@@ -17,39 +17,45 @@ execution.
 In this chapter we'll look into several techniques and tricks of debugging your {{api}} program. Debugging in
 {{api}} is not that difficult to do and getting a grasp of its techniques definitely pays out in the long run.
 
-## The project
+## Your program
 
-The project is learnopengl's debugging demo: one wooden cube (`wood.png`, the course's own texture), 2.5 units in front
-of the camera, turning 10° per second about the axis (1, 1, 1). There is no view matrix – the camera sits at the
-origin and looks down -z – and the projection is a perspective one with a field of view of 45° and a far plane at 10.
-The depth test and back-face culling are on.
+Start from your program from *Coordinate Systems* in a new folder (a textured cube) and turn it into learnopengl's
+debugging demo: one wooden cube (`wood.png`, the course's own texture – **Save resources…** in the panel copies it
+into your folder), 2.5 units in front of the camera, turning 10° per second about the axis (1, 1, 1). There is no view
+matrix – the camera sits at the origin and looks down -z – and the projection is a perspective one with a field of
+view of 45° and a far plane at 10. The depth test and back-face culling are on.
 
 One value differs from learnopengl's demo: the window is cleared to **(0.2, 0.3, 0.3)**, a dark teal, instead of
 black. You will see why soon: halfway through the chapter the cube is drawn *black*, and on a black background you
 would not see it at all.
 
-learnopengl hides two mistakes in its demo for the reader to find, and so does the project. Build and run it:
+learnopengl hides two mistakes in its demo for the reader to find. You write the program yourself, so build them in on
+purpose – the block for your API below says which they are – and watch the tools find them. Build and run it:
 
 :::opengl
 the window shows only the teal clear colour. There is no cube, and nothing is printed. The two mistakes are
-learnopengl's own: one when the texture is loaded and one when the uniforms are set – but the program does not tell you
-anything about them. Finding them is what this chapter is about.
+learnopengl's own: one when the texture is loaded and one when the uniforms are set – but the program does not tell
+you anything about them. To build them in, give the texture's `glTexImage2D` call the target `GL_FRAMEBUFFER` instead
+of `GL_TEXTURE_2D`, and set the `projection` and `tex` uniforms before `shader.use()`. Finding them with the tools is
+what this chapter is about.
 :::
 :::vulkan
-the cube is there, but in one flat dark brown – no wood grain at all. Nothing in the window tells you why. The
-program does print something, though: a few lines starting with `validation layer:`. The mistake is Vulkan's own
+the cube is there, but in one flat dark brown – no wood grain at all. Nothing in the window tells you why. The program
+does print something, though: a few lines starting with `validation layer:`. The mistake is Vulkan's own
 (learnopengl's two mistakes are OpenGL calls that have no Vulkan counterpart): something the vertex shader needs is
-missing from the pipeline. Finding it is what this chapter is about.
+missing from the pipeline. To build it in, let `Vertex::getAttributeDescriptions()` describe only location 0, the
+position – leave out the texture coordinates' description (location 1), which the vertex shader reads. Finding it with
+the tools is what this chapter is about.
 :::
 :::d3d12
-the window shows only the teal clear colour. There is no cube. Like learnopengl's demo, the project has two mistakes:
+the window shows only the teal clear colour. There is no cube. Like learnopengl's demo, your program has two mistakes:
 one in `PopulateCommandList`, which keeps the draw from finding its projection and its texture, and one in
-`LoadTexture`, in the texture's shader resource view. The program says nothing about them. Finding them is what this
-chapter is about.
+`LoadTexture`, in the texture's shader resource view. To build them in, leave out the `SetDescriptorHeaps` call before
+the two `SetGraphicsRootDescriptorTable` calls in `PopulateCommandList`, and don't set `srvDesc.Texture2D.MipLevels`
+in `LoadTexture`. The program says nothing about them. Finding them with the tools is what this chapter is about.
 :::
 
-The `// TODO:` comments in the project mark where your code goes. The tasks first add the tools, then use what they
-report to fix the mistakes.
+The tasks first add the tools, then use what they report to fix the mistakes.
 
 Some of the tools are your IDE's **debugger**: you run the program under it, stop it at a **breakpoint** and look at the
 **call stack** – the chain of calls that led there – and at the variables.
@@ -225,7 +231,7 @@ The project's messenger asks for three severities:
         createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
 ```
 
-and `debugCallback` prints every message it gets. That is why the output of the start is so noisy: the loader and the
+and `debugCallback` prints every message it gets. That is why the output of your program is so noisy: the loader and the
 layer report what they are doing (lines like `validation layer: Searching for ICD drivers named …` and `validation
 layer: Loading layer library libVkLayer_khronos_validation.so`), and between those verbose lines there is one that
 matters. The severities are bits in the order of their importance:
@@ -339,11 +345,12 @@ void CheckDebugMessages_(ID3D12InfoQueue* infoQueue, const char* file, int line)
 #define CheckDebugMessages() CheckDebugMessages_(m_infoQueue.Get(), __FILE__, __LINE__)
 ```
 
-`GetMessage` is called twice, as the documentation describes: first with `nullptr` to learn the size of the message
-(a `D3D12_MESSAGE` with its text behind it), then with memory of that size. A message has a category, a severity
-(`CORRUPTION`, `ERROR`, `WARNING`, `INFO`, `MESSAGE` – `SeverityName`, already in the project, turns it into text), an
-`ID` and the description. In case you're unaware of what `__FILE__` and `__LINE__` are: the preprocessor replaces them
-with the file and the line they appear in, so each `CheckDebugMessages()` call reports its own place.
+`GetMessage` is called twice, as the documentation describes: first with `nullptr` to learn the size of the message (a
+`D3D12_MESSAGE` with its text behind it), then with memory of that size. A message has a category, a severity
+(`CORRUPTION`, `ERROR`, `WARNING`, `INFO`, `MESSAGE` – `SeverityName`, a small `switch` that returns each severity's
+name, turns it into text), an `ID` and the description. In case you're unaware of what `__FILE__` and `__LINE__` are:
+the preprocessor replaces them with the file and the line they appear in, so each `CheckDebugMessages()` call reports
+its own place.
 
 Now do the first task, **info-queue**: get the info queue in `LoadPipeline` right after the device is created (inside
 `#if defined(_DEBUG)` – in a release build there is no debug layer, `As` fails and `m_infoQueue` stays empty), add the
@@ -687,7 +694,7 @@ layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec2 inTexCoord;
 ```
 
-and `Vertex::getAttributeDescriptions()` in the start describes only one attribute, the position at location 0. The
+and `Vertex::getAttributeDescriptions()` in your program describes only one attribute, the position at location 0. The
 pipeline is created anyway, and what the shader reads from an input nobody feeds is undefined; here it reads (0, 0).
 Every fragment then samples the texel at (0, 0) – a dark seam of the wood – and the cube is one flat brown. The OpenGL
 equivalent of this mistake is a vertex attribute that is never enabled with `glEnableVertexAttribArray`.
@@ -839,7 +846,7 @@ queue, so `CheckDebugMessages()` prints them once more afterwards.)
 ### The second mistake
 
 The message says it plainly: the view asks for `MipLevels` 0, and it must be between 1 and 1 – the texture has one mip
-level – or -1 for "all of them". The start fills `srvDesc` like this:
+level – or -1 for "all of them". Your `LoadTexture` fills `srvDesc` like this:
 
 ```cpp
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};

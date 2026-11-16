@@ -23,7 +23,7 @@
         "d3d12": "Stäng fönstret med Escape: hantera `WM_KEYDOWN` i `WindowProc` och anropa `DestroyWindow(hWnd)` när `wParam == VK_ESCAPE`."
       },
       "hint": {
-        "opengl": "Anropa `processInput(window);` som det första i render loopen (den ersätter TODO-kommentaren för input).",
+        "opengl": "Anropa `processInput(window);` som det första i render loopen, i dess input-del.",
         "d3d12": "Lägg till ett `case WM_KEYDOWN:` som returnerar 0. När fönstret förstörs skickas `WM_DESTROY`, som postar `WM_QUIT`: loopen slutar och `OnDestroy` väntar på GPU:n."
       }
     },

@@ -11,37 +11,39 @@ I belysningskapitlen introducerade vi kort Phongs belysningsmodell för att ge v
 Phong-modellen ser bra ut, men har några nyanser som vi ska fokusera på i det här kapitlet.
 
 :::opengl
-Projektet är learnopengls scen: ett trägolv – planet `planeVertices`, 20 × 20 enheter på y = -0.5 med normalen uppåt och
-texturkoordinater upp till 10, så att `wood.png` upprepas tio gånger (`GL_REPEAT`) – och ett ljus på `lightPos` (0, 0, 0),
-en halv enhet ovanför golvet. Kameran står på (0, 0, 3) och tittar längs -z; WASD, musen och scrollhjulet flyttar den
-fortfarande. `advanced_lighting.vs` skickar vidare position, normal och texturkoordinater i ett interface block `VS_OUT`
-(golvet har ingen modellmatris: dess positioner är redan världspositioner), och `advanced_lighting.fs` sköter
+Utgå från ditt program från *Djuptestning* i en ny mapp (det har ett texturerat golv och kameran) och gör om det till
+learnopengls scen: ett trägolv – planet `planeVertices`, 20 × 20 enheter på y = -0.5 med normalen uppåt och
+texturkoordinater upp till 10, så att `wood.png` upprepas tio gånger (`GL_REPEAT`) – och ett ljus på `lightPos` (0, 0,
+0), en halv enhet ovanför golvet. Kameran står på (0, 0, 3) och tittar längs -z; WASD, musen och scrollhjulet flyttar
+den fortfarande. `advanced_lighting.vs` skickar vidare position, normal och texturkoordinater i ett interface block
+`VS_OUT` (golvet har ingen modellmatris: dess positioner är redan världspositioner), och `advanced_lighting.fs` sköter
 belysningen: ambient `0.05 * color`, diffust, och en spekulär term `vec3(0.3) * spec` för ett vitt ljus.
 :::
 :::vulkan
-Projektet är learnopengls scen i de tidigare kapitlens program: ett trägolv – `vertices` innehåller learnopengls
-`planeVertices`, 20 × 20 enheter på y = -0.5 med normalen uppåt och texturkoordinater upp till 10, så att
-`textures/wood.png` upprepas tio gånger (`VK_SAMPLER_ADDRESS_MODE_REPEAT`; v är vänt, som i de tidigare kapitlen) – och
-ett ljus på den globala `lightPos` (0, 0, 0), en halv enhet ovanför golvet. Kameran står på (0, 0, 3) och tittar längs
--z; WASD, musen och scrollhjulet flyttar den fortfarande. `shaders/advanced_lighting.vert` skickar vidare position, normal
-och texturkoordinater i ett interface block `VS_OUT` (golvet har ingen modellmatris), och
-`shaders/advanced_lighting.frag` sköter belysningen: ambient `0.05 * color`, diffust, och en spekulär term
-`vec3(0.3) * spec` för ett vitt ljus. Uniform buffern innehåller `view`, `proj`, `viewPos` och `lightPos`.
+Utgå från ditt program från *Djuptestning* i en ny mapp (det har ett texturerat golv och kameran) och gör om det till
+learnopengls scen: ett trägolv – `vertices` innehåller learnopengls `planeVertices`, 20 × 20 enheter på y = -0.5 med
+normalen uppåt och texturkoordinater upp till 10, så att `textures/wood.png` upprepas tio gånger
+(`VK_SAMPLER_ADDRESS_MODE_REPEAT`; v är vänt, som i de tidigare kapitlen) – och ett ljus på den globala `lightPos` (0,
+0, 0), en halv enhet ovanför golvet. Kameran står på (0, 0, 3) och tittar längs -z; WASD, musen och scrollhjulet
+flyttar den fortfarande. `shaders/advanced_lighting.vert` skickar vidare position, normal och texturkoordinater i ett
+interface block `VS_OUT` (golvet har ingen modellmatris), och `shaders/advanced_lighting.frag` sköter belysningen:
+ambient `0.05 * color`, diffust, och en spekulär term `vec3(0.3) * spec` för ett vitt ljus. Uniform buffern innehåller
+`view`, `proj`, `viewPos` och `lightPos`.
 :::
 :::d3d12
-Projektet är learnopengls scen: ett trägolv – en vertex buffer med planet, 20 × 20 enheter på y = -0.5 med normalen uppåt
-och texturkoordinater upp till 10 (v vänt), så att `wood.png` upprepas tio gånger genom den statiska samplerns
-`D3D12_TEXTURE_ADDRESS_MODE_WRAP` – och ett ljus på den globala `lightPos` (0, 0, 0), en halv enhet ovanför golvet. Kameran
-står på (0, 0, 3) och tittar längs -z; WASD, musen och hjulet flyttar den fortfarande. `advanced_lighting.hlsl` innehåller
-`VSMain` (position, normal och texturkoordinater; golvet har ingen modellmatris) och `PSMain` med belysningen: ambient
-`0.05f * color`, diffust, och en spekulär term `float3(0.3f, 0.3f, 0.3f) * spec` för ett vitt ljus. Constant buffern (b1)
-innehåller `view`, `projection`, `viewPos` och `lightPos`.
+Utgå från ditt program från *Djuptestning* i en ny mapp (det har ett texturerat golv och kameran) och gör om det till
+learnopengls scen: ett trägolv – en vertex buffer med planet, 20 × 20 enheter på y = -0.5 med normalen uppåt och
+texturkoordinater upp till 10 (v vänt), så att `wood.png` upprepas tio gånger genom den statiska samplerns
+`D3D12_TEXTURE_ADDRESS_MODE_WRAP` – och ett ljus på den globala `lightPos` (0, 0, 0), en halv enhet ovanför golvet.
+Kameran står på (0, 0, 3) och tittar längs -z; WASD, musen och hjulet flyttar den fortfarande.
+`advanced_lighting.hlsl` innehåller `VSMain` (position, normal och texturkoordinater; golvet har ingen modellmatris)
+och `PSMain` med belysningen: ambient `0.05f * color`, diffust, och en spekulär term `float3(0.3f, 0.3f, 0.3f) * spec`
+för ett vitt ljus. Constant buffern (b1) innehåller `view`, `projection`, `viewPos` och `lightPos`.
 :::
 
-Kommentarerna `// TODO:` i projektet visar var din kod ska in. Efter varje uppgift bygger och kör du programmet i din
-IDE. Just nu visar den det upplysta trägolvet som sträcker sig bort mot horisonten, den mörka bakgrunden ovanför och en
-mjuk vit högdager mitt i nedre halvan – reflexen av ljuset, beräknad med Phongs spekulära term och en glansexponent på
-8.
+Efter varje uppgift bygger och kör du programmet i din IDE. Just nu visar den det upplysta trägolvet som sträcker sig
+bort mot horisonten, den mörka bakgrunden ovanför och en mjuk vit högdager mitt i nedre halvan – reflexen av ljuset,
+beräknad med Phongs spekulära term och en glansexponent på 8.
 
 ## Blinn-Phong
 
@@ -137,9 +139,9 @@ Vad är Blinn-Phongs halvvägsvektor?
 
 ## Phong eller Blinn-Phong i {{api}}
 
-Projektets fragment shader har båda modellerna sida vid sida, och en flagga väljer en av dem – learnopengl växlar den med
-tangenten B för att jämföra dem. Phong-grenen är klar; Blinn-Phong-grenen är TODO:n. Hur flaggan tar sig från
-C++-programmet in i shadern skiljer sig mellan API:erna.
+Projektets fragment shader har båda modellerna sida vid sida, och en flagga väljer en av dem – learnopengl växlar den
+med tangenten B för att jämföra dem. Skriv Phong-grenen nu, som i *Grundläggande ljussättning*; Blinn-Phong-grenen är
+uppgiften. Hur flaggan tar sig från C++-programmet in i shadern skiljer sig mellan API:erna.
 
 :::opengl
 I OpenGL är flaggan en uniform:
@@ -403,9 +405,9 @@ Gör nu uppgiften **shininess**. Ge Blinn-Phong learnopengls exponent, fyra gån
 ```
 :::
 
-Bygg och kör: högdagern krymper igen till ungefär samma storlek som startens Phong-högdager, men den ligger lite längre
-bak och tonar ut jämnt åt alla håll. Det är learnopengls jämförelse – Phong med exponenten 8.0, Blinn-Phong med 32.0.
-Vill du se båda igen sätter du tillbaka `blinn` till false: Phong-grenen finns kvar i shadern.
+Bygg och kör: högdagern krymper igen till ungefär samma storlek som Phong-högdagern du började med, men den ligger
+lite längre bak och tonar ut jämnt åt alla håll. Det är learnopengls jämförelse – Phong med exponenten 8.0,
+Blinn-Phong med 32.0. Vill du se båda igen sätter du tillbaka `blinn` till false: Phong-grenen finns kvar i shadern.
 
 ```quiz
 Phong och Blinn-Phong används båda med ett ljus och en betraktare ovanför ett plant golv. När kan vinkeln mellan normalen och halvvägsvektorn överstiga 90°?

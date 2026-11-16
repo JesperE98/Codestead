@@ -46,12 +46,13 @@ The root is at the origin with scale 1. Its child is at local position (3.5, 0, 
 global(child 2) = global(child 1) · local(child 2). The first child's global matrix translates by 3.5 and scales by 0.6, so the second child's offset of 3.5 becomes 2.1 in the world, and it lands at 3.5 + 2.1 = 5.6. The next ones follow at 6.86, 7.62, 8.07, … – each 0.6 times closer and smaller.
 ```
 
-## The project
+## Your program
 
-The project is the *Model Loading* part's program, reduced to learnopengl's `1.model_loading` shaders: the diffuse
-texture without lighting. It loads the planet once and draws it once at the origin. The camera stands at (3, 6, 12),
-looking down at 25° (pitch -25) so that the chain of planets fits into the window; learnopengl's demo has its camera at
-(0, 0, 3) for its model. The background is a dark grey (0.05, 0.05, 0.05).
+Start from your program from *Model* in a new folder – the *Model Loading* part's program – and reduce it to
+learnopengl's `1.model_loading` shaders: the diffuse texture without lighting. It loads the planet once and draws it
+once at the origin. The camera stands at (3, 6, 12), looking down at 25° (pitch -25) so that the chain of planets fits
+into the window; learnopengl's demo has its camera at (0, 0, 3) for its model. The background is a dark grey (0.05,
+0.05, 0.05).
 
 learnopengl writes `Transform` and `Entity` as classes with member functions; its `Entity` even derives from `Model`
 and keeps its children in a `std::list<std::unique_ptr<Entity>>` with a pointer back to its parent. As in the *In
@@ -60,7 +61,7 @@ names: `computeModelMatrix(transform, …)` instead of `transform.computeModelMa
 learnopengl's; a real project would keep its classes in their own files.
 
 :::opengl
-The start draws the planet with the identity as its model matrix:
+Your program draws the planet with the identity as its model matrix:
 
 ```cpp
         // draw the model once, at the origin
@@ -73,10 +74,11 @@ The start draws the planet with the identity as its model matrix:
 draws the planet's two meshes, the sphere and the rings, each with its texture.
 :::
 :::vulkan
-The start draws the planet with the identity as its model matrix, a push constant (`struct PushConstants { glm::mat4
-model; }`) as in the *Model Loading* part. The start also has learnopengl's `Model` in Vulkan terms – what an entity
-will point to. learnopengl's `Model` holds meshes with their VAOs and draws itself with `Model::Draw(shader)`; here it is
-a struct with the buffers the program loaded from `models/planet.obj` and a free function that records its draw:
+Your program draws the planet with the identity as its model matrix, a push constant
+(`struct PushConstants { glm::mat4 model; }`) as in the *Model Loading* part. It also has learnopengl's `Model` in
+Vulkan terms – what an entity will point to. learnopengl's `Model` holds meshes with their VAOs and draws itself with
+`Model::Draw(shader)`; here it is a struct with the buffers the program loaded from `models/planet.obj` and a free
+function that records its draw:
 
 ```cpp
 struct Model {
@@ -103,13 +105,12 @@ draw covers both. The descriptor set – the uniform buffer with view and projec
 same for every planet and is bound once before the draws.
 :::
 :::d3d12
-The start draws the planet with the identity as its model matrix, in the root constants (root parameter 0) as in the
+Your program draws the planet with the identity as its model matrix, in the root constants (root parameter 0) as in the
 *Model Loading* part. `Mesh` and `Model` are the `model` chapter's classes, unchanged: `m_model.Draw(commandList)` draws
 the planet's two meshes, the sphere and the rings, each binding its own texture.
 :::
 
-The `// TODO:` comments in the project mark where your code goes. Build and run the program in your IDE: one ringed
-planet on the left of the window.
+Build and run the program in your IDE: one ringed planet on the left of the window.
 
 ## The Transform
 
@@ -401,7 +402,7 @@ times appear in eleven places. learnopengl's scene graph demo draws its chain wi
 child down (and leaves out the last one); the course draws the whole tree recursively, as learnopengl's frustum culling
 demo does.
 
-The application keeps learnopengl's two locals as members, `Model ourModel;` (in the start) and `Entity ourEntity;`,
+The application keeps learnopengl's two locals as members, `Model ourModel;` (already there) and `Entity ourEntity;`,
 and builds the graph once in `loadEntities()`, which `initVulkan()` calls after the buffers exist:
 
 ```cpp

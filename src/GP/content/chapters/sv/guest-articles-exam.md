@@ -406,7 +406,7 @@ Vad behöver en grafikpipeline med tessellering i Vulkan?
 - [ ] Ett eget render pass för den tessellerade geometrin
 - [ ] Bara `VK_PRIMITIVE_TOPOLOGY_PATCH_LIST`; patchstorleken tas från draw callet
 ---
-Därför skriver startens control shader nivå 1 överallt: utan den hade pipelinen inte gått att bygga.
+Därför skriver kapitlets första control shader nivå 1 överallt: utan den hade pipelinen inte gått att bygga.
 ```
 :::
 :::d3d12

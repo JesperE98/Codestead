@@ -61,42 +61,46 @@ resultat på CPU:n, och SSAO-passet är ett av de dyraste passen i kursen:
   bilden ser likadan ut, bruset skiljer sig i detaljerna.
 
 :::opengl
-Starten är en deferred-renderare som förra kapitlets: `main.cpp` ritar rummet (`renderCube()` med `invertedNormals` = 1)
-och planeten (`Model planet("models/planet.obj")`, klassen `Model` från delen Modelladdning i `model.h` / `mesh.h`) i
-G-buffern med `ssao_geometry.vs` / `.fs`, och belyser sedan skärmfyrhörningen med `ssao.vs` / `ssao_lighting.fs`, som
-ännu inte har någon ambient occlusion. `ssao.vs` är skärmfyrhörningens vertex shader, delad av alla tre skärmpassen.
-`ssao.fs` och `ssao_blur.fs` har sina deklarationer, men deras `main` är en TODO.
+Du fortsätter i ditt program från *Deferred shading*, en deferred-renderare som det kapitlets: `main.cpp` ritar rummet
+(`renderCube()` med `invertedNormals` = 1) och planeten (`Model planet("models/planet.obj")`, klassen `Model` från
+delen Modelladdning i `model.h` / `mesh.h`) i G-buffern med `ssao_geometry.vs` / `.fs`, och belyser sedan
+skärmfyrhörningen med `ssao.vs` / `ssao_lighting.fs`, som ännu inte har någon ambient occlusion. `ssao.vs` är
+skärmfyrhörningens vertex shader, delad av alla tre skärmpassen. `ssao.fs` och `ssao_blur.fs` börjar med sina
+deklarationer och en tom `main`.
 :::
 :::vulkan
-Starten är en deferred-renderare som förra kapitlets: `recordCommandBuffer()` ritar rummet (vertexbufferns kub,
-`invertedNormals = VK_TRUE` i push constants: `struct PushConstants { glm::mat4 model; VkBool32 invertedNormals; }` – en
-GLSL-`bool` är 4 byte) och planeten (`loadModel(MODEL_PATH, modelVertices, modelIndices)` med tinyobjloader, egna vertex-
-och indexbuffrar, ett `vkCmdDrawIndexed`) i G-buffern, och sedan skärmfyrhörningen (vertex 36..41) i fönstret med
-`lightingPipeline` (`ssao.vert` / `ssao_lighting.frag`). Det finns **ett descriptor set för alla pass**, `descriptorSet`,
-som vulkan-tutorials: uniform buffern på binding 0, gPosition, gNormal och gAlbedo på 1, 2 och 3; varje pass shaders läser
+Du fortsätter i ditt program från *Deferred shading*, en deferred-renderare som det kapitlets: `recordCommandBuffer()`
+ritar rummet (vertexbufferns kub, `invertedNormals = VK_TRUE` i push constants:
+`struct PushConstants { glm::mat4 model; VkBool32 invertedNormals; }` – en GLSL-`bool` är 4 byte) och planeten
+(`loadModel(MODEL_PATH, modelVertices, modelIndices)` med tinyobjloader, egna vertex- och indexbuffrar, ett
+`vkCmdDrawIndexed`) i G-buffern, och sedan skärmfyrhörningen (vertex 36..41) i fönstret med `lightingPipeline`
+(`ssao.vert` / `ssao_lighting.frag`). Det finns **ett descriptor set för alla pass**, `descriptorSet`, som
+vulkan-tutorials: uniform buffern på binding 0, gPosition, gNormal och gAlbedo på 1, 2 och 3; varje pass shaders läser
 bara de bindings de deklarerar. Fönstrets render pass har ingen djup-attachment – bara fyrhörningen ritas i det – och
-skärmpipelines görs med `depthTestEnable = VK_FALSE` (`createPipeline(…, colorAttachmentCount, depthTestEnable, …)` från
-förra kapitlet). Uniform buffern håller `view`, `proj` och ljuset (`struct Light { glm::vec3 position; float linear;
-glm::vec3 color; float quadratic; }`, std140), vars position `updateUniformBuffer()` transformerar till vyrymden.
-`ssao.frag` och `ssao_blur.frag` är TODO:er som kompilerar och inte skriver något.
+skärmpipelines görs med `depthTestEnable = VK_FALSE` (`createPipeline(…, colorAttachmentCount, depthTestEnable, …)`
+från förra kapitlet). Uniform buffern håller `view`, `proj` och ljuset
+(`struct Light { glm::vec3 position; float linear; glm::vec3 color; float quadratic; }`, std140), vars position
+`updateUniformBuffer()` transformerar till vyrymden. `ssao.frag` och `ssao_blur.frag` börjar med en tom `main` som
+inte skriver något.
 :::
 :::d3d12
-Starten är en deferred-renderare som förra kapitlets: `PopulateCommandList` ritar rummet (vertexbufferns kub,
-`invertedNormals = TRUE` i rotkonstanterna) och planeten (`Model m_model`, klasserna från delen Modelladdning porterade
-med Assimp; `m_model.Draw` binder varje meshs kartor) i G-buffern `m_gBuffer[3]`, och sedan skärmfyrhörningen i back
-buffern med `m_lightingPipelineState` (`ssao_lighting.hlsl`). Heapen håller CBV:n på plats 0, meshernas kartor på plats
-1–4 (`MaxMeshes = 2`) och G-bufferns SRV:er på plats 5, 6 och 7. Rotsignaturen har rotkonstanterna (b0: `ModelConstants`
-– `model`, `normalMatrix`, `BOOL invertedNormals`), tabell 1 för CBV:n (b1), tabell 2 med två SRV:er (t0, t1) och tabell
-3 med en (t2), och den statiska samplern s0: punktfiltrering, CLAMP. Varje skärmpass har sin egen kopia av learnopengls
-delade `ssao.vs` som `VSMain` – ett pipeline state tar här sina shaders från en fil. `ssao.hlsl` och `ssao_blur.hlsl` har
-sina deklarationer; deras `PSMain` är en TODO (de kompileras inte förrän du behöver dem).
+Du fortsätter i ditt program från *Deferred shading*, en deferred-renderare som det kapitlets: `PopulateCommandList`
+ritar rummet (vertexbufferns kub, `invertedNormals = TRUE` i rotkonstanterna) och planeten (`Model m_model`, klasserna
+från delen Modelladdning porterade med Assimp; `m_model.Draw` binder varje meshs kartor) i G-buffern `m_gBuffer[3]`,
+och sedan skärmfyrhörningen i back buffern med `m_lightingPipelineState` (`ssao_lighting.hlsl`). Heapen håller CBV:n
+på plats 0, meshernas kartor på plats 1–4 (`MaxMeshes = 2`) och G-bufferns SRV:er på plats 5, 6 och 7. Rotsignaturen
+har rotkonstanterna (b0: `ModelConstants` – `model`, `normalMatrix`, `BOOL invertedNormals`), tabell 1 för CBV:n (b1),
+tabell 2 med två SRV:er (t0, t1) och tabell 3 med en (t2), och den statiska samplern s0: punktfiltrering, CLAMP. Varje
+skärmpass har sin egen kopia av learnopengls delade `ssao.vs` som `VSMain` – ett pipeline state tar här sina shaders
+från en fil. `ssao.hlsl` och `ssao_blur.hlsl` börjar med sina deklarationer och en tom `PSMain` (de kompileras inte
+förrän du behöver dem).
 :::
 
-Kommentarerna `// TODO:` i projektet visar var din kod ska in. Bygg och kör programmet i din IDE: insidan av ett stort
-grått rum, belyst blått uppifrån höger – bakväggen, golvet nedanför en tunn kantlinje, och den grå planeten i mitten,
-stående på golvet. Dess framsida vetter bort från ljuset och får bara omgivningsljuset; dess övre högra kant är blått
-belyst. Ringen går tvärs framför den från ena sidan av fönstret till den andra, strax ovanför ögonhöjd: du ser den
-**underifrån**. Allt som inte belyses direkt har samma platta grå ton; inget visar var planeten möter golvet.
+Bygg och kör programmet i din IDE: insidan av ett stort grått rum, belyst blått uppifrån höger – bakväggen, golvet
+nedanför en tunn kantlinje, och den grå planeten i mitten, stående på golvet. Dess framsida vetter bort från ljuset
+och får bara omgivningsljuset; dess övre högra kant är blått belyst. Ringen går tvärs framför den från ena sidan av
+fönstret till den andra, strax ovanför ögonhöjd: du ser den **underifrån**. Allt som inte belyses direkt har samma
+platta grå ton; inget visar var planeten möter golvet.
 
 ## Samplingsbuffrar
 
@@ -122,7 +126,7 @@ perfekt ihop med deferred rendering, eftersom vi redan har positionerna och norm
 
 Den här gången ligger G-buffern i **vyrymden**, inte i världsrymden: SSAO-shadern projicerar sina samplingar på skärmen
 med bara projektionsmatrisen, och jämför djup som kameran ser dem – och i vyrymden är en punkts djup helt enkelt dess z
-(negativt: kameran tittar längs -z). Startens geometrishaders gör det – learnopengls `ssao_geometry.vs`: positionen är
+(negativt: kameran tittar längs -z). Geometrishaders gör det – learnopengls `ssao_geometry.vs`: positionen är
 `view * model * aPos`, normalen transformeras med `transpose(inverse(mat3(view * model)))` och negeras för rummet, vars
 insida vi ser:
 

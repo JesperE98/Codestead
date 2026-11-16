@@ -18,35 +18,36 @@ bakom SSAA men gör det mycket effektivare. I det här kapitlet går vi utförli
 har det inbyggt.
 
 :::opengl
-Projektet är learnopengls scen: en kub i origo, helt grön, på den mörka bakgrunden (0.1, 0.1, 0.1), sedd från kameran
-på (0, 0, 3) – WASD, musen och scrollhjulet flyttar den fortfarande. En sak skiljer sig från learnopengl: kuben är
-vriden en fast vinkel på 30° kring axeln (1, 1, 0). learnopengls ovridna kub, sedd framifrån, är en kvadrat med vågräta
-och lodräta kanter, som inte visar några trappsteg alls – så anti-aliasing skulle inte ändra något synligt. Shadrarna
-är `anti_aliasing.vs/.fs`; `aa_post.vs/.fs`, för en skärmfyrhörning, används från uppgiften `resolve`.
+Utgå från ditt program från *Kamera* i en ny mapp och gör det till learnopengls scen: en kub i origo, helt grön, på
+den mörka bakgrunden (0.1, 0.1, 0.1), sedd från kameran på (0, 0, 3) – WASD, musen och scrollhjulet flyttar den
+fortfarande. En sak skiljer sig från learnopengl: kuben är vriden en fast vinkel på 30° kring axeln (1, 1, 0).
+learnopengls ovridna kub, sedd framifrån, är en kvadrat med vågräta och lodräta kanter, som inte visar några trappsteg
+alls – så anti-aliasing skulle inte ändra något synligt. Shadrarna är `anti_aliasing.vs/.fs`; `aa_post.vs/.fs`, för en
+skärmfyrhörning, används från uppgiften `resolve`.
 :::
 :::vulkan
-Projektet är learnopengls scen i de tidigare kapitlens program: en kub i origo, helt grön, på den mörka bakgrunden (0.1,
-0.1, 0.1), sedd från kameran på (0, 0, 3) – WASD, musen och scrollhjulet flyttar den fortfarande.
-`createPipeline(vert, frag, attributeCount, pipeline)` skapar kubens pipeline (kubens shaders läser bara positionen),
-view och projektion ligger i uniform buffern, modellmatrisen är en push constant. En sak skiljer sig från learnopengl:
-kuben är vriden en fast vinkel på 30° kring axeln (1, 1, 0). learnopengls ovridna kub, sedd framifrån, är en kvadrat
-med vågräta och lodräta kanter, som inte visar några trappsteg alls – så anti-aliasing skulle inte ändra något synligt.
-Shadrarna är `shaders/anti_aliasing.vert/.frag`; `shaders/aa_post.vert/.frag`, för en skärmfyrhörning, används från
-uppgiften `resolve`.
+Utgå från ditt program från *Kamera* i en ny mapp och gör det till learnopengls scen: en kub i origo, helt grön, på
+den mörka bakgrunden (0.1, 0.1, 0.1), sedd från kameran på (0, 0, 3) – WASD, musen och scrollhjulet flyttar den
+fortfarande. `createPipeline(vert, frag, attributeCount, pipeline)` skapar kubens pipeline (kubens shaders läser bara
+positionen), view och projektion ligger i uniform buffern, modellmatrisen är en push constant. En sak skiljer sig från
+learnopengl: kuben är vriden en fast vinkel på 30° kring axeln (1, 1, 0). learnopengls ovridna kub, sedd framifrån, är
+en kvadrat med vågräta och lodräta kanter, som inte visar några trappsteg alls – så anti-aliasing skulle inte ändra
+något synligt. Shadrarna är `shaders/anti_aliasing.vert/.frag`; `shaders/aa_post.vert/.frag`, för en skärmfyrhörning,
+används från uppgiften `resolve`.
 :::
 :::d3d12
-Projektet är learnopengls scen: en kub i origo, helt grön, på den mörka bakgrunden (0.1, 0.1, 0.1), sedd från kameran
-på (0, 0, 3) – WASD, musen och hjulet flyttar den fortfarande. Root constants innehåller modellmatrisen (b0), constant
-buffern view och projektion (b1); shadrarna ligger i `anti_aliasing.hlsl`. En sak skiljer sig från learnopengl: kuben
-är vriden en fast vinkel på 30° kring axeln (1, 1, 0). learnopengls ovridna kub, sedd framifrån, är en kvadrat med
-vågräta och lodräta kanter, som inte visar några trappsteg alls – så anti-aliasing skulle inte ändra något synligt.
-`aa_post.hlsl`, för en skärmfyrhörning, används från uppgiften `resolve`.
+Utgå från ditt program från *Kamera* i en ny mapp och gör det till learnopengls scen: en kub i origo, helt grön, på
+den mörka bakgrunden (0.1, 0.1, 0.1), sedd från kameran på (0, 0, 3) – WASD, musen och hjulet flyttar den fortfarande.
+Root constants innehåller modellmatrisen (b0), constant buffern view och projektion (b1); shadrarna ligger i
+`anti_aliasing.hlsl`. En sak skiljer sig från learnopengl: kuben är vriden en fast vinkel på 30° kring axeln (1, 1,
+0). learnopengls ovridna kub, sedd framifrån, är en kvadrat med vågräta och lodräta kanter, som inte visar några
+trappsteg alls – så anti-aliasing skulle inte ändra något synligt. `aa_post.hlsl`, för en skärmfyrhörning, används
+från uppgiften `resolve`.
 :::
 
-Kommentarerna `// TODO:` i projektet visar var din kod ska in. Efter varje uppgift bygger och kör du programmet i din
-IDE. Just nu visar den kubens gröna siluett – en sexhörning av tre sidor, alla i samma grönt – med hårda,
-trappstegsformade kanter: varje pixel är antingen exakt grön eller exakt bakgrunden. Zooma in på en sned kant i tanken,
-så ser du trappan.
+Efter varje uppgift bygger och kör du programmet i din IDE. Just nu visar den kubens gröna siluett – en sexhörning av
+tre sidor, alla i samma grönt – med hårda, trappstegsformade kanter: varje pixel är antingen exakt grön eller exakt
+bakgrunden. Zooma in på en sned kant i tanken, så ser du trappan.
 
 ## Multisampling
 
@@ -175,7 +176,7 @@ och en funktion som tar reda på det:
 
 vulkan-tutorial kontrollerar från `VK_SAMPLE_COUNT_64_BIT` och nedåt och tar det mesta devicen erbjuder; vi stannar
 vid 4, learnopengls antal, så att bilden blir densamma på varje GPU. (Varje Vulkan-device stöder minst 1 och 4 samples
-för de här attachments.) I `pickPhysicalDevice()`, vid TODO:n, direkt efter `physicalDevice = device;`:
+för de här attachments.) I `pickPhysicalDevice()`, direkt efter `physicalDevice = device;`:
 
 ```cpp
                 msaaSamples = getMaxUsableSampleCount();
@@ -336,7 +337,7 @@ Render targetet behöver en render target view, efter swap chainens i RTV-heapen
         rtvHeapDesc.NumDescriptors = FrameCount + 1;    // the swap chain's buffers + the multisampled render target
 ```
 
-Skapa det vid TODO:n i `LoadAssets`. Kontrollera först att devicen kan rita 4 samples per pixel i vårt format (varje
+Skapa det i `LoadAssets`. Kontrollera först att devicen kan rita 4 samples per pixel i vårt format (varje
 GPU av Direct3D 11-klass kan det: från feature level 11_0 krävs 4x för det), med `CheckFeatureSupport`:
 
 ```cpp
@@ -470,7 +471,7 @@ konfigurerar den (bundna) renderbufferns minne. Det enda nya är den extra andra
 samples vi vill använda; 4 i det här fallet.
 
 Gör nu uppgiften **offscreen-msaa**. Ta bort hinten `GLFW_SAMPLES` – fönstret behöver inte längre några samples; vi
-multisamplar själva (`glEnable(GL_MULTISAMPLE)` blir kvar). Vid TODO:n skapar du den multisamplade framebuffern:
+multisamplar själva (`glEnable(GL_MULTISAMPLE)` blir kvar). Före render loopen skapar du den multisamplade framebuffern:
 
 ```cpp
     // configure MSAA framebuffer

@@ -1,8 +1,9 @@
 # {{api}}
 
 Before you write any code, it helps to know what {{api}} actually is, how it is organised and what kind of programming
-it asks of you. This chapter has no tasks: it is the theory you need for the next chapters. Its start files are still
-the triangle program from the introduction, so you can build and run it and find the code this chapter talks about.
+it asks of you. This chapter has no tasks: it is the theory you need for the next chapters. The code it shows comes
+from the triangle program of the introduction – "the program" below – which you will write yourself, step by step,
+in the next chapters.
 
 :::opengl
 ## What OpenGL is
@@ -52,7 +53,7 @@ harder at first than immediate mode, which hid what OpenGL actually does. But it
 and because nothing is hidden, you end up really understanding how graphics programming works.
 
 This is also the reason why this course is geared at core-profile OpenGL **version 3.3**. You can see the request
-for exactly that in the project, right after GLFW is initialised:
+for exactly that in the program, right after GLFW is initialised:
 
 ```cpp
 glfwInit();
@@ -108,7 +109,7 @@ draw command draws lines, until you change the setting back. Nothing is passed t
 uses the current state.
 
 OpenGL functions therefore come in two kinds: **state-changing** functions that set something in the context, and
-**state-using** functions that do some work based on the current state. The render loop of the project has one of
+**state-using** functions that do some work based on the current state. The render loop of the program has one of
 each:
 
 ```cpp
@@ -139,7 +140,7 @@ you a number, an **id**, that refers to the object.
 
 Using an object nearly always follows the same pattern: you *generate* the object and keep its id, you *bind* it
 to a target of the context, you set its options or data through that target, and you un-bind it again by binding
-id 0. This is exactly what the project does with its vertex data:
+id 0. This is exactly what the program does with its vertex data:
 
 ```cpp
 unsigned int VBO, VAO;
@@ -154,7 +155,7 @@ glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
 `glGenBuffers` creates a buffer object and stores its id in `VBO`. `glBindBuffer(GL_ARRAY_BUFFER, VBO)` binds it to
 the `GL_ARRAY_BUFFER` target, and from then on, every call that works on `GL_ARRAY_BUFFER` works on *this* buffer:
-`glBufferData` copies the vertices into it, without even mentioning `VBO`. Afterwards the project un-binds it:
+`glBufferData` copies the vertices into it, without even mentioning `VBO`. Afterwards the program un-binds it:
 
 ```cpp
 glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -181,7 +182,7 @@ maintains OpenGL. Like OpenGL it is a **specification**: Khronos describes exact
 the graphics card manufacturers implement it in their drivers. Your program talks to those drivers through the
 **Vulkan loader**, which finds the installed drivers and the optional layers. Vulkan 1.0 was released in 2016;
 newer versions (1.1, 1.2, 1.3, 1.4) added features, but the basic model you learn here is the same in all of them.
-Like vulkan-tutorial.com, the project asks for version 1.0 (`VK_API_VERSION_1_0`), because everything it uses
+Like vulkan-tutorial.com, the program asks for version 1.0 (`VK_API_VERSION_1_0`), because everything it uses
 exists since then.
 
 Vulkan runs on Windows, Linux and Android; on macOS and iOS it runs on top of Apple's Metal through a translation
@@ -219,7 +220,7 @@ Vulkan has no hidden global state like OpenGL's context. Everything is an explic
 (`VkInstance`, `VkDevice`, `VkBuffer` …), and you pass the objects you mean to every function. Objects are created
 with `vkCreateXXX` (or allocated from another object with `vkAllocateXXX`) and destroyed with `vkDestroyXXX` (or
 `vkFreeXXX`). The parameters are passed in a *create info* structure: you fill a struct, set its `sType` member to
-say which structure it is, and pass a pointer to it. This is how the project describes the application and creates
+say which structure it is, and pass a pointer to it. This is how the program describes the application and creates
 the **instance**, the connection between your program and the Vulkan library:
 
 ```cpp
@@ -242,7 +243,7 @@ if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
 }
 ```
 
-Almost every function returns a `VkResult` that is either `VK_SUCCESS` or an error code; the project turns errors
+Almost every function returns a `VkResult` that is either `VK_SUCCESS` or an error code; the program turns errors
 into exceptions. The `nullptr` is an optional custom memory allocator for the driver's CPU-side memory, which this
 course never uses. Everything you create, you also destroy yourself: `cleanup()` destroys all objects in reverse
 order.
@@ -250,7 +251,7 @@ order.
 ## What it takes to draw a triangle
 
 Here are all the steps it takes to render a triangle in a well-behaved Vulkan program. You will build each of them
-in the coming chapters; this is just the big picture to relate them to. It is the list of calls in the project's
+in the coming chapters; this is just the big picture to relate them to. It is the list of calls in the program's
 `initVulkan()`:
 
 ```cpp
@@ -277,7 +278,7 @@ void initVulkan() {
 - **Logical device and queues.** You then create a `VkDevice`, the *logical device*: your connection to the chosen
   card, with the features you want to use enabled. Most work in Vulkan – drawing, memory transfers – is not executed
   immediately but submitted to a `VkQueue`. Queues come from *queue families*, each supporting a specific set of
-  operations (graphics, compute, transfer, presentation). The project needs a queue that can draw and one that can
+  operations (graphics, compute, transfer, presentation). The program needs a queue that can draw and one that can
   present to the window (often the same family).
 - **Window surface and swap chain.** Vulkan itself knows nothing about windows. The `VkSurfaceKHR` (made by GLFW
   from the window) and the `VkSwapchainKHR` come from the window system integration *extensions* – that is what the
@@ -295,7 +296,7 @@ void initVulkan() {
 - **Main loop.** Each frame, `drawFrame()` acquires an image from the swap chain, records a command buffer that
   draws into it, submits that to the graphics queue and presents the image.
 
-Even the memory of the vertex buffer is explicit: the project creates the `VkBuffer`, asks which memory types it
+Even the memory of the vertex buffer is explicit: the program creates the `VkBuffer`, asks which memory types it
 can live in, allocates a `VkDeviceMemory` itself and binds the two together.
 
 ```quiz
@@ -331,9 +332,9 @@ Because the GPU works asynchronously, you have to tell Vulkan in which order thi
 doesn't do it for you. Vulkan has two main tools for that:
 
 - A **semaphore** (`VkSemaphore`) orders work *on the GPU*: one queue operation signals it, another waits for it.
-  The project uses `imageAvailableSemaphore` so that rendering waits until the swap chain image is available, and
+  The program uses `imageAvailableSemaphore` so that rendering waits until the swap chain image is available, and
   `renderFinishedSemaphores` so that presentation waits until rendering is done.
-- A **fence** (`VkFence`) lets *the CPU* wait for the GPU. The project waits on `inFlightFence` at the start of
+- A **fence** (`VkFence`) lets *the CPU* wait for the GPU. The program waits on `inFlightFence` at the start of
   every frame, so it doesn't re-record the command buffer while the GPU is still using it:
 
 ```cpp
@@ -361,7 +362,7 @@ Fences are for the CPU waiting on the GPU. Ordering between operations on the GP
 
 Like OpenGL, Vulkan has **extensions**: functionality outside the core specification that you have to enable
 explicitly. Their names have a suffix for who made them: `KHR` for Khronos-ratified extensions such as the surface
-and the swap chain, `EXT` for multi-vendor extensions such as the debug messenger. The project enables the swap
+and the swap chain, `EXT` for multi-vendor extensions such as the debug messenger. The program enables the swap
 chain extension on the device:
 
 ```cpp
@@ -388,7 +389,7 @@ const bool enableValidationLayers = true;
 #endif
 ```
 
-In debug builds the layer is enabled, and the project's `debugCallback` prints its messages to the program's console as
+In debug builds the layer is enabled, and the program's `debugCallback` prints its messages to the console as
 `validation layer: …`. In release builds you switch it off and pay nothing for it. A correct program produces no
 validation errors – treat every one as a bug.
 
@@ -426,7 +427,7 @@ compiler and its quirks.
 
 ## A thousand lines for a triangle
 
-The project's `main.cpp` is about a thousand lines long – for one triangle. That is the honest reality of Vulkan:
+The program's `main.cpp` is about a thousand lines long – for one triangle. That is the honest reality of Vulkan:
 before anything appears on the screen, you have to set up everything that OpenGL's driver did for you, and say
 explicitly how memory, images, pipelines and synchronisation should work.
 
@@ -467,7 +468,7 @@ created by functions or by methods of other objects, which fill in a pointer for
 passes both the interface ID and the address of the pointer. COM objects count their references: every object has
 `AddRef` and `Release`, and it deletes itself when the last reference is released.
 
-Calling `Release` by hand is error-prone, so the project (like Microsoft's samples) uses the smart pointer
+Calling `Release` by hand is error-prone, so the program (like Microsoft's samples) uses the smart pointer
 `ComPtr`:
 
 ```cpp
@@ -477,7 +478,7 @@ Calling `Release` by hand is error-prone, so the project (like Microsoft's sampl
 using Microsoft::WRL::ComPtr;
 ```
 
-The methods return an `HRESULT`, a result code that tells whether the call succeeded. The project wraps every call
+The methods return an `HRESULT`, a result code that tells whether the call succeeded. The program wraps every call
 that can fail in `ThrowIfFailed`, which turns a failed `HRESULT` into an exception:
 
 ```cpp
@@ -503,7 +504,7 @@ What does a `ComPtr<ID3D12Device>` do for you?
 
 ## The device and feature levels
 
-The **device** (`ID3D12Device`) represents the graphics card and creates almost every other object. The project
+The **device** (`ID3D12Device`) represents the graphics card and creates almost every other object. The program
 first asks DXGI for a hardware adapter that supports Direct3D 12 and then creates the device on it:
 
 ```cpp
@@ -523,7 +524,7 @@ many cards as possible. A feature level says what a card can do, not how fast it
 
 In Direct3D 12 you don't call "draw" on the device. You **record** commands into a **command list**
 (`ID3D12GraphicsCommandList`) and hand the list to a **command queue** (`ID3D12CommandQueue`), which sends it to the
-GPU. The GPU executes it asynchronously while your program continues. The project creates one *direct* queue, the
+GPU. The GPU executes it asynchronously while your program continues. The program creates one *direct* queue, the
 kind that can execute every type of command:
 
 ```cpp
@@ -577,7 +578,7 @@ with a **resource barrier**, and back again before it is presented. Direct3D 11 
 Shaders and the pipeline don't use resources directly; they use **descriptors** (also called *views*): small
 records that describe a resource and how to use it, for example a *render target view* (RTV) that says "draw into
 this texture". Descriptors live in **descriptor heaps**, arrays of descriptors that you create and fill yourself.
-The project creates a heap with one RTV for each of the two back buffers:
+The program creates a heap with one RTV for each of the two back buffers:
 
 ```cpp
 // Describe and create a render target view (RTV) descriptor heap.
@@ -591,14 +592,14 @@ ThrowIfFailed(m_device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_rtvHe
 ## Root signatures and pipeline state objects
 
 The **root signature** (`ID3D12RootSignature`) describes which resources the shaders get – constant buffers,
-textures, samplers – and where they come from. The triangle's shaders use no resources, so the project creates an
+textures, samplers – and where they come from. The triangle's shaders use no resources, so the program creates an
 empty root signature that only allows the vertex input layout.
 
 The **pipeline state object** (PSO, `ID3D12PipelineState`) contains almost all of the GPU's state in one object:
 the compiled shaders, the input layout of the vertices, the rasterizer, blend and depth/stencil state, the
 primitive topology type and the format of the render target. It is created once, up front, so that the driver can
 compile and optimise everything together; at draw time, switching state is just switching PSOs. A part of the
-project's PSO description:
+program's PSO description:
 
 ```cpp
 D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
@@ -616,7 +617,7 @@ descriptions with sensible defaults.
 Because the GPU runs asynchronously, your program has to know when the GPU has finished something – for example,
 before resetting the command allocator. For that Direct3D 12 has the **fence** (`ID3D12Fence`): an object holding
 a 64-bit value. The command queue *signals* the fence (sets a new value once all work submitted before has
-finished), and the CPU checks the value or waits for it with an event. The project waits for each frame to finish:
+finished), and the CPU checks the value or waits for it with an event. The program waits for each frame to finish:
 
 ```cpp
 // Signal and increment the fence value.
@@ -649,7 +650,7 @@ Why does `WaitForPreviousFrame()` wait on the fence before the next frame is rec
 Direct3D 12 checks very little by itself, to keep the runtime fast: a mistake can crash the program or just give a
 wrong picture. During development you enable the **debug layer**, which validates every call and reports errors
 and warnings in the debugger's output. It has to be enabled *before* the device is created, and it requires the
-Windows "Graphics Tools" optional feature. The project enables it in debug builds:
+Windows "Graphics Tools" optional feature. The program enables it in debug builds:
 
 ```cpp
 #if defined(_DEBUG)
@@ -674,7 +675,7 @@ When must the debug layer be enabled?
 - [ ] Only in release builds
 - [ ] At any time, for example when an error has occurred
 ---
-`EnableDebugLayer()` has to be called before `D3D12CreateDevice`. The project does it at the start of `LoadPipeline()`, and only in debug builds.
+`EnableDebugLayer()` has to be called before `D3D12CreateDevice`. The program does it at the start of `LoadPipeline()`, and only in debug builds.
 ```
 
 ## Shaders: HLSL, DXBC and DXIL
@@ -682,7 +683,7 @@ When must the debug layer be enabled?
 Direct3D shaders are written in **HLSL** (the High-Level Shading Language) and compiled to bytecode that the driver
 turns into GPU code. There are two compilers: the older **FXC** compiles shader models up to 5.1 to **DXBC**
 bytecode, and the newer **DXC** compiles shader model 6.0 and later to **DXIL**. Shaders can be compiled ahead of
-time (with `fxc.exe` or `dxc.exe`) or while the program runs. The project, like Microsoft's HelloWorld samples,
+time (with `fxc.exe` or `dxc.exe`) or while the program runs. The program, like Microsoft's HelloWorld samples,
 compiles `shaders.hlsl` at start-up with `D3DCompileFromFile`, which uses FXC – shader model 5.0 (`vs_5_0`,
 `ps_5_0`), so the bytecode is DXBC:
 
@@ -693,7 +694,7 @@ ThrowIfFailed(D3DCompileFromFile(L"shaders.hlsl", nullptr, nullptr, "PSMain", "p
 
 ## About 500 lines for a triangle
 
-The project's `main.cpp` is a bit over 500 lines – for one triangle. Before anything appears on the screen you set
+The program's `main.cpp` is a bit over 500 lines – for one triangle. Before anything appears on the screen you set
 up the window, the device, the queue, the swap chain, the descriptor heap, the root signature, the PSO, the vertex
 buffer and the fence, all of which Direct3D 11 or OpenGL largely did for you. It pays off: nothing happens behind
 your back, so performance is predictable, the work can be spread over threads, and you learn how modern GPUs really
@@ -705,7 +706,7 @@ OpenGL.
 
 You now know a bit about what {{api}} is and how it works. In the next chapters you build the triangle program yourself:
 first a window, then a window cleared to a colour, then the triangle. Before you go on, set up your IDE – that is the
-next chapter – and build and run this chapter's start files: you will find the code from this chapter in them.
+next chapter. You will meet the code from this chapter again as you write it.
 
 ## Additional resources
 

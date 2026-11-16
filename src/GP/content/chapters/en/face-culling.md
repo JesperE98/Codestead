@@ -20,27 +20,26 @@ need to tell {{api}} which of the faces we use are actually the front faces and 
 does this by a clever trick: it analyzes the *winding order* of the vertex data.
 
 :::opengl
-The project is once more the *Depth testing* scene: the two marble cubes at (-1, 0, -1) and (2, 0, 0), the metal floor,
-`glEnable(GL_DEPTH_TEST); glDepthFunc(GL_LESS);`, the camera at (0, 0, 3), and learnopengl's `cubeVertices` and
-`planeVertices`. Face culling is off – OpenGL's default.
+You continue in your program from *Depth testing*, once more with its scene: the two marble cubes at (-1, 0, -1) and
+(2, 0, 0), the metal floor, `glEnable(GL_DEPTH_TEST); glDepthFunc(GL_LESS);`, the camera at (0, 0, 3), and
+learnopengl's `cubeVertices` and `planeVertices`. Face culling is off – OpenGL's default.
 :::
 :::vulkan
-The project is once more the *Depth testing* scene: the two marble cubes at (-1, 0, -1) and (2, 0, 0), the metal floor,
-one pipeline with the depth test (`VK_COMPARE_OP_LESS`), the camera at (0, 0, 3), and all vertices in one vertex
-buffer – the cube is vertices 0..35, the floor 36..41. The pipeline's rasterizer has
+You continue in your program from *Depth testing*, once more with its scene: the two marble cubes at (-1, 0, -1) and
+(2, 0, 0), the metal floor, one pipeline with the depth test (`VK_COMPARE_OP_LESS`), the camera at (0, 0, 3), and all
+vertices in one vertex buffer – the cube is vertices 0..35, the floor 36..41. The pipeline's rasterizer has
 `cullMode = VK_CULL_MODE_NONE`: you turned culling off in the *Coordinate systems* chapter, because learnopengl's cube
 isn't made for it. In this chapter we fix that.
 :::
 :::d3d12
-The project is once more the *Depth testing* scene: the two marble cubes at (-1, 0, -1) and (2, 0, 0), the metal floor,
-a PSO with the depth function LESS, the camera at (0, 0, 3), the shaders in `face_culling.hlsl`, and all vertices in
-one vertex buffer – the cube is vertices 0 to 35, the floor 36 to 41. The PSO has
-`psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;`: you turned culling off in the *Coordinate systems*
+You continue in your program from *Depth testing*, once more with its scene: the two marble cubes at (-1, 0, -1) and
+(2, 0, 0), the metal floor, a PSO with the depth function LESS, the camera at (0, 0, 3), the shaders in
+`face_culling.hlsl`, and all vertices in one vertex buffer – the cube is vertices 0 to 35, the floor 36 to 41. The PSO
+has `psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;`: you turned culling off in the *Coordinate systems*
 chapter, because learnopengl's cube isn't made for it. In this chapter we fix that.
 :::
 
-The `// TODO:` comments in the project mark where your code goes. After each task, build and run the program in your
-IDE.
+After each task, build and run the program in your IDE.
 
 ## Winding order
 
@@ -233,7 +232,7 @@ front-faces instead of counter-clockwise faces via `glFrontFace`:
 
 The default value is `GL_CCW` that stands for counter-clockwise ordering with the other option being `GL_CW` which
 (obviously) stands for clockwise ordering. Both calls set the defaults, but writing them out says what the program
-relies on. The three lines go where the TODO is, after `glDepthFunc`.
+relies on. The three lines go after `glDepthFunc`.
 :::
 :::vulkan
 In Vulkan face culling is part of the pipeline, in the rasterization state (vulkan-tutorial's *Fixed functions*
@@ -269,7 +268,7 @@ In Direct3D 12 face culling is part of the PSO's rasterizer state: `CullMode` sa
 
 `CullMode` takes `D3D12_CULL_MODE_NONE`, `D3D12_CULL_MODE_FRONT` or `D3D12_CULL_MODE_BACK`; there is no option to cull
 both (OpenGL's `GL_FRONT_AND_BACK`). Our cube is now counter-clockwise from outside, so the front faces should be the
-counter-clockwise ones – OpenGL's `GL_CCW`. At the TODO, replace the `D3D12_CULL_MODE_NONE` line:
+counter-clockwise ones – OpenGL's `GL_CCW`. In the PSO description, replace the `D3D12_CULL_MODE_NONE` line:
 
 ```cpp
         // Face culling: do not draw the triangles that face away from the camera (their back

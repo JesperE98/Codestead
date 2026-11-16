@@ -23,7 +23,7 @@ planeter, eftersom kursen ritar sina kontroller och förväntade resultat på CP
 sekund, som i slutet av förra kapitlet, så hela rutnätet vrider sig kring origo och vilka planeter som syns ändras med
 tiden. De förväntade resultaten visar rutnätet vid 2.0 s, med rutnätet vridet 40°.
 
-Projektet är förra kapitlets lösning med tre nya `// TODO:`-kommentarer. Bygg och kör det i din IDE: du ser den vridna
+Du fortsätter i ditt program från *Scengraf*. Bygg och kör det i din IDE: du ser den vridna
 kedjan av planeter.
 
 :::opengl

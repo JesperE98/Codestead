@@ -79,39 +79,40 @@ Om till exempel två ljuskällor ligger nära fragmentet ger deras sammanlagda b
 om fragmentet lyses upp av en enda ljuskälla.
 
 :::opengl
-Det här kapitlets projekt utgår från resultatet av *Light casters*: de tio behållarna, diffuse och specular map,
-shininess 32, kameran i (0, 0, 3) som tittar längs -z, och lampans VAO och `lightCubeShader`. Vertex shadern heter nu
-`multiple_lights.vs` (oförändrad). `multiple_lights.fs` är ett nytt skelett: structen `Material`, indata,
+Du fortsätter i ditt program från *Ljuskällor*: de tio behållarna, diffuse och specular map, shininess 32, kameran i
+(0, 0, 3) som tittar längs -z, och lampans VAO och `lightCubeShader`. Förbered det först. Döp om vertex shadern till
+`multiple_lights.vs` (oförändrad). Börja om `multiple_lights.fs` från början: structen `Material`, indata,
 `uniform vec3 viewPos;` och `uniform Material material;`, och en `main()` som räknar ut `norm` och `viewDir`, sätter
-`vec3 result = vec3(0.0);` och har tre `// TODO:`-kommentarer, en för varje fas. I `main.cpp` sätter renderloopen bara
-`viewPos` och `material.shininess`, följt av tre `// TODO:`-kommentarer för ljusens värden; den globala `lightPos` är
-borta, och en fjärde `// TODO:` markerar var lamporna ritas.
+`vec3 result = vec3(0.0);` och skriver `FragColor = vec4(result, 1.0);` – de tre faserna kommer emellan. I `main.cpp`
+sätter renderloopen bara `viewPos` och `material.shininess` (ljusens värden kommer i uppgifterna), den globala
+`lightPos` försvinner, och lampan ritas inte längre – uppgifterna ritar fyra av dem.
 :::
 :::vulkan
-Det här kapitlets projekt utgår från resultatet av *Light casters*: de tio behållarna, diffuse map (binding 0) och
-specular map (binding 1), shininess 32, uniform buffern på binding 2, kameran i (0, 0, 3) som tittar längs -z, och
-båda pipelines – `lightingPipeline` byggs nu från `shaders/multiple_lights.vert` / `.frag`, `lightCubePipeline` från
-`shaders/light_cube.*`. Vertex shadern är oförändrad. `multiple_lights.frag` är ett nytt skelett: de två samplers,
-`struct Material { float shininess; };`, uniform-blocket `{ mat4 view; mat4 proj; vec3 viewPos; Material material; }`,
-indata, och en `main()` som räknar ut `norm` och `viewDir`, sätter `vec3 result = vec3(0.0);` och har tre
-`// TODO:`-kommentarer, en för varje fas. I C++ är structen `Light` och den globala `lightPos` borta,
-`UniformBufferObject` slutar med `Material material;`, `updateUniformBuffer()` sätter `viewPos` och
-`material.shininess` följt av tre `// TODO:`-kommentarer för ljusen, och en fjärde `// TODO:` i
-`recordCommandBuffer()` markerar var lamporna ritas.
+Du fortsätter i ditt program från *Ljuskällor*: de tio behållarna, diffuse map (binding 0) och specular map (binding
+1), shininess 32, uniform buffern på binding 2, kameran i (0, 0, 3) som tittar längs -z, och båda pipelines.
+Förbered det först. Bygg `lightingPipeline` från `shaders/multiple_lights.vert` / `.frag` nu (`lightCubePipeline`
+behåller `shaders/light_cube.*`); vertex shadern är oförändrad. Börja om `multiple_lights.frag` från början: de två
+samplers, `struct Material { float shininess; };`, uniform-blocket
+`{ mat4 view; mat4 proj; vec3 viewPos; Material material; }`, indata, och en `main()` som räknar ut `norm` och
+`viewDir`, sätter `vec3 result = vec3(0.0);` och skriver ut det med alfa 1.0 – de tre faserna kommer emellan. Ta i C++
+bort structen `Light` och den globala `lightPos`, låt `UniformBufferObject` sluta med `Material material;`, låt
+`updateUniformBuffer()` sätta bara `viewPos` och `material.shininess` (ljusen kommer i uppgifterna), och ta bort
+lampans ritning ur `recordCommandBuffer()` – uppgifterna ritar fyra av dem.
 :::
 :::d3d12
-Det här kapitlets projekt utgår från resultatet av *Light casters*: de tio behållarna, diffuse och specular map,
-shininess 32, kameran i (0, 0, 3) som tittar längs -z, och lampans pipeline state `m_lightCubePipelineState`. De
-belysta objektens shaders ligger nu i `multiple_lights.hlsl`: `VSMain` är oförändrad; där finns texturerna, `struct
-Material { float shininess; }`, cbuffern `SceneConstantBuffer` med `view`, `projection`, `viewPos` och `material`
-(inget ljus ännu), och en ny `PSMain` som räknar ut `norm` och `viewDir`, sätter `float3 result = float3(0.0f, 0.0f,
-0.0f);` och har tre `// TODO:`-kommentarer, en för varje fas. I `main.cpp` är C++-structen `Light` och den globala
-`lightPos` borta, `OnUpdate` sätter bara `viewPos` och `material.shininess`, följt av tre `// TODO:`-kommentarer för
-ljusen, och en fjärde `// TODO:` i `PopulateCommandList` markerar var lamporna ritas.
+Du fortsätter i ditt program från *Ljuskällor*: de tio behållarna, diffuse och specular map, shininess 32, kameran i
+(0, 0, 3) som tittar längs -z, och lampans pipeline state `m_lightCubePipelineState`. Förbered det först. De belysta
+objektens shaders flyttar till `multiple_lights.hlsl`: `VSMain` är oförändrad; där finns texturerna,
+`struct Material { float shininess; }`, cbuffern `SceneConstantBuffer` med `view`, `projection`, `viewPos` och
+`material` (inget ljus ännu), och en ny `PSMain` som räknar ut `norm` och `viewDir`, sätter
+`float3 result = float3(0.0f, 0.0f, 0.0f);` och returnerar det med alfa 1.0 – de tre faserna kommer emellan. Ta i
+`main.cpp` bort C++-structen `Light` och den globala `lightPos`, låt `OnUpdate` sätta bara `viewPos` och
+`material.shininess` (ljusen kommer i uppgifterna), och ta bort lampans ritning ur `PopulateCommandList` – uppgifterna
+ritar fyra av dem.
 :::
 
-`// TODO:`-kommentarerna markerar var din kod ska in. Efter varje uppgift bygger och kör du programmet i din IDE. Bygg
-det en gång nu: utan något ljus alls är alla tio behållarna svarta mot den mörkgrå bakgrunden.
+Efter varje uppgift bygger och kör du programmet i din IDE. Bygg det en gång nu: utan något ljus alls är alla tio
+behållarna svarta mot den mörkgrå bakgrunden.
 
 > Som i *Light casters* använder vi learnopengls kamera i (0, 0, 3), så att alla tio behållarna syns. I slutet av
 > kapitlet ser du att det döljer de flesta lamporna: de ligger utanför fönstret eller bakom behållare.
@@ -1318,7 +1319,7 @@ stämningar.
   **skräckscen** och ett **biokemiskt laboratorium** – genom att justera ljusens attributvärden?
 
 :::opengl
-Det här är ingen uppgift i projektet: prova när du är klar med uppgifterna, och bygg och kör programmet för att jämföra.
+Det här är ingen uppgift: prova när du är klar med uppgifterna, och bygg och kör programmet för att jämföra.
 Ändra clear-färgen i `glClearColor` och ljusens färger i renderloopen. För en öken kan du till exempel göra allt varmt:
 en gulaktig clear-färg, ett starkt gulvitt riktat ljus och orange punktljus. För en skräckscen: en nästan svart
 clear-färg, ett mycket svagt riktat ljus, dämpade rödaktiga punktljus med kort räckvidd (linear 0.14, quadratic 0.07
@@ -1326,7 +1327,7 @@ eller kortare räckvidder ur tabellen i *Light casters*) och en smal ficklampa. 
 färger också om du vill att de ska stämma – det kräver en färguniform i `light_cube.fs`.
 :::
 :::vulkan
-Det här är ingen uppgift i projektet: prova när du är klar med uppgifterna, och bygg och kör programmet för att jämföra.
+Det här är ingen uppgift: prova när du är klar med uppgifterna, och bygg och kör programmet för att jämföra.
 Ändra clear-färgen (`clearValues[0].color` i `recordCommandBuffer()`) och ljusens färger i `updateUniformBuffer()`. För
 en öken kan du till exempel göra allt varmt: en gulaktig clear-färg, ett starkt gulvitt riktat ljus och orange
 punktljus. För en skräckscen: en nästan svart clear-färg, ett mycket svagt riktat ljus, dämpade rödaktiga punktljus med
@@ -1335,7 +1336,7 @@ ficklampa. Om du vill att lamporna också ska visa punktljusens färger, ge lamp
 constants.
 :::
 :::d3d12
-Det här är ingen uppgift i projektet: prova när du är klar med uppgifterna, och bygg och kör programmet för att jämföra.
+Det här är ingen uppgift: prova när du är klar med uppgifterna, och bygg och kör programmet för att jämföra.
 Ändra clear-färgen (`clearColor` i `PopulateCommandList`) och ljusens färger i `OnUpdate`. För en öken kan du till
 exempel göra allt varmt: en gulaktig clear-färg, ett starkt gulvitt riktat ljus och orange punktljus. För en skräckscen:
 en nästan svart clear-färg, ett mycket svagt riktat ljus, dämpade rödaktiga punktljus med kort räckvidd (linear 0.14,

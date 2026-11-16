@@ -51,32 +51,34 @@ gammakurva, men gammavärdet 2.2 ger bra resultat på de flesta. Därför låter
 gammainställning, eftersom den varierar något mellan bildskärmar.
 
 :::opengl
-Projektet är learnopengls scen: förra kapitlets trägolv (20 × 20 enheter på y = -0.5, `wood.png` upprepad tio gånger)
-belyst av fyra punktljus på (-3, 0, 0), (-1, 0, 0), (1, 0, 0) och (3, 0, 0), vars färger går från svagt grått till vitt:
-0.25, 0.50, 0.75 och 1.00. `gamma_correction.fs` beräknar ljuset från vart och ett i en funktion `BlinnPhong()` – diffust
-och Blinn-Phong-spekulärt (exponent 64), gånger ljusets färg, försvagat med avståndet; inget ambient – och multiplicerar
-golvets färg med summan. Kameran står på (0, 0, 3) som tidigare.
+Du fortsätter i ditt program från *Avancerad belysning* och gör om det till learnopengls scen: förra kapitlets trägolv
+(20 × 20 enheter på y = -0.5, `wood.png` upprepad tio gånger) belyst av fyra punktljus på (-3, 0, 0), (-1, 0, 0), (1,
+0, 0) och (3, 0, 0), vars färger går från svagt grått till vitt: 0.25, 0.50, 0.75 och 1.00. `gamma_correction.fs`
+beräknar ljuset från vart och ett i en funktion `BlinnPhong()` – diffust och Blinn-Phong-spekulärt (exponent 64),
+gånger ljusets färg, försvagat med avståndet; inget ambient – och multiplicerar golvets färg med summan. Kameran står
+på (0, 0, 3) som tidigare.
 :::
 :::vulkan
-Projektet är learnopengls scen: förra kapitlets trägolv (20 × 20 enheter på y = -0.5, `textures/wood.png` upprepad tio
-gånger) belyst av fyra punktljus på (-3, 0, 0), (-1, 0, 0), (1, 0, 0) och (3, 0, 0), vars färger går från svagt grått
-till vitt: 0.25, 0.50, 0.75 och 1.00. `shaders/gamma_correction.frag` beräknar ljuset från vart och ett i en funktion
-`BlinnPhong()` – diffust och Blinn-Phong-spekulärt (exponent 64), gånger ljusets färg, försvagat med avståndet; inget
-ambient – och multiplicerar golvets färg med summan. Kameran står på (0, 0, 3) som tidigare.
+Du fortsätter i ditt program från *Avancerad belysning* och gör om det till learnopengls scen: förra kapitlets trägolv
+(20 × 20 enheter på y = -0.5, `textures/wood.png` upprepad tio gånger) belyst av fyra punktljus på (-3, 0, 0), (-1, 0,
+0), (1, 0, 0) och (3, 0, 0), vars färger går från svagt grått till vitt: 0.25, 0.50, 0.75 och 1.00.
+`shaders/gamma_correction.frag` beräknar ljuset från vart och ett i en funktion `BlinnPhong()` – diffust och
+Blinn-Phong-spekulärt (exponent 64), gånger ljusets färg, försvagat med avståndet; inget ambient – och multiplicerar
+golvets färg med summan. Kameran står på (0, 0, 3) som tidigare.
 :::
 :::d3d12
-Projektet är learnopengls scen: förra kapitlets trägolv (20 × 20 enheter på y = -0.5, `wood.png` upprepad tio gånger)
-belyst av fyra punktljus på (-3, 0, 0), (-1, 0, 0), (1, 0, 0) och (3, 0, 0), vars färger går från svagt grått till vitt:
-0.25, 0.50, 0.75 och 1.00. `gamma_correction.hlsl` beräknar ljuset från vart och ett i en funktion `BlinnPhong()` –
-diffust och Blinn-Phong-spekulärt (exponent 64), gånger ljusets färg, försvagat med avståndet; inget ambient – och
-`PSMain` multiplicerar golvets färg med summan. (Avståndet heter `lightDistance`: `distance` är en inbyggd funktion i
-HLSL.) Kameran står på (0, 0, 3) som tidigare.
+Du fortsätter i ditt program från *Avancerad belysning* och gör om det till learnopengls scen: förra kapitlets trägolv
+(20 × 20 enheter på y = -0.5, `wood.png` upprepad tio gånger) belyst av fyra punktljus på (-3, 0, 0), (-1, 0, 0), (1,
+0, 0) och (3, 0, 0), vars färger går från svagt grått till vitt: 0.25, 0.50, 0.75 och 1.00. `gamma_correction.hlsl`
+beräknar ljuset från vart och ett i en funktion `BlinnPhong()` – diffust och Blinn-Phong-spekulärt (exponent 64),
+gånger ljusets färg, försvagat med avståndet; inget ambient – och `PSMain` multiplicerar golvets färg med summan.
+(Avståndet heter `lightDistance`: `distance` är en inbyggd funktion i HLSL.) Kameran står på (0, 0, 3) som tidigare.
 :::
 
 learnopengl slår om allt som det här kapitlet ändrar med en enda flagga `gamma` (mellanslagstangenten). Här är varje
 steg en egen uppgift, så att du ser vad vart och ett gör. Just nu finns ingen gammakorrigering alls. Bygg och kör
-programmet: ett mörkt golv med fyra ljuspölar, de högra ljusare och starkt mättade – rakt under det tredje ljuset är den
-röda kanalen redan på sitt maximum. Kommentarerna `// TODO:` i projektet visar var din kod ska in.
+programmet: ett mörkt golv med fyra ljuspölar, de högra ljusare och starkt mättade – rakt under det tredje ljuset är
+den röda kanalen redan på sitt maximum.
 
 ### Fyra ljus i {{api}}
 
@@ -449,8 +451,8 @@ Gör nu uppgiften **srgb-texture**. Skapa texturen med sRGB-formatet i `LoadText
 :::
 
 Bygg och kör: träet får tillbaka sina **varma, mättade färger** – avkodade till linjärt, belysta i linjärt rum, kodade
-en gång. Jämfört med starten är golvets mörka delar ljusare och ljuspölarna mindre mättade. Det ser bättre ut, men
-ljuset verkar nu för brett och platt. Det fixar vi strax.
+en gång. Jämfört med hur det började är golvets mörka delar ljusare och ljuspölarna mindre mättade. Det ser bättre ut,
+men ljuset verkar nu för brett och platt. Det fixar vi strax.
 
 Var försiktig när du anger texturer som sRGB, för alla texturer ligger faktiskt inte i sRGB-rummet. Texturer som används
 för att färglägga objekt (som diffusa texturer) ligger nästan alltid i sRGB-rummet. Texturer som används för att hämta
@@ -553,9 +555,9 @@ Gör nu den sista uppgiften, **quadratic**. I `BlinnPhong()` i `gamma_correction
 :::
 
 Bygg och kör: ljuset **avtar snabbare** – ljusare rakt under ljusen, mörkare mellan dem och framför dem. Det här är
-learnopengls gammakorrigerade bild. Jämför med starten: där var det högra ljusets pöl en mättad orange fläck, och de
-fyra ljusens gråtoner (0.25 till 1.00) såg mer olika ut än de är; nu följer ljusstyrkan ljusens färger och avståndet så
-som fysiken säger att den ska.
+learnopengls gammakorrigerade bild. Jämför med hur det började: där var det högra ljusets pöl en mättad orange fläck,
+och de fyra ljusens gråtoner (0.25 till 1.00) såg mer olika ut än de är; nu följer ljusstyrkan ljusens färger och
+avståndet så som fysiken säger att den ska.
 
 Gammakorrigering låter oss alltså arbeta med och visa våra renderingar i linjärt rum. Eftersom linjärt rum är meningsfullt
 i den fysiska världen ger de flesta fysikaliska ekvationer nu faktiskt bra resultat (som verklig ljusdämpning). Ju mer

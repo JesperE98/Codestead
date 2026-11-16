@@ -21,7 +21,7 @@
       },
       "hint": {
         "opengl": "`GetPositionIndex` returnerar det första index vars *nästa* nyckel ligger senare än tiden; `GetScaleFactor(last, next, time) = (time - last) / (next - last)`. Ett spår med en nyckel är den nyckelns värde. Kvaternioner från assimp: `glm::quat(w, x, y, z)` (`GetGLMQuat`); `glm::toMat4` kräver `#define GLM_ENABLE_EXPERIMENTAL` och `<glm/gtx/quaternion.hpp>`.",
-        "vulkan": "`GetPositionIndex` returnerar det första index vars *nästa* nyckel ligger senare än tiden; `GetScaleFactor(last, next, time) = (time - last) / (next - last)`. Ett spår med en nyckel är den nyckelns värde. Kvaternioner från assimp: `glm::quat(w, x, y, z)` (`GetGLMQuat`); `glm::toMat4` kräver `#define GLM_ENABLE_EXPERIMENTAL` och `<glm/gtx/quaternion.hpp>` (båda finns redan överst i `main.cpp`).",
+        "vulkan": "`GetPositionIndex` returnerar det första index vars *nästa* nyckel ligger senare än tiden; `GetScaleFactor(last, next, time) = (time - last) / (next - last)`. Ett spår med en nyckel är den nyckelns värde. Kvaternioner från assimp: `glm::quat(w, x, y, z)` (`GetGLMQuat`); `glm::toMat4` kräver `#define GLM_ENABLE_EXPERIMENTAL` och `<glm/gtx/quaternion.hpp>` (båda överst i `main.cpp`, om de inte redan finns där).",
         "d3d12": "`GetPositionIndex` returnerar det första index vars *nästa* nyckel ligger senare än tiden; `GetScaleFactor(last, next, time) = (time - last) / (next - last)`. Ett spår med en nyckel är den nyckelns värde. `XMMatrixTranslationFromVector(XMLoadFloat3(&…position))`, `XMMatrixRotationQuaternion(XMQuaternionNormalize(…))`, `XMMatrixScalingFromVector(…)`; spara resultatet med `XMStoreFloat4x4(&bone.m_LocalTransform, …)`."
       }
     },

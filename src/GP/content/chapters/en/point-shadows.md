@@ -17,52 +17,54 @@ direction around the light. Again it is the same technique in every API; this ch
 map, the pass that fills all six of its faces at once, and the lookup.
 
 :::opengl
-The project is learnopengl's scene: a room – learnopengl's 2 × 2 × 2 `renderCube()` cube scaled by 5, so its walls
-are at ±5 – with five wooden cubes in it, all drawn by `renderScene(const Shader &shader)`. The room is drawn with face
-culling off and the uniform `reverse_normals` set to 1: its normals point outwards, and the vertex shader turns them
-around so that the inside is lit (learnopengl's "small little hack"). The five cubes are drawn with culling on. The
-light is at `lightPos` (0, 0, 0), the middle of the room. learnopengl moves it back and forth with
-`lightPos.z = static_cast<float>(sin(glfwGetTime() * 0.5) * 3.0);` – that line is in the render loop as a comment, so
-the picture does not change with time; uncomment it if you like, and the shadows sweep over the walls.
-`point_shadows.vs/.fs` light the scene as in the last chapter: a light colour of 0.3, ambient, diffuse and Blinn-Phong
-specular, combined as `(ambient + (1.0 - shadow) * (diffuse + specular)) * color` – with `float shadow = 0.0;` for now.
-`shader_m.h` is the Shader class with the optional geometry shader file from the *Geometry Shader* chapter, and the
-three depth shaders `point_shadows_depth.vs/.gs/.fs` are there with their declarations; their `main` functions are your
-work.
+You continue in your program from *Shadow Mapping* and turn it into learnopengl's scene: a room – learnopengl's 2 × 2
+× 2 `renderCube()` cube scaled by 5, so its walls are at ±5 – with five wooden cubes in it, all drawn by
+`renderScene(const Shader &shader)`. The room is drawn with face culling off and the uniform `reverse_normals` set to
+1: its normals point outwards, and the vertex shader turns them around so that the inside is lit (learnopengl's "small
+little hack"). The five cubes are drawn with culling on. The light is at `lightPos` (0, 0, 0), the middle of the room.
+learnopengl moves it back and forth with `lightPos.z = static_cast<float>(sin(glfwGetTime() * 0.5) * 3.0);` – that
+line is in the render loop as a comment, so the picture does not change with time; uncomment it if you like, and the
+shadows sweep over the walls. `point_shadows.vs/.fs` light the scene as in the last chapter: a light colour of 0.3,
+ambient, diffuse and Blinn-Phong specular, combined as `(ambient + (1.0 - shadow) * (diffuse + specular)) * color` –
+with `float shadow = 0.0;` for now. `shader_m.h` is the Shader class with the optional geometry shader file from the
+*Geometry Shader* chapter, and the three depth shaders `point_shadows_depth.vs/.gs/.fs` are there with their
+declarations; their `main` functions are your work.
 :::
 :::vulkan
-The project is learnopengl's scene: a room – the vertex buffer's one cube (learnopengl's 2 × 2 × 2 `renderCube()` cube,
-36 vertices, v flipped as in the earlier chapters) scaled by 5, so its walls are at ±5 – with five wooden cubes in it.
-learnopengl's `renderScene()` is the helper `renderScene(VkCommandBuffer commandBuffer)`, which pushes each draw's
-`PushConstants` (`glm::mat4 model; VkBool32 reverse_normals;`, vertex stage) and records `vkCmdDraw(commandBuffer, 36, 1,
-0, 0)` six times. The room gets `reverse_normals = VK_TRUE`: its normals point outwards, and the vertex shader turns them
-around so that the inside is lit (learnopengl's "small little hack"). The light is the global `lightPos` (0, 0, 0), the
+You continue in your program from *Shadow Mapping* and turn it into learnopengl's scene: a room – the vertex buffer's
+one cube (learnopengl's 2 × 2 × 2 `renderCube()` cube, 36 vertices, v flipped as in the earlier chapters) scaled by 5,
+so its walls are at ±5 – with five wooden cubes in it. learnopengl's `renderScene()` is the helper
+`renderScene(VkCommandBuffer commandBuffer)`, which pushes each draw's `PushConstants`
+(`glm::mat4 model; VkBool32 reverse_normals;`, vertex stage) and records `vkCmdDraw(commandBuffer, 36, 1, 0, 0)` six
+times. The room gets `reverse_normals = VK_TRUE`: its normals point outwards, and the vertex shader turns them around
+so that the inside is lit (learnopengl's "small little hack"). The light is the global `lightPos` (0, 0, 0), the
 middle of the room. learnopengl moves it with `lightPos.z = sin(glfwGetTime() * 0.5) * 3.0`; here it stays still, so
 the picture does not change with time. `shaders/point_shadows.vert/.frag` light the scene as in the last chapter: a
 light colour of 0.3, ambient, diffuse and Blinn-Phong specular, combined as
 `(ambient + (1.0 - shadow) * (diffuse + specular)) * color` – with `float shadow = 0.0;` for now. The depth shaders
-`point_shadows_depth.vert/.geom/.frag` are empty stubs. `createPipeline` takes an optional geometry shader (`""` =
-none), as in the *Geometry Shader* chapter.
+`point_shadows_depth.vert/.geom/.frag` start as empty shaders – the tasks fill them in. `createPipeline` takes an
+optional geometry shader (`""` = none), as in the *Geometry Shader* chapter.
 :::
 :::d3d12
-The project is learnopengl's scene: a room – the vertex buffer's one cube (learnopengl's 2 × 2 × 2 `renderCube()` cube,
-36 vertices, v flipped for Direct3D) scaled by 5, so its walls are at ±5 – with five wooden cubes in it. learnopengl's
-`renderScene()` is the member function `RenderScene()`: it sets each draw's `ModelConstants` (`model`, `normalMatrix`
-and `BOOL reverseNormals`, 33 root constants) with `SetGraphicsRoot32BitConstants(0, …)` and calls
-`DrawInstanced(36, 1, 0, 0)` six times. `PopulateCommandList` calls it once per pass. The room gets
-`reverseNormals = TRUE`: its normals point outwards, and the vertex shader turns them around so that the inside is lit
-(learnopengl's "small little hack"). The light is the global `lightPos` (0, 0, 0), the middle of the room; learnopengl
-moves it with `lightPos.z = sin(glfwGetTime() * 0.5) * 3.0`, here it stays still, so the picture does not change with
-time. `point_shadows.hlsl` lights the scene as in the last chapter: a light colour of 0.3, ambient, diffuse and
-Blinn-Phong specular, combined as `(ambient + (1.0f - shadow) * (diffuse + specular)) * color` – with
-`float shadow = 0.0f;` for now. `point_shadows_depth.hlsl` has its constant buffers and structs; its three entry points
-are your work (the file is not compiled until then).
+You continue in your program from *Shadow Mapping* and turn it into learnopengl's scene: a room – the vertex buffer's
+one cube (learnopengl's 2 × 2 × 2 `renderCube()` cube, 36 vertices, v flipped for Direct3D) scaled by 5, so its walls
+are at ±5 – with five wooden cubes in it. learnopengl's `renderScene()` is the member function `RenderScene()`: it
+sets each draw's `ModelConstants` (`model`, `normalMatrix` and `BOOL reverseNormals`, 33 root constants) with
+`SetGraphicsRoot32BitConstants(0, …)` and calls `DrawInstanced(36, 1, 0, 0)` six times. `PopulateCommandList` calls it
+once per pass. The room gets `reverseNormals = TRUE`: its normals point outwards, and the vertex shader turns them
+around so that the inside is lit (learnopengl's "small little hack"). The light is the global `lightPos` (0, 0, 0),
+the middle of the room; learnopengl moves it with `lightPos.z = sin(glfwGetTime() * 0.5) * 3.0`, here it stays still,
+so the picture does not change with time. `point_shadows.hlsl` lights the scene as in the last chapter: a light colour
+of 0.3, ambient, diffuse and Blinn-Phong specular, combined as
+`(ambient + (1.0f - shadow) * (diffuse + specular)) * color` – with `float shadow = 0.0f;` for now.
+`point_shadows_depth.hlsl` has its constant buffers and structs; its three entry points are your work (the file is not
+compiled until then).
 :::
 
 The camera is at (0, 0, 3), looking down -z: the back wall of the room (z = -5) fills the window, the wood stretched
 over its 10 × 10 units, with a soft highlight a little left of the centre. Only one of the five cubes is in view – the
 rotated one at (-1.5, 2, -3), in the top-left corner. Build and run the program: the room is lit, but nothing casts a
-shadow. The `// TODO:` comments in the project mark where your code goes.
+shadow.
 
 ## Generating the depth cubemap
 

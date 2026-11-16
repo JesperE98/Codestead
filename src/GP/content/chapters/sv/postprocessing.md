@@ -45,18 +45,18 @@ Effekterna är learnopengls tre:
 - **Chaos** (kaos): använder en kärna för kantdetektering för att ge intressant grafik, och flyttar dessutom den
   texturerade bilden i en cirkel för en intressant kaotisk effekt.
 
-Projektet är lösningen från `particles` med nya `// TODO:`-avsnitt och en ny shader.
+Du fortsätter i ditt program från *Partiklar*, med en ny shader.
 :::opengl
-Den nya shadern är `post_processing.vs` / `post_processing.fs`; deras startkroppar skickar bara vidare rektangeln och
-texturen.
+Den nya shadern är `post_processing.vs` / `post_processing.fs`; börja med kroppar som bara skickar vidare rektangeln
+och texturen.
 :::
 :::vulkan
 Den nya shadern är `shaders/post_processing.vert` / `shaders/post_processing.frag` (byggs till `.spv` som de andra);
-deras startkroppar skickar bara vidare rektangeln och texturen.
+börja med kroppar som bara skickar vidare rektangeln och texturen.
 :::
 :::d3d12
-Den nya shadern är `post_processing.hlsl` med `VSMain` och `PSMain`; deras startkroppar skickar bara vidare rektangeln
-och texturen.
+Den nya shadern är `post_processing.hlsl` med `VSMain` och `PSMain`; börja med kroppar som bara skickar vidare
+rektangeln och texturen.
 :::
 Kapitlets förväntade resultat visar spelet vid **1,45 sekunder** (bildruta 87). Det ögonblicket är valt med flit: bollen
 träffar den solida stenen i bildruta 86 (se `collision-resolution`), och i slutet av kapitlet kommer den träffen att

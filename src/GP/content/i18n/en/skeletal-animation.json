@@ -21,7 +21,7 @@
       },
       "hint": {
         "opengl": "`GetPositionIndex` returns the first index whose *next* key is later than the time; `GetScaleFactor(last, next, time) = (time - last) / (next - last)`. A track with one key is that key's value. Quaternions from assimp: `glm::quat(w, x, y, z)` (`GetGLMQuat`); `glm::toMat4` needs `#define GLM_ENABLE_EXPERIMENTAL` and `<glm/gtx/quaternion.hpp>`.",
-        "vulkan": "`GetPositionIndex` returns the first index whose *next* key is later than the time; `GetScaleFactor(last, next, time) = (time - last) / (next - last)`. A track with one key is that key's value. Quaternions from assimp: `glm::quat(w, x, y, z)` (`GetGLMQuat`); `glm::toMat4` needs `#define GLM_ENABLE_EXPERIMENTAL` and `<glm/gtx/quaternion.hpp>` (both at the top of `main.cpp` already).",
+        "vulkan": "`GetPositionIndex` returns the first index whose *next* key is later than the time; `GetScaleFactor(last, next, time) = (time - last) / (next - last)`. A track with one key is that key's value. Quaternions from assimp: `glm::quat(w, x, y, z)` (`GetGLMQuat`); `glm::toMat4` needs `#define GLM_ENABLE_EXPERIMENTAL` and `<glm/gtx/quaternion.hpp>` (both at the top of `main.cpp`, if they are not there yet).",
         "d3d12": "`GetPositionIndex` returns the first index whose *next* key is later than the time; `GetScaleFactor(last, next, time) = (time - last) / (next - last)`. A track with one key is that key's value. `XMMatrixTranslationFromVector(XMLoadFloat3(&…position))`, `XMMatrixRotationQuaternion(XMQuaternionNormalize(…))`, `XMMatrixScalingFromVector(…)`; store the result with `XMStoreFloat4x4(&bone.m_LocalTransform, …)`."
       }
     },

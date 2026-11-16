@@ -3,6 +3,8 @@
 Hedgerow is close to finished, but it would be cool to add at least one more gameplay mechanic so it's not your
 average standard game of its kind; what about power-ups?
 
+You continue in your program from *Postprocessing*.
+
 The idea is that whenever a block is destroyed, the block has a small chance of spawning a power-up. Such a power-up
 will slowly fall downwards, and if it collides with the paddle, an interesting effect occurs based on the type of
 power-up. For example, one power-up makes the paddle larger, and another allows the ball to pass through blocks. We
@@ -21,10 +23,11 @@ is active, and whether it is currently activated. Hedgerow features learnopengl'
 - **Confuse**: activates the confuse postprocessing effect for a short period of time, confusing the player.
 - **Chaos**: activates the chaos postprocessing effect for a short period of time, heavily disorienting the player.
 
-The course's power-up textures are six light pills with a dark icon, 512 × 128 pixels, in `textures/`:
-`powerup_speed.png`, `powerup_sticky.png`, `powerup_pass.png`, `powerup_increase.png`, `powerup_confuse.png` and
-`powerup_chaos.png` (learnopengl has its own textures). Similar to the block textures, they are light and almost
-without colour, so each power-up's colour vector tints them: the colour makes each kind recognisable.
+The course's power-up textures are six light pills with a dark icon, 512 × 128 pixels, in `textures/` (**Save
+resources…** in the panel copies them into your folder): `powerup_speed.png`, `powerup_sticky.png`,
+`powerup_pass.png`, `powerup_increase.png`, `powerup_confuse.png` and `powerup_chaos.png` (learnopengl has its own
+textures). Similar to the block textures, they are light and almost without colour, so each power-up's colour vector
+tints them: the colour makes each kind recognisable.
 
 **A test, because no block breaks.** With the course's fixed input the ball bounces off the solid stone (5, 9) in frame
 86 and is lost in frame 151 (see `collision-resolution`): no block is ever destroyed, so no power-up would ever spawn,

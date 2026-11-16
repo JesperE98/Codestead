@@ -225,17 +225,36 @@ standard `GL_LESS`. Eftersom funktionen bakas in i PSO:n när den skapas, betyde
 föremål en andra PSO, som väljs med `SetPipelineState` före de anropen.
 :::
 
-Låt oss se vilken effekt en ändrad djupfunktion har på bilden. Kapitlets projekt är learnopengls scen för
-djuptestning: två texturerade kuber som står på ett texturerat golv, utan belysning. Kuberna använder bilden
-`marble.png`, golvet `metal.png`; golvets texturkoordinater går upp till 2, så dess bild upprepas. Kameran är den från
-kapitlet *Camera*, i (0, 0, 3) och tittar längs -z; kuberna står i (-1, 0, -1) och (2, 0, 0), så den vänstra kuben
-syns helt och av den högra syns bara vänstersidan vid fönstrets högra kant. Ritordningen är learnopengls: kub 0, kub 1
-och golvet sist.
+Låt oss se vilken effekt en ändrad djupfunktion har på bilden. Bygg först learnopengls scen för djuptestning, som
+hela delen *Avancerad OpenGL* arbetar med. Utgå från ditt program från *Kamera* i en ny mapp: kameran i (0, 0, 3)
+som tittar längs -z, djuptestet påslaget, rensningsfärgen (0.1, 0.1, 0.1). Scenen är två texturerade kuber som står
+på ett texturerat golv, utan belysning. Kuberna använder bilden `marble.png`, golvet `metal.png` – **Spara
+resursfilerna…** i panelen kopierar båda till din mapp. Golvets texturkoordinater går upp till 2, så dess bild
+upprepas. Kuberna står i (-1, 0, -1) och (2, 0, 0), så den vänstra kuben syns helt och av den högra syns bara
+vänstersidan vid fönstrets högra kant. Ritordningen är learnopengls: kub 0, kub 1 och golvet sist. Kuben är de 36
+vertexarna (position + texturkoordinater) från *Koordinatsystem*; golvet är learnopengls `planeVertices`, två
+trianglar på y = -0.5:
+
+```cpp
+    float planeVertices[] = {
+        // positions          // texture coords (higher than 1: with GL_REPEAT the floor texture repeats)
+         5.0f, -0.5f,  5.0f,  2.0f, 0.0f,
+        -5.0f, -0.5f,  5.0f,  0.0f, 0.0f,
+        -5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
+
+         5.0f, -0.5f,  5.0f,  2.0f, 0.0f,
+        -5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
+         5.0f, -0.5f, -5.0f,  2.0f, 2.0f
+    };
+```
+
+Shadrarna transformerar bara vertexarna och samplar en textur – shadrarna från *Koordinatsystem* med en enda textur
+och ingen blandning.
 
 :::opengl
-Projektet har learnopengls två VAO:er, `cubeVAO` (36 vertexar: position + texturkoordinater) och `planeVAO` (golvets 6
-vertexar på y = -0.5), en shader (`depth_testing.vs` / `depth_testing.fs`) och funktionen `loadTexture` från
-belysningskapitlen. I renderloopen binder varje föremål sin VAO och sin textur och sätter sin modellmatris:
+I OpenGL är det learnopengls två VAO:er, `cubeVAO` (36 vertexar: position + texturkoordinater) och `planeVAO` (golvets
+6 vertexar), en shader (`depth_testing.vs` / `depth_testing.fs`) och funktionen `loadTexture` från belysningskapitlen.
+I renderloopen binder varje föremål sin VAO och sin textur och sätter sin modellmatris:
 
 ```cpp
         // cubes
@@ -256,11 +275,11 @@ belysningskapitlen. I renderloopen binder varje föremål sin VAO och sin textur
         glDrawArrays(GL_TRIANGLES, 0, 6);
 ```
 
-`glEnable(GL_DEPTH_TEST);` finns redan; under den markerar en `// TODO:`-kommentar var djupfunktionen ska stå. Tills du
-sätter en används OpenGL:s standard `GL_LESS`.
+`glEnable(GL_DEPTH_TEST);` står kvar; djupfunktionen hamnar direkt under den. Tills du sätter en används OpenGL:s
+standard `GL_LESS`.
 :::
 :::vulkan
-Projektet är programmet från de tidigare kapitlen, med några ändringar som hela delen *Avancerad OpenGL* behåller. En
+I Vulkan gör du några ändringar i programmet från de tidigare kapitlen som hela delen *Avancerad OpenGL* behåller. En
 vertex är nu `struct Vertex { glm::vec3 pos; glm::vec2 texCoord; }`, och **en enda vertex buffer** rymmer båda
 learnopengls mesher: kubens 36 vertexar (0..35) och golvets 6 (36..41). Där OpenGL binder en annan VAO väljer varje
 anrop här sin del av buffern med parametern `firstVertex` till `vkCmdDraw`. Texturkoordinaterna är learnopengls med v
@@ -291,10 +310,11 @@ att binda rätt set före ett anrop är Vulkans `glBindTexture`. Modellmatrisen 
 
 `loadTexture(path, image, memory, view)` laddar `textures/marble.png` och `textures/metal.png`, och en sampler med
 `VK_SAMPLER_ADDRESS_MODE_REPEAT` används för båda. Det finns en pipeline, byggd av `shaders/depth_testing.vert` och
-`.frag`. Projektet har inga `// TODO:`-kommentarer: uppgifterna ändrar rader som redan finns.
+`.frag`. Uppgifterna ändrar rader som redan finns.
 :::
 :::d3d12
-Projektet följer de tidigare kapitlen, med några ändringar som hela delen *Avancerad OpenGL* behåller. **En enda
+I Direct3D 12 gör du några ändringar i programmet från de tidigare kapitlen som hela delen *Avancerad OpenGL*
+behåller. **En enda
 vertex buffer** rymmer båda learnopengls mesher: kubens 36 vertexar (0..35) och golvets 6 (36..41). Där OpenGL binder
 en annan VAO väljer varje anrop här sin del av buffern med den tredje parametern till `DrawInstanced`, startvertexen.
 Texturkoordinaterna är learnopengls med v vänt (`1 - v`, för golvet `2 - v`), eftersom Direct3D:s v = 0 är bildens
@@ -325,11 +345,10 @@ Modellmatrisen ligger i root constants (root parameter 0):
 ```
 
 `cubeTexture` och `floorTexture` är GPU-handtagen till heap-platserna 1 och 2. Den statiska samplern s0 upprepar
-(wrap), så golvets bild upprepas. Shadrarna finns i `depth_testing.hlsl`. Projektet har inga `// TODO:`-kommentarer:
-uppgifterna ändrar rader som redan finns.
+(wrap), så golvets bild upprepas. Shadrarna finns i `depth_testing.hlsl`. Uppgifterna ändrar rader som redan finns.
 :::
 
-Bygg och kör programmet för att se startbilden: två marmorkuber på ett metallgolv vars bortre kant bildar horisonten.
+Bygg och kör programmet för att se scenen: två marmorkuber på ett metallgolv vars bortre kant bildar horisonten.
 
 Nu sätter vi djupfunktionen till "alltid": varje fragment klarar djuptestet.
 
@@ -432,7 +451,8 @@ hittills lagrats:
 ```
 :::
 
-Gör uppgiften **depth-less** och bygg och kör sedan: startbilden är tillbaka, med kuberna stående framför golvet.
+Gör uppgiften **depth-less** och bygg och kör sedan: den ursprungliga bilden är tillbaka, med kuberna stående framför
+golvet.
 
 ## Djupvärdenas precision
 

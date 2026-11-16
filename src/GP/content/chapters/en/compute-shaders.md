@@ -62,10 +62,10 @@ learnopengl names its file `computeShader.cs`; the course uses `.comp`, the usua
 `.cs` means C# to most tools.
 :::
 :::vulkan
-Compute is part of Vulkan from the start: every Vulkan device that can draw has a queue family that supports both graphics
-and compute work (vulkan-tutorial's `graphicsAndComputeFamily`, already in the start). A compute shader runs in a
-**compute pipeline** – much simpler than a graphics pipeline: one shader stage and a pipeline layout, created with
-`vkCreateComputePipelines`.
+Compute is part of Vulkan from the start: every Vulkan device that can draw has a queue family that supports both
+graphics and compute work (vulkan-tutorial's `graphicsAndComputeFamily`: look for `VK_QUEUE_GRAPHICS_BIT` and
+`VK_QUEUE_COMPUTE_BIT` together in `findQueueFamilies()`). A compute shader runs in a **compute pipeline** – much
+simpler than a graphics pipeline: one shader stage and a pipeline layout, created with `vkCreateComputePipelines`.
 :::
 :::d3d12
 Compute is part of every Direct3D 12 device. A compute shader runs with a **compute pipeline state** – much simpler than a
@@ -74,13 +74,13 @@ command list that draws can also dispatch compute work; a separate compute queue
 lets compute run alongside drawing, which this program doesn't need.
 :::
 
-## The project
+## Your program
 
-The start creates the texture – 800 × 600 texels of four 32-bit floats – fills it from the CPU with dark blue, and draws
-it on a screen quad that covers the window: learnopengl's `renderQuad()` with `screenQuad.vs` / `.fs`. The CPU fill is
-the course's addition, so that the quad shows something before there is a compute shader; learnopengl creates the
-texture without data. The compute shader's file is there, empty. Build and run the program: it shows a dark blue window;
-the `// TODO:` comments mark where your code goes.
+Start from your program from *Framebuffers* in a new folder (it has a screen quad) and make it create the texture –
+800 × 600 texels of four 32-bit floats – fills it from the CPU with dark blue, and draws it on a screen quad that
+covers the window: learnopengl's `renderQuad()` with `screenQuad.vs` / `.fs`. The CPU fill is the course's addition,
+so that the quad shows something before there is a compute shader; learnopengl creates the texture without data. Add
+the compute shader's file, empty for now. Build and run the program: it shows a dark blue window.
 
 :::opengl
 :::ide vs rider

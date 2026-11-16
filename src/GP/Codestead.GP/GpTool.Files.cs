@@ -45,17 +45,22 @@ public sealed partial class GpTool
         return near is null ? null : await storage.TryGetFolderFromPathAsync(near);
     }
 
-    /// <summary>The chapter's files of the course's own: textures, models, fonts (with their licences), levels – no code.</summary>
+    /// <summary>The chapter's files of the course's own: textures, models, fonts (with their licences), levels and data
+    /// tables – no code.</summary>
     private GpuProject Resources()
     {
         var resources = new GpuProject();
         if (chapter == "") return resources;
         var start = GpCourse.StartProject(chapter, shownApi);
         foreach (var (name, bytes) in start.Assets) resources.Assets[name] = bytes;
-        foreach (var (name, text) in start.Files.Where(f => Path.GetExtension(f.Key) is ".lvl" or ".txt"))
+        foreach (var (name, text) in start.Files.Where(f => IsData(f.Key)))
             resources.Assets[name] = System.Text.Encoding.UTF8.GetBytes(text);
         return resources;
     }
+
+    /// <summary>Text files of the course's own that are data, not code: levels, licences, the LTC fit tables.</summary>
+    private static bool IsData(string path) =>
+        Path.GetExtension(path) is ".lvl" or ".txt" || Path.GetFileName(path) == "ltc_matrix.hpp";
 
     /// <summary>Saves files into a folder the learner picks, asking first when that would overwrite other contents.</summary>
     private async Task SaveFiles(GpuProject files)

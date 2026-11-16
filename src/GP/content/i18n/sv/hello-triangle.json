@@ -82,7 +82,7 @@
         "vulkan": "Skriv de två shaderna: `shader.vert` läser `layout(location = 0) in vec3 inPosition;` och skriver `gl_Position = vec4(inPosition, 1.0);`, `shader.frag` deklarerar `layout(location = 0) out vec4 outColor;` och skriver `outColor = vec4(1.0, 0.5, 0.2, 1.0);`."
       },
       "hint": {
-        "vulkan": "Vulkans shaders behöver uttryckliga `location`; `#version 450` finns redan. Bygget kompilerar dem till `vert.spv` och `frag.spv` med `glslc`."
+        "vulkan": "Vulkans shaders behöver uttryckliga `location`; varje fil börjar med `#version 450`. Bygget kompilerar dem till `vert.spv` och `frag.spv` med `glslc`."
       }
     },
     "shader-modules": {
@@ -115,7 +115,7 @@
         "d3d12": "Kompilera shaderna med `D3DCompileFromFile` (`VSMain`/`vs_5_0`, `PSMain`/`ps_5_0`), definiera input layouten med `POSITION`, skapa PSO:n med `CreateGraphicsPipelineState`, och skicka `m_pipelineState.Get()` till `CreateCommandList`."
       },
       "hint": {
-        "vulkan": "Shadermodulerna kan förstöras direkt efter att pipelinen skapats, så anropet hamnar före TODO-kommentaren \"destroy the shader modules\".",
+        "vulkan": "Shadermodulerna kan förstöras direkt efter att pipelinen skapats, så anropet hamnar före de två anropen till `vkDestroyShaderModule`.",
         "d3d12": "`CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT)`, `CD3DX12_BLEND_DESC(D3D12_DEFAULT)`, inget djup/stencil, `SampleMask = UINT_MAX`, `D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE`, ett render target `DXGI_FORMAT_R8G8B8A8_UNORM`, `SampleDesc.Count = 1`."
       }
     },

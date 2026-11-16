@@ -11,9 +11,54 @@ tvådimensionell matris av pixlar. En stor del av det arbete som {{api}} gör ä
 delar: den första omvandlar dina 3D-koordinater till 2D-koordinater, den andra omvandlar 2D-koordinaterna till
 faktiska färgade pixlar.
 
-Som vanligt har kapitlets startfiler `// TODO:`-kommentarer som markerar var din kod ska in, och du bygger och kör
-programmet i din IDE. Tills du kommer till uppgiften som ritar visar programmet bara det blågröna fönstret från förra
-kapitlet.
+Du fortsätter i ditt program från *Hello Window*, och du bygger och kör det i din IDE efter varje uppgift. Tills du
+kommer till uppgiften som ritar visar programmet bara det blågröna fönstret från förra kapitlet.
+
+:::opengl
+Allt som kapitlet lägger till hamnar i `main`: shaderna efter att GLAD har laddats, hörndata efter dem, ritanropet i
+loopens renderingsdel och städningen efter loopen, före `glfwTerminate()`.
+:::
+:::vulkan
+Förbered ditt program först. Lägg till `#include <glm/glm.hpp>` ovanför `<iostream>`, och `<fstream>` och `<array>`
+bland de andra includes. Lägg till en tom `void createGraphicsPipeline()` i klassen och anropa den i `initVulkan()`
+direkt efter `createRenderPass()`. Skapa sedan en mapp `shaders` bredvid `main.cpp` med två filer, `shader.vert` och
+`shader.frag`, som var och en bara innehåller raden `#version 450` och en tom `void main() {}` så länge – den första
+uppgiften fyller i dem.
+:::
+:::d3d12
+Förbered ditt program först. Deklarera det som triangeln behöver i klassen `D3D12App`: hörntypen, viewporten och
+scissor-rektangeln, root-signaturen och vertex buffern med sin vy –
+
+```cpp
+    struct Vertex
+    {
+        XMFLOAT3 position;
+    };
+
+    // Pipeline objects.
+    CD3DX12_VIEWPORT m_viewport;
+    CD3DX12_RECT m_scissorRect;
+    ComPtr<ID3D12RootSignature> m_rootSignature;
+
+    // App resources.
+    ComPtr<ID3D12Resource> m_vertexBuffer;
+    D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView = {};
+```
+
+– och initiera viewporten och scissor-rektangeln till hela fönstret i konstruktorn:
+
+```cpp
+D3D12App::D3D12App(UINT width, UINT height) :
+    m_width(width),
+    m_height(height),
+    m_viewport(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height)),
+    m_scissorRect(0, 0, static_cast<LONG>(width), static_cast<LONG>(height))
+{
+}
+```
+
+Lägg sedan till en fil `shaders.hlsl` bredvid `main.cpp`, tom så länge: shaderna skrivs in i den i uppgifterna.
+:::
 
 ## Grafikpipelinen
 
@@ -148,8 +193,8 @@ Vertex vertices[] =
 };
 ```
 
-`Vertex` är redan deklarerad i klassen: `struct Vertex { XMFLOAT3 position; };`, tre floats per vertex. Direct3D:s
-normalized device coordinates är som OpenGL:s: (0, 0) är mitten, x växer åt höger och **y växer uppåt**, så
+`Vertex` är structen du deklarerade i klassen: `struct Vertex { XMFLOAT3 position; };`, tre floats per vertex.
+Direct3D:s normalized device coordinates är som OpenGL:s: (0, 0) är mitten, x växer åt höger och **y växer uppåt**, så
 `(0.0, 0.5)` är det övre hörnet.
 
 Men lägg märke till ordningen: överst, nere till höger, nere till vänster – inte learnopengls vänster, höger,
@@ -220,7 +265,7 @@ Triangelns position ändras inte, används mycket och är densamma vid varje ren
 `GL_STATIC_DRAW`. Om datan troligen skulle ändras ofta skulle `GL_DYNAMIC_DRAW` låta drivrutinen lägga den i minne
 som tillåter snabbare skrivningar.
 
-I slutet av programmet ska allt du skapat tas bort igen. Projektet har en städsektion i slutet av `main` för det:
+I slutet av programmet ska allt du skapat tas bort igen. Ge `main` en städsektion i slutet för det:
 `glDeleteBuffers(1, &VBO);`.
 
 Gör nu den första uppgiften: lägg de tre vertexarna i `float vertices[]`, skapa VBO:n, bind den och fyll den med
@@ -532,7 +577,7 @@ Först definierar du ett heltal för resultatet och en buffert för felmeddeland
 kontrollen syns ett stavfel i en shader bara som en triangel som saknas.
 
 Gör nu den andra uppgiften: skriv `vertexShaderSource` överst i `main.cpp`, skapa och kompilera sedan vertex shadern
-med felkontrollen (där TODO-kommentaren i `main` säger). Bygg & kör: inget fel ska skrivas ut.
+med felkontrollen i `main`, efter att GLAD har laddats. Bygg & kör: inget fel ska skrivas ut.
 :::
 :::vulkan
 OpenGL kompilerar GLSL medan programmet körs, inne i drivrutinen. Det gör inte Vulkan: det tar bara emot shaders i
@@ -740,8 +785,8 @@ void main() {
 färgen: du deklarerar din egen utdata, och `layout(location = 0)` säger att den skrivs till framebufferns
 attachment med index 0 – color attachmenten i den render pass du skapade i förra kapitlet.
 
-Gör nu den första uppgiften: skriv båda shaderna, `shader.vert` och `shader.frag` (raderna `#version 450` och tomma
-`main`-funktioner finns redan). Bygg & kör kompilerar dem till SPIR-V; fönstret visar fortfarande bara blågrönt,
+Gör nu den första uppgiften: skriv båda shaderna, `shader.vert` och `shader.frag` (båda börjar med `#version 450`).
+Bygg & kör kompilerar dem till SPIR-V; fönstret visar fortfarande bara blågrönt,
 eftersom programmet inte laddar dem än.
 :::
 :::d3d12
@@ -821,8 +866,8 @@ vertexdatan ska kopplas till vertex shaderns attribut. Det talar du om härnäst
 :::vulkan
 Vulkan har inget shaderprogramobjekt. Det OpenGL länkar ihop till ett program – shaderna, plus allt OpenGL kommer
 ihåg som tillstånd, till exempel hur vertexar läses – blir i Vulkan en enda **grafikpipeline**, en `VkPipeline`.
-Pipelinen skapas i `createGraphicsPipeline()`, som redan anropas i `initVulkan()` direkt efter `createRenderPass()`.
-Dess fyra TODO-kommentarer är stegen i de kommande uppgifterna:
+Pipelinen skapas i `createGraphicsPipeline()`, funktionen som du lade till och anropar i `initVulkan()` direkt efter
+`createRenderPass()`. Du skriver den i fyra steg, de kommande uppgifterna:
 
 1. ladda SPIR-V-koden, skapa shadermodulerna och shader-stegen;
 2. beskriv stegen med fasta funktioner och skapa pipeline layouten;
@@ -1364,7 +1409,8 @@ vkDestroyPipeline(device, graphicsPipeline, nullptr);
 vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
 ```
 
-Gör nu den femte uppgiften: skapa grafikpipelinen vid TODO-kommentaren "create the graphics pipeline", lägg till
+Gör nu den femte uppgiften: skapa grafikpipelinen i `createGraphicsPipeline()`, efter pipeline-layouten och innan
+shadermodulerna förstörs, lägg till
 medlemmen och förstör den i `cleanup()`. Bygg & kör: fortfarande blågrönt, men inget valideringsmeddelande ska synas.
 
 Gör sedan den sjätte uppgiften: vertexbufferten, som den beskrivs i *Vertexindata* – medlemmarna `vertexBuffer` och
@@ -1393,7 +1439,7 @@ m_vertexBufferView.SizeInBytes = vertexBufferSize;
 - `SizeInBytes` är hela buffertens storlek.
 
 Till skillnad från det mesta i Direct3D 12 sparas en vertex buffer view inte i en descriptor heap: den skickas direkt
-till command listen. Medlemmen `m_vertexBufferView` är redan deklarerad i klassen.
+till command listen. Medlemmen `m_vertexBufferView` är den som du deklarerade i klassen.
 
 Gör nu den femte uppgiften: skapa vertexbufferten i `LoadAssets` – de tre vertexarna från *Vertexindata* (överst,
 nere till höger, nere till vänster), committed resource i upload heapen, `Map` + `memcpy` + `Unmap`, och vertex
@@ -1496,8 +1542,9 @@ vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
 - `vkCmdDraw` tar antalet vertexar (3), antalet instanser (`1`: ingen instansierad rendering), första vertexen (`0`)
   och första instansen (`0`).
 
-Gör nu den sjunde uppgiften: lägg till de här kommandona vid TODO-kommentaren i `recordCommandBuffer()` och bygg och kör
-sedan. Du ska se en orange triangel på den blågröna bakgrunden, med hörnen på pixlarna (400, 150), (600, 450) och (200,
+Gör nu den sjunde uppgiften: lägg till de här kommandona i `recordCommandBuffer()`, efter `vkCmdBeginRenderPass`, och
+bygg och kör sedan. Du ska se en orange triangel på den blågröna bakgrunden, med hörnen på pixlarna (400, 150),
+(600, 450) och (200,
 450).
 
 Om fönstret förblir blågrönt, titta först i programmets konsol efter valideringsmeddelanden: de brukar peka ut
@@ -1953,8 +2000,8 @@ kapitlen blir förhoppningsvis mycket lättare att förstå.
 ## Övningar
 
 För att verkligen förstå begreppen som tagits upp finns några övningar. Det är bra att arbeta igenom dem innan du går
-vidare till nästa ämne, så att du har koll på vad som händer. Projektet är ditt att ändra i: prova övningarna i din IDE,
-och spara startfilerna i en ny mapp med **Spara startfilerna…** om du vill börja om från början.
+vidare till nästa ämne, så att du har koll på vad som händer. Prova dem i din IDE – i en kopia av programmets mapp,
+om du vill behålla det färdiga kapitlet som det är.
 
 :::opengl
 1. Försök rita 2 trianglar bredvid varandra med `glDrawArrays` genom att lägga till fler vertexar i din data.

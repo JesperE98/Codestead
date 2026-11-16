@@ -330,7 +330,7 @@ A resource's state must fit its use, and the transition also orders the GPU's wo
 :::
 
 ```quiz
-The deferred-shading scene has nine boxes and 32 lights. What does deferred shading save compared with the start's forward rendering?
+The deferred-shading scene has nine boxes and 32 lights. What does deferred shading save compared with the forward rendering the chapter starts with?
 - [ ] It needs fewer lights for the same picture
 - [ ] It doesn't need a depth test any more
 - [x] The lighting runs once per visible pixel – at most 800 × 600 × 32 light calculations – however many boxes overlap there; fragments that are covered later were never lit, because the geometry pass only stores surface data

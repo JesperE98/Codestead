@@ -16,39 +16,41 @@ teknik i alla API:er: ett andra render pass plus lite matematik i shadrarna. Det
 passet och djuptexturen som det ritar i.
 
 :::opengl
-Projektet är learnopengls scen: ett stort trägolv (`planeVertices`, 50 × 50 enheter på y = -0.5, `wood.png` upprepad 25
-gånger) och tre träkuber som ritas av learnopengls `renderScene(const Shader &shader)` med `renderCube()`: en som svävar
-på (0, 1.5, 0), en på (2, 0, 1) och en liten vriden på (-1, 0, 2). Ljuset står på `lightPos` (-2, 4, -1).
-`shadow_mapping.vs/.fs` belyser scenen: ljusfärgen 0.3, ambient, diffust och Blinn-Phong-spekulärt, kombinerat som
-`(ambient + (1.0 - shadow) * (diffuse + specular)) * color` – med `float shadow = 0.0;` tills vidare. `renderQuad()`, en
-fyrhörning som täcker fönstret, finns redan. De nya shadrarna `shadow_mapping_depth.vs/.fs`, `debug_quad.vs` och
+Du fortsätter i ditt program från *Gammakorrigering* och gör om det till learnopengls scen: ett stort trägolv
+(`planeVertices`, 50 × 50 enheter på y = -0.5, `wood.png` upprepad 25 gånger) och tre träkuber som ritas av
+learnopengls `renderScene(const Shader &shader)` med `renderCube()`: en som svävar på (0, 1.5, 0), en på (2, 0, 1) och
+en liten vriden på (-1, 0, 2). Ljuset står på `lightPos` (-2, 4, -1). `shadow_mapping.vs/.fs` belyser scenen:
+ljusfärgen 0.3, ambient, diffust och Blinn-Phong-spekulärt, kombinerat som
+`(ambient + (1.0 - shadow) * (diffuse + specular)) * color` – med `float shadow = 0.0;` tills vidare. `renderQuad()`,
+en fyrhörning som täcker fönstret, finns redan. De nya shadrarna `shadow_mapping_depth.vs/.fs`, `debug_quad.vs` och
 `debug_quad_depth.fs` används från första uppgiften.
 :::
 :::vulkan
-Projektet är learnopengls scen: ett stort trägolv (vertex 0..5: 50 × 50 enheter på y = -0.5, `textures/wood.png`
-upprepad 25 gånger) och tre träkuber (en kub, vertex 6..41, ritad tre gånger): en som svävar på (0, 1.5, 0), en på
-(2, 0, 1) och en liten vriden på (-1, 0, 2). learnopengls `renderScene()` är en hjälpfunktion
-`renderScene(VkCommandBuffer commandBuffer)` som pushar varje modellmatris (en push constant, vertexsteget) och spelar in
-de fyra draws. Ljuset står på den globala `lightPos` (-2, 4, -1). `shaders/shadow_mapping.vert/.frag` belyser scenen:
-ljusfärgen 0.3, ambient, diffust och Blinn-Phong-spekulärt, kombinerat som
-`(ambient + (1.0 - shadow) * (diffuse + specular)) * color` – med `float shadow = 0.0;` tills vidare. De nya shadrarna
-`shadow_mapping_depth.vert/.frag`, `debug_quad.vert` och `debug_quad_depth.frag` används från första uppgiften.
+Du fortsätter i ditt program från *Gammakorrigering* och gör om det till learnopengls scen: ett stort trägolv (vertex
+0..5: 50 × 50 enheter på y = -0.5, `textures/wood.png` upprepad 25 gånger) och tre träkuber (en kub, vertex 6..41,
+ritad tre gånger): en som svävar på (0, 1.5, 0), en på (2, 0, 1) och en liten vriden på (-1, 0, 2). learnopengls
+`renderScene()` är en hjälpfunktion `renderScene(VkCommandBuffer commandBuffer)` som pushar varje modellmatris (en
+push constant, vertexsteget) och spelar in de fyra draws. Ljuset står på den globala `lightPos` (-2, 4, -1).
+`shaders/shadow_mapping.vert/.frag` belyser scenen: ljusfärgen 0.3, ambient, diffust och Blinn-Phong-spekulärt,
+kombinerat som `(ambient + (1.0 - shadow) * (diffuse + specular)) * color` – med `float shadow = 0.0;` tills vidare.
+De nya shadrarna `shadow_mapping_depth.vert/.frag`, `debug_quad.vert` och `debug_quad_depth.frag` används från första
+uppgiften.
 :::
 :::d3d12
-Projektet är learnopengls scen: ett stort trägolv (vertex 0–5: 50 × 50 enheter på y = -0.5, `wood.png` upprepad 25
-gånger) och tre träkuber (en kub, vertex 6–41, ritad tre gånger): en som svävar på (0, 1.5, 0), en på (2, 0, 1) och en
-liten vriden på (-1, 0, 2). `PopulateCommandList` beräknar fyra `ModelConstants` (modellmatrisen och normalmatrisen för
-varje objekt) och sätter dem med `SetGraphicsRoot32BitConstants(0, …)` före var och en av de fyra draws – learnopengls
-`renderScene()`. Ljuset står på den globala `lightPos` (-2, 4, -1). `shadow_mapping.hlsl` belyser scenen: ljusfärgen 0.3,
-ambient, diffust och Blinn-Phong-spekulärt, kombinerat som `(ambient + (1.0f - shadow) * (diffuse + specular)) * color`
-– med `float shadow = 0.0f;` tills vidare. `shadow_mapping_depth.hlsl` och `debug_quad.hlsl` är redan klara; första
+Du fortsätter i ditt program från *Gammakorrigering* och gör om det till learnopengls scen: ett stort trägolv (vertex
+0–5: 50 × 50 enheter på y = -0.5, `wood.png` upprepad 25 gånger) och tre träkuber (en kub, vertex 6–41, ritad tre
+gånger): en som svävar på (0, 1.5, 0), en på (2, 0, 1) och en liten vriden på (-1, 0, 2). `PopulateCommandList`
+beräknar fyra `ModelConstants` (modellmatrisen och normalmatrisen för varje objekt) och sätter dem med
+`SetGraphicsRoot32BitConstants(0, …)` före var och en av de fyra draws – learnopengls `renderScene()`. Ljuset står på
+den globala `lightPos` (-2, 4, -1). `shadow_mapping.hlsl` belyser scenen: ljusfärgen 0.3, ambient, diffust och
+Blinn-Phong-spekulärt, kombinerat som `(ambient + (1.0f - shadow) * (diffuse + specular)) * color` – med
+`float shadow = 0.0f;` tills vidare. `shadow_mapping_depth.hlsl` och `debug_quad.hlsl` är redan klara; första
 uppgiften kompilerar dem.
 :::
 
 Från kameran på (0, 0, 3) ser du golvet och, överst i fönstret, den svävande kuben underifrån. De två andra kuberna
 ligger precis utanför bilden, till vänster och höger om kameran; dem möter du i djupkartan. Bygg och kör programmet:
-golvet är jämnt belyst – svagt, ljusfärgen är bara 0.3 – och ingenting kastar någon skugga. Kommentarerna `// TODO:` i
-projektet visar var din kod ska in.
+golvet är jämnt belyst – svagt, ljusfärgen är bara 0.3 – och ingenting kastar någon skugga.
 
 ## Shadow mapping
 
@@ -1058,7 +1060,7 @@ håller sig till learnopengls bias i shadern.
 :::
 
 Djupet är linjärt från 0 vid near-planet till 1 vid far-planet i alla tre API:erna (projektionen är ortografisk), så
-learnopengls biasvärden passar oförändrade. Bygg och kör: **ränderna är borta**, golvet är belyst som i starten, och
+learnopengls biasvärden passar oförändrade. Bygg och kör: **ränderna är borta**, golvet är belyst som i början, och
 kubens skugga står kvar – med hårda, taggiga kanter.
 
 ### Peter panning

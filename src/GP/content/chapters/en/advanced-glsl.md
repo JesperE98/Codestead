@@ -18,29 +18,33 @@ counterpart, often with a different name and form, and this chapter shows each o
 :::
 
 :::opengl
-The project is once more the *Depth testing* scene – two marble cubes, the metal floor, the camera at (0, 0, 3) – with
-the *Face culling* chapter's cube, whose triangles are all counter-clockwise seen from outside. Face culling is off, so
-it looks exactly like learnopengl's cube. The last task replaces the scene with learnopengl's uniform buffer demo; its
-shaders (`uniform_buffer.vs`, `red.fs`, `green.fs`, `blue.fs`, `yellow.fs`) are already in the project.
+You continue in your program from *Face culling*, back at the *Depth testing* scene – two marble cubes, the metal
+floor, the camera at (0, 0, 3) – with the *Face culling* chapter's cube, whose triangles are all counter-clockwise
+seen from outside. Turn face culling off again, so it looks exactly like learnopengl's cube. The last task replaces
+the scene with learnopengl's uniform buffer demo. Its shaders are new: `uniform_buffer.vs` (the section *Uniform
+buffer objects* shows it) and four fragment shaders that each write one solid colour, `red.fs`
+(`FragColor = vec4(1.0, 0.0, 0.0, 1.0);`), `green.fs` (0, 1, 0), `blue.fs` (0, 0, 1) and `yellow.fs` (1, 1, 0).
 :::
 :::vulkan
-The project is once more the *Depth testing* scene – two marble cubes, the metal floor, the camera at (0, 0, 3) – with
-the *Face culling* chapter's cube, whose triangles are all counter-clockwise seen from outside. The pipeline culls
-nothing (`VK_CULL_MODE_NONE`, `VK_FRONT_FACE_CLOCKWISE`), so it looks exactly like learnopengl's cube. The last task
-replaces the scene with learnopengl's uniform buffer demo; its shaders (`shaders/uniform_buffer.vert`, `red.frag`,
-`green.frag`, `blue.frag`, `yellow.frag`) are already in the project.
+You continue in your program from *Face culling*, back at the *Depth testing* scene – two marble cubes, the metal
+floor, the camera at (0, 0, 3) – with the *Face culling* chapter's cube, whose triangles are all counter-clockwise
+seen from outside. Let the pipeline cull nothing again (`VK_CULL_MODE_NONE`, `VK_FRONT_FACE_CLOCKWISE`), so it looks
+exactly like learnopengl's cube. The last task replaces the scene with learnopengl's uniform buffer demo. Its shaders
+are new: `shaders/uniform_buffer.vert` (the section *Uniform buffer objects* shows it) and four fragment shaders that
+each write one solid colour, `red.frag` (`outColor = vec4(1.0, 0.0, 0.0, 1.0);`), `green.frag` (0, 1, 0),
+`blue.frag` (0, 0, 1) and `yellow.frag` (1, 1, 0).
 :::
 :::d3d12
-The project is once more the *Depth testing* scene – two marble cubes, the metal floor, the camera at (0, 0, 3) – with
-the *Face culling* chapter's cube, whose triangles are all counter-clockwise seen from outside, and
-`psoDesc.RasterizerState.FrontCounterClockwise = TRUE;`. `CullMode` is still `D3D12_CULL_MODE_NONE`, so it looks
-exactly like learnopengl's cube. The shaders are in `advanced_glsl.hlsl`. The last task replaces the scene with
-learnopengl's uniform buffer demo; its shaders (`uniform_buffer.hlsl`, `red.hlsl`, `green.hlsl`, `blue.hlsl`,
-`yellow.hlsl`) are already in the project.
+You continue in your program from *Face culling*, back at the *Depth testing* scene – two marble cubes, the metal
+floor, the camera at (0, 0, 3) – with the *Face culling* chapter's cube, whose triangles are all counter-clockwise
+seen from outside, and `psoDesc.RasterizerState.FrontCounterClockwise = TRUE;`. Set `CullMode` back to
+`D3D12_CULL_MODE_NONE`, so it looks exactly like learnopengl's cube. The shaders move to `advanced_glsl.hlsl`. The last
+task replaces the scene with learnopengl's uniform buffer demo. Its shaders are new: `uniform_buffer.hlsl` (the
+section *Uniform buffer objects* shows it) and four files with a `PSMain` that returns one solid colour, `red.hlsl`
+(`return float4(1.0f, 0.0f, 0.0f, 1.0f);`), `green.hlsl` (0, 1, 0), `blue.hlsl` (0, 0, 1) and `yellow.hlsl` (1, 1, 0).
 :::
 
-The `// TODO:` comments in the project mark where your code goes. After each task, build and run the program in your
-IDE.
+After each task, build and run the program in your IDE.
 
 ## GLSL's built-in variables
 
@@ -353,7 +357,7 @@ front faces, as at the end of the *Face culling* chapter, and look into the cube
 the far faces – back faces.
 
 :::opengl
-Now do the task **front-facing**. At the TODO after `glDepthFunc`, cull the front faces (our cube is counter-clockwise
+Now do the task **front-facing**. Right after `glDepthFunc`, cull the front faces (our cube is counter-clockwise
 from outside, OpenGL's default front):
 
 ```cpp
@@ -427,8 +431,8 @@ gets marble for the front and metal for the back, the floor's set metal for both
 ```
 :::
 :::d3d12
-Now do the task **front-facing**. At the TODO, cull the front faces (`FrontCounterClockwise = TRUE` stays: our cube is
-counter-clockwise from outside):
+Now do the task **front-facing**. In the PSO description, cull the front faces (`FrontCounterClockwise = TRUE` stays:
+our cube is counter-clockwise from outside):
 
 ```cpp
         // Cull the front faces: only the back faces are drawn - the insides of the cubes (and
@@ -1417,8 +1421,8 @@ float4 VSMain(float4 position : POSITION) : SV_POSITION
 ```
 
 OpenGL's four shader programs are four pipeline states in Direct3D 12 – a PSO holds its shaders. Add the members
-`m_redPipelineState`, `m_greenPipelineState`, `m_bluePipelineState` and `m_yellowPipelineState`. At the TODO in
-`LoadAssets`, compile the vertex shader once and reuse `psoDesc` for each colour, changing only the pixel shader:
+`m_redPipelineState`, `m_greenPipelineState`, `m_bluePipelineState` and `m_yellowPipelineState`. In `LoadAssets`,
+compile the vertex shader once and reuse `psoDesc` for each colour, changing only the pixel shader:
 
 ```cpp
         ComPtr<ID3DBlob> uboVertexShader;

@@ -103,21 +103,21 @@ Why does the project convolute the environment into an irradiance map once, inst
 With the Lambertian term moved out, what is left in the integral is a function of the normal alone – a function on the sphere of directions, which is exactly what a cube map stores. 32 × 32 texels per face are enough because that function changes slowly.
 ```
 
-## The project
+## Your program
 
-The project starts where the previous chapter's `tone-map` task left off: the 7 × 7 red spheres with the complete
-reflectance equation for the four point lights, Reinhard and gamma at the end of the shader, and the constant ambient
-term `0.03 * albedo * ao`. (The textured spheres come back in the next chapter's last task.) The camera is still at
-(0, 0, 22). New in the project are an environment image and the shaders for three passes that are TODOs for now, and a
-cube: learnopengl's `renderCube()`, the 2 × 2 × 2 cube of the earlier chapters with 36 vertices, of which only the
-positions are used here.
+You continue in your program from *PBR Lighting*, as it was after the task `tone-map`: the 7 × 7 red spheres with the
+complete reflectance equation for the four point lights, Reinhard and gamma at the end of the shader, and the constant
+ambient term `0.03 * albedo * ao`. (The textured spheres come back in the next chapter's last task.) The camera is
+still at (0, 0, 22). New in this chapter are an environment image, the shaders for three passes (the text shows them),
+and a cube: learnopengl's `renderCube()`, the 2 × 2 × 2 cube of the earlier chapters with 36 vertices, of which only
+the positions are used here.
 
-The environment is the course's own: `environment.hdr`, a 512 × 256 equirectangular HDR image of a sky with clouds and
-a bright, hazy sun, green hills on the horizon, a grey-brown ground and three coloured lamps (learnopengl uses
-`newport_loft.hdr`, a photograph of a loft). The camera looks down -z, at the middle of the image's left half: pale
-blue-grey sky above, dark green hills on the horizon (higher on the left of the window), the ground below. The sun –
-up, to the right and *behind* the camera – and the lamps are outside the view, but they will light the spheres from the
-front.
+The environment is the course's own – **Save resources…** in the panel copies it into your folder: `environment.hdr`,
+a 512 × 256 equirectangular HDR image of a sky with clouds and a bright, hazy sun, green hills on the horizon, a
+grey-brown ground and three coloured lamps (learnopengl uses `newport_loft.hdr`, a photograph of a loft). The camera
+looks down -z, at the middle of the image's left half: pale blue-grey sky above, dark green hills on the horizon
+(higher on the left of the window), the ground below. The sun – up, to the right and *behind* the camera – and the
+lamps are outside the view, but they will light the spheres from the front.
 
 Two numbers are smaller than learnopengl's, because the course computes its checks and expected results on the CPU (a
 real GPU handles learnopengl's values easily): the environment cube map has 128 × 128 texels per face instead of 512 ×
@@ -125,26 +125,25 @@ real GPU handles learnopengl's values easily): the environment cube map has 128 
 about 16,000.
 
 :::opengl
-`main.cpp` has the shader objects of learnopengl's IBL demo: the spheres' shader is called `pbrShader` now. The new
-files are `cubemap.vs` (complete), `equirectangular_to_cubemap.fs`, `irradiance_convolution.fs`, `background.vs` and
-`background.fs` (their bodies are TODOs). `loadTexture` is still there, unused.
+In `main.cpp`, give the shader objects the names of learnopengl's IBL demo: the spheres' shader is called `pbrShader`
+now. The new files are `cubemap.vs`, `equirectangular_to_cubemap.fs`, `irradiance_convolution.fs`, `background.vs` and
+`background.fs`; the text shows them, and the tasks write them. `loadTexture` stays, unused for now.
 :::
 :::vulkan
-`main.cpp` calls the spheres' pipeline `pbrPipeline` now. Prepared: the global `vertices` with learnopengl's cube (the
-sphere's `Vertex` struct, the tangent left zero), its `vertexBuffer` and `renderCube(VkCommandBuffer)`
-(`vkCmdBindVertexBuffers` + `vkCmdDraw(commandBuffer, 36, 1, 0, 0)`). In `shaders/` there are `cubemap.vert`
-(complete), `equirectangular_to_cubemap.frag`, `irradiance_convolution.frag`, `background.vert` and `background.frag`
-(stubs that compile but are not used yet). The TODOs in `main.cpp` mark the members, the pipelines, the images, the
-capture, the background draw and the cleanup.
+In `main.cpp`, call the spheres' pipeline `pbrPipeline` now, and prepare the global `vertices` with learnopengl's cube
+(the sphere's `Vertex` struct, the tangent left zero), its `vertexBuffer` and `renderCube(VkCommandBuffer)`
+(`vkCmdBindVertexBuffers` + `vkCmdDraw(commandBuffer, 36, 1, 0, 0)`). The new shaders are `shaders/cubemap.vert`,
+`equirectangular_to_cubemap.frag`, `irradiance_convolution.frag`, `background.vert` and `background.frag`; the text
+shows them. The tasks add the members, the pipelines, the images, the capture, the background draw and the cleanup to
+`main.cpp`.
 :::
 :::d3d12
-`main.cpp` has a second vertex buffer `m_cubeVertexBuffer` with learnopengl's cube (the same `Vertex` struct, tangent
+Give `main.cpp` a second vertex buffer `m_cubeVertexBuffer` with learnopengl's cube (the same `Vertex` struct, tangent
 zero) and the helper `RenderCube()` (`IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST)`,
 `IASetVertexBuffers`, `DrawInstanced(36, 1, 0, 0)`) – each draw sets its own topology, so the strip of the spheres and
-the list of the cube can follow each other with no other change. The new shader files are `cubemap.hlsl` (complete:
-the vertex shader of the capture passes), `equirectangular_to_cubemap.hlsl` and `irradiance_convolution.hlsl` (a
-`PSMain` each, bodies TODO) and `background.hlsl` (`VSMain` and `PSMain`, bodies TODO). `LoadTexture` is still there,
-unused.
+the list of the cube can follow each other with no other change. The new shader files are `cubemap.hlsl` (the vertex
+shader of the capture passes), `equirectangular_to_cubemap.hlsl` and `irradiance_convolution.hlsl` (a `PSMain` each)
+and `background.hlsl` (`VSMain` and `PSMain`); the text shows them. `LoadTexture` stays, unused for now.
 :::
 
 ## PBR and HDR

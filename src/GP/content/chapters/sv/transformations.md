@@ -732,10 +732,11 @@ returnerar varje `XMMatrix…`-funktion en fullständig matris, så det finns in
 ### Projektet
 
 :::opengl
-Det här kapitlets projekt fortsätter där kapitlet *Texturer* slutade efter uppgiften **texture-units** – lådan med
-den svaga smileyn, `mix(…, 0.2)` – städat på samma sätt som learnopengls `transformations.cpp`: vertexfärgerna, som
-fragment shadern inte längre använde, är borta. Varje vertex består nu av en position och texturkoordinater (5
-floats, stride `5 * sizeof(float)`), och texturkoordinaterna är attribut 1:
+Du fortsätter i ditt program från *Texturer*, så som det var efter uppgiften **texture-units** – lådan med den svaga
+smileyn, `mix(…, 0.2)`; ångra det du ändrade efter det. Städa det först på samma sätt som learnopengls
+`transformations.cpp`: ta bort vertexfärgerna, som fragment shadern inte längre använder (`aColor`, `ourColor` och
+deras attribut). Varje vertex består nu av en position och texturkoordinater (5 floats, stride `5 * sizeof(float)`),
+och texturkoordinaterna är attribut 1:
 
 ```cpp
     float vertices[] = {
@@ -747,14 +748,14 @@ floats, stride `5 * sizeof(float)`), och texturkoordinaterna är attribut 1:
     };
 ```
 
-I renderingsloopen aktiveras shadern under `// activate shader`, och en `// TODO:` visar var transformationen ska in,
-precis innan lådan ritas.
+I renderingsloopen kommer transformationen direkt efter att shadern har aktiverats, innan lådan ritas.
 :::
 :::vulkan
-Det här kapitlets projekt fortsätter där kapitlet *Texturer* slutade efter uppgiften **texture-units** – lådan med
-den svaga smileyn, `mix(…, 0.2)` – förberett för learnopengls vertexdata. Vertexfärgerna, som fragment shadern inte
-längre använde, är borta: `struct Vertex { glm::vec3 pos; glm::vec2 texCoord; }` med location 0 = `pos` och
-location 1 = `texCoord`. Och rektangeln är nu learnopengls, i dess ordning och **med +y uppåt**:
+Du fortsätter i ditt program från *Texturer*, så som det var efter uppgiften **texture-units** – lådan med den svaga
+smileyn, `mix(…, 0.2)`; ångra det du ändrade efter det. Förbered det först för learnopengls vertexdata. Ta bort
+vertexfärgerna, som fragment shadern inte längre använder: `struct Vertex { glm::vec3 pos; glm::vec2 texCoord; }`
+med location 0 = `pos` och location 1 = `texCoord` (två attributbeskrivningar, och samma två indata i
+`shader.vert`). Och gör rektangeln till learnopengls, i dess ordning och **med +y uppåt**:
 
 ```cpp
 // learnopengl's rectangle: +y points up (the vertex shader flips y for Vulkan).
@@ -780,7 +781,8 @@ kring z vrider moturs, och en translation med (0.5, −0.5) flyttar nedåt till 
 samma matriser ge en spegelvänd bild: rotationen skulle vrida medurs på skärmen och translationen skulle flytta lådan
 *uppåt* till höger.
 
-Därför räknar vi i ett rum med y uppåt, som learnopengl, och vänder på y allra sist, **efter** transformationen:
+Därför räknar vi i ett rum med y uppåt, som learnopengl, och vänder på y allra sist, **efter** transformationen.
+Lägg till vändningen i din `shader.vert`:
 
 ```glsl
 void main() {
@@ -803,15 +805,15 @@ rektangeln vara spegelvänd, dess trianglar skulle gå moturs på skärmen, och 
 translationer och likformiga skalningar (även med en negativ faktor, som du ser i övningarna) speglar aldrig
 rektangeln, så inget cullas bort i det här kapitlet.
 
-Kommentarerna `// TODO:` visar fyra ställen: `struct PushConstants` före klassen, push constant-intervallet i
+Kapitlets kod hamnar på fyra ställen: `struct PushConstants` före klassen, push constant-intervallet i
 `createGraphicsPipeline()`, matrisen och `vkCmdPushConstants` i `recordCommandBuffer()` (mellan
 `vkCmdBindDescriptorSets` och `vkCmdDrawIndexed`), och push constant-blocket i `shader.vert`.
 :::
 :::d3d12
-Det här kapitlets projekt fortsätter där kapitlet *Texturer* slutade efter uppgiften **texture-units** – lådan med
-den svaga smileyn, `lerp(…, …, 0.2f)` – utan färgen per vertex, som pixel shadern inte längre använde:
-`struct Vertex { XMFLOAT3 position; XMFLOAT2 texCoord; };` med inputelementen `POSITION` på offset 0 och `TEXCOORD`
-på offset 12. Rektangeln är learnopengls, i dess ordning:
+Du fortsätter i ditt program från *Texturer*, så som det var efter uppgiften **texture-units** – lådan med den svaga
+smileyn, `lerp(…, …, 0.2f)`; ångra det du ändrade efter det. Ta först bort färgen per vertex, som pixel shadern inte
+längre använder: `struct Vertex { XMFLOAT3 position; XMFLOAT2 texCoord; };` med inputelementen `POSITION` på offset 0
+och `TEXCOORD` på offset 12. Och gör rektangeln till learnopengls, i dess ordning:
 
 ```cpp
         Vertex vertices[] =
@@ -828,12 +830,11 @@ Direct3D:s clip space har y uppåt, precis som OpenGL:s, så kapitlets matematik
 ritats: en positiv rotation kring z vrider moturs och en translation med (0.5, −0.5) flyttar nedåt till höger.
 Texturkoordinaterna börjar i bildens övre vänstra hörn, som i förra kapitlet.
 
-Root signaturen har hittills en parameter: parameter 0, descriptor-tabellen med de två texturerna. Kommentarerna
-`// TODO:` visar root signature-blocket i `LoadAssets()` och stället före `DrawIndexedInstanced` i
-`PopulateCommandList()`.
+Root signaturen har hittills en parameter: parameter 0, descriptor-tabellen med de två texturerna. Kapitlets kod
+hamnar i root signature-blocket i `LoadAssets()` och före `DrawIndexedInstanced` i `PopulateCommandList()`.
 :::
 
-Kommentarerna `// TODO:` visar var din kod ska in. Efter varje uppgift bygger och kör du programmet i din IDE.
+Efter varje uppgift bygger och kör du programmet i din IDE.
 
 ### Att få matrisen till shadern
 
@@ -901,8 +902,8 @@ förväntar sig behöver vi inte transponera den; vi kan låta den vara `GL_FALS
 matrisdatan som en pekare till floats; GLM:s inbyggda funktion `value_ptr` returnerar en pekare till den första av
 matrisens 16 floats.
 
-Gör nu den första uppgiften, **transform-uniform**: inkludera de tre GLM-headrarna efter `stb_image.h`, ersätt
-`// TODO:` med raderna ovan och lägg till uniformen i `shader.vs`.
+Gör nu den första uppgiften, **transform-uniform**: inkludera de tre GLM-headrarna efter `stb_image.h`, lägg till
+raderna ovan i renderingsloopen och lägg till uniformen i `shader.vs`.
 :::
 :::vulkan
 I learnopengl är matrisen en *uniform*. Vulkan har också uniform buffers, men för ett litet värde per ritning som
@@ -989,8 +990,8 @@ kring z-axeln; tänk på att axeln ska vara en enhetsvektor. Eftersom varje GLM-
 `vkCmdPushConstants` kopierar de 64 byten in i command buffern, och varje ritning som spelas in efter den ser dem.
 Eftersom `drawFrame()` spelar in command buffern på nytt varje bildruta byggs matrisen också om varje bildruta.
 
-Gör nu den första uppgiften, **transform-uniform**: inkludera `<glm/gtc/matrix_transform.hpp>` och ersätt de fyra
-`// TODO:`-kommentarerna med koden ovan.
+Gör nu den första uppgiften, **transform-uniform**: inkludera `<glm/gtc/matrix_transform.hpp>` och lägg till koden
+ovan på dess fyra ställen.
 :::
 :::d3d12
 I learnopengl är matrisen en *uniform*. Direct3D 12:s motsvarighet för ett litet värde per ritning är *root
@@ -1082,8 +1083,8 @@ och `mul(float4(position, 1.0f), g_mWorldViewProj)` i shadern).
 > `row_major`. Det fungerar också – det är samma multiplikation skriven på ett annat sätt. Det viktiga är att
 > lagringen, packningen och ordningen i `mul` passar ihop; vi följer exemplen.
 
-Gör nu den första uppgiften, **transform-uniform**: lägg till structen, ersätt de två `// TODO:`-kommentarerna i
-`main.cpp` med koden ovan och lägg till `cbuffer` och `mul` i `shaders.hlsl`.
+Gör nu den första uppgiften, **transform-uniform**: lägg till structen, lägg till koden ovan i `LoadAssets()` och
+`PopulateCommandList()` och lägg till `cbuffer` och `mul` i `shaders.hlsl`.
 :::
 
 Resultatet: lådan är hälften så stor och vriden ett kvarts varv moturs, med sin översida åt vänster – hjärtat, som

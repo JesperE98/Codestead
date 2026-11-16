@@ -20,9 +20,10 @@ Allt som en ritning av meshen läser: vertexattributen som shadrarna tar emot, i
 ```
 
 :::opengl
-Nu när vi har bestämt minimikraven för en meshklass kan vi definiera en vertex i OpenGL. `// TODO:`-kommentarerna i
-`mesh.h` markerar var koden ska in; filen har redan sin include guard och sina includes (`glad`, `glm`,
-`"shader_m.h"`, `<string>` och `<vector>`):
+Nu när vi har bestämt minimikraven för en meshklass kan vi definiera en vertex i OpenGL. Du fortsätter i programmet
+som du förberedde i kapitlet *Assimp*. Koden hamnar i en ny fil, `mesh.h`, bredvid `main.cpp`: ge den en include guard
+(`#ifndef MESH_H` / `#define MESH_H` … `#endif`), inkludera `<glad/glad.h>`, `<glm/glm.hpp>`, `"shader_m.h"`,
+`<string>` och `<vector>`, och inkludera `"mesh.h"` i `main.cpp`. Sedan vertexen:
 
 ```cpp
 struct Vertex {
@@ -110,13 +111,11 @@ I Vulkan motsvaras delarna av learnopengls klass `Mesh` av vulkan-tutorials grun
 Vulkan-program – vulkan-tutorials också – har dem som medlemmar i programklassen; en separat klass `Mesh` skulle
 innehålla exakt samma buffrar. En meshs texturer kommer i nästa kapitel, tillsammans med modellens material.
 
-Projektet är det du tittade på i kapitlet *Assimp*. `// TODO:`-kommentarerna i `main.cpp` och i de två shadrarna
-markerar var din kod ska in. Än så länge har `Vertex` bara en position:
+Du fortsätter i programmet som du förberedde i kapitlet *Assimp*. Än så länge har dess `Vertex` bara en position:
 
 ```cpp
 // One vertex of a mesh. For now it only has a position.
 struct Vertex {
-    // TODO: the vertex's data: its position, normal, texture coordinates and the index of its material
     glm::vec3 pos;
 ```
 
@@ -141,8 +140,7 @@ materialnummer, så de förblir separata vertexar även där deras positioner sk
 :::d3d12
 DirectX 12 har ingen egen meshklass, så vi portar learnopengls `mesh.h` – `struct Vertex`, `struct Texture` och
 `class Mesh` med sin data, konstruktor, `SetupMesh` och `Draw` – till `main.cpp`, på filnivå före `class D3D12App`.
-Projektet är det du tittade på i kapitlet *Assimp*; de två `// TODO:`-kommentarerna före `class D3D12App` markerar var
-koden ska in.
+Du fortsätter i programmet som du förberedde i kapitlet *Assimp*; koden hamnar före `class D3D12App`.
 
 Nu när vi har bestämt minimikraven för en meshklass kan vi definiera en vertex i Direct3D 12:
 
@@ -210,7 +208,7 @@ public:
     // render the mesh
     void Draw(ID3D12GraphicsCommandList* commandList)
     {
-        // TODO: bind the mesh's textures (root parameter 2) and draw it (its vertex and index buffers, DrawIndexedInstanced)
+        // bind the mesh's textures and draw it: the task draw-mesh
     }
 
 private:
@@ -224,9 +222,9 @@ private:
     // initializes all the buffers and views
     void SetupMesh(ID3D12Device* device, CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle)
     {
-        // TODO: the vertex buffer and the index buffer, and their views
+        // the vertex buffer and the index buffer, and their views: the task setup-mesh
 
-        // TODO: the shader resource views of the mesh's textures (diffuse in the first slot, specular in the second)
+        // the shader resource views of the mesh's textures: the task mesh-textures
     }
 };
 ```
@@ -247,10 +245,11 @@ det dolda:
   `texture_specular1`). CPU-handtaget är där `SetupMesh` skriver vyerna; GPU-handtaget är det som `Draw` ger command
   listen, så konstruktorn sparar det i `m_srvHandle`.
 
-Projektets heap har plats för det: `cbvSrvHeapDesc.NumDescriptors = 1 + 2 * MaxMeshes;` – CBV:n på plats 0 och två
+Ditt programs heap har plats för det: `cbvSrvHeapDesc.NumDescriptors = 1 + 2 * MaxMeshes;` – CBV:n på plats 0 och två
 SRV:er för var och en av upp till `MaxMeshes` (8) meshar. Vem som delar ut platserna är kapitlet *Model*s sak.
 
-Gör nu uppgiften **mesh-class**: klassen som ovan. `Draw` och `SetupMesh` förblir TODO:er till nästa uppgifter.
+Gör nu uppgiften **mesh-class**: klassen som ovan. Kropparna i `Draw` och `SetupMesh` förblir tomma till nästa
+uppgifter.
 :::
 
 ## Initiering
@@ -597,7 +596,7 @@ Gör nu uppgiften **index-buffer**. Bilden ändras inte.
 :::d3d12
 Tack vare konstruktorn har vi nu stora listor med meshdata som vi kan använda för att rendera. Vi behöver dock sätta
 upp lämpliga buffrar – och i OpenGL ange vertex shaderns layout med vertex attribute pointers. I Direct3D 12 är den
-layouten en del av pipeline state, och projektet har den redan: input layouten i `LoadAssets`.
+layouten en del av pipeline state, och ditt program har den redan: input layouten i `LoadAssets`.
 
 ```cpp
         D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
@@ -688,7 +687,7 @@ Formatet `DXGI_FORMAT_R32_UINT` säger att indexen är 32-bitars heltal utan tec
 Triangle* använde dem också; `DXGI_FORMAT_R16_UINT` skulle tillåta högst 65536 olika vertexar – för få för många
 modeller.) Buffrarna är `ComPtr`-medlemmar i meshen, så de lever exakt lika länge som meshen.
 
-Gör nu uppgiften **setup-mesh**: den här koden vid den första TODO:n i `SetupMesh`. Bilden ändras inte.
+Gör nu uppgiften **setup-mesh**: den här koden i början av `SetupMesh`. Bilden ändras inte.
 
 ### Texturernas vyer
 

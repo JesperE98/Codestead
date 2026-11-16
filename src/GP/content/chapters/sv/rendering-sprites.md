@@ -5,6 +5,8 @@ har många definitioner, men i grunden är den inte mycket mer än en 2D-bild so
 placera den i en större värld (till exempel position, rotation och storlek). Kort sagt är sprites de renderbara
 bild- och texturobjekt vi använder i ett 2D-spel.
 
+Du fortsätter i ditt program från *Förberedelser*.
+
 Vi kan, precis som i tidigare kapitel, skapa en 2D-form av vertexdata, skicka alla data till GPU:n och transformera allt
 för hand. Men i ett större program som det här vill vi hellre ha några abstraktioner för att rendera 2D-former. Om vi
 definierade formerna och transformationerna för hand för varje objekt skulle det snabbt bli rörigt.
@@ -662,8 +664,9 @@ glm (och GLSL) multiplicerar kolumnvektorer från höger, så matrisen som skriv
 ## Hej sprite
 
 Med sprite-renderaren kan vi rita en sprite på två rader. learnopengl ritar sin egen ansiktstextur här; kursen ritar
-**sin boll** – `textures/ball.png`, en ljusgrön boll på genomskinlig bakgrund, 128 × 128 pixlar – med exakt learnopengls
-tal: på (200, 200), 300 × 400 pixlar, vriden 45°, tonad grön. I `Init`:
+***sin boll** – `textures/ball.png`, en ljusgrön boll på genomskinlig bakgrund, 128 × 128 pixlar (**Spara
+resursfilerna…** i panelen kopierar den till din mapp) – med exakt learnopengls tal: på (200, 200), 300 × 400 pixlar,
+vriden 45°, tonad grön. I `Init`:
 
 :::opengl
 ```cpp

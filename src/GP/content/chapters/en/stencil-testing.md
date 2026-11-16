@@ -277,27 +277,30 @@ draw the borders, we draw scaled-up versions of the objects only where the stenc
 discarding all the fragments of the scaled-up versions that are part of the original objects' fragments using the
 stencil buffer.
 
-This chapter's project is the scene of *Depth testing* drawn normally (with textures and the depth function LESS), with
-one change, taken from learnopengl's stencil code: the loop draws the **floor first**, then the two cubes. With the
-depth test the order doesn't change the picture, but it matters for the stencil buffer, as you'll see. Build and run the
-program: the start picture is the one you know from the previous chapter.
+You continue in your program from *Depth testing*, with its scene drawn normally again (with textures and the depth
+function LESS) and one change, taken from learnopengl's stencil code: the loop draws the **floor first**, then the two
+cubes. With the depth test the order doesn't change the picture, but it matters for the stencil buffer, as you'll see.
+Build and run the program: the picture is the one you know from the previous chapter.
 
 :::opengl
-The `// TODO:` comments mark where your code goes: after `glDepthFunc`, after the shader, at the `glClear` call, after
-the matrices, before the floor, before the cubes and after them. The per-frame matrices are now computed before
-`shader.use()`, under `// set uniforms`, so that a second shader can get them too.
+Your code goes after `glDepthFunc`, after the shader, at the `glClear` call, after the matrices, before the floor,
+before the cubes and after them. Compute the per-frame matrices before `shader.use()` now, under a `// set uniforms`
+comment, so that a second shader can get them too.
 :::
 :::vulkan
-The project has the same structure as the previous chapter's: one vertex buffer, one descriptor set per texture,
+Your program has the same structure as in the previous chapter: one vertex buffer, one descriptor set per texture,
 `createPipeline(vertFile, fragFile, pipeline)` with the depth function LESS, and the model matrix as a push constant.
-The fragment shader `shaders/stencil_single_color.frag` has a `// TODO:` comment; the changes in `main.cpp` are to
+Add a new fragment shader, `shaders/stencil_single_color.frag`, with just `#version 450`, the output
+`layout(location = 0) out vec4 outColor;` and an empty `main` – a task fills it in. The changes in `main.cpp` are to
 lines that are already there and to the functions named in each task.
 :::
 :::d3d12
-The project has the same structure as the previous chapter's: one vertex buffer, one SRV per texture,
-`SetGraphicsRootDescriptorTable(2, …)` before each draw. The new file `stencil_single_color.hlsl` already has the
-outline's vertex shader. `// TODO:` comments mark every place a task fills in: the depth buffer's format, the PSO's
-stencil state, the outline's PSO, the stencil clear and the three draw passes in `PopulateCommandList`.
+Your program has the same structure as in the previous chapter: one vertex buffer, one SRV per texture,
+`SetGraphicsRootDescriptorTable(2, …)` before each draw. Add a new file `stencil_single_color.hlsl` for the outline:
+the two cbuffers of `depth_testing.hlsl` (`ModelConstants` at b0, `SceneConstantBuffer` at b1), a `PSInput` with only
+`SV_POSITION`, the same `VSMain` without the texture coordinates, and a `PSMain` that returns black for now – a task
+gives it the outline's colour. The tasks fill in the depth buffer's format, the PSO's stencil state, the outline's
+PSO, the stencil clear and the three draw passes in `PopulateCommandList`.
 :::
 
 First we need a stencil buffer that is switched on and cleared every frame, and the stencil operation of step 2: we
@@ -492,12 +495,12 @@ from the same `psoDesc` with these two shaders – like the lamp's PSO in the li
 
         psoDesc.VS = CD3DX12_SHADER_BYTECODE(singleColorVertexShader.Get());
         psoDesc.PS = CD3DX12_SHADER_BYTECODE(singleColorPixelShader.Get());
-        // TODO: the outline's depth and stencil state
+        // (the outline's depth and stencil state go here: the last task)
         ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_singleColorPipelineState)));
 ```
 
-Keep the `// TODO:` line: the outline's depth and stencil state come in the last task. The input layout still lists
-`TEXCOORD`; a vertex shader may ignore elements it doesn't read.
+The outline's depth and stencil state come in the last task, right before `CreateGraphicsPipelineState`. The input
+layout still lists `TEXCOORD`; a vertex shader may ignore elements it doesn't read.
 :::
 
 Do the task **single-color**, then build and run. Again nothing changes: nothing is drawn with the new shader yet.
@@ -721,8 +724,7 @@ state, and the next frame starts by binding `floorPipeline` again. Nor does the 
 render pass's load op clears the whole stencil buffer, whatever the pipelines' write masks are.
 :::
 :::d3d12
-Again a PSO of its own. The last task's `// TODO:` line before `m_singleColorPipelineState` is created gets the
-outline's state:
+Again a PSO of its own. Right before `m_singleColorPipelineState` is created, the outline gets its state:
 
 ```cpp
         // Only where the stencil value is not 1 (NOT_EQUAL with the reference value 1), no

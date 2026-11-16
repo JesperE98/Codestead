@@ -45,12 +45,12 @@ Roten ligger i origo med skala 1. Dess barn ligger i den lokala positionen (3.5,
 global(barn 2) = global(barn 1) · local(barn 2). Det första barnets globala matris flyttar 3.5 och skalar med 0.6, så det andra barnets förskjutning på 3.5 blir 2.1 i världen, och det hamnar i 3.5 + 2.1 = 5.6. De följande ligger i 6.86, 7.62, 8.07, … – var och en 0.6 gånger närmare och mindre.
 ```
 
-## Projektet
+## Ditt program
 
-Projektet är programmet från delen *Modellinläsning*, nedbantat till learnopengls `1.model_loading`-shaders: den diffusa
-texturen utan belysning. Det läser in planeten en gång och ritar den en gång i origo. Kameran står i (3, 6, 12) och
-tittar nedåt 25° (pitch -25) så att kedjan av planeter får plats i fönstret; learnopengls demo har kameran i (0, 0, 3)
-för sin modell. Bakgrunden är mörkgrå (0.05, 0.05, 0.05).
+Utgå från ditt program från *Modell* i en ny mapp – programmet från delen *Modellinläsning* – och banta ned det till
+learnopengls `1.model_loading`-shaders: den diffusa texturen utan belysning. Det läser in planeten en gång och ritar
+den en gång i origo. Kameran står i (3, 6, 12) och tittar nedåt 25° (pitch -25) så att kedjan av planeter får plats i
+fönstret; learnopengls demo har kameran i (0, 0, 3) för sin modell. Bakgrunden är mörkgrå (0.05, 0.05, 0.05).
 
 learnopengl skriver `Transform` och `Entity` som klasser med medlemsfunktioner; dess `Entity` ärver till och med från
 `Model` och håller sina barn i en `std::list<std::unique_ptr<Entity>>` med en pekare tillbaka till föräldern. Som i delen
@@ -59,7 +59,7 @@ learnopengl skriver `Transform` och `Entity` som klasser med medlemsfunktioner; 
 learnopengls; ett riktigt projekt skulle behålla klasserna i egna filer.
 
 :::opengl
-Starten ritar planeten med enhetsmatrisen som modellmatris:
+Ditt program ritar planeten med enhetsmatrisen som modellmatris:
 
 ```cpp
         // draw the model once, at the origin
@@ -72,10 +72,11 @@ Starten ritar planeten med enhetsmatrisen som modellmatris:
 ritar planetens två meshar, klotet och ringarna, var och en med sin textur.
 :::
 :::vulkan
-Starten ritar planeten med enhetsmatrisen som modellmatris, en push constant (`struct PushConstants { glm::mat4 model; }`)
-som i delen *Modellinläsning*. Starten har också learnopengls `Model` i Vulkan-form – det som en entitet kommer att peka
-på. learnopengls `Model` håller meshar med sina VAO:er och ritar sig själv med `Model::Draw(shader)`; här är den en
-struct med de buffrar programmet läste in från `models/planet.obj` och en fri funktion som spelar in ritningen:
+Ditt program ritar planeten med enhetsmatrisen som modellmatris, en push constant
+(`struct PushConstants { glm::mat4 model; }`) som i delen *Modellinläsning*. Det har också learnopengls `Model` i
+Vulkan-form – det som en entitet kommer att peka på. learnopengls `Model` håller meshar med sina VAO:er och ritar sig
+själv med `Model::Draw(shader)`; här är den en struct med de buffrar programmet läste in från `models/planet.obj` och
+en fri funktion som spelar in ritningen:
 
 ```cpp
 struct Model {
@@ -102,13 +103,12 @@ draw-anrop täcker båda. Descriptor setet – uniform buffern med vy och projek
 detsamma för alla planeter och binds en gång före ritningen.
 :::
 :::d3d12
-Starten ritar planeten med enhetsmatrisen som modellmatris, i root constants (root-parameter 0) som i delen
+Ditt program ritar planeten med enhetsmatrisen som modellmatris, i root constants (root-parameter 0) som i delen
 *Modellinläsning*. `Mesh` och `Model` är klasserna från kapitlet `model`, oförändrade: `m_model.Draw(commandList)` ritar
 planetens två meshar, klotet och ringarna, där var och en binder sin egen textur.
 :::
 
-Kommentarerna `// TODO:` i projektet visar var din kod ska in. Bygg och kör programmet i din IDE: en planet med ringar
-till vänster i fönstret.
+Bygg och kör programmet i din IDE: en planet med ringar till vänster i fönstret.
 
 ## Transform
 
@@ -401,8 +401,8 @@ ritas elva gånger hamnar på elva ställen. learnopengls scengrafsdemo ritar si
 sista barnet nedåt (och utelämnar det allra sista); kursen ritar hela trädet rekursivt, som learnopengls demo för frustum
 culling gör.
 
-Applikationen behåller learnopengls två lokala variabler som medlemmar, `Model ourModel;` (finns i starten) och `Entity
-ourEntity;`, och bygger grafen en gång i `loadEntities()`, som `initVulkan()` anropar när buffrarna finns:
+Applikationen behåller learnopengls två lokala variabler som medlemmar, `Model ourModel;` (finns redan) och
+`Entity ourEntity;`, och bygger grafen en gång i `loadEntities()`, som `initVulkan()` anropar när buffrarna finns:
 
 ```cpp
     void loadEntities() {

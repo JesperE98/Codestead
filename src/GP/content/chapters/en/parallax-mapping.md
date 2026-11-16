@@ -19,43 +19,45 @@ normal mapping, it happens entirely in the fragment shader, in tangent space –
 differences are where the third texture goes, and – in Direct3D – how a texture may be sampled inside a loop.
 
 :::opengl
-The project continues the last chapter: the normal-mapped quad – `renderQuad()` with tangents and bitangents, 14 floats
-per vertex – and the vertex shader `parallax_mapping.vs`, which is complete: the TBN matrix with Gram-Schmidt, and the
-light, view and fragment positions in tangent space. The textures are new: `bricks2.png` (sandy bricks with deep
-mortar, unit 0) and its normal map `bricks2_normal.png` (unit 1). The quad is rotated by a fixed -45° about the x axis:
-its top edge tilts away and its normal points to (0, 0.707, 0.707), so the camera at (0, 0, 3) looks at the bricks
-from 45° above, like at a floor in front of it (learnopengl turns the quad with time). `parallax_mapping.fs` lights it
-as the last chapter did, but `main` computes the view direction first and samples the normal map and the colour at
-`vec2 texCoords = fs_in.TexCoords;` – the TODO is the line that changes `texCoords`. The light is at `lightPos`
-(0.5, 1.0, 0.3).
+You continue in your program from *Normal Mapping* (rename its shaders for this chapter): the normal-mapped quad –
+`renderQuad()` with tangents and bitangents, 14 floats per vertex – and the vertex shader `parallax_mapping.vs`, which
+is complete: the TBN matrix with Gram-Schmidt, and the light, view and fragment positions in tangent space. The
+textures are new (**Save resources…** in the panel copies them into your folder): `bricks2.png` (sandy bricks with
+deep mortar, unit 0) and its normal map `bricks2_normal.png` (unit 1). The quad is rotated by a fixed -45° about the x
+axis: its top edge tilts away and its normal points to (0, 0.707, 0.707), so the camera at (0, 0, 3) looks at the
+bricks from 45° above, like at a floor in front of it (learnopengl turns the quad with time). `parallax_mapping.fs`
+lights it as the last chapter did, but `main` computes the view direction first and samples the normal map and the
+colour at `vec2 texCoords = fs_in.TexCoords;` – the line that changes `texCoords` comes right after it. The light is
+at `lightPos` (0.5, 1.0, 0.3).
 :::
 :::vulkan
-The project continues the last chapter: the normal-mapped quad – `createQuadVertices()` with tangents and bitangents –
-and the vertex shader `parallax_mapping.vert`, which is complete: the TBN matrix with Gram-Schmidt, and the light,
-view and fragment positions in tangent space. The textures are new: `textures/bricks2.png` (sandy bricks with deep
-mortar, binding 1) and its normal map `textures/bricks2_normal.png` (binding 2), loaded flipped
-(`stbi_set_flip_vertically_on_load(true)`) as in the last chapter. The quad is rotated by a fixed -45° about the x axis:
-its top edge tilts away and its normal points to (0, 0.707, 0.707), so the camera at (0, 0, 3) looks at the bricks from
-45° above, like at a floor in front of it (learnopengl turns the quad with time). `parallax_mapping.frag` lights it as
-the last chapter did, but `main` computes the view direction first and samples the normal map and the colour at
-`vec2 texCoords = fs_in.texCoord;` – the TODO is the line that changes `texCoords`. The light is at `lightPos`
-(0.5, 1.0, 0.3).
+You continue in your program from *Normal Mapping* (rename its shaders for this chapter): the normal-mapped quad –
+`createQuadVertices()` with tangents and bitangents – and the vertex shader `parallax_mapping.vert`, which is
+complete: the TBN matrix with Gram-Schmidt, and the light, view and fragment positions in tangent space. The textures
+are new (**Save resources…** in the panel copies them into your folder): `textures/bricks2.png` (sandy bricks with
+deep mortar, binding 1) and its normal map `textures/bricks2_normal.png` (binding 2), loaded flipped
+(`stbi_set_flip_vertically_on_load(true)`) as in the last chapter. The quad is rotated by a fixed -45° about the x
+axis: its top edge tilts away and its normal points to (0, 0.707, 0.707), so the camera at (0, 0, 3) looks at the
+bricks from 45° above, like at a floor in front of it (learnopengl turns the quad with time). `parallax_mapping.frag`
+lights it as the last chapter did, but `main` computes the view direction first and samples the normal map and the
+colour at `vec2 texCoords = fs_in.texCoord;` – the line that changes `texCoords` comes right after it. The light is at
+`lightPos` (0.5, 1.0, 0.3).
 :::
 :::d3d12
-The project continues the last chapter: the normal-mapped quad – tangents and bitangents computed in `LoadAssets`, 14
-floats per vertex – and `VSMain` in `parallax_mapping.hlsl`, which is complete: the TBN matrix with Gram-Schmidt and
-`B = cross(T, N)`, and the light, view and fragment positions in tangent space. The textures are new: `bricks2.png`
+You continue in your program from *Normal Mapping* (rename its shaders for this chapter): the normal-mapped quad –
+tangents and bitangents computed in `LoadAssets`, 14 floats per vertex – and `VSMain` in `parallax_mapping.hlsl`,
+which is complete: the TBN matrix with Gram-Schmidt and `B = cross(T, N)`, and the light, view and fragment positions
+in tangent space. The textures are new (**Save resources…** in the panel copies them into your folder): `bricks2.png`
 (sandy bricks with deep mortar, t0) and its normal map `bricks2_normal.png` (t1) – OpenGL-style, so `PSMain` flips its
-y as in the last chapter. The quad is rotated by a fixed -45° about the x axis (`XMMatrixRotationX`): its top edge tilts
-away and its normal points to (0, 0.707, 0.707), so the camera at (0, 0, 3) looks at the bricks from 45° above, like at
-a floor in front of it (learnopengl turns the quad with time). `PSMain` computes the view direction first and samples
-the normal map and the colour at `float2 texCoords = input.texCoords;` – the TODO is the line that changes `texCoords`.
-The light is at `lightPos` (0.5, 1.0, 0.3).
+y as in the last chapter. The quad is rotated by a fixed -45° about the x axis (`XMMatrixRotationX`): its top edge
+tilts away and its normal points to (0, 0.707, 0.707), so the camera at (0, 0, 3) looks at the bricks from 45° above,
+like at a floor in front of it (learnopengl turns the quad with time). `PSMain` computes the view direction first and
+samples the normal map and the colour at `float2 texCoords = input.texCoords;` – the line that changes `texCoords`
+comes right after it. The light is at `lightPos` (0.5, 1.0, 0.3).
 :::
 
 Build and run the program: a brick floor seen at an angle, a trapezoid narrower at the top. The normal map gives the
 mortar its bevels, but every brick is at the same height – look along the bricks and they're painted on a flat board.
-The `// TODO:` comments in the project mark where your code goes.
 
 ## Parallax mapping
 

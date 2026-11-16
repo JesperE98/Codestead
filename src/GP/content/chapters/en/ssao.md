@@ -62,44 +62,46 @@ expected results on the CPU, and the SSAO pass is one of the most expensive pass
   other numbers: the picture looks the same, the noise differs in detail.
 
 :::opengl
-The start is a deferred renderer like the last chapter's: `main.cpp` draws the room (`renderCube()` with
-`invertedNormals` = 1) and the planet (`Model planet("models/planet.obj")`, the Model Loading part's `Model` class in
-`model.h` / `mesh.h`) into the G-buffer with `ssao_geometry.vs` / `.fs`, then lights the screen quad with `ssao.vs` /
-`ssao_lighting.fs`, which has no ambient occlusion yet. `ssao.vs` is the screen quad's vertex shader, shared by all
-three screen passes. `ssao.fs` and `ssao_blur.fs` have their declarations, but their `main` is a TODO.
+You continue in your program from *Deferred Shading*, a deferred renderer like that chapter's: `main.cpp` draws the
+room (`renderCube()` with `invertedNormals` = 1) and the planet (`Model planet("models/planet.obj")`, the Model
+Loading part's `Model` class in `model.h` / `mesh.h`) into the G-buffer with `ssao_geometry.vs` / `.fs`, then lights
+the screen quad with `ssao.vs` / `ssao_lighting.fs`, which has no ambient occlusion yet. `ssao.vs` is the screen
+quad's vertex shader, shared by all three screen passes. `ssao.fs` and `ssao_blur.fs` start with their declarations
+and an empty `main`.
 :::
 :::vulkan
-The start is a deferred renderer like the last chapter's: `recordCommandBuffer()` draws the room (the cube of the vertex
-buffer, `invertedNormals = VK_TRUE` in the push constants: `struct PushConstants { glm::mat4 model; VkBool32
-invertedNormals; }` – a GLSL `bool` is 4 bytes) and the planet (`loadModel(MODEL_PATH, modelVertices, modelIndices)` with
-tinyobjloader, its own vertex and index buffers, one `vkCmdDrawIndexed`) into the G-buffer, then the screen quad
-(vertices 36..41) into the window with `lightingPipeline` (`ssao.vert` / `ssao_lighting.frag`). There is **one descriptor
-set for all passes**, `descriptorSet`, like vulkan-tutorial's: the uniform buffer at binding 0, gPosition, gNormal and
-gAlbedo at 1, 2 and 3; each pass's shaders read only the bindings they declare. The window's render pass has no depth
-attachment – only the quad is drawn into it – and the screen pipelines are made with `depthTestEnable = VK_FALSE`
-(`createPipeline(…, colorAttachmentCount, depthTestEnable, …)` from the last chapter). The uniform buffer holds `view`,
-`proj` and the light (`struct Light { glm::vec3 position; float linear; glm::vec3 color; float quadratic; }`, std140),
-whose position `updateUniformBuffer()` transforms into view space. `ssao.frag` and `ssao_blur.frag` are TODOs that
-compile and write nothing.
+You continue in your program from *Deferred Shading*, a deferred renderer like that chapter's: `recordCommandBuffer()`
+draws the room (the cube of the vertex buffer, `invertedNormals = VK_TRUE` in the push constants:
+`struct PushConstants { glm::mat4 model; VkBool32 invertedNormals; }` – a GLSL `bool` is 4 bytes) and the planet
+(`loadModel(MODEL_PATH, modelVertices, modelIndices)` with tinyobjloader, its own vertex and index buffers, one
+`vkCmdDrawIndexed`) into the G-buffer, then the screen quad (vertices 36..41) into the window with `lightingPipeline`
+(`ssao.vert` / `ssao_lighting.frag`). There is **one descriptor set for all passes**, `descriptorSet`, like
+vulkan-tutorial's: the uniform buffer at binding 0, gPosition, gNormal and gAlbedo at 1, 2 and 3; each pass's shaders
+read only the bindings they declare. The window's render pass has no depth attachment – only the quad is drawn into it
+– and the screen pipelines are made with `depthTestEnable = VK_FALSE`
+(`createPipeline(…, colorAttachmentCount, depthTestEnable, …)` from the last chapter). The uniform buffer holds
+`view`, `proj` and the light (`struct Light { glm::vec3 position; float linear; glm::vec3 color; float quadratic; }`,
+std140), whose position `updateUniformBuffer()` transforms into view space. `ssao.frag` and `ssao_blur.frag` start
+with an empty `main` that writes nothing.
 :::
 :::d3d12
-The start is a deferred renderer like the last chapter's: `PopulateCommandList` draws the room (the cube of the vertex
-buffer, `invertedNormals = TRUE` in the root constants) and the planet (`Model m_model`, the Model Loading part's classes
-ported with Assimp; `m_model.Draw` binds each mesh's maps) into the G-buffer `m_gBuffer[3]`, then the screen quad into the
-back buffer with `m_lightingPipelineState` (`ssao_lighting.hlsl`). The heap holds the CBV in slot 0, the meshes' maps in
-slots 1–4 (`MaxMeshes = 2`) and the G-buffer's SRVs in slots 5, 6 and 7. The root signature has the root constants
-(b0: `ModelConstants` – `model`, `normalMatrix`, `BOOL invertedNormals`), table 1 for the CBV (b1), table 2 with two SRVs
-(t0, t1) and table 3 with one (t2), and static sampler s0: point filtering, CLAMP. Every screen pass has its own copy of
-learnopengl's shared `ssao.vs` as `VSMain` – a pipeline state takes its shaders from one file here. `ssao.hlsl` and
-`ssao_blur.hlsl` have their declarations; their `PSMain` is a TODO (they aren't compiled before you need them).
+You continue in your program from *Deferred Shading*, a deferred renderer like that chapter's: `PopulateCommandList`
+draws the room (the cube of the vertex buffer, `invertedNormals = TRUE` in the root constants) and the planet
+(`Model m_model`, the Model Loading part's classes ported with Assimp; `m_model.Draw` binds each mesh's maps) into the
+G-buffer `m_gBuffer[3]`, then the screen quad into the back buffer with `m_lightingPipelineState`
+(`ssao_lighting.hlsl`). The heap holds the CBV in slot 0, the meshes' maps in slots 1–4 (`MaxMeshes = 2`) and the
+G-buffer's SRVs in slots 5, 6 and 7. The root signature has the root constants (b0: `ModelConstants` – `model`,
+`normalMatrix`, `BOOL invertedNormals`), table 1 for the CBV (b1), table 2 with two SRVs (t0, t1) and table 3 with one
+(t2), and static sampler s0: point filtering, CLAMP. Every screen pass has its own copy of learnopengl's shared
+`ssao.vs` as `VSMain` – a pipeline state takes its shaders from one file here. `ssao.hlsl` and `ssao_blur.hlsl` start
+with their declarations and an empty `PSMain` (they aren't compiled before you need them).
 :::
 
-The `// TODO:` comments in the project mark where your code goes. Build and run the program in your IDE: the inside of a
-large grey room lit blue from the upper right – the back wall, the floor below a thin edge line, and the grey planet in
-the middle, standing on the floor. Its front faces away from the light and gets only the ambient light; its upper right
-edge is lit blue. The ring crosses in front of it from one side of the window to the other, just above the eye: you see
-it **from below**. Everything that isn't lit directly is the same flat grey; nothing shows where the planet touches the
-floor.
+Build and run the program in your IDE: the inside of a large grey room lit blue from the upper right – the back wall,
+the floor below a thin edge line, and the grey planet in the middle, standing on the floor. Its front faces away from
+the light and gets only the ambient light; its upper right edge is lit blue. The ring crosses in front of it from one
+side of the window to the other, just above the eye: you see it **from below**. Everything that isn't lit directly is
+the same flat grey; nothing shows where the planet touches the floor.
 
 ## Sample buffers
 
@@ -126,7 +128,7 @@ vectors in the G-buffer.
 
 This time the G-buffer is in **view space**, not world space: the SSAO shader projects its samples onto the screen with
 the projection matrix alone, and compares depths as the camera sees them – and in view space the depth of a point is
-simply its z (negative: the camera looks down -z). The geometry shaders of the start do this – learnopengl's
+simply its z (negative: the camera looks down -z). The geometry shaders do this – learnopengl's
 `ssao_geometry.vs`: the position is `view * model * aPos`, the normal is transformed with
 `transpose(inverse(mat3(view * model)))` and negated for the room, whose inside we see:
 

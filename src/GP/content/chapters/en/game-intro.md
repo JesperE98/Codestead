@@ -10,8 +10,8 @@ an old one – a ball, a paddle and a wall of blocks – and every technique and
 stays; only the name, the art and the levels are the course's own. Where the text says "learnopengl's game", it means
 learnopengl's version.
 
-This chapter has no tasks. It describes the game and the road to it; its project is the one you will work in next,
-and you can build and run it at the end.
+This chapter has no tasks. It describes the game and the road to it; at its end you prepare the program you will work
+in next, and build and run it.
 
 ## Hedgerow
 
@@ -92,33 +92,36 @@ frame, and the only key ever "pressed" is the space bar, half a second after the
 real clock and reacts to your keys. The next chapter explains how.
 
 :::opengl
-## The project
+## Your program
 
-The project is the start of the next chapter: one `main.cpp` that opens an 800 × 600 window titled "Hedgerow" (not
+Prepare the program the next chapter starts from, in a new folder – the game is a program of its own. Start from your
+program from *Hello Window* and make it one `main.cpp` that opens an 800 × 600 window titled "Hedgerow" (not
 resizable) with an OpenGL 3.3 core context, switches blending on and clears the window to black in its render loop.
-The rest are `// TODO:` sections for the game, in the order of learnopengl's files: Shader, Texture2D,
-ResourceManager, Game and the program.
+The game's parts follow in the next chapters, in the order of learnopengl's files: Shader, Texture2D, ResourceManager,
+Game and the program.
 :::
 :::vulkan
-## The project
+## Your program
 
-The project is the start of the next chapter: one `main.cpp` with vulkan-tutorial's `HelloTriangleApplication` and
-everything the earlier chapters built – the instance with the validation layer, the swap chain, a render pass with one
-colour attachment (a 2D game needs no depth buffer), the descriptor set layout (a uniform buffer at binding 0, a
-texture at binding 1), the pipeline layout with push constants for the sprites, the `createPipeline` helper, the texture
-helpers, the uniform buffer and a descriptor pool with room for 16 textures. It opens an 800 × 600 window titled
-"Hedgerow" and clears it to black. The game's parts are `// TODO:` sections next to the class, in the order of
-learnopengl's files: Texture2D, ResourceManager, Game and the key callback.
+Prepare the program the next chapter starts from, in a new folder – the game is a program of its own. Start from your
+program from *Text Rendering* (a 2D program without a depth buffer) and make it one `main.cpp` with vulkan-tutorial's
+`HelloTriangleApplication` and everything the earlier chapters built – the instance with the validation layer, the
+swap chain, a render pass with one colour attachment (a 2D game needs no depth buffer), the descriptor set layout (a
+uniform buffer at binding 0, a texture at binding 1), the pipeline layout with push constants for the sprites, the
+`createPipeline` helper, the texture helpers, the uniform buffer and a descriptor pool with room for 16 textures. It
+opens an 800 × 600 window titled "Hedgerow" and clears it to black. The game's parts follow in the next chapters, next
+to the class, in the order of learnopengl's files: Texture2D, ResourceManager, Game and the key callback.
 :::
 :::d3d12
-## The project
+## Your program
 
-The project is the start of the next chapter: one `main.cpp` with the Direct3D 12 application class of the earlier
+Prepare the program the next chapter starts from, in a new folder – the game is a program of its own. Start from your
+program from *Text Rendering* and make it one `main.cpp` with the Direct3D 12 application class of the earlier
 chapters (`D3D12App` with `LoadPipeline`, `LoadAssets`, `OnUpdate`, `OnRender`, `PopulateCommandList`,
-`WaitForPreviousFrame`). It opens an 800 × 600 window titled "Hedgerow" that cannot be resized and clears it to
-black. It already has `GraphicsContext Graphics`, a struct with the Direct3D 12 objects the game's functions will
-create resources and draw with (the next chapter explains it). The game's parts are `// TODO:` sections, in the order of
-learnopengl's files: Shader, Texture2D, ResourceManager, Game and the program.
+`WaitForPreviousFrame`). It opens an 800 × 600 window titled "Hedgerow" that cannot be resized and clears it to black.
+The next chapter adds `GraphicsContext Graphics`, a struct with the Direct3D 12 objects the game's functions will
+create resources and draw with, and the game's parts, in the order of learnopengl's files: Shader, Texture2D,
+ResourceManager, Game and the program.
 :::
 
 Build and run the program: you see an empty, black window. That is all learnopengl's "Setting up" draws, too – the next

@@ -26,13 +26,13 @@ ljusstyrka, och ljusa saker glöder mer helt enkelt för att det finns mer av de
 Precis som den tidigare bloomen är tekniken en kedja av pass över hela skärmen på texturer, och den fungerar likadant i
 alla API:er. Kapitlet visar hur {{api}} renderar i en kedja av allt mindre mål.
 
-## Projektet
+## Ditt program
 
-Scenen är kapitlet *Bloom*:s – trägolvet, sex lådor och fyra ljuskuber, kameran i (0, 0, 5) – renderad i en färgbuffer
-med flyttal och tone mappad med exponeringskurvan, **utan** ljuspasset och bluren: starten i kapitlet *Bloom*, en scen
-med skarpkantade ljuskuber. I enlighet med artikeln arbetar den nya bloomen på hela HDR-bilden. (learnopengls demokod
-lämnar fortfarande sin tröskelfiltrerade ljusbuffer till den nya bloom-renderaren; artikelns text och kursen använder
-själva scenen.)
+Utgå från ditt program från *Bloom* i en ny mapp. Scenen är kapitlet *Bloom*:s – trägolvet, sex lådor och fyra
+ljuskuber, kameran i (0, 0, 5) – renderad i en färgbuffer med flyttal och tone mappad med exponeringskurvan, **utan**
+ljuspasset och bluren: scenen som kapitlet *Bloom* började med, med skarpkantade ljuskuber. I enlighet med artikeln
+arbetar den nya bloomen på hela HDR-bilden. (learnopengls demokod lämnar fortfarande sin tröskelfiltrerade ljusbuffer
+till den nya bloom-renderaren; artikelns text och kursen använder själva scenen.)
 
 learnopengl skriver bloomen som två klasser, `bloomFBO` och `BloomRenderer`. Som i delen *I praktiken* skriver kursen
 dem som structs och fria funktioner med learnopengls namn: en `BloomMip` (en nivås storlek och dess textur), en
@@ -42,20 +42,20 @@ dem som structs och fria funktioner med learnopengls namn: en `BloomMip` (en niv
 :::opengl
 `main.cpp` renderar scenen i `hdrFBO` – texturen `colorBuffer` i `GL_RGBA16F` och en renderbuffer för djupet – och ritar
 `colorBuffer` på skärmfyrhörningen med `bloom_final.vs` / `.fs`. `downsample.vs/.fs` och `upsample.vs/.fs`
-(learnopengls `6.new_downsample` och `6.new_upsample`) finns med sina uniforms; deras `main` är TODO:er.
+(learnopengls `6.new_downsample` och `6.new_upsample`) börjar med sina uniforms och en tom `main`.
 :::
 :::vulkan
 `recordCommandBuffer()` renderar scenen i flyttalsbilden från kapitlet *Bloom* (`hdrRenderPass`) och ritar den på
 skärmfyrhörningen (vertex 36–41) med `bloomFinalPipeline`. Push constants och descriptor sets är kapitlet *Bloom*:s;
-`shaders/downsample.frag` och `upsample.frag` har sina indata, deras `main` är TODO:er.
+`shaders/downsample.frag` och `upsample.frag` börjar med sina indata och en tom `main`.
 :::
 :::d3d12
-`PopulateCommandList` renderar scenen i flyttalsfärgbuffern från kapitlet *Bloom* (plats 3 i CBV/SRV-heapen) och ritar den
-på skärmfyrhörningen (vertex 36–41) med det sista pipeline state-objektet. `downsample.hlsl` och `upsample.hlsl` har sina
-indata; deras pixel shaders är TODO:er.
+`PopulateCommandList` renderar scenen i flyttalsfärgbuffern från kapitlet *Bloom* (plats 3 i CBV/SRV-heapen) och ritar
+den på skärmfyrhörningen (vertex 36–41) med det sista pipeline state-objektet. `downsample.hlsl` och `upsample.hlsl`
+börjar med sina indata och tomma pixel shaders.
 :::
 
-Kommentarerna `// TODO:` visar var din kod ska in. Bygg och kör programmet i din IDE: scenen med skarpa ljuskuber och
+ Bygg och kör programmet i din IDE: scenen med skarpa ljuskuber och
 svart bakgrund alldeles intill dem.
 
 ## Mip-kedjan

@@ -25,30 +25,33 @@ blending with the windows. As in the other chapters of this part, everything wor
 place where you switch it on differs, and the text shows it for your API.
 
 :::opengl
-The project starts where the *Depth testing* chapter started: the two marble cubes at (-1, 0, -1) and (2, 0, 0) and
-the metal floor, drawn with `glEnable(GL_DEPTH_TEST); glDepthFunc(GL_LESS);`, the camera at (0, 0, 3) looking down -z,
-and one shader (`blending.vs`, `blending.fs`) that samples `texture1`. Two new files come with it: `grass.png` and
-`window.png` next to `marble.png` and `metal.png`.
+You continue in your program from *Depth testing*, back where that chapter started: the two marble cubes at (-1, 0,
+-1) and (2, 0, 0) and the metal floor, drawn with `glEnable(GL_DEPTH_TEST); glDepthFunc(GL_LESS);`, the camera at (0,
+0, 3) looking down -z, and one shader (`blending.vs`, `blending.fs`) that samples `texture1`. Two new images come with
+this chapter, `grass.png` and `window.png`; **Save resources…** in the panel copies them next to `marble.png` and
+`metal.png`.
 :::
 :::vulkan
-The project starts where the *Depth testing* chapter started: the two marble cubes at (-1, 0, -1) and (2, 0, 0) and
-the metal floor, the camera at (0, 0, 3) looking down -z, one pipeline with the depth test (`VK_COMPARE_OP_LESS`), and
-all the vertices of the scene in one vertex buffer – the cube is vertices 0..35, the floor 36..41 – from which every
-`vkCmdDraw` picks its part with `firstVertex`. Each texture has its own descriptor set (the uniform buffer at
-binding 0, the texture at binding 1), and the helpers `loadTexture(...)` and `createTextureSampler(addressMode,
-sampler)` load an image and create a sampler. New in `textures/`: `grass.png` and `window.png`.
+You continue in your program from *Depth testing*, back where that chapter started: the two marble cubes at (-1, 0,
+-1) and (2, 0, 0) and the metal floor, the camera at (0, 0, 3) looking down -z, one pipeline with the depth test
+(`VK_COMPARE_OP_LESS`), and all the vertices of the scene in one vertex buffer – the cube is vertices 0..35, the floor
+36..41 – from which every `vkCmdDraw` picks its part with `firstVertex`. Each texture has its own descriptor set (the
+uniform buffer at binding 0, the texture at binding 1), and the helpers `loadTexture(...)` and
+`createTextureSampler(addressMode, sampler)` load an image and create a sampler (give your sampler function the
+address mode as a parameter if it doesn't have one yet). New in `textures/`: `grass.png` and `window.png` – **Save
+resources…** in the panel copies them there.
 :::
 :::d3d12
-The project starts where the *Depth testing* chapter started: the two marble cubes at (-1, 0, -1) and (2, 0, 0) and
-the metal floor, the camera at (0, 0, 3) looking down -z, a PSO with the depth function LESS, and the shaders `VSMain`
-and `PSMain` in `blending.hlsl`. All vertices are in one vertex buffer – the cube is vertices 0 to 35, the floor 36
-to 41 – and each draw picks its part with `DrawInstanced`'s start vertex. Every texture has an SRV in the CBV/SRV heap
-(the CBV in slot 0, marble in slot 1, metal in slot 2), and `SetGraphicsRootDescriptorTable(2, …)` points the pixel
-shader at one of them before each draw. New next to the other images: `grass.png` and `window.png`.
+You continue in your program from *Depth testing*, back where that chapter started: the two marble cubes at (-1, 0,
+-1) and (2, 0, 0) and the metal floor, the camera at (0, 0, 3) looking down -z, a PSO with the depth function LESS,
+and the shaders `VSMain` and `PSMain` in `blending.hlsl`. All vertices are in one vertex buffer – the cube is vertices
+0 to 35, the floor 36 to 41 – and each draw picks its part with `DrawInstanced`'s start vertex. Every texture has an
+SRV in the CBV/SRV heap (the CBV in slot 0, marble in slot 1, metal in slot 2), and
+`SetGraphicsRootDescriptorTable(2, …)` points the pixel shader at one of them before each draw. New next to the other
+images: `grass.png` and `window.png` – **Save resources…** in the panel copies them there.
 :::
 
-The `// TODO:` comments in the project mark where your code goes. After each task, build and run the program in your
-IDE.
+After each task, build and run the program in your IDE.
 
 ## Discarding fragments
 
@@ -199,7 +202,7 @@ const std::vector<glm::vec3> vegetation = {
 };
 ```
 
-The grass texture needs what every texture of this project has: an image, its memory and a view
+The grass texture needs what every texture of your program has: an image, its memory and a view
 (`transparentTextureImage`, `transparentTextureImageMemory`, `transparentTextureImageView`), and a descriptor set
 `transparentDescriptorSet` with the uniform buffer and the texture. It also gets a sampler of its own,
 `transparentSampler` – why, you'll see in a moment. In `initVulkan()`:

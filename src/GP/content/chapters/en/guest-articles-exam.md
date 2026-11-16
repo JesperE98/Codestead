@@ -407,7 +407,7 @@ What does a Vulkan graphics pipeline with tessellation need?
 - [ ] A separate render pass for the tessellated geometry
 - [ ] Only `VK_PRIMITIVE_TOPOLOGY_PATCH_LIST`; the patch size is taken from the draw call
 ---
-That is why the start's control shader writes level 1 everywhere: without it the pipeline couldn't have been built.
+That is why the first control shader of the chapter writes level 1 everywhere: without it the pipeline couldn't have been built.
 ```
 :::
 :::d3d12

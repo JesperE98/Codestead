@@ -27,17 +27,17 @@ later the window surface).
 :::
 :::d3d12
 Direct3D 12 only runs on Windows, so there is no need for a cross-platform library: like Microsoft's D3D12HelloWorld
-samples, we create the window directly with the **Win32 API**. That part is already written in your project – we'll
-walk through it so you know what it does. Then we start Direct3D 12 itself: the debug layer, the DXGI factory, the
+samples, we create the window directly with the **Win32 API**. You write that part first; the text shows all of it
+and walks through it so you know what it does. Then we start Direct3D 12 itself: the debug layer, the DXGI factory, the
 adapter (graphics card), the **device** and the **command queue**. That is the beginning of `LoadPipeline()` in
 the D3D12HelloWindow sample.
 :::
 
-The chapter's start files already contain the program's skeleton: save them into a folder of your choice with
-**Save start files…**, add your project files and open the project in your IDE. `// TODO:` comments mark where your
-code goes. After each task, build and run the program in your IDE to see what it does; when it does what the task
-asks, tick the task with **Mark as done** – or let **Check my code** check your code and tick it for you. How to set
-up the IDE, the compiler and the libraries is the subject of the previous chapter, *Setting up your IDE*; the
+You write this chapter's program from the first line: start in the chapter folder you made at the end of *Setting up
+your IDE*, with its project files and the empty `main.cpp`, and open it in your IDE. The text shows every line that
+goes into `main.cpp`. After each task, build and run the program in your IDE to see what it does; when it does what
+the task asks, tick the task with **Mark as done** – or let **Check my code** check your code and tick it for you. How
+to set up the IDE, the compiler and the libraries is the subject of the previous chapter, *Setting up your IDE*; the
 sections below explain what each piece is for, the way learnopengl.com does.
 
 ```quiz
@@ -134,7 +134,7 @@ include directory and add `glad.c` to your project.
 
 ### Your project
 
-The project in this chapter is one file, `main.cpp`.
+The program in this chapter is one file, `main.cpp`.
 
 :::ide clion vscode
 The `CMakeLists.txt` from *Setting up your IDE* builds it together with `glad.c` and links GLFW – that is all of the
@@ -157,11 +157,23 @@ g++ -std=c++17 main.cpp glad.c -Iinclude -o window -lglfw -ldl
 
 ## Hello Window
 
-Let's see if we can get GLFW up and running. At the top of `main.cpp` the project already includes the headers:
+Let's see if we can get GLFW up and running. Replace the empty program in `main.cpp` with the headers we need, the
+size of the window and an empty `main` function:
 
 ```cpp
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+
+#include <iostream>
+
+// settings
+const unsigned int SCR_WIDTH = 800;
+const unsigned int SCR_HEIGHT = 600;
+
+int main()
+{
+    return 0;
+}
 ```
 
 Be sure to include GLAD before GLFW. GLAD's header includes the required OpenGL headers behind the scenes (like
@@ -179,7 +191,7 @@ declarations up to 3.3 itself and refuses to work if `gl.h` came first – so GL
 ```
 :::
 :::opengl
-Next, we create the `main` function where we will instantiate the GLFW window:
+Next, we fill in the `main` function, where we will instantiate the GLFW window:
 
 ```cpp
 glfwInit();
@@ -205,7 +217,7 @@ We also tell GLFW we want to explicitly use the **core profile**: we'll get acce
 features, without the backwards-compatible features we no longer need. On macOS you also need to ask for a
 *forward-compatible* context, or the context isn't created – that's what the `#ifdef __APPLE__` lines are for.
 
-Now do the first task: replace the first `// TODO:` in `main` with the `glfwInit()` call and the window hints.
+Now do the first task: put the `glfwInit()` call and the window hints at the start of `main`.
 Build & run: nothing visible happens yet, but the program should build and exit normally.
 
 ```quiz
@@ -368,9 +380,76 @@ it targets Windows and Linux.
 
 ## Base code
 
-Your project starts with vulkan-tutorial.com's base code. The program is wrapped into a class where we'll store the
-Vulkan objects as private class members and add functions to initiate each of them, which will be called from
-`initVulkan`:
+Your program starts with vulkan-tutorial.com's base code. Replace the empty program in `main.cpp` with it:
+
+```cpp
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
+
+#include <iostream>
+#include <stdexcept>
+#include <vector>
+#include <cstring>
+#include <cstdlib>
+#include <optional>
+
+const uint32_t WIDTH = 800;
+const uint32_t HEIGHT = 600;
+
+class HelloTriangleApplication {
+public:
+    void run() {
+        initWindow();
+        initVulkan();
+        mainLoop();
+        cleanup();
+    }
+
+private:
+    GLFWwindow* window;
+
+    void initWindow() {
+        glfwInit();
+
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+
+        window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
+    }
+
+    void initVulkan() {
+    }
+
+    void mainLoop() {
+        while (!glfwWindowShouldClose(window)) {
+            glfwPollEvents();
+        }
+    }
+
+    void cleanup() {
+        glfwDestroyWindow(window);
+
+        glfwTerminate();
+    }
+};
+
+int main() {
+    HelloTriangleApplication app;
+
+    try {
+        app.run();
+    } catch (const std::exception& e) {
+        std::cerr << e.what() << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    return EXIT_SUCCESS;
+}
+
+```
+
+The program is wrapped into a class where we'll store the Vulkan objects as private class members and add functions
+to initiate each of them, which will be called from `initVulkan`. `run` calls the four steps in order:
 
 ```cpp
 void run() {
@@ -432,7 +511,7 @@ void mainLoop() {
 }
 ```
 
-Build & run the project as it is: a window titled "Vulkan" opens and stays open until you close it. Its content is
+Build & run the program as it is: a window titled "Vulkan" opens and stays open until you close it. Its content is
 black (undefined, really) – nothing will be shown in it until the next chapter presents the first image.
 
 ```quiz
@@ -731,7 +810,7 @@ if (enableValidationLayers) {
 
 `debugCreateInfo` is declared outside the `if` so that it still exists when `vkCreateInstance` is called.
 
-Now do the third task – it touches several places, so follow the TODO comments: the two proxy functions, the
+Now do the third task – it touches several places: the two proxy functions (before the class), the
 `debugMessenger` member, `debugCallback`, `populateDebugMessengerCreateInfo()` and `setupDebugMessenger()`, the
 extension, the `pNext` chain, the call in `initVulkan` and the destruction in `cleanup`. Build & run: the program's console now
 shows lines starting with `validation layer:`. Because we asked for verbose messages too, these are mostly harmless
@@ -1019,9 +1098,190 @@ cl /std:c++17 /EHsc /MDd /Zi /I DirectX-Headers\include\directx main.cpp /link /
 
 ## The Win32 window
 
-The window part of the program is finished in your project; it is what the samples' `Win32Application` class does.
-`wWinMain` first describes and registers a **window class** – the kind of window we want, and the function that
-handles its messages:
+You start with the window part of the program; it is what the samples' `Win32Application` class does. Replace the
+empty program in `main.cpp` with this, the starting point of everything that follows – `LoadPipeline()` and
+`GetHardwareAdapter()` stay almost empty until this chapter's tasks fill them:
+
+```cpp
+// A Direct3D 12 program in one file, modelled on Microsoft's D3D12HelloWorld samples
+// (D3D12HelloWindow, D3D12HelloTriangle).
+
+#include <windows.h>
+#include <d3d12.h>
+#include <dxgi1_6.h>
+#include <d3dcompiler.h>
+#include <DirectXMath.h>
+#include <wrl.h>
+#include "d3dx12.h"
+
+#include <climits>
+#include <cstdio>
+#include <cstring>
+#include <stdexcept>
+
+// The libraries to link: d3d12.lib, dxgi.lib and d3dcompiler.lib (Visual Studio reads these lines).
+#if defined(_MSC_VER)
+#pragma comment(lib, "d3d12.lib")
+#pragma comment(lib, "dxgi.lib")
+#pragma comment(lib, "d3dcompiler.lib")
+#endif
+
+using namespace DirectX;
+
+// ComPtr is a smart pointer for COM objects: it releases the object when it goes away.
+// It knows nothing about the GPU, though: OnDestroy() waits until the GPU is done
+// before the objects are released.
+using Microsoft::WRL::ComPtr;
+
+// Turns a failed HRESULT (the result code of the D3D12 and DXGI calls) into an exception.
+inline void ThrowIfFailed(HRESULT hr)
+{
+    if (FAILED(hr))
+    {
+        char message[64] = {};
+        snprintf(message, sizeof(message), "HRESULT of 0x%08X", static_cast<unsigned int>(hr));
+        throw std::runtime_error(message);
+    }
+}
+
+class D3D12App
+{
+public:
+    D3D12App(UINT width, UINT height);
+
+    void OnInit(HWND hwnd);
+    void OnDestroy();
+
+private:
+    UINT m_width;
+    UINT m_height;
+    HWND m_hwnd = nullptr;
+
+    // Pipeline objects.
+    ComPtr<ID3D12Device> m_device;
+    ComPtr<ID3D12CommandQueue> m_commandQueue;
+
+    void LoadPipeline();
+    void GetHardwareAdapter(IDXGIFactory1* pFactory, IDXGIAdapter1** ppAdapter);
+};
+
+D3D12App::D3D12App(UINT width, UINT height) :
+    m_width(width),
+    m_height(height)
+{
+}
+
+void D3D12App::OnInit(HWND hwnd)
+{
+    m_hwnd = hwnd;
+    LoadPipeline();
+}
+
+// Load the rendering pipeline dependencies.
+void D3D12App::LoadPipeline()
+{
+}
+
+void D3D12App::OnDestroy()
+{
+    // Nothing to do by hand yet: the ComPtr members release the device and the command queue.
+}
+
+// Helper function for acquiring the first available hardware adapter that supports Direct3D 12.
+// If no such adapter can be found, *ppAdapter will be set to nullptr (D3D12CreateDevice then
+// uses the default adapter).
+void D3D12App::GetHardwareAdapter(IDXGIFactory1* pFactory, IDXGIAdapter1** ppAdapter)
+{
+    *ppAdapter = nullptr;
+}
+
+// Main message handler for the window.
+LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    switch (message)
+    {
+    case WM_DESTROY:
+        PostQuitMessage(0);
+        return 0;
+    }
+
+    // Handle any messages the switch statement didn't.
+    return DefWindowProc(hWnd, message, wParam, lParam);
+}
+
+int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int nCmdShow)
+{
+    const UINT width = 800;
+    const UINT height = 600;
+
+    // Initialize the window class.
+    WNDCLASSEXW windowClass = {};
+    windowClass.cbSize = sizeof(WNDCLASSEXW);
+    windowClass.style = CS_HREDRAW | CS_VREDRAW;
+    windowClass.lpfnWndProc = WindowProc;
+    windowClass.hInstance = hInstance;
+    windowClass.hCursor = LoadCursor(nullptr, IDC_ARROW);
+    windowClass.lpszClassName = L"DXSampleClass";
+    RegisterClassExW(&windowClass);
+
+    // The window is bigger than the area we draw in (title bar, borders):
+    // compute the window size for a client area of width x height.
+    RECT windowRect = { 0, 0, static_cast<LONG>(width), static_cast<LONG>(height) };
+    AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
+
+    // Create the window and store a handle to it.
+    HWND hwnd = CreateWindowW(
+        windowClass.lpszClassName,
+        L"LearnDirectX",
+        WS_OVERLAPPEDWINDOW,
+        CW_USEDEFAULT,
+        CW_USEDEFAULT,
+        windowRect.right - windowRect.left,
+        windowRect.bottom - windowRect.top,
+        nullptr,        // We have no parent window.
+        nullptr,        // We aren't using menus.
+        hInstance,
+        nullptr);
+    if (hwnd == nullptr)
+    {
+        MessageBoxW(nullptr, L"Failed to create the window", L"Error", MB_OK | MB_ICONERROR);
+        return EXIT_FAILURE;
+    }
+
+    D3D12App app(width, height);
+    try
+    {
+        app.OnInit(hwnd);
+
+        ShowWindow(hwnd, nCmdShow);
+
+        // Main loop: process the window's messages until the window is closed (WM_QUIT).
+        MSG msg = {};
+        while (msg.message != WM_QUIT)
+        {
+            if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+            {
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
+            }
+        }
+
+        app.OnDestroy();
+
+        // Return this part of the WM_QUIT message to Windows.
+        return static_cast<int>(msg.wParam);
+    }
+    catch (const std::exception& e)
+    {
+        MessageBoxA(nullptr, e.what(), "Error", MB_OK | MB_ICONERROR);
+        return EXIT_FAILURE;
+    }
+}
+
+```
+
+The rest of this section walks through the window part. `wWinMain` first describes and registers a **window class** –
+the kind of window we want, and the function that handles its messages:
 
 ```cpp
 WNDCLASSEXW windowClass = {};
@@ -1086,7 +1346,7 @@ case WM_DESTROY:
 `PostQuitMessage` puts a `WM_QUIT` message in the queue, which ends the loop. Every other message goes to
 `DefWindowProc`, Windows' default handling – which, for example, destroys the window when you press the close button.
 
-Build & run the project as it is: a window titled "LearnDirectX" opens and stays open until you close it. Nothing is
+Build & run the program as it is: a window titled "LearnDirectX" opens and stays open until you close it. Nothing is
 drawn into it – that only happens once there is a swap chain, in the next chapter.
 
 ```quiz
@@ -1105,7 +1365,7 @@ frame that the `WS_OVERLAPPEDWINDOW` style puts around it.
 
 Direct3D 12 and DXGI are made of **COM** interfaces (`ID3D12Device`, `IDXGIFactory4` …). You never create these
 objects with `new`; a function creates them and hands you an interface pointer, and you release it when you're done.
-The project uses **`ComPtr`** (from `wrl.h`), a smart pointer that releases the object automatically when it goes
+The program uses **`ComPtr`** (from `wrl.h`), a smart pointer that releases the object automatically when it goes
 away. Three of its members appear in this chapter: `Get()` returns the raw pointer, `&` gives the address to fill in
 (releasing whatever it held before), and `Detach()` hands the pointer over without releasing it.
 
@@ -1113,7 +1373,7 @@ The creation functions take the interface you want and the pointer to fill in. T
 both for you: the interface ID (taken from the pointer's type) and the address.
 
 Almost every call returns an **`HRESULT`**, a result code that is negative on failure; the macros `SUCCEEDED` and
-`FAILED` test it. The project's `ThrowIfFailed` turns a failure into an exception, which `wWinMain` shows in a message
+`FAILED` test it. The program's `ThrowIfFailed` turns a failure into an exception, which `wWinMain` shows in a message
 box. That way no error goes unnoticed.
 
 ## The DXGI factory
@@ -1130,8 +1390,7 @@ ThrowIfFailed(CreateDXGIFactory2(0, IID_PPV_ARGS(&factory)));
 `IDXGIFactory4` is the factory version the D3D12 samples use; the first parameter of `CreateDXGIFactory2` holds
 creation flags (none for now – that changes in the next step).
 
-Now do the first task: create the factory where the `// TODO: create the DXGI factory` comment is. Build & run: the
-window looks the same.
+Now do the first task: create the factory in `LoadPipeline()`. Build & run: the window looks the same.
 
 ```quiz
 What is DXGI responsible for? (Choose all that apply.)

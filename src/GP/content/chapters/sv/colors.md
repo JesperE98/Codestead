@@ -124,13 +124,14 @@ Det första vi behöver är ett objekt att lysa på, och vi tar den ökända lå
 också ett ljusobjekt som visar var ljuskällan finns i 3D-scenen. För enkelhetens skull representerar vi ljuskällan
 med en kub också.
 
-### Projektet
+### Ditt program
 
-Det här kapitlets projekt är redan förberett för det. Det är resultatet från *Camera*, nedbantat till det som
-belysningskapitlen börjar med: **en kub i origo**, byggd av samma 36 hörn som förut men med **bara positioner** –
+Du fortsätter i ditt program från *Kamera*. Banta före den första uppgiften ned det till det som belysningskapitlen
+börjar med: **en kub i origo**, byggd av samma 36 hörn som förut men med **bara positioner** –
 inga texturkoordinater och inga texturer längre, eftersom vi vill se kubens färg, inte en bild. Rensningsfärgen är en
 mörkgrå, (0.1, 0.1, 0.1), som i alla learnopengl:s belysningskapitel, så att lampan syns tydligt. Den fria kameran från
-förra kapitlet, med W/A/S/D, mustittande och zoom, finns kvar.
+förra kapitlet, med W/A/S/D, mustittande och zoom, finns kvar. Kubens vertex shader blir den som visas nedan, och
+lampans filer (mer om dem nedan) börjar som kopior av kubens.
 
 :::opengl
 Filerna är `main.cpp`, `shader_m.h`, `colors.vs` och `colors.fs` (shaders för den belysta kuben) samt `light_cube.vs`
@@ -194,7 +195,7 @@ buffern (fortfarande på **binding 2** – bindings 0 och 1 höll texturerna och
 bara en `glm::vec3 pos`, och `getAttributeDescriptions()` beskriver det enda attributet.
 
 Eftersom det här kapitlet behöver **två** grafikpipelines – en för kuben, en för lampan – har den gamla
-`createGraphicsPipeline()` delats i två:
+`createGraphicsPipeline()` delas i två – flytta dess kod till de här två funktionerna:
 
 - `createPipelineLayout()` skapar pipeline layouten – descriptor set layouten och push constant-intervallet – en gång.
   Alla pipelines använder den.
@@ -267,7 +268,7 @@ och samma block, med `compileFlags` överst, så att ett andra pipeline state ka
 `PopulateCommandList` sätter kubens modellmatris (`XMMatrixIdentity()`) som root constants och ritar de 36 hörnen.
 :::
 
-Projektets `// TODO:`-kommentarer visar var din kod ska in. Bygg och kör programmet när som helst. I början ser du en
+Bygg och kör programmet när som helst. När du har förberett det ser du en
 platt **vit** kub mot den mörkgrå bakgrunden – kubens fragment shader skriver fortfarande bara vitt.
 
 ### Standardkameran
@@ -552,7 +553,7 @@ färgändringar (då ser det ut som om ljuskällans kub verkligen är källan ti
 :::opengl
 För att åstadkomma det behöver vi en andra uppsättning shaders som vi använder för att rita ljuskällans kub, och som
 därmed är skyddad från alla ändringar i belysningsshaderna. Vertex shadern, `light_cube.vs`, är samma som kubens vertex
-shader – den är redan färdig i projektet. Fragment shadern ser till att kubens färg förblir ljus genom att ge lampan en
+shader – en kopia av `colors.vs`. Fragment shadern ser till att kubens färg förblir ljus genom att ge lampan en
 konstant vit färg:
 
 ```glsl
@@ -575,8 +576,8 @@ Programmet byggs bredvid `lightingShader`:
 :::vulkan
 För att åstadkomma det behöver vi en andra uppsättning shaders som vi använder för att rita ljuskällans kub, och som
 därmed är skyddad från alla ändringar i belysningsshaderna. I Vulkan är shaderna en del av en grafikpipeline, så lampan
-får **en andra pipeline**. `shaders/light_cube.vert` är samma som kubens vertex shader – den är redan färdig i
-projektet. Fragment shadern ser till att kubens färg förblir ljus genom att ge lampan en konstant vit färg, och den
+får **en andra pipeline**. `shaders/light_cube.vert` är samma som kubens vertex shader – en kopia av `colors.vert`.
+Fragment shadern ser till att kubens färg förblir ljus genom att ge lampan en konstant vit färg, och den
 deklarerar inte ens uniform-blocket:
 
 ```glsl
@@ -609,7 +610,7 @@ fixed-function-tillstånd; bara shaderna skiljer sig.
 För att åstadkomma det behöver vi en andra uppsättning shaders som vi använder för att rita ljuskällans kub, och som
 därmed är skyddad från alla ändringar i belysningsshaderna. I Direct3D 12 är shaderna en del av ett pipeline state
 object, så lampan får **ett andra pipeline state object**. I `light_cube.hlsl` är `VSMain` samma som kubens vertex
-shader – den är redan färdig i projektet, och dess cbuffer deklarerar bara de två matriser den behöver. `PSMain` ser
+shader – en kopia av den i `colors.hlsl`, och dess cbuffer deklarerar bara de två matriser den behöver. `PSMain` ser
 till att kubens färg förblir ljus genom att returnera en konstant vit färg:
 
 ```hlsl

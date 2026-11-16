@@ -16,50 +16,52 @@ teknik i alla API:er; det här kapitlet visar var {{api}} lägger cube mapen, pa
 gång, och uppslagningen.
 
 :::opengl
-Projektet är learnopengls scen: ett rum – learnopengls kub på 2 × 2 × 2 från `renderCube()`, skalad med 5 så att
-väggarna ligger på ±5 – med fem träkuber i, alla ritade av `renderScene(const Shader &shader)`. Rummet ritas med face
-culling avstängt och uniformen `reverse_normals` satt till 1: dess normaler pekar utåt, och vertex shadern vänder dem så
-att insidan blir belyst (learnopengls "small little hack"). De fem kuberna ritas med culling på. Ljuset står på
-`lightPos` (0, 0, 0), mitt i rummet. learnopengl flyttar det fram och tillbaka med
-`lightPos.z = static_cast<float>(sin(glfwGetTime() * 0.5) * 3.0);` – den raden finns i renderloopen som kommentar, så
-bilden ändras inte med tiden; ta bort kommentaren om du vill, så sveper skuggorna över väggarna.
-`point_shadows.vs/.fs` belyser scenen som i förra kapitlet: ljusfärgen 0.3, ambient, diffust och Blinn-Phong-spekulärt,
-kombinerat som `(ambient + (1.0 - shadow) * (diffuse + specular)) * color` – med `float shadow = 0.0;` tills vidare.
-`shader_m.h` är Shader-klassen med den valfria geometry shader-filen från kapitlet *Geometry shader*, och de tre
-djupshadrarna `point_shadows_depth.vs/.gs/.fs` finns med sina deklarationer; deras `main`-funktioner är ditt jobb.
+Du fortsätter i ditt program från *Shadow mapping* och gör om det till learnopengls scen: ett rum – learnopengls kub
+på 2 × 2 × 2 från `renderCube()`, skalad med 5 så att väggarna ligger på ±5 – med fem träkuber i, alla ritade av
+`renderScene(const Shader &shader)`. Rummet ritas med face culling avstängt och uniformen `reverse_normals` satt till
+1: dess normaler pekar utåt, och vertex shadern vänder dem så att insidan blir belyst (learnopengls "small little
+hack"). De fem kuberna ritas med culling på. Ljuset står på `lightPos` (0, 0, 0), mitt i rummet. learnopengl flyttar
+det fram och tillbaka med `lightPos.z = static_cast<float>(sin(glfwGetTime() * 0.5) * 3.0);` – den raden finns i
+renderloopen som kommentar, så bilden ändras inte med tiden; ta bort kommentaren om du vill, så sveper skuggorna över
+väggarna. `point_shadows.vs/.fs` belyser scenen som i förra kapitlet: ljusfärgen 0.3, ambient, diffust och
+Blinn-Phong-spekulärt, kombinerat som `(ambient + (1.0 - shadow) * (diffuse + specular)) * color` – med
+`float shadow = 0.0;` tills vidare. `shader_m.h` är Shader-klassen med den valfria geometry shader-filen från kapitlet
+*Geometry shader*, och de tre djupshadrarna `point_shadows_depth.vs/.gs/.fs` finns med sina deklarationer; deras
+`main`-funktioner är ditt jobb.
 :::
 :::vulkan
-Projektet är learnopengls scen: ett rum – vertexbufferns enda kub (learnopengls kub på 2 × 2 × 2 från `renderCube()`,
-36 vertex, v vänt som i de tidigare kapitlen) skalad med 5, så att väggarna ligger på ±5 – med fem träkuber i.
-learnopengls `renderScene()` är hjälpfunktionen `renderScene(VkCommandBuffer commandBuffer)`, som pushar varje draws
-`PushConstants` (`glm::mat4 model; VkBool32 reverse_normals;`, vertexsteget) och spelar in `vkCmdDraw(commandBuffer, 36,
-1, 0, 0)` sex gånger. Rummet får `reverse_normals = VK_TRUE`: dess normaler pekar utåt, och vertex shadern vänder dem så
-att insidan blir belyst (learnopengls "small little hack"). Ljuset är den globala `lightPos` (0, 0, 0), mitt i rummet.
-learnopengl flyttar det med `lightPos.z = sin(glfwGetTime() * 0.5) * 3.0`; här står det still, så bilden ändras inte med
-tiden. `shaders/point_shadows.vert/.frag` belyser scenen som i förra kapitlet: ljusfärgen 0.3, ambient, diffust och
+Du fortsätter i ditt program från *Shadow mapping* och gör om det till learnopengls scen: ett rum – vertexbufferns
+enda kub (learnopengls kub på 2 × 2 × 2 från `renderCube()`, 36 vertex, v vänt som i de tidigare kapitlen) skalad med
+5, så att väggarna ligger på ±5 – med fem träkuber i. learnopengls `renderScene()` är hjälpfunktionen
+`renderScene(VkCommandBuffer commandBuffer)`, som pushar varje draws `PushConstants`
+(`glm::mat4 model; VkBool32 reverse_normals;`, vertexsteget) och spelar in `vkCmdDraw(commandBuffer, 36, 1, 0, 0)` sex
+gånger. Rummet får `reverse_normals = VK_TRUE`: dess normaler pekar utåt, och vertex shadern vänder dem så att insidan
+blir belyst (learnopengls "small little hack"). Ljuset är den globala `lightPos` (0, 0, 0), mitt i rummet. learnopengl
+flyttar det med `lightPos.z = sin(glfwGetTime() * 0.5) * 3.0`; här står det still, så bilden ändras inte med tiden.
+`shaders/point_shadows.vert/.frag` belyser scenen som i förra kapitlet: ljusfärgen 0.3, ambient, diffust och
 Blinn-Phong-spekulärt, kombinerat som `(ambient + (1.0 - shadow) * (diffuse + specular)) * color` – med
-`float shadow = 0.0;` tills vidare. Djupshadrarna `point_shadows_depth.vert/.geom/.frag` är tomma stubbar.
-`createPipeline` tar en valfri geometry shader (`""` = ingen), som i kapitlet *Geometry shader*.
+`float shadow = 0.0;` tills vidare. Djupshadrarna `point_shadows_depth.vert/.geom/.frag` börjar som tomma shaders –
+uppgifterna fyller i dem. `createPipeline` tar en valfri geometry shader (`""` = ingen), som i kapitlet *Geometry
+shader*.
 :::
 :::d3d12
-Projektet är learnopengls scen: ett rum – vertexbufferns enda kub (learnopengls kub på 2 × 2 × 2 från `renderCube()`,
-36 vertex, v vänt för Direct3D) skalad med 5, så att väggarna ligger på ±5 – med fem träkuber i. learnopengls
-`renderScene()` är medlemsfunktionen `RenderScene()`: den sätter varje draws `ModelConstants` (`model`, `normalMatrix`
-och `BOOL reverseNormals`, 33 root constants) med `SetGraphicsRoot32BitConstants(0, …)` och anropar
-`DrawInstanced(36, 1, 0, 0)` sex gånger. `PopulateCommandList` anropar den en gång per pass. Rummet får
-`reverseNormals = TRUE`: dess normaler pekar utåt, och vertex shadern vänder dem så att insidan blir belyst
-(learnopengls "small little hack"). Ljuset är den globala `lightPos` (0, 0, 0), mitt i rummet; learnopengl flyttar det
-med `lightPos.z = sin(glfwGetTime() * 0.5) * 3.0`, här står det still, så bilden ändras inte med tiden.
-`point_shadows.hlsl` belyser scenen som i förra kapitlet: ljusfärgen 0.3, ambient, diffust och Blinn-Phong-spekulärt,
-kombinerat som `(ambient + (1.0f - shadow) * (diffuse + specular)) * color` – med `float shadow = 0.0f;` tills vidare.
-`point_shadows_depth.hlsl` har sina constant buffers och structar; dess tre ingångspunkter är ditt jobb (filen
-kompileras inte förrän dess).
+Du fortsätter i ditt program från *Shadow mapping* och gör om det till learnopengls scen: ett rum – vertexbufferns
+enda kub (learnopengls kub på 2 × 2 × 2 från `renderCube()`, 36 vertex, v vänt för Direct3D) skalad med 5, så att
+väggarna ligger på ±5 – med fem träkuber i. learnopengls `renderScene()` är medlemsfunktionen `RenderScene()`: den
+sätter varje draws `ModelConstants` (`model`, `normalMatrix` och `BOOL reverseNormals`, 33 root constants) med
+`SetGraphicsRoot32BitConstants(0, …)` och anropar `DrawInstanced(36, 1, 0, 0)` sex gånger. `PopulateCommandList`
+anropar den en gång per pass. Rummet får `reverseNormals = TRUE`: dess normaler pekar utåt, och vertex shadern vänder
+dem så att insidan blir belyst (learnopengls "small little hack"). Ljuset är den globala `lightPos` (0, 0, 0), mitt i
+rummet; learnopengl flyttar det med `lightPos.z = sin(glfwGetTime() * 0.5) * 3.0`, här står det still, så bilden
+ändras inte med tiden. `point_shadows.hlsl` belyser scenen som i förra kapitlet: ljusfärgen 0.3, ambient, diffust och
+Blinn-Phong-spekulärt, kombinerat som `(ambient + (1.0f - shadow) * (diffuse + specular)) * color` – med
+`float shadow = 0.0f;` tills vidare. `point_shadows_depth.hlsl` har sina constant buffers och structar; dess tre
+ingångspunkter är ditt jobb (filen kompileras inte förrän dess).
 :::
 
 Kameran står på (0, 0, 3) och tittar längs -z: rummets bakre vägg (z = -5) fyller fönstret, med träet utsträckt över
-dess 10 × 10 enheter och ett mjukt högdager lite till vänster om mitten. Bara en av de fem kuberna syns – den vridna på
-(-1.5, 2, -3), i övre vänstra hörnet. Bygg och kör programmet: rummet är belyst, men ingenting kastar någon skugga.
-Kommentarerna `// TODO:` i projektet visar var din kod ska in.
+dess 10 × 10 enheter och ett mjukt högdager lite till vänster om mitten. Bara en av de fem kuberna syns – den vridna
+på (-1.5, 2, -3), i övre vänstra hörnet. Bygg och kör programmet: rummet är belyst, men ingenting kastar någon skugga.
 
 ## Att skapa djup-cube mapen
 

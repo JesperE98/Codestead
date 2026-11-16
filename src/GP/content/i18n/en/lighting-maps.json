@@ -21,7 +21,7 @@
       },
       "hint": {
         "opengl": "`vec3 ambient = light.ambient * texture(material.diffuse, TexCoords).rgb;`. After loading: `lightingShader.use(); lightingShader.setInt(\"material.diffuse\", 0);`. In the loop: `glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, diffuseMap);`. Delete the texture at the end.",
-        "vulkan": "Call `createDiffuseMap()` at the TODO in `initVulkan()` and destroy the view, image and memory in `cleanup()`. The write: `dstBinding = 0`, `VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER`, `pImageInfo = &diffuseMapInfo` (the view, `textureSampler`, `SHADER_READ_ONLY_OPTIMAL`).",
+        "vulkan": "Call `createDiffuseMap()` in `initVulkan()`, after `createCommandPool()`, and destroy the view, image and memory in `cleanup()`. The write: `dstBinding = 0`, `VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER`, `pImageInfo = &diffuseMapInfo` (the view, `textureSampler`, `SHADER_READ_ONLY_OPTIMAL`).",
         "d3d12": "`ComPtr<ID3D12Resource> diffuseMapUploadHeap; LoadTexture(\"container2.png\", m_diffuseMap, diffuseMapUploadHeap, 1);` – `ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);`, `rootParameters[2].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL);`, and the handle of slot 1 for `SetGraphicsRootDescriptorTable(2, …)`."
       }
     },

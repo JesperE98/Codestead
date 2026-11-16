@@ -114,37 +114,41 @@ position values to position each instance at a different location in the world.
 The technique is the same in every API; this chapter shows it for {{api}}.
 
 :::opengl
-The project starts with learnopengl's first example before instancing: no camera, no matrices, the clear colour (0.1,
-0.1, 0.1), and one small quad – learnopengl's `quadVertices`, a 2D position and a colour per vertex, ±0.05 – drawn once
-in the centre with `glDrawArrays(GL_TRIANGLES, 0, 6)` by `instancing.vs` / `instancing.fs`. For the asteroid field the
-project already contains the Model chapter's `mesh.h` and `model.h` – with `Mesh::VAO`, `Mesh::indices`,
-`Model::meshes` and `Model::textures_loaded` public, as learnopengl's asteroid demo needs – the planet and the course's
-rock (`models/rock.obj`, `rock.mtl`, `rock.png`), and the shaders `planet.vs/.fs` and `asteroids.vs/.fs`.
+Start from your program from *Model* in a new folder – its model code is needed for the asteroid field – and make it
+learnopengl's first example before instancing: no camera, no matrices, the clear colour (0.1, 0.1, 0.1), and one small
+quad – learnopengl's `quadVertices`, a 2D position and a colour per vertex, ±0.05 – drawn once in the centre with
+`glDrawArrays(GL_TRIANGLES, 0, 6)` by `instancing.vs` / `instancing.fs`. For the asteroid field keep the Model
+chapter's `mesh.h` and `model.h` – with `Mesh::VAO`, `Mesh::indices`, `Model::meshes` and `Model::textures_loaded`
+public, as learnopengl's asteroid demo needs – and the planet, and add the course's rock (`models/rock.obj`,
+`rock.mtl`, `rock.png` – **Save resources…** in the panel copies them into your folder). The shaders `planet.vs/.fs`
+and `asteroids.vs/.fs` come with their tasks.
 :::
 :::vulkan
-The project starts with learnopengl's first example before instancing: no camera, no matrices, the clear colour (0.1,
-0.1, 0.1), and one small quad – learnopengl's `quadVertices` (`struct QuadVertex { glm::vec2 pos; glm::vec3 color; }`,
-±0.05, in its own vertex buffer `quadVertexBuffer`) – drawn once in the centre with `vkCmdDraw(commandBuffer, 6, 1, 0,
-0)` by `shaders/instancing.vert` / `.frag`. Vulkan's y axis points down, so the quad's y values are negated and the
-picture is learnopengl's (red corner top-left). `createPipeline(vertFile, fragFile, bindingDescriptions,
-attributeDescriptions, pipeline)` takes the vertex input as parameters – a *vector* of bindings, because instancing adds
-a second one. For the asteroid field the start already creates (but doesn't use yet) the Model chapter's code for two
-models: `loadModel(path, vertices, indices)` for the planet and the course's rock, their vertex and index buffers, three
-textures, the uniform buffer (`view`, `proj`) and two descriptor sets, `planetDescriptorSet` and `rockDescriptorSet`.
+Start from your program from *Model* in a new folder – its model code is needed for the asteroid field – and make it
+learnopengl's first example before instancing: no camera, no matrices, the clear colour (0.1, 0.1, 0.1), and one small
+quad – learnopengl's `quadVertices` (`struct QuadVertex { glm::vec2 pos; glm::vec3 color; }`, ±0.05, in its own vertex
+buffer `quadVertexBuffer`) – drawn once in the centre with `vkCmdDraw(commandBuffer, 6, 1, 0, 0)` by
+`shaders/instancing.vert` / `.frag`. Vulkan's y axis points down, so the quad's y values are negated and the picture
+is learnopengl's (red corner top-left).
+`createPipeline(vertFile, fragFile, bindingDescriptions, attributeDescriptions, pipeline)` takes the vertex input as
+parameters – a *vector* of bindings, because instancing adds a second one. For the asteroid field, create (but don't
+use yet) the Model chapter's code for two models: `loadModel(path, vertices, indices)` for the planet and the course's
+rock, their vertex and index buffers, three textures, the uniform buffer (`view`, `proj`) and two descriptor sets,
+`planetDescriptorSet` and `rockDescriptorSet`.
 :::
 :::d3d12
-The project starts with learnopengl's first example before instancing: no camera, no matrices, the clear colour (0.1,
-0.1, 0.1), and one small quad – learnopengl's `quadVertices` (`struct QuadVertex { XMFLOAT2 position; XMFLOAT3 color;
-}`, ±0.05, 6 vertices) – drawn once in the centre with `DrawInstanced(6, 1, 0, 0)` by `instancing.hlsl`. For the
-asteroid field the project already contains the Model chapter's `Model` class – with each mesh's `vertexBufferView`,
-`indexBufferView` and `srvHandle` public, as learnopengl makes the mesh's VAO public for its asteroid demo – the
-planet, the course's rock (`models/rock.obj`, `rock.mtl`, `rock.png`), the root signature with root constants (b0), the
-CBV table (b1) and a texture table, and the shaders `planet.hlsl` and `asteroids.hlsl`.
+Start from your program from *Model* in a new folder – its model code is needed for the asteroid field – and make it
+learnopengl's first example before instancing: no camera, no matrices, the clear colour (0.1, 0.1, 0.1), and one small
+quad – learnopengl's `quadVertices` (`struct QuadVertex { XMFLOAT2 position; XMFLOAT3 color; }`, ±0.05, 6 vertices) –
+drawn once in the centre with `DrawInstanced(6, 1, 0, 0)` by `instancing.hlsl`. For the asteroid field keep the Model
+chapter's `Model` class – with each mesh's `vertexBufferView`, `indexBufferView` and `srvHandle` public, as
+learnopengl makes the mesh's VAO public for its asteroid demo – the planet, the course's rock (`models/rock.obj`,
+`rock.mtl`, `rock.png` – **Save resources…** in the panel copies them into your folder), the root signature with root
+constants (b0), the CBV table (b1) and a texture table, and the shaders `planet.hlsl` and `asteroids.hlsl`.
 :::
 
-The `// TODO:` comments in the project mark where your code goes. After each task, build and run the program in your
-IDE. Right now it shows one small quad in the centre of the window, coloured from its corners: red, green, blue and
-cyan.
+After each task, build and run the program in your IDE. Right now it shows one small quad in the centre of the window,
+coloured from its corners: red, green, blue and cyan.
 
 ## Instancing
 
@@ -178,7 +182,7 @@ void main()
 }
 ```
 
-In `main.cpp`, at the TODO, generate the translations and hand them to the shader:
+In `main.cpp`, before the render loop, generate the translations and hand them to the shader:
 
 ```cpp
     // generate a list of 100 quad locations/translation-vectors
@@ -319,7 +323,7 @@ register b2 for the vertex shader:
         rootParameters[3].InitAsConstantBufferView(2, 0, D3D12_SHADER_VISIBILITY_VERTEX);
 ```
 
-In `LoadAssets`, at the TODO, generate the translations and write them into the buffer once:
+In `LoadAssets`, generate the translations and write them into the buffer once:
 
 ```cpp
     XMFLOAT2 translations[100];

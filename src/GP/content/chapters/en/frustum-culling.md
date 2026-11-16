@@ -22,7 +22,7 @@ course draws its checks and expected results on the CPU. The root keeps turning 
 last chapter, so the whole grid turns about the origin, and which planets are in view changes over time. The expected
 results show the grid at 2.0 s, with the grid turned by 40°.
 
-The project is the last chapter's solution with three new `// TODO:` comments. Build and run it in your IDE: you see the
+You continue in your program from *Scene Graph*. Build and run it in your IDE: you see the
 turning chain of planets.
 
 :::opengl

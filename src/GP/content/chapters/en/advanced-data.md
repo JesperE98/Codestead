@@ -24,13 +24,12 @@ but the CPU can't write it. What the buffer *is* (vertex buffer, constant buffer
 it: a vertex buffer view, a constant buffer view.
 :::
 
-learnopengl.com's chapter has no demo program of its own, so this chapter's project is once more the *Depth testing*
-scene – the two marble cubes, the metal floor, the camera at (0, 0, 3) – and every task changes *how* the vertex data
-gets into the buffers, not *what* is drawn. **After every task the picture is exactly the same.** That is the point:
-the tasks check your code, and the unchanged picture proves the data arrived where the GPU expects it.
+learnopengl.com's chapter has no demo program of its own, so you continue in your program from *Depth testing* once
+more, with its scene – the two marble cubes, the metal floor, the camera at (0, 0, 3) – and every task changes *how*
+the vertex data gets into the buffers, not *what* is drawn. **After every task the picture is exactly the same.** That
+is the point: the tasks check your code, and the unchanged picture proves the data arrived where the GPU expects it.
 
-The `// TODO:` comments in the project mark where your code goes. After each task, build and run the program in your
-IDE.
+After each task, build and run the program in your IDE.
 
 ## Filling buffers
 
@@ -47,7 +46,7 @@ to fill the buffer. This allows us to insert/update only certain parts of the bu
 should have enough allocated memory, so a call to `glBufferData` is necessary before calling `glBufferSubData` on the
 buffer.
 
-Now do the first task, **buffer-sub-data**: at the TODO in the cube's VAO block, reserve the memory first and fill it
+Now do the first task, **buffer-sub-data**: in the cube's VAO block, reserve the memory first and fill it
 in a second step:
 
 ```cpp
@@ -77,7 +76,7 @@ the pointer and never read.
 Using `glMapBuffer` is useful for directly mapping data to a buffer, without first storing it in temporary memory.
 Think of directly reading data from file and copying it into the buffer's memory.
 
-Now do the task **map-buffer**: fill the floor's buffer this way, at the TODO in the plane's VAO block. `memcpy` needs
+Now do the task **map-buffer**: fill the floor's buffer this way, in the plane's VAO block. `memcpy` needs
 `#include <cstring>` at the top of `main.cpp`.
 :::
 :::vulkan
@@ -165,7 +164,7 @@ pointer and write through it). Direct3D 12 has no call that takes your data and 
 what it has is the pointer: `Map` returns a CPU pointer to the memory of a buffer in an upload heap, and `Unmap` ends
 it. Writing through the pointer is OpenGL's `glMapBuffer`; copying a block to an offset of the pointer is
 `glBufferSubData`. (For data that changes per draw there are also root constants, `SetGraphicsRoot32BitConstants`,
-which the project already uses for the model matrix: they travel inside the command list itself.)
+which your program already uses for the model matrix: they travel inside the command list itself.)
 
 Right now one upload-heap vertex buffer holds everything: the cube is vertices 0 to 35, the floor 36 to 41. learnopengl
 gives the floor a buffer of its own, `planeVBO`. Now do the first task, **map-buffer**: move the floor's six vertices

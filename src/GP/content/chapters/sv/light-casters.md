@@ -10,46 +10,47 @@ vi hade tidigare, och sist strålkastare (spotlights). I nästa kapitel kombiner
 och samma scen.
 
 :::opengl
-Det här kapitlets projekt utgår från resultatet av *Lighting maps* (utan emissionsövningen): samma `main.cpp` och
-`shader_m.h`, behållarens diffuse map `container2.png` och specular map `container2_specular.png`, och lampans
-shaders `light_cube.vs` / `light_cube.fs`. De belysta objektens shaders heter nu `light_casters.vs` och
-`light_casters.fs`; fragment shadern har structen `Material` (två samplers och en shininess) och en struct `Light`
-med en `position` och styrkorna för de tre färgdelarna.
+Du fortsätter i ditt program från *Ljuskartor* (utan emissionsövningen): samma `main.cpp` och `shader_m.h`,
+behållarens diffuse map `container2.png` och specular map `container2_specular.png`, och lampans shaders
+`light_cube.vs` / `light_cube.fs`. Döp om de belysta objektens shaders till `light_casters.vs` och
+`light_casters.fs`; fragment shadern behåller structen `Material` (två samplers och en shininess) och structen
+`Light` med en `position` och styrkorna för de tre färgdelarna.
 
-Två saker är nya. Scenen har learnopengls **tio behållare** igen – `cubePositions` från *Coordinate Systems* och en
-`for`-loop som ritar var och en med sin egen modellmatris (roterad 20° · i, ingenting snurrar med tiden). Och kameran
-är **tillbaka i (0, 0, 3)** och tittar längs -z (`cameraPos`, `cameraFront`, `yaw = -90.0f`, `pitch = 0.0f`), så att
-alla tio behållarna syns och behållare 0 fyller mitten av fönstret. Ljuset är fortfarande punktljuset från *Lighting
-maps* i `lightPos` (1.2, 1.0, 2.0), med ambient 0.2, diffuse 0.5, specular 1.0 och shininess 64.
+Två saker ändras också – gör dem före den första uppgiften. Scenen får learnopengls **tio behållare** igen –
+`cubePositions` från *Coordinate Systems* och en `for`-loop som ritar var och en med sin egen modellmatris (roterad
+20° · i, ingenting snurrar med tiden). Och kameran är **tillbaka i (0, 0, 3)** och tittar längs -z (`cameraPos`,
+`cameraFront`, `yaw = -90.0f`, `pitch = 0.0f`), så att alla tio behållarna syns och behållare 0 fyller mitten av
+fönstret. Ljuset är fortfarande punktljuset från *Lighting maps* i `lightPos` (1.2, 1.0, 2.0), med ambient 0.2,
+diffuse 0.5, specular 1.0 och shininess 64.
 :::
 :::vulkan
-Det här kapitlets projekt utgår från resultatet av *Lighting maps* (utan emissionsövningen): diffuse map på binding
-0, specular map på binding 1 och uniform buffern på binding 2. De belysta objektens shaders heter nu
-`shaders/light_casters.vert` och `shaders/light_casters.frag`; lampan behåller `shaders/light_cube.*` och sin egen
+Du fortsätter i ditt program från *Ljuskartor* (utan emissionsövningen): diffuse map på binding 0, specular map på
+binding 1 och uniform buffern på binding 2. Döp om de belysta objektens shaders till `shaders/light_casters.vert`
+och `shaders/light_casters.frag`; lampan behåller `shaders/light_cube.*` och sin egen
 pipeline, `lightCubePipeline`. Uniform-blocket innehåller matriserna, `viewPos`, en `Material` (shininess) och en
 `Light` med en `position` och styrkorna för de tre färgdelarna, speglade av C++-structar med utfyllnadsfloats.
 
-Två saker är nya. Scenen har learnopengls **tio behållare** igen: en global `cubePositions` och en loop i
-`recordCommandBuffer()` som skickar varje behållares modellmatris som push constant (roterad 20° · i, ingenting
-snurrar med tiden) och ritar den. Och kameran är **tillbaka i (0, 0, 3)** och tittar längs -z (`cameraPos`,
-`cameraFront`, `yaw = -90`, `pitch = 0`), så att alla tio behållarna syns och behållare 0 fyller mitten av fönstret.
-Ljuset är fortfarande punktljuset från *Lighting maps* i `lightPos` (1.2, 1.0, 2.0), som `updateUniformBuffer()`
-sätter med ambient 0.2, diffuse 0.5, specular 1.0 och shininess 64.
+Två saker ändras också – gör dem före den första uppgiften. Scenen får learnopengls **tio behållare** igen: en global
+`cubePositions` och en loop i `recordCommandBuffer()` som skickar varje behållares modellmatris som push constant
+(roterad 20° · i, ingenting snurrar med tiden) och ritar den. Och kameran är **tillbaka i (0, 0, 3)** och tittar längs
+-z (`cameraPos`, `cameraFront`, `yaw = -90`, `pitch = 0`), så att alla tio behållarna syns och behållare 0 fyller
+mitten av fönstret. Ljuset är fortfarande punktljuset från *Lighting maps* i `lightPos` (1.2, 1.0, 2.0), som
+`updateUniformBuffer()` sätter med ambient 0.2, diffuse 0.5, specular 1.0 och shininess 64.
 :::
 :::d3d12
-Det här kapitlets projekt utgår från resultatet av *Lighting maps* (utan emissionsövningen): diffuse map (`t0`) och
-specular map (`t1`), constant buffern `SceneConstantBuffer` (`b1`) och root constants med modell- och
-normalmatrisen (`b0`). De belysta objektens shaders ligger nu i `light_casters.hlsl`; lampan behåller
+Du fortsätter i ditt program från *Ljuskartor* (utan emissionsövningen): diffuse map (`t0`) och specular map
+(`t1`), constant buffern `SceneConstantBuffer` (`b1`) och root constants med modell- och normalmatrisen (`b0`). Döp
+om de belysta objektens shaders till `light_casters.hlsl`; lampan behåller
 `light_cube.hlsl` och sitt eget pipeline state, `m_lightCubePipelineState`. Constant buffern innehåller matriserna,
 `viewPos`, en `Material` (shininess) och en `Light` med en `position` och styrkorna för de tre färgdelarna, speglade
 av C++-structar med utfyllnadsfloats.
 
-Två saker är nya. Scenen har learnopengls **tio behållare** igen: `PopulateCommandList` har arrayen `cubePositions`
-och en `for`-loop som sätter varje behållares modellmatris (roterad 20° · i, ingenting snurrar med tiden) och
-normalmatris som root constants och ritar den. Och kameran är **tillbaka i (0, 0, 3)** och tittar längs -z
-(`cameraPos`, `cameraFront`, `yaw = -90.0f`, `pitch = 0.0f`), så att alla tio behållarna syns och behållare 0 fyller
-mitten av fönstret. Ljuset är fortfarande punktljuset från *Lighting maps* i `lightPos` (1.2, 1.0, 2.0), som
-`OnUpdate` sätter med ambient 0.2, diffuse 0.5, specular 1.0 och shininess 64.
+Två saker ändras också – gör dem före den första uppgiften. Scenen får learnopengls **tio behållare** igen:
+`PopulateCommandList` har arrayen `cubePositions` och en `for`-loop som sätter varje behållares modellmatris (roterad
+20° · i, ingenting snurrar med tiden) och normalmatris som root constants och ritar den. Och kameran är **tillbaka i
+(0, 0, 3)** och tittar längs -z (`cameraPos`, `cameraFront`, `yaw = -90.0f`, `pitch = 0.0f`), så att alla tio
+behållarna syns och behållare 0 fyller mitten av fönstret. Ljuset är fortfarande punktljuset från *Lighting maps* i
+`lightPos` (1.2, 1.0, 2.0), som `OnUpdate` sätter med ambient 0.2, diffuse 0.5, specular 1.0 och shininess 64.
 :::
 
 > De tidigare belysningskapitlen placerade kameran åt sidan så att du kunde se både den belysta kuben *och* lampan. I
@@ -58,9 +59,9 @@ mitten av fönstret. Ljuset är fortfarande punktljuset från *Lighting maps* i 
 > de steg där lampan ritas ser du den alltså inte. I ditt program kan du fortfarande flyga runt med tangentbordet och
 > musen och leta upp den.
 
-Den här gången har projektet inga `// TODO:`-kommentarer: varje uppgift ändrar kod som redan finns, och uppgiftstexten
-talar om var. Efter varje uppgift bygger och kör du programmet i din IDE. Bygg det en gång nu: alla tio behållarna lyses
-upp av lampan, de avlägsna lika starkt som de nära.
+Varje uppgift ändrar kod som redan finns, och uppgiftstexten talar om var. Efter varje uppgift bygger och kör du
+programmet i din IDE. Bygg det en gång nu: alla tio behållarna lyses upp av lampan, de avlägsna lika starkt som de
+nära.
 
 ## Riktat ljus
 
@@ -309,7 +310,7 @@ område nära ljuskällan och inte hela scenen.
 Om du lade till de 10 behållarna i belysningsscenen från de tidigare kapitlen skulle du märka att behållaren längst
 bak lyses upp med samma intensitet som behållaren framför ljuset; det finns ännu ingen logik som minskar ljuset med
 avståndet. Vi vill att behållaren längst bak bara ska vara svagt upplyst jämfört med behållarna nära ljuskällan. Det
-var precis det du såg i startbilden för det här projektet.
+var precis det du såg när du byggde programmet i början av kapitlet.
 
 ## Dämpning
 
@@ -1264,7 +1265,7 @@ float4 PSMain(PSInput input) : SV_TARGET
 - Experimentera med alla de olika ljustyperna och deras fragment shaders. Prova att vända på några vektorer och/eller
   använda `<` i stället för `>`. Försök förklara de olika visuella resultaten.
 
-Det här är ingen uppgift i projektet: prova när du är klar med uppgifterna, och bygg och kör programmet för att se
+Det här är ingen uppgift: prova när du är klar med uppgifterna, och bygg och kör programmet för att se
 resultatet. Med `theta < light.cutOff` i strålkastarsteget vänds till exempel cirkeln ut och in – allt *utanför* konen
 lyses upp, och mitten av behållare 0 får bara det omgivande ljuset. Och om du använder `normalize(light.direction)` utan
 minustecken blir theta cosinus för vinkeln mot den *motsatta* riktningen, som är negativ för allt framför kameran: inget

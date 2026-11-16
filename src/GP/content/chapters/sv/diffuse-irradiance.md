@@ -100,19 +100,21 @@ Varför konvolverar projektet omgivningen till en irradiansmap en gång, i stäl
 När den Lambertska termen har flyttats ut är det som återstår i integralen en funktion av normalen ensam – en funktion på riktningarnas sfär, precis vad en cube map lagrar. 32 × 32 texlar per sida räcker eftersom funktionen ändras långsamt.
 ```
 
-## Projektet
+## Ditt program
 
-Projektet börjar där förra kapitlets uppgift `tone-map` slutade: de 7 × 7 röda sfärerna med hela reflektansekvationen för
-de fyra punktljusen, Reinhard och gamma i slutet av shadern, och den konstanta ambienta termen `0.03 * albedo * ao`. (De
-texturerade sfärerna kommer tillbaka i nästa kapitels sista uppgift.) Kameran står fortfarande på (0, 0, 22). Nytt i
-projektet är en omgivningsbild och shadrarna för tre pass som än så länge är TODO, och en kub: learnopengls
-`renderCube()`, de tidigare kapitlens kub på 2 × 2 × 2 med 36 vertex, av vilka bara positionerna används här.
+Du fortsätter i ditt program från *PBR-belysning*, som det var efter uppgiften `tone-map`: de 7 × 7 röda sfärerna med
+hela reflektansekvationen för de fyra punktljusen, Reinhard och gamma i slutet av shadern, och den konstanta ambienta
+termen `0.03 * albedo * ao`. (De texturerade sfärerna kommer tillbaka i nästa kapitels sista uppgift.) Kameran står
+fortfarande på (0, 0, 22). Nytt i kapitlet är en omgivningsbild, shadrarna för tre pass (texten visar dem) och en kub:
+learnopengls `renderCube()`, de tidigare kapitlens kub på 2 × 2 × 2 med 36 vertex, av vilka bara positionerna används
+här.
 
-Omgivningen är kursens egen: `environment.hdr`, en ekvirektangulär HDR-bild på 512 × 256 av en himmel med moln och en
-ljus, disig sol, gröna kullar vid horisonten, en gråbrun mark och tre färgade lampor (learnopengl använder
-`newport_loft.hdr`, ett foto av en loftvåning). Kameran tittar längs -z, mot mitten av bildens vänstra halva: blekt
-blågrå himmel upptill, mörkgröna kullar vid horisonten (högre till vänster i fönstret), marken nedtill. Solen – uppe, till
-höger och *bakom* kameran – och lamporna är utanför bilden, men de kommer att belysa sfärerna framifrån.
+Omgivningen är kursens egen – **Spara resursfilerna…** i panelen kopierar den till din mapp: `environment.hdr`, en
+ekvirektangulär HDR-bild på 512 × 256 av en himmel med moln och en ljus, disig sol, gröna kullar vid horisonten, en
+gråbrun mark och tre färgade lampor (learnopengl använder `newport_loft.hdr`, ett foto av en loftvåning). Kameran
+tittar längs -z, mot mitten av bildens vänstra halva: blekt blågrå himmel upptill, mörkgröna kullar vid horisonten
+(högre till vänster i fönstret), marken nedtill. Solen – uppe, till höger och *bakom* kameran – och lamporna är
+utanför bilden, men de kommer att belysa sfärerna framifrån.
 
 Två tal är mindre än learnopengls, eftersom kursen ritar sina kontroller och förväntade resultat på CPU:n (en riktig GPU
 klarar learnopengls värden lätt): environment-cube mappen har 128 × 128 texlar per sida i stället för 512 × 512, och
@@ -120,25 +122,25 @@ konvolutionen samplar halvsfären med steget 0.1 i stället för 0.025 – 1008 
 000.
 
 :::opengl
-`main.cpp` har shaderobjekten från learnopengls IBL-demo: sfärernas shader heter nu `pbrShader`. De nya filerna är
-`cubemap.vs` (färdig), `equirectangular_to_cubemap.fs`, `irradiance_convolution.fs`, `background.vs` och `background.fs`
-(deras innehåll är TODO). `loadTexture` finns kvar, oanvänd.
+Ge shaderobjekten i `main.cpp` namnen från learnopengls IBL-demo: sfärernas shader heter nu `pbrShader`. De nya
+filerna är `cubemap.vs`, `equirectangular_to_cubemap.fs`, `irradiance_convolution.fs`, `background.vs` och
+`background.fs`; texten visar dem, och uppgifterna skriver dem. `loadTexture` finns kvar, oanvänd så länge.
 :::
 :::vulkan
-`main.cpp` kallar nu sfärernas pipeline `pbrPipeline`. Förberett: den globala `vertices` med learnopengls kub (sfärens
-`Vertex`-struct, tangenten lämnad noll), dess `vertexBuffer` och `renderCube(VkCommandBuffer)` (`vkCmdBindVertexBuffers`
-+ `vkCmdDraw(commandBuffer, 36, 1, 0, 0)`). I `shaders/` finns `cubemap.vert` (färdig), `equirectangular_to_cubemap.frag`,
-`irradiance_convolution.frag`, `background.vert` och `background.frag` (stubbar som kompilerar men inte används ännu).
-TODO-kommentarerna i `main.cpp` markerar medlemmarna, pipelinerna, bilderna, inspelningen, bakgrundens ritanrop och
-städningen.
+Kalla nu sfärernas pipeline i `main.cpp` för `pbrPipeline`, och förbered den globala `vertices` med learnopengls kub
+(sfärens `Vertex`-struct, tangenten lämnad noll), dess `vertexBuffer` och `renderCube(VkCommandBuffer)`
+(`vkCmdBindVertexBuffers` + `vkCmdDraw(commandBuffer, 36, 1, 0, 0)`). De nya shadrarna är `shaders/cubemap.vert`,
+`equirectangular_to_cubemap.frag`, `irradiance_convolution.frag`, `background.vert` och `background.frag`; texten
+visar dem. Uppgifterna lägger till medlemmarna, pipelinerna, bilderna, inspelningen, bakgrundens ritanrop och
+städningen i `main.cpp`.
 :::
 :::d3d12
-`main.cpp` har en andra vertex buffer `m_cubeVertexBuffer` med learnopengls kub (samma `Vertex`-struct, tangenten noll)
-och hjälpfunktionen `RenderCube()` (`IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST)`, `IASetVertexBuffers`,
-`DrawInstanced(36, 1, 0, 0)`) – varje ritanrop sätter sin egen topologi, så sfärernas strip och kubens lista kan följa på
-varandra utan någon annan ändring. De nya shaderfilerna är `cubemap.hlsl` (färdig: capture-passens vertex shader),
-`equirectangular_to_cubemap.hlsl` och `irradiance_convolution.hlsl` (var sin `PSMain`, innehållet TODO) och
-`background.hlsl` (`VSMain` och `PSMain`, innehållet TODO). `LoadTexture` finns kvar, oanvänd.
+Ge `main.cpp` en andra vertex buffer `m_cubeVertexBuffer` med learnopengls kub (samma `Vertex`-struct, tangenten noll)
+och hjälpfunktionen `RenderCube()` (`IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST)`,
+`IASetVertexBuffers`, `DrawInstanced(36, 1, 0, 0)`) – varje ritanrop sätter sin egen topologi, så sfärernas strip och
+kubens lista kan följa på varandra utan någon annan ändring. De nya shaderfilerna är `cubemap.hlsl` (capture-passens
+vertex shader), `equirectangular_to_cubemap.hlsl` och `irradiance_convolution.hlsl` (var sin `PSMain`) och
+`background.hlsl` (`VSMain` och `PSMain`); texten visar dem. `LoadTexture` finns kvar, oanvänd så länge.
 :::
 
 ## PBR och HDR

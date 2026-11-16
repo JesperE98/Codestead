@@ -185,10 +185,11 @@ That is also why it is an approximation: an average of the layers is not what th
 Real renderers mix these: they sort what can be sorted, use weighted blending or a variant for particles and other
 volumes of small transparent pieces, and keep an exact method for the few cases where it matters.
 
-## The project
+## Your program
 
-The project shows the problem: the start of the next chapter, with no tasks yet. Three 2 × 2 quads face the camera,
-which is at (0, 0, 5) looking down -z:
+This chapter has no tasks. At its end you prepare the program the next chapter starts from, in a new folder – start
+from any of your earlier programs, for example the one from *Blending* – and it shows the problem. Three 2 × 2 quads
+face the camera, which is at (0, 0, 5) looking down -z:
 
 - a **red** opaque quad at (0.5, -0.2, 1.0);
 - a **green** quad with alpha 0.5 at (-0.3, -0.6, 2.0) – the nearest;
@@ -215,13 +216,12 @@ blended the ordinary way, with depth writes on.
 ```
 
 `transparent.fs` just outputs the colour with its alpha (`frag = color;`). Each draw sets learnopengl's two uniforms,
-`mvp` and `color`. The files `composite.vs` / `.fs` and `screen.vs` / `.fs` are there already for the next chapter;
-`composite.fs`'s `main` is still a TODO.
+`mvp` and `color`. The files `composite.vs` / `.fs` and `screen.vs` / `.fs` come in the next chapter.
 :::
 :::vulkan
-In Vulkan the blend function is part of the pipeline. The project's helper `createPipeline(…)` takes the depth test,
-depth writes, whether to blend and the blend factors of up to two colour attachments, and the transparent pipeline is
-made with ordinary alpha blending and depth writes on:
+In Vulkan the blend function is part of the pipeline. Your helper `createPipeline(…)`, extended for this, takes the
+depth test, depth writes, whether to blend and the blend factors of up to two colour attachments, and the transparent
+pipeline is made with ordinary alpha blending and depth writes on:
 
 ```cpp
         // transparent objects: ordinary alpha blending (SRC_ALPHA, ONE_MINUS_SRC_ALPHA), depth test with depth writes
@@ -231,11 +231,10 @@ made with ordinary alpha blending and depth writes on:
 
 Everything is drawn into the window's render pass. learnopengl's two uniforms `mvp` and `color` are push constants
 (`struct PushConstants { glm::mat4 mvp; glm::vec4 color; }`), and `transparent.frag` outputs `pc.color` as it is. The
-shaders `composite.vert` / `.frag` and `screen.vert` / `.frag` are there already for the next chapter; `composite.frag`'s
-`main` is still a TODO.
+shaders `composite.vert` / `.frag` and `screen.vert` / `.frag` come in the next chapter.
 :::
 :::d3d12
-In DirectX 12 the blend function is part of the pipeline state. The project draws the red quad with
+In DirectX 12 the blend function is part of the pipeline state. Your program draws the red quad with
 `m_solidPipelineState` and the green and blue quads with `m_transparentPipelineState`, which blends the ordinary way and
 keeps the default depth state (test LESS, writes on):
 
@@ -248,8 +247,7 @@ keeps the default depth state (test LESS, writes on):
 
 Everything is drawn straight into the back buffer with a depth buffer. learnopengl's two uniforms `mvp` and `color` are
 root constants (`struct ObjectConstants { XMFLOAT4X4 mvp; XMFLOAT4 color; }`), and `transparent.hlsl`'s `PSMain` returns
-`color` as it is. `composite.hlsl` and `screen.hlsl` are there already for the next chapter; `composite.hlsl`'s `PSMain`
-is still a TODO.
+`color` as it is. `composite.hlsl` and `screen.hlsl` come in the next chapter.
 :::
 
 This chapter has no tasks. Build and run the program: on black you see the red quad on the right, the half-transparent

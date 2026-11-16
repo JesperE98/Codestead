@@ -45,18 +45,18 @@ The effects are learnopengl's three:
 - **Chaos**: make use of an edge detection kernel to create interesting visuals and also move the textured image in a
   circular fashion for an interesting chaotic effect.
 
-The project is `particles`' solution with new `// TODO:` sections and a new shader.
+You continue in your program from *Particles*, with a new shader.
 :::opengl
-The new shader is `post_processing.vs` / `post_processing.fs`; its start bodies only pass the quad and the texture
-through.
+The new shader is `post_processing.vs` / `post_processing.fs`; start it with bodies that only pass the quad and the
+texture through.
 :::
 :::vulkan
 The new shader is `shaders/post_processing.vert` / `shaders/post_processing.frag` (built to `.spv` like the others);
-its start bodies only pass the quad and the texture through.
+start it with bodies that only pass the quad and the texture through.
 :::
 :::d3d12
-The new shader is `post_processing.hlsl` with `VSMain` and `PSMain`; its start bodies only pass the quad and the
-texture through.
+The new shader is `post_processing.hlsl` with `VSMain` and `PSMain`; start it with bodies that only pass the quad and
+the texture through.
 :::
 The chapter's expected results show the game at **1.45 seconds** (frame 87). That moment is chosen on purpose: the ball
 hits the solid stone in frame 86 (see `collision-resolution`), and at the end of the chapter that hit will shake the

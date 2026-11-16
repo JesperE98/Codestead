@@ -9,7 +9,7 @@
       },
       "hint": {
         "opengl": "`#include <ft2build.h>` then `#include FT_FREETYPE_H`; `FT_Init_FreeType(&ft)` and `FT_New_Face(ft, \"fonts/Inter-Bold.otf\", 0, &face)` return non-zero on failure (print and `return -1`); `FT_Set_Pixel_Sizes(face, 0, 48);`; `FT_Done_Face(face); FT_Done_FreeType(ft);`.",
-        "vulkan": "`#include <ft2build.h>` then `#include FT_FREETYPE_H`; `FT_Init_FreeType(&ft)` and `FT_New_Face(ft, \"fonts/Inter-Bold.otf\", 0, &face)` return non-zero on failure – throw a `std::runtime_error`; `FT_Set_Pixel_Sizes(face, 0, 48);`; leave the glyph TODO between it and `FT_Done_Face(face); FT_Done_FreeType(ft);`.",
+        "vulkan": "`#include <ft2build.h>` then `#include FT_FREETYPE_H`; `FT_Init_FreeType(&ft)` and `FT_New_Face(ft, \"fonts/Inter-Bold.otf\", 0, &face)` return non-zero on failure – throw a `std::runtime_error`; `FT_Set_Pixel_Sizes(face, 0, 48);`; leave room for the glyphs (the next task) between it and `FT_Done_Face(face); FT_Done_FreeType(ft);`.",
         "d3d12": "`#include <ft2build.h>` then `#include FT_FREETYPE_H`, and `#pragma comment(lib, \"freetype.lib\")`; `FT_Init_FreeType(&ft)` and `FT_New_Face(ft, \"fonts/Inter-Bold.otf\", 0, &face)` return non-zero on failure – throw a `std::runtime_error`; `FT_Set_Pixel_Sizes(face, 0, 48);`; `FT_Done_Face(face); FT_Done_FreeType(ft);`."
       }
     },

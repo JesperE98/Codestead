@@ -52,33 +52,35 @@ has its own gamma curve, but a gamma value of 2.2 gives good results on most mon
 allow players to change the game's gamma setting as it varies slightly per monitor.
 
 :::opengl
-The project is learnopengl's scene: the wooden floor of the last chapter (20 × 20 units at y = -0.5, `wood.png`
-repeated ten times) lit by four point lights at (-3, 0, 0), (-1, 0, 0), (1, 0, 0) and (3, 0, 0), whose colours go from
-dim grey to white: 0.25, 0.50, 0.75 and 1.00. `gamma_correction.fs` computes the light of each one in a function
-`BlinnPhong()` – diffuse and Blinn-Phong specular (exponent 64), times the light's colour, weakened with the distance;
-no ambient – and multiplies the floor's colour with their sum. The camera is at (0, 0, 3) as before.
+You continue in your program from *Advanced Lighting* and turn it into learnopengl's scene: the wooden floor of the
+last chapter (20 × 20 units at y = -0.5, `wood.png` repeated ten times) lit by four point lights at (-3, 0, 0), (-1,
+0, 0), (1, 0, 0) and (3, 0, 0), whose colours go from dim grey to white: 0.25, 0.50, 0.75 and 1.00.
+`gamma_correction.fs` computes the light of each one in a function `BlinnPhong()` – diffuse and Blinn-Phong specular
+(exponent 64), times the light's colour, weakened with the distance; no ambient – and multiplies the floor's colour
+with their sum. The camera is at (0, 0, 3) as before.
 :::
 :::vulkan
-The project is learnopengl's scene: the wooden floor of the last chapter (20 × 20 units at y = -0.5,
-`textures/wood.png` repeated ten times) lit by four point lights at (-3, 0, 0), (-1, 0, 0), (1, 0, 0) and (3, 0, 0),
-whose colours go from dim grey to white: 0.25, 0.50, 0.75 and 1.00. `shaders/gamma_correction.frag` computes the light of
-each one in a function `BlinnPhong()` – diffuse and Blinn-Phong specular (exponent 64), times the light's colour,
-weakened with the distance; no ambient – and multiplies the floor's colour with their sum. The camera is at (0, 0, 3) as
-before.
+You continue in your program from *Advanced Lighting* and turn it into learnopengl's scene: the wooden floor of the
+last chapter (20 × 20 units at y = -0.5, `textures/wood.png` repeated ten times) lit by four point lights at (-3, 0,
+0), (-1, 0, 0), (1, 0, 0) and (3, 0, 0), whose colours go from dim grey to white: 0.25, 0.50, 0.75 and 1.00.
+`shaders/gamma_correction.frag` computes the light of each one in a function `BlinnPhong()` – diffuse and Blinn-Phong
+specular (exponent 64), times the light's colour, weakened with the distance; no ambient – and multiplies the floor's
+colour with their sum. The camera is at (0, 0, 3) as before.
 :::
 :::d3d12
-The project is learnopengl's scene: the wooden floor of the last chapter (20 × 20 units at y = -0.5, `wood.png`
-repeated ten times) lit by four point lights at (-3, 0, 0), (-1, 0, 0), (1, 0, 0) and (3, 0, 0), whose colours go from
-dim grey to white: 0.25, 0.50, 0.75 and 1.00. `gamma_correction.hlsl` computes the light of each one in a function
-`BlinnPhong()` – diffuse and Blinn-Phong specular (exponent 64), times the light's colour, weakened with the distance;
-no ambient – and `PSMain` multiplies the floor's colour with their sum. (The distance is called `lightDistance`:
-`distance` is an HLSL intrinsic function.) The camera is at (0, 0, 3) as before.
+You continue in your program from *Advanced Lighting* and turn it into learnopengl's scene: the wooden floor of the
+last chapter (20 × 20 units at y = -0.5, `wood.png` repeated ten times) lit by four point lights at (-3, 0, 0), (-1,
+0, 0), (1, 0, 0) and (3, 0, 0), whose colours go from dim grey to white: 0.25, 0.50, 0.75 and 1.00.
+`gamma_correction.hlsl` computes the light of each one in a function `BlinnPhong()` – diffuse and Blinn-Phong specular
+(exponent 64), times the light's colour, weakened with the distance; no ambient – and `PSMain` multiplies the floor's
+colour with their sum. (The distance is called `lightDistance`: `distance` is an HLSL intrinsic function.) The camera
+is at (0, 0, 3) as before.
 :::
 
 learnopengl switches everything this chapter changes with one `gamma` flag (the space bar). Here each step is its own
 task, so you can see what each one does. Right now there is no gamma correction at all. Build and run the program: a
 dark floor with four pools of light, the right ones brighter and strongly saturated – right below the third light the
-red channel is already at its maximum. The `// TODO:` comments in the project mark where your code goes.
+red channel is already at its maximum.
 
 ### Four lights in {{api}}
 

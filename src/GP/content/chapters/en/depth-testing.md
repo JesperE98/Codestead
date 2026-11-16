@@ -231,17 +231,36 @@ default `GL_LESS`. Because the function is baked into the PSO when it is created
 for some objects means a second PSO, selected with `SetPipelineState` before those draws.
 :::
 
-Let's see the effect that changing the depth function has on the visual output. This chapter's project is
-learnopengl's depth-testing scene: two textured cubes standing on a textured floor, with no lighting. The cubes use
-the image `marble.png`, the floor `metal.png`; the floor's texture coordinates go up to 2, so its image repeats. The
-camera is the one of the *Camera* chapter, at (0, 0, 3) looking down -z; the cubes stand at (-1, 0, -1) and (2, 0, 0),
-so the left cube is in full view and only the left face of the right cube shows at the window's right edge. The draw
-order is learnopengl's: cube 0, cube 1, and the floor last.
+Let's see the effect that changing the depth function has on the visual output. First build learnopengl's
+depth-testing scene, which the whole *Advanced OpenGL* part works with. Start from your program from *Camera* in a
+new folder: the camera at (0, 0, 3) looking down -z, the depth test on, the clear colour (0.1, 0.1, 0.1). The scene
+is two textured cubes standing on a textured floor, with no lighting. The cubes use the image `marble.png`, the floor
+`metal.png` – **Save resources…** in the panel copies both into your folder. The floor's texture coordinates go up
+to 2, so its image repeats. The cubes stand at (-1, 0, -1) and (2, 0, 0), so the left cube is in full view and only
+the left face of the right cube shows at the window's right edge. The draw order is learnopengl's: cube 0, cube 1,
+and the floor last. The cube is the 36 vertices (position + texture coordinates) of *Coordinate Systems*; the floor
+is learnopengl's `planeVertices`, two triangles at y = -0.5:
+
+```cpp
+    float planeVertices[] = {
+        // positions          // texture coords (higher than 1: with GL_REPEAT the floor texture repeats)
+         5.0f, -0.5f,  5.0f,  2.0f, 0.0f,
+        -5.0f, -0.5f,  5.0f,  0.0f, 0.0f,
+        -5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
+
+         5.0f, -0.5f,  5.0f,  2.0f, 0.0f,
+        -5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
+         5.0f, -0.5f, -5.0f,  2.0f, 2.0f
+    };
+```
+
+The shaders only transform the vertices and sample one texture – the shaders of *Coordinate Systems* with a single
+texture and no mixing.
 
 :::opengl
-The project has learnopengl's two VAOs, `cubeVAO` (36 vertices: position + texture coordinates) and `planeVAO` (the
-floor's 6 vertices at y = -0.5), one shader (`depth_testing.vs` / `depth_testing.fs`) and the `loadTexture` function
-of the lighting chapters. In the render loop each object binds its VAO and its texture and sets its model matrix:
+In OpenGL that is learnopengl's two VAOs, `cubeVAO` (36 vertices: position + texture coordinates) and `planeVAO` (the
+floor's 6 vertices), one shader (`depth_testing.vs` / `depth_testing.fs`) and the `loadTexture` function of the
+lighting chapters. In the render loop each object binds its VAO and its texture and sets its model matrix:
 
 ```cpp
         // cubes
@@ -262,11 +281,11 @@ of the lighting chapters. In the render loop each object binds its VAO and its t
         glDrawArrays(GL_TRIANGLES, 0, 6);
 ```
 
-`glEnable(GL_DEPTH_TEST);` is already there; below it, a `// TODO:` comment marks where the depth function goes.
-Until you set one, OpenGL's default `GL_LESS` is used.
+`glEnable(GL_DEPTH_TEST);` stays; the depth function goes right below it. Until you set one, OpenGL's default
+`GL_LESS` is used.
 :::
 :::vulkan
-The project is the program of the earlier chapters, with a few changes that the whole *Advanced OpenGL* part keeps.
+In Vulkan, make a few changes to the program of the earlier chapters that the whole *Advanced OpenGL* part keeps.
 A vertex is now `struct Vertex { glm::vec3 pos; glm::vec2 texCoord; }`, and **one vertex buffer** holds both of
 learnopengl's meshes: the cube's 36 vertices (0..35) and the floor's 6 (36..41). Where OpenGL binds another VAO, each
 draw here picks its part of the buffer with the `firstVertex` parameter of `vkCmdDraw`. The texture coordinates are
@@ -297,10 +316,11 @@ and binding the right one before a draw is Vulkan's `glBindTexture`. The model m
 
 `loadTexture(path, image, memory, view)` loads `textures/marble.png` and `textures/metal.png`, and one sampler with
 `VK_SAMPLER_ADDRESS_MODE_REPEAT` serves both. There is one pipeline, built from `shaders/depth_testing.vert` and
-`.frag`. This project has no `// TODO:` comments: the tasks change lines that are already there.
+`.frag`. The tasks change lines that are already there.
 :::
 :::d3d12
-The project follows the earlier chapters, with a few changes that the whole *Advanced OpenGL* part keeps. **One
+In Direct3D 12, make a few changes to the program of the earlier chapters that the whole *Advanced OpenGL* part
+keeps. **One
 vertex buffer** holds both of learnopengl's meshes: the cube's 36 vertices (0..35) and the floor's 6 (36..41). Where
 OpenGL binds another VAO, each draw here picks its part of the buffer with the third parameter of `DrawInstanced`, the
 start vertex. The texture coordinates are learnopengl's with v flipped (`1 - v`, for the floor `2 - v`), because
@@ -331,11 +351,10 @@ parameter 2 is a one-SRV descriptor table that is pointed at the right slot befo
 ```
 
 `cubeTexture` and `floorTexture` are the GPU handles of heap slots 1 and 2. The static sampler s0 wraps, so the floor's
-image repeats. The shaders are in `depth_testing.hlsl`. This project has no `// TODO:` comments: the tasks change
-lines that are already there.
+image repeats. The shaders are in `depth_testing.hlsl`. The tasks change lines that are already there.
 :::
 
-Build and run the program to see the start picture: two marble cubes on a metal floor whose far edge forms the horizon.
+Build and run the program to see the scene: two marble cubes on a metal floor whose far edge forms the horizon.
 
 Now we set the depth function to "always": every fragment passes the depth test.
 
@@ -437,7 +456,7 @@ Then set the depth function back to "less" – a fragment passes when it is near
 ```
 :::
 
-Do the task **depth-less**, then build and run: the start picture is back, with the cubes standing in front of the
+Do the task **depth-less**, then build and run: the original picture is back, with the cubes standing in front of the
 floor.
 
 ## Depth value precision

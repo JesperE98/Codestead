@@ -7,6 +7,8 @@ blocklayouter. Hedgerow har fyra egna banor, var och en i learnopengls format, o
 - Ett **solitt** block: ett block av grå sten som inte kan förstöras.
 - Ett **vanligt** block: en ljus platta, tonad i en av fyra färger, som bollen förstör när den träffar den.
 
+Du fortsätter i ditt program från *Rendera sprites*.
+
 För att det ska vara enkelt att definiera banor är en bana en vanlig textfil med tal. Varje tal är ett block, och talen
 ligger på filens rader så som blocken ligger i muren: en rad per blockrad, talen åtskilda av mellanslag. learnopengls
 banformat:
@@ -15,8 +17,9 @@ banformat:
 - Talet **1**: ett solitt block, ett block som inte kan förstöras.
 - Ett tal **större än 1**: ett block som kan förstöras; varje följande tal skiljer sig bara i färg.
 
-Kursens banor är 15 block breda och 8 rader höga. Bana ett, `levels/one.lvl`, består av fyra hela rader med färgade
-block – talen 5, 4, 3, 2 uppifrån –, en tom rad och en rad stenar med luckor:
+Kursens banor är 15 block breda och 8 rader höga; **Spara resursfilerna…** i panelen kopierar de fyra banfilerna,
+`levels/one.lvl` till `levels/four.lvl`, och spelets texturer till din mapp. Bana ett, `levels/one.lvl`, består av
+fyra hela rader med färgade block – talen 5, 4, 3, 2 uppifrån –, en tom rad och en rad stenar med luckor:
 
 ```text
 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5
@@ -236,9 +239,9 @@ annat):
 ```
 :::
 
-Kommentarerna `// TODO:` i projektet visar var koden för varje uppgift ska in. Gör nu den första uppgiften,
-**background**: ladda de fyra texturerna efter bollens och rita bakgrunden i stället för bollen. Bygg och kör
-programmet: **trädgården i skymningen fyller fönstret** – stjärnorna, månen uppe till höger, kullarna och häckarna.
+Gör nu den första uppgiften, **background**: ladda de fyra texturerna efter bollens och rita bakgrunden i stället för
+bollen. Bygg och kör programmet: **trädgården i skymningen fyller fönstret** – stjärnorna, månen uppe till höger,
+kullarna och häckarna.
 
 Gör nu uppgiften **game-object**: structen, `MakeGameObject` och `DrawObject`. Ingenting använder dem ännu – bilden är
 densamma.

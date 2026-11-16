@@ -33,13 +33,54 @@ tentakeln mitt i fönstret (learnopengl använder `translate(0, -0.4, 0) · scal
 visar den diffusa texturen utan belysning, som learnopengls gör.
 
 :::opengl
-Projektet är programmet från delen *Modellinläsning* med learnopengls ändringar från `model_animation.h` ännu ogjorda:
-`model.h` och `mesh.h` (klasserna `Model` och `Mesh`), `assimp_glm_helpers.h` (learnopengls omvandlingar från assimps
-typer till GLM:s, som fria `inline`-funktioner: `ConvertMatrixToGLMFormat`, `GetGLMVec`, `GetGLMQuat`) och shaderna
-`anim_model.vs` / `.fs`. Modellen läses in som learnopengls `model_animation.h` gör – `aiProcess_Triangulate |
-aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace`, **utan** `aiProcess_FlipUVs`: assimp vänder redan glTF:s
-texturkoordinater till OpenGL:s konvention med v uppåt, och `stbi_set_flip_vertically_on_load(true)` vänder bilden på
-samma sätt. Programmet använder OpenGL 3.3 core, som learnopengls demo.
+Utgå från ditt program från *Modell* i en ny mapp – programmet från delen *Modellinläsning*, med learnopengls
+ändringar från `model_animation.h` ännu ogjorda: `model.h` och `mesh.h` (klasserna `Model` och `Mesh`),
+`assimp_glm_helpers.h` (learnopengls omvandlingar från assimps typer till GLM:s, som fria `inline`-funktioner:
+`ConvertMatrixToGLMFormat`, `GetGLMVec`, `GetGLMQuat`) och shaderna `anim_model.vs` / `.fs`. Modellen läses in som
+learnopengls `model_animation.h` gör –
+`aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace`, **utan** `aiProcess_FlipUVs`:
+assimp vänder redan glTF:s texturkoordinater till OpenGL:s konvention med v uppåt, och
+`stbi_set_flip_vertically_on_load(true)` vänder bilden på samma sätt. Programmet använder OpenGL 3.3 core, som
+learnopengls demo.
+
+`assimp_glm_helpers.h` är kort:
+
+```cpp
+#ifndef ASSIMP_GLM_HELPERS_H
+#define ASSIMP_GLM_HELPERS_H
+
+#include <assimp/quaternion.h>
+#include <assimp/vector3.h>
+#include <assimp/matrix4x4.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
+
+// assimp's matrices are row-major (a1 a2 a3 a4 is the first row), glm's are column-major (m[column][row]):
+// copy every element to its place
+inline glm::mat4 ConvertMatrixToGLMFormat(const aiMatrix4x4& from)
+{
+    glm::mat4 to;
+    // the a,b,c,d in assimp is the row ; the 1,2,3,4 is the column
+    to[0][0] = from.a1; to[1][0] = from.a2; to[2][0] = from.a3; to[3][0] = from.a4;
+    to[0][1] = from.b1; to[1][1] = from.b2; to[2][1] = from.b3; to[3][1] = from.b4;
+    to[0][2] = from.c1; to[1][2] = from.c2; to[2][2] = from.c3; to[3][2] = from.c4;
+    to[0][3] = from.d1; to[1][3] = from.d2; to[2][3] = from.d3; to[3][3] = from.d4;
+    return to;
+}
+
+inline glm::vec3 GetGLMVec(const aiVector3D& vec)
+{
+    return glm::vec3(vec.x, vec.y, vec.z);
+}
+
+// glm::quat's constructor takes w first
+inline glm::quat GetGLMQuat(const aiQuaternion& pOrientation)
+{
+    return glm::quat(pOrientation.w, pOrientation.x, pOrientation.y, pOrientation.z);
+}
+
+#endif
+```
 
 :::ide clion vscode
 Din `CMakeLists.txt` behöver de två Assimp-raderna från kapitlet *Assimp* i slutet. `assimp_glm_helpers.h` behöver,
@@ -53,14 +94,15 @@ Solution Explorer; de behöver ingen inställning.
 :::
 :::
 :::vulkan
-Projektet läser in modellen med assimp som vulkan-tutorials `loadModel` gör: hela modellen blir en lista med vertexar och
-en lista med index, för en vertex buffer och en index buffer. learnopengls klass `Model` blir en struct med fria
-funktioner – `struct Model { std::vector<Vertex> vertices; std::vector<uint32_t> indices; … }`, fylld av
-`LoadModel(Model&, path)` → `processNode` → `processMesh` – och filnamnen är konstanter, `MODEL_PATH =
-"models/tentacle.gltf"` och `TEXTURE_PATH = "models/tentacle.png"` (inläst med kursens `loadTexture`). assimp vänder
-glTF:s texturkoordinater till OpenGL:s konvention med v uppåt; i Vulkan är v = 0 bildens översta rad, så modellen läses
-med `aiProcess_FlipUVs` tillagd, som vänder tillbaka dem. learnopengls GLM-hjälpfunktioner (`ConvertMatrixToGLMFormat`,
-`GetGLMVec`, `GetGLMQuat`) är fria `inline`-funktioner överst i `main.cpp`. Modellmatrisen är en push constant.
+Utgå från ditt program från *Modell* i en ny mapp. Det läser in modellen med assimp som vulkan-tutorials `loadModel`
+gör: hela modellen blir en lista med vertexar och en lista med index, för en vertex buffer och en index buffer.
+learnopengls klass `Model` blir en struct med fria funktioner –
+`struct Model { std::vector<Vertex> vertices; std::vector<uint32_t> indices; … }`, fylld av `LoadModel(Model&, path)`
+→ `processNode` → `processMesh` – och filnamnen är konstanter, `MODEL_PATH = "models/tentacle.gltf"` och
+`TEXTURE_PATH = "models/tentacle.png"` (inläst med kursens `loadTexture`). assimp vänder glTF:s texturkoordinater till
+OpenGL:s konvention med v uppåt; i Vulkan är v = 0 bildens översta rad, så modellen läses med `aiProcess_FlipUVs`
+tillagd, som vänder tillbaka dem. learnopengls GLM-hjälpfunktioner (`ConvertMatrixToGLMFormat`, `GetGLMVec`,
+`GetGLMQuat`) är fria `inline`-funktioner överst i `main.cpp`. Modellmatrisen är en push constant.
 
 Det här är det första Vulkan-projektet som använder Assimp i stället för tinyobjloader, så ditt projekt behöver biblioteket:
 
@@ -90,10 +132,11 @@ dess DLL bredvid din `.exe` – programmet skulle inte starta utan den.
 :::
 :::
 :::d3d12
-Projektet läser in modellen med klassen `Model` från kapitlet *Modell* och assimp, med `aiProcess_FlipUVs` – assimp
-vänder glTF:s texturkoordinater till OpenGL:s konvention med v uppåt, flaggan vänder tillbaka dem, och i Direct3D är
-v = 0 bildens översta rad. Ingen `aiProcess_ConvertToLeftHanded`: kursens matematik är högerhänt (`XMMatrixLookAtRH`,
-`XMMatrixPerspectiveFovRH`). Modellmatrisen är en root constant, som i kapitlet *Modell*.
+Utgå från ditt program från *Modell* i en ny mapp. Det läser in modellen med klassen `Model` från kapitlet *Modell*
+och assimp, med `aiProcess_FlipUVs` – assimp vänder glTF:s texturkoordinater till OpenGL:s konvention med v uppåt,
+flaggan vänder tillbaka dem, och i Direct3D är v = 0 bildens översta rad. Ingen `aiProcess_ConvertToLeftHanded`:
+kursens matematik är högerhänt (`XMMatrixLookAtRH`, `XMMatrixPerspectiveFovRH`). Modellmatrisen är en root constant,
+som i kapitlet *Modell*.
 
 :::ide clion vscode
 Din `CMakeLists.txt` behöver de två Assimp-raderna från kapitlet *Assimp* i slutet.
@@ -104,7 +147,7 @@ Med vcpkg:s integration hittar projektet Assimp av sig självt; utan den gör du
 :::
 :::
 
-Kommentarerna `// TODO:` visar var din kod ska in. Bygg och kör programmet i din IDE: en rak tentakel mitt i fönstret –
+Bygg och kör programmet i din IDE: en rak tentakel mitt i fönstret –
 meshet i sin *vilopose*, den form det modellerades i.
 
 ## Ben, bindposen och offsetmatrisen

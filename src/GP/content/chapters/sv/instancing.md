@@ -112,36 +112,41 @@ på en egen plats i världen.
 Tekniken är densamma i alla API:er; kapitlet visar den för {{api}}.
 
 :::opengl
-Projektet börjar med learnopengls första exempel före instancing: ingen kamera, inga matriser, rensningsfärgen (0.1,
-0.1, 0.1) och en liten fyrhörning – learnopengls `quadVertices`, en 2D-position och en färg per vertex, ±0.05 – ritad
-en gång i mitten med `glDrawArrays(GL_TRIANGLES, 0, 6)` av `instancing.vs` / `instancing.fs`. För asteroidfältet
-innehåller projektet redan Model-kapitlets `mesh.h` och `model.h` – med `Mesh::VAO`, `Mesh::indices`, `Model::meshes`
-och `Model::textures_loaded` publika, som learnopengls asteroiddemo behöver – planeten och kursens sten
-(`models/rock.obj`, `rock.mtl`, `rock.png`), och shadrarna `planet.vs/.fs` och `asteroids.vs/.fs`.
+Utgå från ditt program från *Modell* i en ny mapp – dess modellkod behövs för asteroidfältet – och gör det till
+learnopengls första exempel före instancing: ingen kamera, inga matriser, rensningsfärgen (0.1, 0.1, 0.1) och en liten
+fyrhörning – learnopengls `quadVertices`, en 2D-position och en färg per vertex, ±0.05 – ritad en gång i mitten med
+`glDrawArrays(GL_TRIANGLES, 0, 6)` av `instancing.vs` / `instancing.fs`. För asteroidfältet behåller du
+Model-kapitlets `mesh.h` och `model.h` – med `Mesh::VAO`, `Mesh::indices`, `Model::meshes` och
+`Model::textures_loaded` publika, som learnopengls asteroiddemo behöver och planeten, och lägger till kursens sten
+(`models/rock.obj`, `rock.mtl`, `rock.png` – **Spara resursfilerna…** i panelen kopierar dem till din mapp). Shadrarna
+`planet.vs/.fs` och `asteroids.vs/.fs` kommer med sina uppgifter.
 :::
 :::vulkan
-Projektet börjar med learnopengls första exempel före instancing: ingen kamera, inga matriser, rensningsfärgen (0.1,
-0.1, 0.1) och en liten fyrhörning – learnopengls `quadVertices` (`struct QuadVertex { glm::vec2 pos; glm::vec3 color;
-}`, ±0.05, i en egen vertexbuffer `quadVertexBuffer`) – ritad en gång i mitten med `vkCmdDraw(commandBuffer, 6, 1, 0,
-0)` av `shaders/instancing.vert` / `.frag`. Vulkans y-axel pekar nedåt, så fyrhörningens y-värden är negerade och
-bilden blir learnopengls (rött hörn uppe till vänster). `createPipeline(vertFile, fragFile, bindingDescriptions,
-attributeDescriptions, pipeline)` tar vertexindatan som parametrar – en *vector* av bindings, eftersom instancing lägger
-till en andra. För asteroidfältet skapar starten redan (men använder ännu inte) Model-kapitlets kod för två modeller:
-`loadModel(path, vertices, indices)` för planeten och kursens sten, deras vertex- och indexbuffrar, tre texturer,
-uniform buffern (`view`, `proj`) och två descriptor sets, `planetDescriptorSet` och `rockDescriptorSet`.
+Utgå från ditt program från *Modell* i en ny mapp – dess modellkod behövs för asteroidfältet – och gör det till
+learnopengls första exempel före instancing: ingen kamera, inga matriser, rensningsfärgen (0.1, 0.1, 0.1) och en liten
+fyrhörning – learnopengls `quadVertices` (`struct QuadVertex { glm::vec2 pos; glm::vec3 color; }`, ±0.05, i en egen
+vertexbuffer `quadVertexBuffer`) – ritad en gång i mitten med `vkCmdDraw(commandBuffer, 6, 1, 0, 0)` av
+`shaders/instancing.vert` / `.frag`. Vulkans y-axel pekar nedåt, så fyrhörningens y-värden är negerade och bilden blir
+learnopengls (rött hörn uppe till vänster).
+`createPipeline(vertFile, fragFile, bindingDescriptions, attributeDescriptions, pipeline)` tar vertexindatan som
+parametrar – en *vector* av bindings, eftersom instancing lägger till en andra. För asteroidfältet skapar du (men
+använder ännu inte) Model-kapitlets kod för två modeller: `loadModel(path, vertices, indices)` för planeten och
+kursens sten, deras vertex- och indexbuffrar, tre texturer, uniform buffern (`view`, `proj`) och två descriptor sets,
+`planetDescriptorSet` och `rockDescriptorSet`.
 :::
 :::d3d12
-Projektet börjar med learnopengls första exempel före instancing: ingen kamera, inga matriser, rensningsfärgen (0.1,
-0.1, 0.1) och en liten fyrhörning – learnopengls `quadVertices` (`struct QuadVertex { XMFLOAT2 position; XMFLOAT3
-color; }`, ±0.05, 6 vertices) – ritad en gång i mitten med `DrawInstanced(6, 1, 0, 0)` av `instancing.hlsl`. För
-asteroidfältet innehåller projektet redan Model-kapitlets klass `Model` – med varje meshs `vertexBufferView`,
-`indexBufferView` och `srvHandle` publika, som learnopengl gör meshens VAO publik för sin asteroiddemo – planeten,
-kursens sten (`models/rock.obj`, `rock.mtl`, `rock.png`), root signaturen med root constants (b0), CBV-tabellen (b1)
-och en texturtabell, och shadrarna `planet.hlsl` och `asteroids.hlsl`.
+Utgå från ditt program från *Modell* i en ny mapp – dess modellkod behövs för asteroidfältet – och gör det till
+learnopengls första exempel före instancing: ingen kamera, inga matriser, rensningsfärgen (0.1, 0.1, 0.1) och en liten
+fyrhörning – learnopengls `quadVertices` (`struct QuadVertex { XMFLOAT2 position; XMFLOAT3 color; }`, ±0.05, 6
+vertices) – ritad en gång i mitten med `DrawInstanced(6, 1, 0, 0)` av `instancing.hlsl`. För asteroidfältet behåller
+du Model-kapitlets klass `Model` – med varje meshs `vertexBufferView`, `indexBufferView` och `srvHandle` publika, som
+learnopengl gör meshens VAO publik för sin asteroiddemo – planeten, kursens sten (`models/rock.obj`, `rock.mtl`,
+`rock.png` – **Spara resursfilerna…** i panelen kopierar dem till din mapp), root signaturen med root constants (b0),
+CBV-tabellen (b1) och en texturtabell, och shadrarna `planet.hlsl` och `asteroids.hlsl`.
 :::
 
-Kommentarerna `// TODO:` i projektet visar var din kod ska in. Efter varje uppgift bygger och kör du programmet i din
-IDE. Just nu visar den en liten fyrhörning mitt i fönstret, färgad från hörnen: rött, grönt, blått och cyan.
+Efter varje uppgift bygger och kör du programmet i din IDE. Just nu visar den en liten fyrhörning mitt i fönstret,
+färgad från hörnen: rött, grönt, blått och cyan.
 
 ## Instancing
 
@@ -175,7 +180,7 @@ void main()
 }
 ```
 
-I `main.cpp`, vid TODO:n, skapa förskjutningarna och lämna dem till shadern:
+I `main.cpp`, före render loopen, skapa förskjutningarna och lämna dem till shadern:
 
 ```cpp
     // generate a list of 100 quad locations/translation-vectors
@@ -315,7 +320,7 @@ register b2 för vertex shadern:
         rootParameters[3].InitAsConstantBufferView(2, 0, D3D12_SHADER_VISIBILITY_VERTEX);
 ```
 
-I `LoadAssets`, vid TODO:n, skapa förskjutningarna och skriv dem i buffern en gång:
+I `LoadAssets`, skapa förskjutningarna och skriv dem i buffern en gång:
 
 ```cpp
     XMFLOAT2 translations[100];

@@ -3,7 +3,7 @@
   "tasks": {
     "depth-always": {
       "text": {
-        "opengl": "Låt varje fragment klara djuptestet: sätt djupfunktionen till `GL_ALWAYS` med `glDepthFunc` (vid TODO:n efter `glEnable(GL_DEPTH_TEST);`).",
+        "opengl": "Låt varje fragment klara djuptestet: sätt djupfunktionen till `GL_ALWAYS` med `glDepthFunc` (direkt efter `glEnable(GL_DEPTH_TEST);`).",
         "vulkan": "Låt varje fragment klara djuptestet: sätt `depthStencil.depthCompareOp = VK_COMPARE_OP_ALWAYS;` i `createPipeline()`.",
         "d3d12": "Låt varje pixel klara djuptestet: sätt PSO:ns `DepthStencilState.DepthFunc` till `D3D12_COMPARISON_FUNC_ALWAYS`."
       },

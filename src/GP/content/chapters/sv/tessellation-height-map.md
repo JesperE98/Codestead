@@ -24,25 +24,26 @@ Kameran tittar på hela landskapet framifrån och ovanifrån: från (0, 190, 290
 1000 (learnopengl börjar på en punkt över sin mycket större karta). Fragment shadern färgar varje punkt efter dess höjd.
 
 :::opengl
-Projektet är ett enkelt OpenGL 3.3-program: `main.cpp`, kursens klass `Shader`, `cpuheight.vs` / `.fs` (learnopengls
-shaders `8.3.cpuheight`) och `heightmap.png`. Starten öppnar fönstret och rensar det; det finns inget att rita ännu.
+Börja ett nytt program för terrängen – ett enkelt OpenGL 3.3-program, till exempel från ditt program från *Kamera*:
+`main.cpp`, kursens klass `Shader`, `cpuheight.vs` / `.fs` (learnopengls shaders `8.3.cpuheight`) och `heightmap.png`.
+Till en början öppnar det fönstret och rensar det; det finns inget att rita ännu.
 :::
 :::vulkan
-Projektet är ett enkelt Vulkan-program med en pipeline för `shaders/cpuheight.vert` / `.frag`, kamerans matriser i en
-uniform buffer och modellmatrisen som push constant. Startens `loadHeightMap()` är tom, och `vertexBuffer` och
-`indexBuffer` förblir `VK_NULL_HANDLE` – Vulkan kan inte skapa en buffer med storleken 0, och att förstöra ett
-null-handtag gör ingenting. `createVertexBuffer()` och `createIndexBuffer()` är funktionerna med staging buffer från
-kapitlen om modellinläsning; uppgifterna anropar dem när datan finns. Höjdkartan läses bara på CPU:n, så ingen textur
-skapas för den.
+Börja ett nytt program för terrängen – ett enkelt Vulkan-program, till exempel från ditt program från *Kamera* – med
+en pipeline för `shaders/cpuheight.vert` / `.frag`, kamerans matriser i en uniform buffer och modellmatrisen som push
+constant. Till en början är `loadHeightMap()` tom, och `vertexBuffer` och `indexBuffer` förblir `VK_NULL_HANDLE` –
+Vulkan kan inte skapa en buffer med storleken 0, och att förstöra ett null-handtag gör ingenting.
+`createVertexBuffer()` och `createIndexBuffer()` är funktionerna med staging buffer från kapitlen om modellinläsning;
+uppgifterna anropar dem när datan finns. Höjdkartan läses bara på CPU:n, så ingen textur skapas för den.
 :::
 :::d3d12
-Projektet är ett enkelt Direct3D 12-program med ett pipeline state-objekt för `cpuheight.hlsl`, kamerans matriser i en
-constant buffer och ett tomt avsnitt i `LoadAssets` för terrängen. Ett Windows-program har ingen konsol, så där
-learnopengl skriver ut med `std::cout` skriver kursen till felsökarens utdatafönster med `OutputDebugStringA` (efter
-`snprintf` till en buffer).
+Börja ett nytt program för terrängen – ett enkelt Direct3D 12-program, till exempel från ditt program från *Kamera* –
+med ett pipeline state-objekt för `cpuheight.hlsl`, kamerans matriser i en constant buffer och ett tomt avsnitt i
+`LoadAssets` för terrängen. Ett Windows-program har ingen konsol, så där learnopengl skriver ut med `std::cout`
+skriver kursen till felsökarens utdatafönster med `OutputDebugStringA` (efter `snprintf` till en buffer).
 :::
 
-Kommentarerna `// TODO:` visar var din kod ska in. Bygg och kör programmet i din IDE: ett tomt, mörkt fönster.
+ Bygg och kör programmet i din IDE: ett tomt, mörkt fönster.
 
 ## Att läsa in höjdkartan
 
@@ -153,10 +154,11 @@ och anropar `vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1,
 `gl_PointSize = 1.0;` – Vulkan tar en punkts storlek bara från shadern (uppgiften strips tar bort det igen).
 :::
 :::d3d12
-I Direct3D 12 har primitivtopologin två delar: pipeline state-objektets `PrimitiveTopologyType` (punkt, linje, triangel
-eller patch – vad rastreraren får) och command listens `IASetPrimitiveTopology` (lista eller strip – hur vertexarna sätts
-ihop). Startens pipeline state är gjort för punkter; command listen sätter `D3D_PRIMITIVE_TOPOLOGY_POINTLIST` och ritar
-vertexarna. En punkt är en pixel i Direct3D – det finns ingen punktstorlek.
+I Direct3D 12 har primitivtopologin två delar: pipeline state-objektets `PrimitiveTopologyType` (punkt, linje,
+triangel eller patch – vad rastreraren får) och command listens `IASetPrimitiveTopology` (lista eller strip – hur
+vertexarna sätts ihop). Till en början är pipeline state gjort för punkter; command listen sätter
+`D3D_PRIMITIVE_TOPOLOGY_POINTLIST` och ritar vertexarna. En punkt är en pixel i Direct3D – det finns ingen
+punktstorlek.
 :::
 
 Gör nu den andra uppgiften, **vertices**. Bygg och kör: terrängen syns som ett moln av 65 536 vita punkter, täta på de

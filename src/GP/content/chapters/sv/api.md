@@ -2,8 +2,8 @@
 
 Innan du skriver någon kod är det bra att veta vad {{api}} egentligen är, hur det är organiserat och vilken sorts
 programmering det kräver av dig. Det här kapitlet har inga uppgifter: det är teorin du behöver för de kommande kapitlen.
-Kapitlets startfiler är fortfarande triangelprogrammet från introduktionen, så du kan bygga och köra det och hitta koden
-som kapitlet pratar om.
+Koden som visas kommer från triangelprogrammet i introduktionen – "programmet" nedan – som du själv skriver, steg för
+steg, i de kommande kapitlen.
 
 :::opengl
 ## Vad OpenGL är
@@ -52,7 +52,7 @@ Det är svårare i början än immediate mode, som dolde vad OpenGL faktiskt gö
 effektivt, och eftersom inget är dolt förstår du till slut verkligen hur grafikprogrammering fungerar.
 
 Det är också anledningen till att den här kursen är inriktad på core profile i OpenGL **version 3.3**. Du ser
-begäran om just det i projektet, direkt efter att GLFW har initierats:
+begäran om just det i programmet, direkt efter att GLFW har initierats:
 
 ```cpp
 glfwInit();
@@ -140,7 +140,7 @@ för dem: OpenGL ger dig ett nummer, ett **id**, som refererar till objektet.
 
 Att använda ett objekt följer nästan alltid samma mönster: du *genererar* objektet och sparar dess id, du *binder*
 det till ett mål (target) i kontexten, du ställer in dess alternativ eller data via det målet, och du binder loss
-det igen genom att binda id 0. Det är precis vad projektet gör med sina hörndata:
+det igen genom att binda id 0. Det är precis vad programmet gör med sina hörndata:
 
 ```cpp
 unsigned int VBO, VAO;
@@ -155,7 +155,7 @@ glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
 `glGenBuffers` skapar ett buffer object och sparar dess id i `VBO`. `glBindBuffer(GL_ARRAY_BUFFER, VBO)` binder det
 till målet `GL_ARRAY_BUFFER`, och från och med då arbetar varje anrop som gäller `GL_ARRAY_BUFFER` på *den här*
-buffern: `glBufferData` kopierar in hörnen i den, utan att ens nämna `VBO`. Efteråt binder projektet loss den:
+buffern: `glBufferData` kopierar in hörnen i den, utan att ens nämna `VBO`. Efteråt binder programmet loss den:
 
 ```cpp
 glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -182,7 +182,7 @@ underhåller OpenGL. Liksom OpenGL är det en **specifikation**: Khronos beskriv
 göra, och grafikkortstillverkarna implementerar den i sina drivrutiner. Ditt program pratar med drivrutinerna via
 **Vulkan-loadern**, som hittar de installerade drivrutinerna och de valfria lagren (layers). Vulkan 1.0 släpptes
 2016; nyare versioner (1.1, 1.2, 1.3, 1.4) har lagt till funktioner, men grundmodellen du lär dig här är densamma i
-alla. Precis som vulkan-tutorial.com ber projektet om version 1.0 (`VK_API_VERSION_1_0`), eftersom allt det använder
+alla. Precis som vulkan-tutorial.com ber programmet om version 1.0 (`VK_API_VERSION_1_0`), eftersom allt det använder
 har funnits sedan dess.
 
 Vulkan körs på Windows, Linux och Android; på macOS och iOS körs det ovanpå Apples Metal via ett
@@ -221,7 +221,7 @@ Vulkan har inget dolt globalt tillstånd som OpenGL:s kontext. Allt är explicit
 (`VkInstance`, `VkDevice`, `VkBuffer` …), och du skickar med de objekt du menar till varje funktion. Objekt skapas
 med `vkCreateXXX` (eller allokeras från ett annat objekt med `vkAllocateXXX`) och förstörs med `vkDestroyXXX`
 (eller `vkFreeXXX`). Parametrarna skickas i en *create info*-struktur: du fyller i en struct, sätter dess medlem
-`sType` för att tala om vilken struktur det är, och skickar en pekare till den. Så här beskriver projektet
+`sType` för att tala om vilken struktur det är, och skickar en pekare till den. Så här beskriver programmet
 applikationen och skapar **instansen** (instance), kopplingen mellan ditt program och Vulkan-biblioteket:
 
 ```cpp
@@ -244,7 +244,7 @@ if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
 }
 ```
 
-Nästan varje funktion returnerar ett `VkResult` som är antingen `VK_SUCCESS` eller en felkod; projektet gör om fel
+Nästan varje funktion returnerar ett `VkResult` som är antingen `VK_SUCCESS` eller en felkod; programmet gör om fel
 till undantag. `nullptr` är en valfri egen minnesallokerare för drivrutinens minne på CPU-sidan, som kursen aldrig
 använder. Allt du skapar förstör du också själv: `cleanup()` förstör alla objekt i omvänd ordning.
 
@@ -252,7 +252,7 @@ använder. Allt du skapar förstör du också själv: `cleanup()` förstör alla
 
 Här är alla steg som krävs för att rendera en triangel i ett välskrivet Vulkan-program. Du bygger vart och ett av
 dem i de kommande kapitlen; det här är bara helhetsbilden att relatera dem till. Det är listan med anrop i
-projektets `initVulkan()`:
+programmets `initVulkan()`:
 
 ```cpp
 void initVulkan() {
@@ -278,7 +278,7 @@ void initVulkan() {
 - **Logical device och köer.** Sedan skapar du en `VkDevice`, den *logiska enheten* (logical device): din koppling
   till det valda kortet, med de funktioner du vill använda påslagna. Det mesta arbetet i Vulkan – att rita, att
   flytta minne – utförs inte direkt utan skickas till en `VkQueue`. Köerna kommer från *queue families*, som var och
-  en stöder en viss uppsättning operationer (grafik, beräkningar, överföring, presentation). Projektet behöver en
+  en stöder en viss uppsättning operationer (grafik, beräkningar, överföring, presentation). Programmet behöver en
   kö som kan rita och en som kan presentera i fönstret (ofta samma family).
 - **Window surface och swap chain.** Vulkan självt vet ingenting om fönster. `VkSurfaceKHR` (som GLFW gör av
   fönstret) och `VkSwapchainKHR` kommer från *extensions* för integration med fönstersystemet – det är vad
@@ -296,7 +296,7 @@ void initVulkan() {
 - **Huvudloopen.** Varje bildruta hämtar `drawFrame()` en bild från swap chainen, spelar in en command buffer som
   ritar i den, skickar den till grafikkön och presenterar bilden.
 
-Till och med minnet för vertex buffern är explicit: projektet skapar `VkBuffer`, frågar vilka minnestyper den kan
+Till och med minnet för vertex buffern är explicit: programmet skapar `VkBuffer`, frågar vilka minnestyper den kan
 ligga i, allokerar själv ett `VkDeviceMemory` och binder ihop de två.
 
 ```quiz
@@ -332,9 +332,9 @@ Eftersom GPU:n arbetar asynkront måste du tala om för Vulkan i vilken ordning 
 inte åt dig. Vulkan har två huvudverktyg för det:
 
 - En **semaphore** (`VkSemaphore`) ordnar arbete *på GPU:n*: en köoperation signalerar den, en annan väntar på den.
-  Projektet använder `imageAvailableSemaphore` så att renderingen väntar tills swap chain-bilden är tillgänglig,
+  Programmet använder `imageAvailableSemaphore` så att renderingen väntar tills swap chain-bilden är tillgänglig,
   och `renderFinishedSemaphores` så att presentationen väntar tills renderingen är klar.
-- Ett **fence** (`VkFence`) låter *CPU:n* vänta på GPU:n. Projektet väntar på `inFlightFence` i början av varje
+- Ett **fence** (`VkFence`) låter *CPU:n* vänta på GPU:n. Programmet väntar på `inFlightFence` i början av varje
   bildruta, så att det inte spelar in command buffern på nytt medan GPU:n fortfarande använder den:
 
 ```cpp
@@ -362,7 +362,7 @@ Fences är till för att CPU:n ska vänta på GPU:n. Ordningen mellan operatione
 
 Liksom OpenGL har Vulkan **extensions**: funktionalitet utanför core-specifikationen som du måste slå på
 uttryckligen. Deras namn har ett suffix som visar vem som gjort dem: `KHR` för extensions som Khronos har
-godkänt, som surface och swap chain, `EXT` för extensions från flera tillverkare, som debug messengern. Projektet
+godkänt, som surface och swap chain, `EXT` för extensions från flera tillverkare, som debug messengern. Programmet
 slår på swap chain-extensionen på devicen:
 
 ```cpp
@@ -389,7 +389,7 @@ const bool enableValidationLayers = true;
 #endif
 ```
 
-I debug-byggen är lagret påslaget, och projektets `debugCallback` skriver ut dess meddelanden i programmets konsol som
+I debug-byggen är lagret påslaget, och programmets `debugCallback` skriver ut dess meddelanden i konsolen som
 `validation layer: …`. I release-byggen stänger du av det och betalar ingenting för det. Ett korrekt program ger inga
 valideringsfel – behandla vart och ett som en bugg.
 
@@ -468,7 +468,7 @@ Objekt skapas av funktioner eller av metoder i andra objekt, som fyller i en pek
 skickar med både gränssnittets ID och pekarens adress. COM-objekt räknar sina referenser: varje objekt har `AddRef`
 och `Release`, och det tar bort sig självt när den sista referensen släpps.
 
-Att anropa `Release` för hand är lätt att göra fel, så projektet (liksom Microsofts exempel) använder den smarta
+Att anropa `Release` för hand är lätt att göra fel, så programmet (liksom Microsofts exempel) använder den smarta
 pekaren `ComPtr`:
 
 ```cpp
@@ -478,7 +478,7 @@ pekaren `ComPtr`:
 using Microsoft::WRL::ComPtr;
 ```
 
-Metoderna returnerar ett `HRESULT`, en resultatkod som talar om ifall anropet lyckades. Projektet lägger varje anrop
+Metoderna returnerar ett `HRESULT`, en resultatkod som talar om ifall anropet lyckades. Programmet lägger varje anrop
 som kan misslyckas i `ThrowIfFailed`, som gör om ett misslyckat `HRESULT` till ett undantag:
 
 ```cpp
@@ -504,7 +504,7 @@ Vad gör en `ComPtr<ID3D12Device>` åt dig?
 
 ## Devicen och feature levels
 
-**Devicen** (`ID3D12Device`) representerar grafikkortet och skapar nästan alla andra objekt. Projektet ber först
+**Devicen** (`ID3D12Device`) representerar grafikkortet och skapar nästan alla andra objekt. Programmet ber först
 DXGI om en hårdvaruadapter med stöd för Direct3D 12 och skapar sedan devicen på den:
 
 ```cpp
@@ -524,7 +524,7 @@ köras på så många kort som möjligt. En feature level säger vad ett kort ka
 
 I Direct3D 12 anropar du inte "rita" på devicen. Du **spelar in** kommandon i en **command list**
 (`ID3D12GraphicsCommandList`) och lämnar listan till en **command queue** (`ID3D12CommandQueue`), som skickar den
-till GPU:n. GPU:n utför den asynkront medan ditt program fortsätter. Projektet skapar en *direct*-kö, den sort som
+till GPU:n. GPU:n utför den asynkront medan ditt program fortsätter. Programmet skapar en *direct*-kö, den sort som
 kan utföra alla typer av kommandon:
 
 ```cpp
@@ -578,7 +578,7 @@ en **resource barrier**, och tillbaka igen innan den presenteras. Direct3D 11 h�
 Shaders och pipelinen använder inte resurser direkt; de använder **descriptors** (även kallade *views*): små poster
 som beskriver en resurs och hur den ska användas, till exempel en *render target view* (RTV) som säger "rita i den
 här texturen". Descriptors ligger i **descriptor heaps**, arrayer av descriptors som du skapar och fyller själv.
-Projektet skapar en heap med en RTV för var och en av de två back buffrarna:
+Programmet skapar en heap med en RTV för var och en av de två back buffrarna:
 
 ```cpp
 // Describe and create a render target view (RTV) descriptor heap.
@@ -592,13 +592,13 @@ ThrowIfFailed(m_device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_rtvHe
 ## Root signatures och pipeline state objects
 
 **Root signaturen** (`ID3D12RootSignature`) beskriver vilka resurser shaderna får – constant buffers, texturer,
-samplers – och var de kommer ifrån. Triangelns shaders använder inga resurser, så projektet skapar en tom root
+samplers – och var de kommer ifrån. Triangelns shaders använder inga resurser, så programmet skapar en tom root
 signature som bara tillåter hörnens input layout.
 
 **Pipeline state objectet** (PSO, `ID3D12PipelineState`) innehåller nästan allt GPU-tillstånd i ett enda objekt:
 de kompilerade shaderna, hörnens input layout, rasterizer-, blend- och depth/stencil-tillståndet, typen av
 primitiv topologi och render targetens format. Det skapas en gång, i förväg, så att drivrutinen kan kompilera och
-optimera allt tillsammans; när du ritar är ett byte av tillstånd bara ett byte av PSO. En del av projektets
+optimera allt tillsammans; när du ritar är ett byte av tillstånd bara ett byte av PSO. En del av programmets
 PSO-beskrivning:
 
 ```cpp
@@ -617,7 +617,7 @@ beskrivningar med rimliga standardvärden.
 Eftersom GPU:n kör asynkront måste ditt program veta när GPU:n är klar med något – till exempel innan command
 allocatorn återställs. För det har Direct3D 12 **fencet** (`ID3D12Fence`): ett objekt som håller ett 64-bitars
 värde. Command queuen *signalerar* fencet (sätter ett nytt värde när allt arbete som skickats före har blivit
-klart), och CPU:n läser värdet eller väntar på det med en event. Projektet väntar på att varje bildruta blir klar:
+klart), och CPU:n läser värdet eller väntar på det med en event. Programmet väntar på att varje bildruta blir klar:
 
 ```cpp
 // Signal and increment the fence value.
@@ -650,7 +650,7 @@ Varför väntar `WaitForPreviousFrame()` på fencet innan nästa bildruta spelas
 Direct3D 12 kontrollerar väldigt lite på egen hand, för att runtime-delen ska vara snabb: ett misstag kan krascha
 programmet eller bara ge en felaktig bild. Under utvecklingen slår du på **debuglagret** (debug layer), som
 kontrollerar varje anrop och rapporterar fel och varningar i debuggerns utdata. Det måste slås på *innan* devicen
-skapas, och det kräver Windows-tillvalet "Graphics Tools". Projektet slår på det i debug-byggen:
+skapas, och det kräver Windows-tillvalet "Graphics Tools". Programmet slår på det i debug-byggen:
 
 ```cpp
 #if defined(_DEBUG)
@@ -675,7 +675,7 @@ När måste debuglagret slås på?
 - [ ] Bara i release-byggen
 - [ ] När som helst, till exempel när ett fel har inträffat
 ---
-`EnableDebugLayer()` måste anropas före `D3D12CreateDevice`. Projektet gör det i början av `LoadPipeline()`, och bara i debug-byggen.
+`EnableDebugLayer()` måste anropas före `D3D12CreateDevice`. Programmet gör det i början av `LoadPipeline()`, och bara i debug-byggen.
 ```
 
 ## Shaders: HLSL, DXBC och DXIL
@@ -683,7 +683,7 @@ När måste debuglagret slås på?
 Shaders för Direct3D skrivs i **HLSL** (High-Level Shading Language) och kompileras till bytekod som drivrutinen
 gör om till GPU-kod. Det finns två kompilatorer: den äldre **FXC** kompilerar shader models upp till 5.1 till
 **DXBC**-bytekod, och den nyare **DXC** kompilerar shader model 6.0 och senare till **DXIL**. Shaders kan kompileras
-i förväg (med `fxc.exe` eller `dxc.exe`) eller medan programmet körs. Projektet kompilerar, liksom Microsofts
+i förväg (med `fxc.exe` eller `dxc.exe`) eller medan programmet körs. Programmet kompilerar, liksom Microsofts
 HelloWorld-exempel, `shaders.hlsl` vid start med `D3DCompileFromFile`, som använder FXC – shader model 5.0
 (`vs_5_0`, `ps_5_0`), så bytekoden är DXBC:
 
@@ -705,7 +705,7 @@ engångsuppsättning: när triangeln väl syns på skärmen kräver nya funktion
 
 Nu vet du lite om vad {{api}} är och hur det fungerar. I de kommande kapitlen bygger du triangelprogrammet själv: först
 ett fönster, sedan ett fönster som fylls med en färg, sedan triangeln. Innan du går vidare sätter du upp din IDE – det
-är nästa kapitel – och bygger och kör kapitlets startfiler: där hittar du koden från det här kapitlet.
+är nästa kapitel. Koden från det här kapitlet möter du igen när du skriver den.
 
 ## Mer att läsa
 

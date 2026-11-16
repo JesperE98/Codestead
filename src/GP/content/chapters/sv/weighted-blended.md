@@ -92,10 +92,10 @@ Bildrutan har då fyra steg, de fyra passen i learnopengls program:
    målet.
 4. **Sista passet**: en fyrhörning över hela skärmen som kopierar det ogenomskinliga målet till fönstret.
 
-Projektet är förra kapitlets: kameran i (0, 0, 5), den röda ogenomskinliga fyrhörningen i (0.5, -0.2, 1.0), den gröna
-(alfa 0.5) i (-0.3, -0.6, 2.0) – närmast – och den blå (alfa 0.5) i (-0.6, 0.5, 0.0) – längst bort, delvis bakom den
-röda – ritade röd, grön, blå. learnopengls demo lägger de tre fyrhörningarna ovanpå varandra mitt i fönstret; kursen
-sprider ut dem så att varje fall syns.
+Du fortsätter i programmet som du förberedde i *OIT: introduktion*: kameran i (0, 0, 5), den röda ogenomskinliga
+fyrhörningen i (0.5, -0.2, 1.0), den gröna (alfa 0.5) i (-0.3, -0.6, 2.0) – närmast – och den blå (alfa 0.5) i (-0.6,
+0.5, 0.0) – längst bort, delvis bakom den röda – ritade röd, grön, blå. learnopengls demo lägger de tre fyrhörningarna
+ovanpå varandra mitt i fönstret; kursen sprider ut dem så att varje fall syns.
 
 :::opengl
 Programmet begär en OpenGL 4.2 core-kontext (som learnopengl): `glBlendFunci`, en blendfunktion per färg-attachment, är
@@ -123,16 +123,16 @@ med framebuffers gjorda för dem – fyra render passes per bildruta, inspelade 
 :::d3d12
 learnopengls renderingstillstånd är pipeline-tillstånd i DirectX 12: varje pass får ett eget pipeline state-objekt,
 skapat i `LoadAssets` från en och samma `D3D12_GRAPHICS_PIPELINE_STATE_DESC` som ändras steg för steg. learnopengls
-uniforms `mvp` och `color` är root constants (root-parameter 0: `struct ObjectConstants { XMFLOAT4X4 mvp; XMFLOAT4
-color; }`). Starten har redan det skärmfyrhörningarna behöver: root-parameter 1, en descriptor table med två SRV:er (t0,
-t1) för pixel shadern, en statisk sampler s0 (linjär, clamp), och descriptor heaps i sina slutliga storlekar –
-RTV-heapen med `FrameCount + 3` platser (back buffrarna, sedan den ogenomskinliga texturen, ackumulerings- och
-revealage-texturen), SRV-heapen med 3 (plats 0 ogenomskinlig, 1 ackumulering, 2 revealage) och DSV-heapen med
-djupbuffern (`D32_FLOAT`). Varje textur utanför skärmen vilar i tillståndet `PIXEL_SHADER_RESOURCE` och görs om till
-`RENDER_TARGET` med en barriär inför passet som ritar i den.
+uniforms `mvp` och `color` är root constants (root-parameter 0:
+`struct ObjectConstants { XMFLOAT4X4 mvp; XMFLOAT4 color; }`). Förbered det som skärmfyrhörningarna behöver:
+root-parameter 1, en descriptor table med två SRV:er (t0, t1) för pixel shadern, en statisk sampler s0 (linjär,
+clamp), och descriptor heaps i sina slutliga storlekar – RTV-heapen med `FrameCount + 3` platser (back buffrarna,
+sedan den ogenomskinliga texturen, ackumulerings- och revealage-texturen), SRV-heapen med 3 (plats 0 ogenomskinlig, 1
+ackumulering, 2 revealage) och DSV-heapen med djupbuffern (`D32_FLOAT`). Varje textur utanför skärmen vilar i
+tillståndet `PIXEL_SHADER_RESOURCE` och görs om till `RENDER_TARGET` med en barriär inför passet som ritar i den.
 :::
 
-Kommentarerna `// TODO:` i projektet visar var din kod ska in; du bygger och kör programmet i din IDE.
+Du bygger och kör programmet i din IDE efter varje uppgift.
 
 ## Det ogenomskinliga passet
 
@@ -255,7 +255,7 @@ det sista passet skapas för fönstrets `renderPass`, utan djuptest och utan ble
             VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, screenPipeline);
 ```
 
-Skärmshadern läser den ogenomskinliga bilden genom ett descriptor set. Starten har en descriptor set layout med två
+Skärmshadern läser den ogenomskinliga bilden genom ett descriptor set. Ge ditt program en descriptor set layout med två
 combined image samplers (bindning 0 och 1 – kompositpasset kommer att behöva båda), en pool, samplern
 `colorBufferSampler` (linjär, clamp to edge) och hjälpfunktionen `createDescriptorSet(firstView, secondView, set)`; det
 sista passet använder `createDescriptorSet(opaqueImageView, opaqueImageView, screenDescriptorSet)` (bindning 1 används
@@ -298,7 +298,7 @@ resource view (det sista passet läser den). Det är en committed resource i en 
 ```
 
 Dess RTV hamnar på plats `FrameCount` i RTV-heapen (efter swap chainens buffrar), dess SRV på plats 0 i SRV-heapen.
-Djupbuffern är den starten redan har. Det solida pipeline state-objektet renderar nu i texturens format,
+Djupbuffern är den som ditt program redan har. Det solida pipeline state-objektet renderar nu i texturens format,
 `psoDesc.RTVFormats[0] = DXGI_FORMAT_R16G16B16A16_FLOAT` – det genomskinliga härleds från det – och det sista passet får
 ett eget, `m_screenPipelineState`, kompilerat från `screen.hlsl`: ingen blending, `DepthEnable = FALSE`, ett mål i back
 bufferns format `DXGI_FORMAT_R8G8B8A8_UNORM` och `DSVFormat = DXGI_FORMAT_UNKNOWN`.

@@ -93,19 +93,20 @@ What does the split sum approximation split the specular integral into?
 The full integral depends on the view direction and the roughness as well as on the light direction – too many inputs to tabulate. The product of two integrals, each with only two inputs besides the direction, can be stored in a cube map with mip levels and in a small 2D texture.
 ```
 
-## The project
+## Your program
 
-The project starts at the end of the previous chapter: the 7 × 7 red spheres, lit directly by the four point lights
-and indirectly by the irradiance map, in front of the environment. New in it:
+You continue in your program from *Diffuse Irradiance*, as it was at the end of that chapter: the 7 × 7 red spheres,
+lit directly by the four point lights and indirectly by the irradiance map, in front of the environment. New in this
+chapter:
 
 - **The screen quad**, learnopengl's `renderQuad()` of the earlier chapters: two triangles covering the render target,
   with texture coordinates from 0 to 1 – for the BRDF integration map.
-- **`prefilter`** and **`brdf`** shaders with TODOs. The pre-filter shader already has `DistributionGGX` and the two
-  functions of the Hammersley sequence (`RadicalInverse_VdC` and `Hammersley`), the BRDF shader the Hammersley
-  functions; the screen quad's vertex shader is complete.
+- **`prefilter`** and **`brdf`** shaders, which the text shows. The pre-filter shader uses `DistributionGGX` and the
+  two functions of the Hammersley sequence (`RadicalInverse_VdC` and `Hammersley`), the BRDF shader the Hammersley
+  functions; the screen quad's vertex shader only passes the corners on.
 - **A debug shader** that shows a two-channel texture on the screen quad (`vec4(texture(image, TexCoords).rg, 0.0,
   1.0)`), to look at the BRDF integration map for a moment.
-- The material's five maps for the last task.
+- The material's five maps for the last task (from *PBR Lighting*).
 
 Three numbers are smaller than learnopengl's, because the course draws its checks and expected results on the CPU (a
 real GPU handles learnopengl's values easily): the pre-filter map has 64 × 64 texels per face instead of 128 × 128
@@ -113,23 +114,21 @@ real GPU handles learnopengl's values easily): the pre-filter map has 64 × 64 t
 BRDF integration map is 128 × 128 instead of 512 × 512.
 
 :::opengl
-The files are `prefilter.fs`, `brdf.vs` (complete), `brdf.fs`, `debug_quad.fs` (complete) and the five `.png` maps;
+The new files are `prefilter.fs`, `brdf.vs`, `brdf.fs` and `debug_quad.fs`;
 `renderQuad()` draws a triangle strip of 4 vertices with the texture coordinates (0, 0) at the bottom left and (1, 1) at
 the top right.
 :::
 :::vulkan
-The files are `shaders/prefilter.frag`, `shaders/brdf.vert` (complete), `shaders/brdf.frag`, `shaders/debug_quad.frag`
-(complete) and the five maps in `textures/`. The screen quad is vertices 36–41 of the global `vertices` (learnopengl's
-quad as two triangles, its texture coordinates unchanged) and `renderQuad(VkCommandBuffer)` draws it:
-`vkCmdDraw(commandBuffer, 6, 1, 36, 0)`.
+The new files are `shaders/prefilter.frag`, `shaders/brdf.vert`, `shaders/brdf.frag` and `shaders/debug_quad.frag`.
+The screen quad is vertices 36–41 of the global `vertices` (learnopengl's quad as two triangles, its texture
+coordinates unchanged) and `renderQuad(VkCommandBuffer)` draws it: `vkCmdDraw(commandBuffer, 6, 1, 36, 0)`.
 :::
 :::d3d12
-The files are `prefilter.hlsl` (its `cbuffer CaptureConstants` has a `float roughness` after the two matrices),
-`brdf.hlsl` (`VSMain` complete), `downsample.hlsl` (`PSMain` TODO: it makes a mip level from the one above – more
-below), `debug_quad.hlsl` (complete) and the five `.png` maps. The screen quad is vertices 36–39 of
-`m_cubeVertexBuffer`, a triangle strip drawn by `RenderQuad()` (`IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP)`,
-`DrawInstanced(4, 1, 36, 0)`); its texture coordinates are learnopengl's with v flipped: (0, 0) at the **top** left,
-(1, 1) at the bottom right.
+The new files are `prefilter.hlsl` (its `cbuffer CaptureConstants` has a `float roughness` after the two matrices),
+`brdf.hlsl`, `downsample.hlsl` (its `PSMain` makes a mip level from the one above – more below) and `debug_quad.hlsl`.
+The screen quad is vertices 36–39 of `m_cubeVertexBuffer`, a triangle strip drawn by `RenderQuad()`
+(`IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP)`, `DrawInstanced(4, 1, 36, 0)`); its texture
+coordinates are learnopengl's with v flipped: (0, 0) at the **top** left, (1, 1) at the bottom right.
 :::
 
 ## Pre-filtering an HDR environment map
@@ -290,7 +289,7 @@ the *Hammersley Sequence* as carefully described by Holger Dammertz. The Hammers
 *Van Der Corput* sequence which mirrors a decimal binary representation around its decimal point.
 
 Given some neat bit tricks, we can quite efficiently generate the Van Der Corput sequence in a shader program which
-we'll use to get a Hammersley sequence sample i over N total samples – these functions are already in the project:
+we'll use to get a Hammersley sequence sample i over N total samples – the pre-filter shader gets these functions:
 
 :::opengl vulkan
 ```glsl
@@ -586,7 +585,7 @@ final weight.
 ### Pre-filter convolution artifacts
 
 While the above pre-filtering process works fine for most purposes, there are some artifacts to be aware of; learnopengl
-lists them, together with their solutions, and the course's code already contains both solutions.
+lists them, together with their solutions, and the course's code uses both solutions, as below.
 
 #### Cubemap seams at high roughness
 
@@ -670,7 +669,7 @@ texels of the bigger level. The irradiance convolution, which runs after it, now
 levels as well (`texture` picks one from the screen-space derivatives); its picture changes by a level or so.
 :::
 :::vulkan
-Vulkan has no `glGenerateMipmap` either, but the project has had its counterpart since the PBR Lighting chapter:
+Vulkan has no `glGenerateMipmap` either, but your program has had its counterpart since the PBR Lighting chapter:
 `generateMipmaps`, vulkan-tutorial's function, which fills every level with a `vkCmdBlitImage` of the level above it
 (a scaled copy with linear filtering). It takes a layer count, so it does all six faces at once. The environment cube
 map is created with 8 levels (128, 64 … 1) and with two more usages – a blit reads one level of the image and writes

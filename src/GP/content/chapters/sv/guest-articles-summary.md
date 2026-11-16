@@ -291,8 +291,8 @@ du har lärt dig.
   uppåt till hela, lika långa segment; **`fractional_odd_spacing`** avrundar uppåt till nästa udda tal med två kortare
   segment, så att en nivå som ändras flyttar punkterna mjukt. Nivå 8 → 9 segment, 9 × 9 fyrhörningar, 162 trianglar per
   patch.
-- **Nivå 1** (startens control-steg): en platt fyrhörning per patch – en grov terräng; **nivå 8**: hela terrängen,
-  ungefär 65 000 trianglar från 1 600 vertexar.
+- **Nivå 1** (kapitlets första control-steg): en platt fyrhörning per patch – en grov terräng; **nivå 8**: hela
+  terrängen, ungefär 65 000 trianglar från 1 600 vertexar.
 - **Nivåer efter avstånd**: per hörn djupet i ögonrummet, skalat till 0..1 mellan 250 och 450; varje yttre nivå
   `mix(MAX, MIN, …)` (8 till 2) från **det närmaste av kantens två hörn**, de inre nivåerna den största av de två
   parallella yttre nivåerna. Att räkna en kant bara från dess egna hörn undviker **sprickor** mellan grannpatches.
@@ -312,8 +312,8 @@ du har lärt dig.
 :::vulkan
 - Device featuren **`tessellationShader`**; `maxTessellationGenerationLevel` (64); `VK_PRIMITIVE_TOPOLOGY_PATCH_LIST`
   och `VkPipelineTessellationStateCreateInfo.patchControlPoints = 4` – patchstorleken hör till pipelinen.
-- En pipeline med tessellering **måste** ha både en control och en evaluation shader – därav startens control shader med
-  nivå 1. Tessellatorn placerar `gl_TessCoord` som OpenGL:s gör.
+- En pipeline med tessellering **måste** ha både en control och en evaluation shader – därav kapitlets första control
+  shader med nivå 1. Tessellatorn placerar `gl_TessCoord` som OpenGL:s gör.
 - Trådmodell med `VK_POLYGON_MODE_LINE` och featuren **`fillModeNonSolid`**; höjdkartan i `VK_FORMAT_R8_UNORM` utan
   mipmaps, samplad i evaluation-steget.
 :::

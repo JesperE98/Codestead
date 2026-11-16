@@ -14,19 +14,19 @@ further than learnopengl's demo and put the container texture on it, created thr
 :::
 :::vulkan
 Vulkan never had bind to edit: from the start, every Vulkan function names the object it works on. So this chapter has
-**no tasks** for Vulkan. Its project is the *Hello Triangle* program – the orange rectangle from a vertex buffer and an
-index buffer – and the chapter explains what DSA changes in OpenGL and how it brings OpenGL closer to the model Vulkan
-has always had, comparing each DSA function with the Vulkan code you know. It is worth reading even if you never write
-OpenGL: much OpenGL code you will meet is written one way or the other, and the comparison shows why Vulkan's API looks
-the way it does.
+**no tasks** for Vulkan. It uses your program from *Hello Triangle* – the orange rectangle from a vertex
+buffer and an index buffer – and the chapter explains what DSA changes in OpenGL and how it brings OpenGL closer to
+the model Vulkan has always had, comparing each DSA function with the Vulkan code you know. It is worth reading even
+if you never write OpenGL: much OpenGL code you will meet is written one way or the other, and the comparison shows
+why Vulkan's API looks the way it does.
 :::
 :::d3d12
 Direct3D 12 never had bind to edit: every call names the object it works on, and objects are COM interfaces with
-methods. So this chapter has **no tasks** for DirectX 12. Its project is the *Hello Triangle* program – the orange
-rectangle from a vertex buffer and an index buffer – and the chapter explains what DSA changes in OpenGL and how it
-brings OpenGL closer to the model Direct3D 12 has always had, comparing each DSA function with the Direct3D 12 code you
-know. It is worth reading even if you never write OpenGL: much OpenGL code you will meet is written one way or the
-other, and the comparison shows why Direct3D 12's API looks the way it does.
+methods. So this chapter has **no tasks** for DirectX 12. It uses your program from *Hello Triangle* – the
+orange rectangle from a vertex buffer and an index buffer – and the chapter explains what DSA changes in OpenGL and
+how it brings OpenGL closer to the model Direct3D 12 has always had, comparing each DSA function with the Direct3D 12
+code you know. It is worth reading even if you never write OpenGL: much OpenGL code you will meet is written one way
+or the other, and the comparison shows why Direct3D 12's API looks the way it does.
 :::
 
 ## Bind to edit
@@ -134,21 +134,21 @@ OpenGL 4.1**, so this chapter's program doesn't run on a Mac – the bind-to-edi
 (Before 4.5, the older extension `EXT_direct_state_access` offered similar functions with other names, such as
 `glNamedBufferDataEXT` and `glTextureParameteriEXT`; you may still meet them in older code.)
 
-The project is the course's *Hello Triangle* solution, the orange rectangle, with `// TODO:` comments where the DSA code
-goes. Build and run it in your IDE. Now do the first task, **context**. The picture doesn't change: the bind-to-edit
-code runs unchanged in a 4.5 context.
+You continue in your program from *Hello Triangle*, the orange rectangle, in a new folder. Build and run it in your
+IDE. Now do the first task, **context**. The picture doesn't change: the bind-to-edit code runs unchanged in a 4.5
+context.
 :::
 :::vulkan
-### The project
+### Your program
 
-The project is the course's Vulkan *Hello Triangle* solution: the orange rectangle `(1.0, 0.5, 0.2)` – two triangles
+Your program is the one from *Hello Triangle*: the orange rectangle `(1.0, 0.5, 0.2)` – two triangles
 from an index buffer – on the teal clear colour. Build and run it in your IDE; it is the same rectangle the OpenGL
 version of this chapter starts from. The sections below put its code next to OpenGL's DSA calls.
 :::
 :::d3d12
-### The project
+### Your program
 
-The project is the course's DirectX 12 *Hello Triangle* solution: the orange rectangle `(1.0, 0.5, 0.2)` – two triangles
+Your program is the one from *Hello Triangle*: the orange rectangle `(1.0, 0.5, 0.2)` – two triangles
 from an index buffer – on the teal clear colour. Build and run it in your IDE; it is the same rectangle the OpenGL
 version of this chapter starts from. The sections below put its code next to OpenGL's DSA calls.
 :::
@@ -413,24 +413,24 @@ running from the bottom left to the top right.
 :::
 :::vulkan
 In Vulkan a texture has always been built this way. `vkCreateImage` creates the image with its size, format and number
-of mip levels fixed – immutable storage, like `glTextureStorage2D`. Its memory is allocated and bound separately, as for
-a buffer. The pixels arrive through a staging buffer and `vkCmdCopyBufferToImage` – `glTextureSubImage2D` – and the
-mip levels, where a program wants them, are filled with `vkCmdBlitImage` from level to level (vulkan-tutorial's
-*Generating Mipmaps* chapter) – `glGenerateTextureMipmap`. And there are no texture
-units: a shader reads a texture through a **descriptor** that names the image view and the sampler, written with
-`vkUpdateDescriptorSets` and bound with `vkCmdBindDescriptorSets` – the counterpart of `glBindTextureUnit(unit,
-texture)`, where the descriptor set's binding plays the unit's part. The *Textures* chapter's project has the image,
-the staging copy and the descriptor; this chapter's project has no texture.
+of mip levels fixed – immutable storage, like `glTextureStorage2D`. Its memory is allocated and bound separately, as
+for a buffer. The pixels arrive through a staging buffer and `vkCmdCopyBufferToImage` – `glTextureSubImage2D` – and
+the mip levels, where a program wants them, are filled with `vkCmdBlitImage` from level to level (vulkan-tutorial's
+*Generating Mipmaps* chapter) – `glGenerateTextureMipmap`. And there are no texture units: a shader reads a texture
+through a **descriptor** that names the image view and the sampler, written with `vkUpdateDescriptorSets` and bound
+with `vkCmdBindDescriptorSets` – the counterpart of `glBindTextureUnit(unit, texture)`, where the descriptor set's
+binding plays the unit's part. Your program from the *Textures* chapter has the image, the staging copy and the
+descriptor; this chapter's program has no texture.
 :::
 :::d3d12
-In Direct3D 12 a texture has always been built this way. A texture is an `ID3D12Resource` created with its size, format
-and number of mip levels fixed – immutable storage, like `glTextureStorage2D`. The pixels arrive through an upload
-buffer and `UpdateSubresources` (a copy on the command list) – `glTextureSubImage2D`. Direct3D 12 has no built-in mipmap
-generation: the levels are computed by the program (with a compute shader, for instance) or loaded with the image. And
-there are no texture units: a shader reads a texture through a **descriptor** – a shader resource view in a descriptor
-heap – that the root signature's descriptor table points to (`SetGraphicsRootDescriptorTable`) – the counterpart of
-`glBindTextureUnit(unit, texture)`, where the shader register `t0` plays the unit's part. The *Textures* chapter's
-project has all of it; this chapter's project has no texture.
+In Direct3D 12 a texture has always been built this way. A texture is an `ID3D12Resource` created with its size,
+format and number of mip levels fixed – immutable storage, like `glTextureStorage2D`. The pixels arrive through an
+upload buffer and `UpdateSubresources` (a copy on the command list) – `glTextureSubImage2D`. Direct3D 12 has no
+built-in mipmap generation: the levels are computed by the program (with a compute shader, for instance) or loaded
+with the image. And there are no texture units: a shader reads a texture through a **descriptor** – a shader resource
+view in a descriptor heap – that the root signature's descriptor table points to (`SetGraphicsRootDescriptorTable`) –
+the counterpart of `glBindTextureUnit(unit, texture)`, where the shader register `t0` plays the unit's part. Your
+program from the *Textures* chapter has all of it; this chapter's program has no texture.
 :::
 
 ```quiz

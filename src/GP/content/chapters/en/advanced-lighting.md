@@ -11,37 +11,39 @@ In the lighting chapters we briefly introduced the Phong lighting model to bring
 scenes. The Phong model looks nice, but has a few nuances we'll focus on in this chapter.
 
 :::opengl
-The project is learnopengl's scene: a wooden floor – the plane `planeVertices`, 20 × 20 units at y = -0.5 with its
-normal pointing up and texture coordinates up to 10, so `wood.png` repeats ten times (`GL_REPEAT`) – and one light at
-`lightPos` (0, 0, 0), half a unit above the floor. The camera is at (0, 0, 3) looking down -z; WASD, the mouse and the
-scroll wheel still move it. `advanced_lighting.vs` passes the position, normal and texture coordinates in an interface
-block `VS_OUT` (the floor has no model matrix: its positions are world positions already), and `advanced_lighting.fs`
-does the lighting: ambient `0.05 * color`, diffuse, and a specular term `vec3(0.3) * spec` for a white light.
+Start from your program from *Depth testing* in a new folder (it has a textured floor and the camera) and turn it into
+learnopengl's scene: a wooden floor – the plane `planeVertices`, 20 × 20 units at y = -0.5 with its normal pointing up
+and texture coordinates up to 10, so `wood.png` repeats ten times (`GL_REPEAT`) – and one light at `lightPos` (0, 0,
+0), half a unit above the floor. The camera is at (0, 0, 3) looking down -z; WASD, the mouse and the scroll wheel
+still move it. `advanced_lighting.vs` passes the position, normal and texture coordinates in an interface block
+`VS_OUT` (the floor has no model matrix: its positions are world positions already), and `advanced_lighting.fs` does
+the lighting: ambient `0.05 * color`, diffuse, and a specular term `vec3(0.3) * spec` for a white light.
 :::
 :::vulkan
-The project is learnopengl's scene in the program of the earlier chapters: a wooden floor – `vertices` holds
-learnopengl's `planeVertices`, 20 × 20 units at y = -0.5 with the normal pointing up and texture coordinates up to 10,
-so `textures/wood.png` repeats ten times (`VK_SAMPLER_ADDRESS_MODE_REPEAT`; v is flipped, as in the earlier chapters) –
-and one light at the global `lightPos` (0, 0, 0), half a unit above the floor. The camera is at (0, 0, 3) looking down
--z; WASD, the mouse and the scroll wheel still move it. `shaders/advanced_lighting.vert` passes the position, normal and
-texture coordinates in an interface block `VS_OUT` (the floor has no model matrix), and `shaders/advanced_lighting.frag`
-does the lighting: ambient `0.05 * color`, diffuse, and a specular term `vec3(0.3) * spec` for a white light. The
-uniform buffer holds `view`, `proj`, `viewPos` and `lightPos`.
+Start from your program from *Depth testing* in a new folder (it has a textured floor and the camera) and turn it into
+learnopengl's scene: a wooden floor – `vertices` holds learnopengl's `planeVertices`, 20 × 20 units at y = -0.5 with
+the normal pointing up and texture coordinates up to 10, so `textures/wood.png` repeats ten times
+(`VK_SAMPLER_ADDRESS_MODE_REPEAT`; v is flipped, as in the earlier chapters) – and one light at the global `lightPos`
+(0, 0, 0), half a unit above the floor. The camera is at (0, 0, 3) looking down -z; WASD, the mouse and the scroll
+wheel still move it. `shaders/advanced_lighting.vert` passes the position, normal and texture coordinates in an
+interface block `VS_OUT` (the floor has no model matrix), and `shaders/advanced_lighting.frag` does the lighting:
+ambient `0.05 * color`, diffuse, and a specular term `vec3(0.3) * spec` for a white light. The uniform buffer holds
+`view`, `proj`, `viewPos` and `lightPos`.
 :::
 :::d3d12
-The project is learnopengl's scene: a wooden floor – one vertex buffer with the plane, 20 × 20 units at y = -0.5 with the
-normal pointing up and texture coordinates up to 10 (v flipped), so `wood.png` repeats ten times through the static
-sampler's `D3D12_TEXTURE_ADDRESS_MODE_WRAP` – and one light at the global `lightPos` (0, 0, 0), half a unit above the
-floor. The camera is at (0, 0, 3) looking down -z; WASD, the mouse and the wheel still move it. `advanced_lighting.hlsl`
-holds `VSMain` (position, normal and texture coordinates; the floor has no model matrix) and `PSMain` with the lighting:
-ambient `0.05f * color`, diffuse, and a specular term `float3(0.3f, 0.3f, 0.3f) * spec` for a white light. The constant
-buffer (b1) holds `view`, `projection`, `viewPos` and `lightPos`.
+Start from your program from *Depth testing* in a new folder (it has a textured floor and the camera) and turn it into
+learnopengl's scene: a wooden floor – one vertex buffer with the plane, 20 × 20 units at y = -0.5 with the normal
+pointing up and texture coordinates up to 10 (v flipped), so `wood.png` repeats ten times through the static sampler's
+`D3D12_TEXTURE_ADDRESS_MODE_WRAP` – and one light at the global `lightPos` (0, 0, 0), half a unit above the floor. The
+camera is at (0, 0, 3) looking down -z; WASD, the mouse and the wheel still move it. `advanced_lighting.hlsl` holds
+`VSMain` (position, normal and texture coordinates; the floor has no model matrix) and `PSMain` with the lighting:
+ambient `0.05f * color`, diffuse, and a specular term `float3(0.3f, 0.3f, 0.3f) * spec` for a white light. The
+constant buffer (b1) holds `view`, `projection`, `viewPos` and `lightPos`.
 :::
 
-The `// TODO:` comments in the project mark where your code goes. After each task, build and run the program in your
-IDE. Right now it shows the lit wooden floor stretching away to the horizon, the dark background above it, and a soft
-white highlight in the middle of the lower half – the reflection of the light, computed with Phong's specular term and a
-shininess exponent of 8.
+After each task, build and run the program in your IDE. Right now it shows the lit wooden floor stretching away to the
+horizon, the dark background above it, and a soft white highlight in the middle of the lower half – the reflection of
+the light, computed with Phong's specular term and a shininess exponent of 8.
 
 ## Blinn-Phong
 
@@ -141,8 +143,8 @@ What is Blinn-Phong's halfway vector?
 ## Phong or Blinn-Phong in {{api}}
 
 The fragment shader of the project keeps both models side by side, and a flag picks one – learnopengl toggles it with
-the B key to compare them. Its Phong branch is complete; the Blinn-Phong branch is the TODO. How the flag gets from the
-C++ program into the shader is different in every API.
+the B key to compare them. Write its Phong branch now, as in *Basic Lighting*; the Blinn-Phong branch is the task. How
+the flag gets from the C++ program into the shader is different in every API.
 
 :::opengl
 In OpenGL the flag is a uniform:
@@ -406,10 +408,10 @@ Now do the task **shininess**. Give Blinn-Phong learnopengl's exponent, four tim
 ```
 :::
 
-Build and run: the highlight shrinks again to about the size of the start's Phong highlight, but it is centred a little
-further back and fades out evenly in every direction. That's learnopengl's comparison – Phong with an exponent of 8.0,
-Blinn-Phong with 32.0. If you want to see both again, set `blinn` back to false: the Phong branch is still in the
-shader.
+Build and run: the highlight shrinks again to about the size of the Phong highlight you started with, but it is
+centred a little further back and fades out evenly in every direction. That's learnopengl's comparison – Phong with an
+exponent of 8.0, Blinn-Phong with 32.0. If you want to see both again, set `blinn` back to false: the Phong branch is
+still in the shader.
 
 ```quiz
 Phong and Blinn-Phong are both used with a light and a viewer above a flat floor. When can the angle between the normal and the halfway vector exceed 90°?

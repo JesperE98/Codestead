@@ -7,7 +7,7 @@ text for the lives and the menu – and, in learnopengl's version, audio. All th
 chapters: textures, transformations, blending, framebuffers, multisampling and text rendering. We didn't really learn
 new and exciting graphics techniques, but rather how to combine all the knowledge so far into a larger whole.
 
-**This chapter has no tasks.** Its project is the finished game – the `render-text` chapter's solution: one
+***This chapter has no tasks.** Your program is the finished game – as it was at the end of *Render text*: one
 `main.cpp` plus its shaders, `textures/`, `levels/` and `fonts/`.
 :::opengl
 The `main.cpp` holds the game's structs and free functions.

@@ -18,12 +18,41 @@ rensningen och synkroniseringen som binder ihop att hämta, rendera och presente
 kapitel "Presentation" och "Drawing" – allt utom grafikpipelinen och shaders, som rensningen inte behöver och som
 kommer i nästa kapitel.
 
-Projektet är resultatet av förra kapitlet (instans, valideringslager, fysisk och logisk enhet), utbyggt till det
-här kapitlets form: `initVulkan()` anropar redan `createSurface()`, `createSwapChain()`, `createImageViews()`,
-`createRenderPass()`, `createFramebuffers()`, `createCommandPool()`, `createCommandBuffer()` och
-`createSyncObjects()`, och `mainLoop()` anropar redan `drawFrame()` varje frame. Funktionskropparna är fortfarande
-tomma. Fönstret öppnas och förblir öppet, men ingenting presenteras någonsin i det, så innehållet är odefinierat
-(oftast svart) ända fram till sista uppgiften.
+Du fortsätter i ditt program från *Skapa ett fönster* (instans, valideringslager, fysisk och logisk enhet). Ge det
+först det här kapitlets form. Lägg till åtta tomma funktioner i klassen – `createSurface()`, `createSwapChain()`,
+`createImageViews()`, `createRenderPass()`, `createFramebuffers()`, `createCommandPool()`, `createCommandBuffer()` och
+`createSyncObjects()`, var och en `void` med en tom kropp – och en nionde, `drawFrame()`. Anropa dem från
+`initVulkan()` och `mainLoop()` (och lägg till `#include <algorithm>`, `<cstdint>`, `<limits>` och `<set>` överst,
+som swap chain-koden behöver):
+
+```cpp
+void initVulkan() {
+    createInstance();
+    setupDebugMessenger();
+    createSurface();
+    pickPhysicalDevice();
+    createLogicalDevice();
+    createSwapChain();
+    createImageViews();
+    createRenderPass();
+    createFramebuffers();
+    createCommandPool();
+    createCommandBuffer();
+    createSyncObjects();
+}
+
+void mainLoop() {
+    while (!glfwWindowShouldClose(window)) {
+        glfwPollEvents();
+        drawFrame();
+    }
+
+    vkDeviceWaitIdle(device);
+}
+```
+
+Uppgifterna fyller i funktionskropparna en i taget. Fönstret öppnas och förblir öppet, men ingenting presenteras
+någonsin i det, så innehållet är odefinierat (oftast svart) ända fram till sista uppgiften.
 :::
 :::d3d12
 I OpenGL är det här kapitlet kort: fönstret du får av GLFW kommer med en *default framebuffer* som OpenGL ritar i
@@ -33,16 +62,59 @@ target view för var och en av dem, en command allocator och en command list sam
 Sedan spelar det varje frame in några kommandon – "gör back buffern till render target, rensa den, gör den
 presenterbar igen" – kör dem och presenterar resultatet.
 
-Projektet är resultatet av förra kapitlet (factory, adapter, device, command queue), utbyggt till exemplets form:
-klassen `D3D12App` deklarerar redan alla medlemmar från exemplet (`m_swapChain`, `m_renderTargets[FrameCount]`,
-`m_rtvHeap`, `m_commandAllocator`, `m_commandList`, `m_fence` …) och funktionerna `LoadAssets`, `OnUpdate`,
-`OnRender`, `PopulateCommandList` och `WaitForPreviousFrame`, men de flesta funktionskroppar är fortfarande tomma.
+Du fortsätter i ditt program från *Skapa ett fönster* (factory, adapter, device, command queue). Ge det först
+exemplets form: klassen `D3D12App` deklarerar alla medlemmar från exemplet och fem nya funktioner,
+
+```cpp
+class D3D12App
+{
+public:
+    D3D12App(UINT width, UINT height);
+
+    void OnInit(HWND hwnd);
+    void OnUpdate();
+    void OnRender();
+    void OnDestroy();
+
+private:
+    static const UINT FrameCount = 2;
+
+    UINT m_width;
+    UINT m_height;
+    HWND m_hwnd = nullptr;
+
+    // Pipeline objects.
+    ComPtr<IDXGISwapChain3> m_swapChain;
+    ComPtr<ID3D12Device> m_device;
+    ComPtr<ID3D12Resource> m_renderTargets[FrameCount];
+    ComPtr<ID3D12CommandAllocator> m_commandAllocator;
+    ComPtr<ID3D12CommandQueue> m_commandQueue;
+    ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
+    ComPtr<ID3D12PipelineState> m_pipelineState;
+    ComPtr<ID3D12GraphicsCommandList> m_commandList;
+    UINT m_rtvDescriptorSize = 0;
+
+    // Synchronization objects.
+    UINT m_frameIndex = 0;
+    HANDLE m_fenceEvent = nullptr;
+    ComPtr<ID3D12Fence> m_fence;
+    UINT64 m_fenceValue = 0;
+
+    void LoadPipeline();
+    void LoadAssets();
+    void PopulateCommandList();
+    void WaitForPreviousFrame();
+    void GetHardwareAdapter(IDXGIFactory1* pFactory, IDXGIAdapter1** ppAdapter);
+};
+```
+
+och de nya funktionerna `LoadAssets`, `OnUpdate`, `OnRender`, `PopulateCommandList` och `WaitForPreviousFrame` får
+tomma kroppar så länge; `OnInit` anropar `LoadAssets()` efter `LoadPipeline()`. Uppgifterna fyller i kropparna.
 Fönstret öppnas och förblir öppet, men ingenting presenteras någonsin i det, så dess klientyta förblir omålad tills
 du renderar den första framen.
 :::
 
-Som tidigare markerar `// TODO:`-kommentarerna i projektet var din kod ska in, och du bygger och kör programmet i din
-IDE.
+Som tidigare visar texten koden för varje uppgift, och du bygger och kör programmet i din IDE.
 
 ## Ready your engines
 
@@ -71,20 +143,18 @@ while (!glfwWindowShouldClose(window))
 - `glfwSwapBuffers` byter färgbufferten (en stor 2D-buffert med ett färgvärde för varje pixel i GLFW:s fönster)
   som renderades till under det här varvet och visar den på skärmen.
 
-Gör nu den första uppgiften, **render-loop**: ersätt TODO-kommentaren i `main` med render loopen. Förutom de två
-GLFW-anropen innehåller loopen två kommentarer, `// input` och `// render`, var och en med en TODO – de markerar
-platserna för nästa uppgifter:
+Gör nu den första uppgiften, **render-loop**: lägg till render loopen i `main`, efter att GLAD har laddats och före
+`glfwTerminate()`. Förutom de två GLFW-anropen lämnar du plats i den för nästa uppgifter: en `// input`-del och en
+`// render`-del, tomma så länge:
 
 ```cpp
 while (!glfwWindowShouldClose(window))
 {
     // input
     // -----
-    // TODO: process the input (processInput)
 
     // render
     // ------
-    // TODO: clear the screen with a colour
 
     // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
     // -------------------------------------------------------------------------------
@@ -97,7 +167,7 @@ Bygg och kör: fönstret förblir nu öppet tills du stänger det. Innehållet �
 svart), eftersom ingenting rensar eller ritar i det ännu.
 :::
 :::vulkan
-I Vulkan-projektet finns render loopen redan, i `mainLoop()`:
+I ditt Vulkan-program finns render loopen redan, i `mainLoop()`:
 
 ```cpp
 void mainLoop() {
@@ -117,7 +187,7 @@ OpenGL:s `glfwSwapBuffers` – Vulkan har inga buffertar som GLFW kan byta. Det 
 det.
 :::
 :::d3d12
-I DirectX 12-projektet finns loopen redan, i slutet av `wWinMain`:
+I ditt DirectX 12-program finns loopen redan, i slutet av `wWinMain`:
 
 ```cpp
 MSG msg = {};
@@ -128,15 +198,14 @@ while (msg.message != WM_QUIT)
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
-    // TODO: when no messages are waiting, update and render a frame (app.OnUpdate, app.OnRender)
 }
 ```
 
 `PeekMessage` är Win32:s motsvarighet till `glfwPollEvents`: den tar ut nästa meddelande till fönstret (en
 tangenttryckning, ett klick på stängknappen …) ur kön, och `DispatchMessage` skickar det vidare till `WindowProc`.
 Till skillnad från `GetMessage` väntar `PeekMessage` inte när kön är tom – den returnerar `FALSE` direkt, så
-loopen kan rendera en frame när det inte finns något annat att göra. Det är vad TODO-kommentaren gäller; du fyller
-i den när det finns något att rendera. Loopen slutar när meddelandet `WM_QUIT` kommer, som `PostQuitMessage`
+loopen kan rendera en frame när det inte finns något annat att göra – i en `else`-gren efter `if`-satsen, som du
+lägger till när det finns något att rendera. Loopen slutar när meddelandet `WM_QUIT` kommer, som `PostQuitMessage`
 skickar när fönstret förstörs.
 :::
 
@@ -641,7 +710,7 @@ Gör nu uppgiften **render-targets**.
 Så snart vi lämnar render loopen vill vi städa upp alla resurser som allokerats på ett korrekt sätt.
 
 :::opengl
-Det görs med funktionen `glfwTerminate`, som projektet redan anropar i slutet av `main`:
+Det görs med funktionen `glfwTerminate`, som ditt program redan anropar i slutet av `main`:
 
 ```cpp
 glfwTerminate();
@@ -826,7 +895,7 @@ while (!glfwWindowShouldClose(window))
 Det ger oss ett enkelt sätt att kontrollera specifika tangenttryckningar och reagera på dem varje frame.
 
 Gör nu uppgiften **input**: deklarera `processInput` överst, skriv den längst ned i filen och anropa den som det
-första i render loopen (den ersätter TODO-kommentaren för input). Bygg och kör, och tryck på **Escape**: fönstret
+första i render loopen (i dess input-del). Bygg och kör, och tryck på **Escape**: fönstret
 stängs.
 :::
 :::vulkan
@@ -887,7 +956,7 @@ tillståndet. OpenGL är en stor tillståndsmaskin: `glClearColor` ändrar tills
 läser det, tills rensningsfärgen ändras igen. (Strängt taget skulle du kunna sätta rensningsfärgen en gång före
 loopen – den är ju alltid densamma – men det är tydligare att hålla ihop båda anropen i renderingsdelen.)
 
-Gör nu uppgiften **clear**: lägg de två anropen i loopens renderingsdel, i stället för TODO-kommentaren, före
+Gör nu uppgiften **clear**: lägg de två anropen i loopens renderingsdel, före
 `glfwSwapBuffers`. Bygg och kör: hela fönstret är nu mörkt grönblått.
 
 ```quiz

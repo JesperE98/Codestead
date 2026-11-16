@@ -19,33 +19,33 @@ För att skapa visuellt intressanta scener vill vi åtminstone simulera de här 
 enklaste: *ambient ljus*.
 
 :::opengl
-Det här kapitlets projekt är resultatet från *Colors*: den korallfärgade kuben, den vita lampan i `lightPos` och
-kameran snett framför kuben från vänster. Två saker är förberedda. Kubens shaders har bytt namn till
-`basic_lighting.vs` och `basic_lighting.fs` (samma innehåll som `colors.vs`/`colors.fs`; `Shader
-lightingShader("basic_lighting.vs", "basic_lighting.fs");`), och hörnfältet har nu **6 floats per hörn** – en position
-och en *normalvektor*, som vi kommer till strax. Båda VAO:ernas positionsattribut använder redan det nya steget,
-`6 * sizeof(float)`.
+Du fortsätter i ditt program från *Färger*: den korallfärgade kuben, den vita lampan i `lightPos` och kameran snett
+framför kuben från vänster. Förbered först två saker. Byt namn på kubens shaders till `basic_lighting.vs` och
+`basic_lighting.fs` (samma innehåll som `colors.vs`/`colors.fs`;
+`Shader lightingShader("basic_lighting.vs", "basic_lighting.fs");`). Och ge hörnfältet **6 floats per hörn** – en
+position och en *normalvektor*, som vi kommer till strax (avsnittet om normalvektorer nedan visar datan) – med båda
+VAO:ernas positionsattribut på det nya steget, `6 * sizeof(float)`.
 :::
 :::vulkan
-Det här kapitlets projekt är resultatet från *Colors*: den korallfärgade kuben, den vita lampan i `lightPos`, två
-pipelines skapade med `createPipeline(...)` och kameran snett framför kuben från vänster. Två saker är förberedda.
-Kubens shaders har bytt namn till `shaders/basic_lighting.vert` och `shaders/basic_lighting.frag` (samma innehåll som
-förut; `createPipeline("shaders/basic_lighting.vert.spv", "shaders/basic_lighting.frag.spv", 1, lightingPipeline)`),
-och varje hörn har nu **en position och en normalvektor** – som vi kommer till strax: `struct Vertex { glm::vec3 pos;
-glm::vec3 normal; }`.
+Du fortsätter i ditt program från *Färger*: den korallfärgade kuben, den vita lampan i `lightPos`, två pipelines
+skapade med `createPipeline(...)` och kameran snett framför kuben från vänster. Förbered först två saker. Byt namn på
+kubens shaders till `shaders/basic_lighting.vert` och `shaders/basic_lighting.frag` (samma innehåll som förut;
+`createPipeline("shaders/basic_lighting.vert.spv", "shaders/basic_lighting.frag.spv", 1, lightingPipeline)`). Och ge
+varje hörn **en position och en normalvektor** – som vi kommer till strax (avsnittet om normalvektorer nedan visar
+datan): `struct Vertex { glm::vec3 pos; glm::vec3 normal; }`.
 :::
 :::d3d12
-Det här kapitlets projekt är resultatet från *Colors*: den korallfärgade kuben, den vita lampan i `lightPos`, två
-pipeline state objects och kameran snett framför kuben från vänster. Två saker är förberedda. Kubens shaders har bytt
-namn till `basic_lighting.hlsl` (samma innehåll som `colors.hlsl`; båda `D3DCompileFromFile`-anropen använder det nya
-namnet), och varje hörn har nu **en position och en normalvektor** – som vi kommer till strax: `struct Vertex {
-XMFLOAT3 position; XMFLOAT3 normal; }`. Vertex buffer-vyns steg är `sizeof(Vertex)`, nu 24 byte, så positionerna läses
-fortfarande rätt.
+Du fortsätter i ditt program från *Färger*: den korallfärgade kuben, den vita lampan i `lightPos`, två pipeline state
+objects och kameran snett framför kuben från vänster. Förbered först två saker. Byt namn på kubens shaders till
+`basic_lighting.hlsl` (samma innehåll som `colors.hlsl`; båda `D3DCompileFromFile`-anropen använder det nya namnet).
+Och ge varje hörn **en position och en normalvektor** – som vi kommer till strax (avsnittet om normalvektorer nedan
+visar datan): `struct Vertex { XMFLOAT3 position; XMFLOAT3 normal; }`. Vertex buffer-vyns steg är `sizeof(Vertex)`, nu
+24 byte, så positionerna läses fortfarande rätt.
 :::
 
-De flesta uppgifterna i kapitlet ändrar kod som redan finns; den enda `// TODO:`-kommentaren visar var normalattributet
-ska in. Bygg och kör programmet efter varje uppgift för att se resultatet. Startbilden är slutet på förra kapitlet: en
-platt korallfärgad kub och en vit lampa.
+De flesta uppgifterna i kapitlet ändrar kod som redan finns. Bygg och kör programmet efter varje uppgift för att se
+resultatet. När du har förberett programmet är bilden slutet på förra kapitlet: en platt korallfärgad kub och en vit
+lampa.
 
 ## Ambient ljus
 
@@ -149,11 +149,13 @@ Så vad behöver vi för att räkna ut diffust ljus?
 
 En normalvektor är en (enhets)vektor som är vinkelrät mot ytan i ett hörn. Eftersom ett hörn i sig inte har någon yta
 (det är bara en punkt i rymden) tar vi fram normalvektorn med hjälp av de omgivande hörnen för att lista ut hörnets
-yta. Vi skulle kunna använda ett litet trick för att räkna ut normalvektorerna för alla kubens hörn med kryssprodukten,
-men eftersom en kub inte är en komplicerad form kan vi helt enkelt lägga till dem för hand i hörndatan. Det
-uppdaterade hörnfältet finns redan i projektet; försök se framför dig att normalerna verkligen är vektorer som är
-vinkelräta mot varje plans yta (en kub består av 6 plan). Den första sidan, baksidan vid z = -0.5, har normalen
-(0, 0, -1), som pekar bort från kuben:
+yta. Vi skulle kunna använda ett litet trick för att räkna ut normalvektorerna för alla kubens hörn med
+kryssprodukten, men eftersom en kub inte är en komplicerad form kan vi helt enkelt lägga till dem för hand i
+hörndatan. Ge vart och ett av de 36 hörnen en normal: sidans sex hörn delar dess normal, och sidorna kommer i
+ordningen baksida (0, 0, -1), framsida (0, 0, 1), vänster (-1, 0, 0), höger (1, 0, 0), undersida (0, -1, 0) och
+ovansida (0, 1, 0). Försök se framför dig att normalerna verkligen är vektorer som är vinkelräta mot varje plans yta
+(en kub består av 6 plan). Den första sidan, baksidan vid z = -0.5, har normalen (0, 0, -1), som pekar bort från
+kuben:
 
 :::opengl
 ```cpp
@@ -177,7 +179,7 @@ floats, med början 3 floats in i varje hörn på 6 floats:
 ```
 
 För lampan vill vi bara använda de första 3 floats i varje hörn och strunta i de sista 3, så vi behöver bara uppdatera
-steget (stride) i lampans VAO – vilket projektet redan har gjort:
+steget (stride) i lampans VAO – vilket du gjorde när du förberedde programmet:
 
 ```cpp
     // note that we update the lamp's position attribute's stride to reflect the updated buffer data

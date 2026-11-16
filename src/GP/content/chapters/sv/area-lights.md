@@ -52,8 +52,8 @@ blickvinkeln.
 
 Kursen tar tabellerna från artikelns referensimplementation, repot `ltc_code`. De ligger i
 `textures/ltc/ltc_matrix.hpp`, under repots BSD-liknande licens, vars upphovsrättsnotis och artikelreferens står
-överst i headerfilen. learnopengl levererar samma tal. Varje projekt kopierar headerfilen oförändrad till platsen
-bredvid sin `main.cpp`.
+överst i headerfilen. learnopengl levererar samma tal. **Spara resursfilerna…** i panelen kopierar headerfilen,
+oförändrad, och golvets textur till din mapp: lägg headerfilen bredvid `main.cpp`.
 
 :::ide vs rider
 Lägg till `ltc_matrix.hpp` i projektet (**Project → Add Existing Item…**; i Rider **Add → Existing Item…** i projektets
@@ -71,13 +71,13 @@ Varför kan shadern räkna ut en GGX-liknande reflektion över en polygon utan a
 Den anpassade M⁻¹ (ur LTC1) flyttar polygonens hörn. Integralen av en klampad cosinus över en polygon är exakt: en summa över kanterna.
 ```
 
-## Projektet
+## Ditt program
 
-Startkoden ritar learnopengls scen. Ett golv av två trianglar, 20 × 20 enheter, har trätexturen från kapitlen om
-avancerad belysning som sRGB-textur (learnopengl använder en egen betongtextur). Ett ljus, en rektangel på 2 × 2 som
-står vid x = −8 och är vänd mot +x, ritas i sin färg, BurlyWood. Kameran står i (0, 1, 0,5) och tittar längs −x mot
-ljuset. Golvets shader skriver svart eftersom det inte finns något ljus ännu. Bygg och kör programmet: det visar
-rektangeln mot svart; kommentarerna `// TODO:` visar var din kod ska in.
+Utgå från ditt program från *Avancerad belysning* i en ny mapp (det har trägolvet) och låt det rita learnopengls scen.
+Ett golv av två trianglar, 20 × 20 enheter, har trätexturen från kapitlen om avancerad belysning som sRGB-textur
+(learnopengl använder en egen betongtextur). Ett ljus, en rektangel på 2 × 2 som står vid x = −8 och är vänd mot +x,
+ritas i sin färg, BurlyWood. Kameran står i (0, 1, 0,5) och tittar längs −x mot ljuset. Golvets shader skriver svart
+eftersom det inte finns något ljus ännu. Bygg och kör programmet: det visar rektangeln mot svart.
 
 Värdena är learnopengls: intensitet 4, strävhet 0,5, en spekulär färg på 0,23 (omräknad till linjär), ett ljus som
 lyser åt båda hållen, och en utdata som gammakorrigeras med exponenten 1/2,2. learnopengl ändrar strävheten,
@@ -148,8 +148,8 @@ och `LoadAssets` lägger LTC1 på plats 1 i heapen och LTC2 på plats 2:
     LoadLTCTexture(LTC2, m_LTC.mat2, ltcMat2UploadHeap, 2);
 ```
 
-Upload-heaparna måste leva tills setup-command listen har körts. Root-signaturens tabell täcker redan t0…t2 i
-startkoden, med träet på plats 3 som t2. Tabellerna använder den statiska samplern s0:
+Upload-heaparna måste leva tills setup-command listen har körts. Root-signaturens tabell täcker t0…t2, med träet på
+plats 3 som t2. Tabellerna använder den statiska samplern s0:
 
 ```cpp
         samplers[0].Filter = D3D12_FILTER_MIN_POINT_MAG_LINEAR_MIP_POINT;

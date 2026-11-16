@@ -152,11 +152,13 @@ them as vertex attributes to the fragment shader, load the texture, and bind the
 unit.
 
 :::opengl
-This chapter's project is the result of *Materials*, with the shaders of the lit cube renamed to `lighting_maps.vs`
-and `lighting_maps.fs`. The light has learnopengl's fixed intensities again (ambient 0.2, diffuse 0.5, specular 1.0 –
-no changing colour), and the material is still coral. A few things for textures are already there: `stb_image.h`
-(with `STB_IMAGE_IMPLEMENTATION`), the three images `container2.png`, `container2_specular.png` and `matrix.png`, and
-vertex data with texture coordinates – each vertex now has a position, a normal and texture coordinates, 8 floats:
+You continue in your program from *Materials*. Prepare it first: rename the shaders of the lit cube to
+`lighting_maps.vs` and `lighting_maps.fs`, and give the light learnopengl's fixed intensities again (ambient 0.2,
+diffuse 0.5, specular 1.0 – no changing colour); the material stays coral. Then bring back what textures need:
+`stb_image.h` (with `STB_IMAGE_IMPLEMENTATION`, as in *Textures*), the three images `container2.png`,
+`container2_specular.png` and `matrix.png` – **Save resources…** in the panel copies them into your folder – and
+vertex data with texture coordinates. Each vertex now has a position, a normal and texture coordinates, 8 floats; the
+texture coordinates are those of the cube in *Coordinate Systems*:
 
 ```cpp
     float vertices[] = {
@@ -167,20 +169,21 @@ vertex data with texture coordinates – each vertex now has a position, a norma
         ...
 ```
 
-The position and normal attributes already use a stride of `8 * sizeof(float)`, for the cube's VAO and the lamp's.
-The `// TODO:` comments mark where your code goes: the texture coordinate attribute, loading the textures, and
-binding them in the render loop.
+Change the stride of the position and normal attributes to `8 * sizeof(float)`, for the cube's VAO and the lamp's.
+The tasks add the texture coordinate attribute, load the textures and bind them in the render loop.
 :::
 :::vulkan
-This chapter's project is the result of *Materials*, with the cube's shaders renamed to
-`shaders/lighting_maps.vert` and `.frag`. The light has learnopengl's fixed intensities again (ambient 0.2, diffuse
-0.5, specular 1.0 – no changing colour), and the material is still coral. What textures need is already there, from
-the *Textures* chapter: `stb_image.h`, the images `textures/container2.png`, `textures/container2_specular.png` and
-`textures/matrix.png`, vulkan-tutorial's helpers `beginSingleTimeCommands()`, `endSingleTimeCommands()`,
-`transitionImageLayout()` and `copyBufferToImage()`, and the sampler `textureSampler` (linear filtering, repeat,
-anisotropy), created in `initVulkan()` and destroyed in `cleanup()`. The `Vertex` struct has a third member,
-`glm::vec2 texCoord`, with learnopengl's coordinates, v flipped (`1 - v`): learnopengl flips the images when loading
-them, we flip the coordinates instead, as in the *Textures* chapter.
+You continue in your program from *Materials*. Prepare it first: rename the cube's shaders to
+`shaders/lighting_maps.vert` and `.frag`, and give the light learnopengl's fixed intensities again (ambient 0.2,
+diffuse 0.5, specular 1.0 – no changing colour); the material stays coral. Then bring back what textures need, from
+your program of the *Textures* chapter: `stb_image.h`, vulkan-tutorial's helpers `createBuffer()`, `createImage()`,
+`beginSingleTimeCommands()`, `endSingleTimeCommands()`, `transitionImageLayout()` and `copyBufferToImage()`, and the
+sampler `textureSampler` (linear filtering, repeat, anisotropy), created in `initVulkan()` and destroyed in
+`cleanup()`. The images are `textures/container2.png`, `textures/container2_specular.png` and `textures/matrix.png`;
+**Save resources…** in the panel copies them into your folder. Give the `Vertex` struct a third member,
+`glm::vec2 texCoord`, with learnopengl's coordinates (those of the cube in *Coordinate Systems*), v flipped
+(`1 - v`): learnopengl flips the images when loading them, we flip the coordinates instead, as in the *Textures*
+chapter.
 
 The body of the *Textures* chapter's `createTextureImage()` is now a helper that every map can use:
 
@@ -192,18 +195,18 @@ The body of the *Textures* chapter's `createTextureImage()` is now a helper that
 
 It creates a staging buffer, copies the pixels into it, creates a device-local `VK_FORMAT_R8G8B8A8_UNORM` image,
 transitions it to `TRANSFER_DST_OPTIMAL`, copies the buffer into it and transitions it to
-`SHADER_READ_ONLY_OPTIMAL`. The `// TODO:` comments mark where your code goes: the texture coordinate attribute
-and loading the maps.
+`SHADER_READ_ONLY_OPTIMAL`. The tasks add the texture coordinate attribute and load the maps.
 :::
 :::d3d12
-This chapter's project is the result of *Materials*, with the lit cube's shaders renamed to `lighting_maps.hlsl`. The
-light has learnopengl's fixed intensities again (ambient 0.2, diffuse 0.5, specular 1.0 – no changing colour), and
-the material is still coral. A few things for textures are already there: `stb_image.h` (with
-`STB_IMAGE_IMPLEMENTATION`), the three images `container2.png`, `container2_specular.png` and `matrix.png`, and a
-`Vertex` struct with a third member, `XMFLOAT2 texCoord`. The texture coordinates are learnopengl's with v flipped
-(`1 - v`): Direct3D's v = 0 is the image's top row, and the images are loaded without a flip, as in the *Textures*
-chapter. The `// TODO:` comments mark where your code goes: the texture coordinate element of the input layout,
-loading the textures, and the textures' root parameter in `PopulateCommandList`.
+You continue in your program from *Materials*. Prepare it first: rename the lit cube's shaders to
+`lighting_maps.hlsl`, and give the light learnopengl's fixed intensities again (ambient 0.2, diffuse 0.5, specular
+1.0 – no changing colour); the material stays coral. Then bring back what textures need: `stb_image.h` (with
+`STB_IMAGE_IMPLEMENTATION`, as in *Textures*), the three images `container2.png`, `container2_specular.png` and
+`matrix.png` – **Save resources…** in the panel copies them into your folder – and a `Vertex` struct with a third
+member, `XMFLOAT2 texCoord`. The texture coordinates are learnopengl's (those of the cube in *Coordinate Systems*)
+with v flipped (`1 - v`): Direct3D's v = 0 is the image's top row, and the images are loaded without a flip, as in
+the *Textures* chapter. The tasks add the texture coordinate element of the input layout, load the textures and set
+the textures' root parameter in `PopulateCommandList`.
 :::
 
 First the texture coordinates have to reach the fragment shader, exactly like the normals did in *Basic Lighting*.
@@ -296,8 +299,8 @@ coordinates are now on their way to the fragment shader.
 Next comes the texture itself.
 
 :::opengl
-The project uses learnopengl's utility function `loadTexture`, at the end of `main.cpp`, so we don't have to repeat
-the texture code of the *Textures* chapter for every map:
+We use learnopengl's utility function `loadTexture` – write it at the end of `main.cpp`, with a declaration at the
+top – so we don't have to repeat the texture code of the *Textures* chapter for every map:
 
 ```cpp
 // utility function for loading a 2D texture from file
@@ -405,7 +408,7 @@ new members of the application:
     }
 ```
 
-`initVulkan()` calls `createDiffuseMap();` where the TODO is, after `createCommandPool()` (the copy needs a command
+`initVulkan()` calls `createDiffuseMap();` after `createCommandPool()` (the copy needs a command
 buffer) and before `createTextureSampler()`, and `cleanup()` destroys the three objects after the sampler:
 
 ```cpp
@@ -473,8 +476,8 @@ and, like learnopengl, uses a shininess of 64:
 ```
 :::
 :::d3d12
-The project has learnopengl's utility `loadTexture` as a member function, `LoadTexture`, at the end of `main.cpp`. It
-does the steps of the *Textures* chapter for one file, so we don't have to repeat them for every map:
+Write learnopengl's utility `loadTexture` as a member function, `LoadTexture`, at the end of `main.cpp`. It does the
+steps of the *Textures* chapter for one file, so we don't have to repeat them for every map:
 
 ```cpp
 void D3D12App::LoadTexture(const char* path, ComPtr<ID3D12Resource>& texture, ComPtr<ID3D12Resource>& uploadHeap, UINT descriptorIndex)
@@ -489,7 +492,7 @@ end and waits for the GPU. That's why the upload buffer is an output parameter: 
 The texture has a single mip level, as in the *Textures* chapter. OpenGL's `loadTexture` generates mipmaps, so the
 crate's finest details can look a little sharper here than in OpenGL.
 
-Loading the diffuse map goes where the TODO is, after the vertex buffer. The texture is a new member,
+Loading the diffuse map goes into `LoadAssets`, after the vertex buffer. The texture is a new member,
 `ComPtr<ID3D12Resource> m_diffuseMap;`, and its SRV goes into heap slot 1, right after the CBV in slot 0:
 
 ```cpp

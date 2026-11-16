@@ -5,6 +5,8 @@ En *partikel* är, sett från {{api}}s perspektiv, en liten 2D-rektangel som all
 som vi har använt flitigt, men när du lägger ihop hundratals eller till och med tusentals sådana partiklar kan du skapa
 fantastiska effekter.
 
+Du fortsätter i ditt program från *Kollisionshantering*.
+
 När man arbetar med partiklar finns det oftast ett objekt som kallas *partikelsändare* (particle emitter) eller
 *partikelgenerator*, som från sin plats hela tiden skapar nya partiklar som tynar bort med tiden. Om en sådan sändare till
 exempel skapade små partiklar med en rökliknande textur, färgade dem mindre ljust ju längre från sändaren de kom och gav
@@ -16,8 +18,9 @@ styr alla partiklar den har skapat och ändrar deras beteende utifrån deras att
 följande attribut: en position, en hastighet, en färg och sitt liv.
 
 Idén är att skapa en partikelsändare som hela tiden skapar partiklar vid bollen, så att ett spår av mjuka, glödande
-partiklar följer bollen genom trädgården. Kursens partikeltextur, `textures/particle.png`, är ett mjukt vitt sken på
-64 × 64 som tonar ut till genomskinligt mot kanterna (learnopengl använder en egen partikeltextur här).
+partiklar följer bollen genom trädgården. Kursens partikeltextur – **Spara resursfilerna…** i panelen kopierar den
+till din mapp –, `textures/particle.png`, är ett mjukt vitt sken på 64 × 64 som tonar ut till genomskinligt mot
+kanterna (learnopengl använder en egen partikeltextur här).
 
 ## Partiklar
 

@@ -63,24 +63,24 @@ compute shaders i GLSL – `.cs` betyder C# för de flesta verktyg.
 :::
 :::vulkan
 Compute finns i Vulkan från början: varje Vulkan-enhet som kan rita har en köfamilj som klarar både grafik- och
-compute-arbete (vulkan-tutorials `graphicsAndComputeFamily`, som redan finns i startkoden). En compute shader körs i en
-**compute-pipeline** – mycket enklare än en grafikpipeline: ett enda shadersteg och en pipeline layout, skapad med
-`vkCreateComputePipelines`.
+compute-arbete (vulkan-tutorials `graphicsAndComputeFamily`: leta efter `VK_QUEUE_GRAPHICS_BIT` och
+`VK_QUEUE_COMPUTE_BIT` tillsammans i `findQueueFamilies()`). En compute shader körs i en **compute-pipeline** – mycket
+enklare än en grafikpipeline: ett enda shadersteg och en pipeline layout, skapad med `vkCreateComputePipelines`.
 :::
 :::d3d12
 Compute ingår i varje Direct3D 12-enhet. En compute shader körs med ett **compute pipeline state** – mycket enklare än
-ett för grafik: en root-signatur och compute shadern, inget annat – och en egen **compute-root-signatur**. Samma direkta
-command list som ritar kan också starta compute-arbete; en separat compute-kö (som i Microsofts exempel nBodyGravity) gör
-att compute kan köras parallellt med ritandet, men det behöver det här programmet inte.
+ett för grafik: en root-signatur och compute shadern, inget annat – och en egen **compute-root-signatur**. Samma
+direkta command list som ritar kan också starta compute-arbete; en separat compute-kö (som i Microsofts exempel
+nBodyGravity) gör att compute kan köras parallellt med ritandet, men det behöver det här programmet inte.
 :::
 
-## Projektet
+## Ditt program
 
-Startkoden skapar texturen – 800 × 600 texlar med fyra 32-bitars flyttal – fyller den från CPU:n med mörkblått och ritar
-den på en skärmfyrhörning som täcker fönstret: learnopengls `renderQuad()` med `screenQuad.vs` / `.fs`. Fyllningen från
-CPU:n är kursens tillägg, så att fyrhörningen visar något innan det finns en compute shader; learnopengl skapar texturen
-utan data. Compute shaderns fil finns redan, men är tom. Bygg och kör programmet: det visar ett mörkblått fönster;
-kommentarerna `// TODO:` visar var din kod ska in.
+Utgå från ditt program från *Framebuffers* i en ny mapp (det har en skärmfyrhörning) och låt det skapa texturen – 800
+× 600 texlar med fyra 32-bitars flyttal – fyller den från CPU:n med mörkblått och ritar den på en skärmfyrhörning som
+täcker fönstret: learnopengls `renderQuad()` med `screenQuad.vs` / `.fs`. Fyllningen från CPU:n är kursens tillägg, så
+att fyrhörningen visar något innan det finns en compute shader; learnopengl skapar texturen utan data. Lägg till
+compute shaderns fil, tom så länge. Bygg och kör programmet: det visar ett mörkblått fönster.
 
 :::opengl
 :::ide vs rider

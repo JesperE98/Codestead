@@ -17,8 +17,9 @@ av tre grafik-API:er:
 - **DirectX 12** (Direct3D 12) – text och kod följer Microsofts D3D12HelloWorld-exempel och dokumentationen av
   Direct3D 12 på Microsoft Learn.
 
-Du läser inte bara om grafikprogrammering: varje kapitel har ett projekt som du ändrar, bygger och kör själv, i din
-egen IDE på din egen dator. När ett kapitel är slut har du skrivit koden som det handlar om.
+Du läser inte bara om grafikprogrammering: du skriver ett eget program, i din egen IDE på din egen dator, och varje
+kapitel bygger vidare på det. Varje rad skriver du själv – kursen ger dig ingen färdig kod att utgå från – så när ett
+kapitel är slut har du skrivit koden som det handlar om.
 
 ## Förkunskaper
 
@@ -95,7 +96,7 @@ bäst att följa dem i ordning.
 Varje kapitel är en lektion i tre delar:
 
 1. **Texten** (till vänster) förklarar teorin och koden steg för steg, så som learnopengl.com gör. Kodutdragen i
-   texten är hämtade ur kapitlets startfiler, så du hittar varje rad igen i ditt projekt.
+   texten är koden du skriver: tillsammans blir de programmet som kapitlet bygger.
 2. **Frågor** i texten ("Testa dig själv") ser till att du har förstått de viktiga delarna. Svara på dem medan du
    läser: när du har svarat på dem öppnas uppgifterna.
 3. **Uppgifterna** (till höger) är koden du skriver – i din egen IDE. I panelen **Ditt projekt** bockar du av dem
@@ -111,16 +112,18 @@ kompilator, och ditt program öppnar ett riktigt fönster på din skärm. Appen 
 *Sätt upp din IDE*, två kapitel härifrån, visar hur du sätter upp IDE:n, kompilatorn och biblioteken för det API du har
 valt.
 
-Till höger i varje kapitel finns **uppgifterna**. Varje uppgift är en ändring i projektet: en funktion att anropa, ett
-värde att ändra, några rader att lägga till. Texten säger till när det är dags för en uppgift. Om du kör fast kan du
-öppna **Tips**. Efter några försök – eller så snart du har öppnat tipset – kan du också visa **lösningen**, koden som
-hör hemma där uppgiftens `// TODO:`-kommentar står.
+Till höger i varje kapitel finns **uppgifterna**. Varje uppgift är en ändring i ditt program: en funktion att anropa,
+ett värde att ändra, några rader att lägga till. Texten säger till när det är dags för en uppgift. Om du kör fast kan
+du öppna **Tips**. Efter några försök – eller så snart du har öppnat tipset – kan du också visa **lösningen**: kursens
+egen kod för uppgiften, i ett eget fönster som du stänger igen när du har jämfört den med din.
 
 Uppgifterna finns i panelen **Ditt projekt**, tillsammans med allt som kopplar ihop dem med din egen kod. Var du har
 den koden bestämmer du själv – dina egna mappar, vilken IDE som helst:
 
-- **Spara startfilerna…** kopierar kapitlets filer till en mapp som du väljer: `main.cpp`, och senare även shaders,
-  texturer och modeller. I projekten i de kommande kapitlen visar `// TODO:`-kommentarer var din kod ska stå.
+- Du skriver ditt program själv från första raden, med början i en tom `main.cpp` i *Skapa ett fönster*. Varje
+  kapitel fortsätter i programmet du skrev i kapitlet före; texten säger vilket i början av kapitlet.
+- **Spara resursfilerna…** finns i kapitel som använder kursens egna filer – texturer, modeller, typsnitt, banor – och
+  kopierar just dem till en mapp som du väljer. Allt annat, shaderfilerna också, är kod som du skriver.
 - När du har skrivit koden för en uppgift **bygger** du programmet och **kör** det från din IDE för att se vad det gör.
   För varje uppgift visar panelen **Förväntat resultat**: en bild av vad ditt programs fönster ska visa när
   uppgiften är klar.
@@ -142,8 +145,8 @@ källfiler och bocka av det som klarar kontrollen. Bilden finns där för att j�
 
 ## Ditt första program
 
-Projektet i det här kapitlet behöver du inte skriva: det är det färdiga *Hello Triangle*-programmet, programmet du
-bygger själv under de kommande kapitlen. Det öppnar ett fönster på 800×600, fyller det med en mörkt blågrön färg och
+Programmet i det här kapitlet ska du bara titta på: det är det färdiga *Hello Triangle*-programmet, programmet du
+skriver själv under de kommande kapitlen. Det öppnar ett fönster på 800×600, fyller det med en mörkt blågrön färg och
 ritar en orange triangel i mitten.
 
 :::opengl
@@ -188,7 +191,7 @@ din IDE* tar dig igenom IDE:n, kompilatorn, CMake och biblioteken, med länkar:
 - **d3dx12.h**, Microsofts hjälpheader – [github.com/microsoft/DirectX-Headers](https://github.com/microsoft/DirectX-Headers)
 :::
 
-*Creating a window* är det första kapitlet där du skriver och bygger kod – först ett fönster, den här triangeln några
+*Skapa ett fönster* är det första kapitlet där du skriver och bygger kod – först ett fönster, den här triangeln några
 kapitel senare. Till dess visar kapitlets **Förväntat resultat** vad programmet ritar.
 
 ### Triangelns färg
@@ -275,9 +278,9 @@ Färgvärden i en shader går från 0.0 till 1.0, i ordningen röd, grön, blå,
 ```
 :::
 
-När din IDE är uppsatt kan du komma tillbaka och prova: spara kapitlets startfiler med **Spara startfilerna…**,
-ändra färgen till `(0.2, 0.8, 0.3, 1.0)`, bygg och kör – triangeln behåller sin form och position, bara färgen
-ändras. Det är ingen uppgift; kursens uppgifter börjar i *Creating a window*.
+Det här kan du prova i *Hello Triangle*, när du har skrivit programmet själv: ändra färgen till
+`(0.2, 0.8, 0.3, 1.0)`, bygg och kör – triangeln behåller sin form och position, bara färgen ändras. Det är ingen
+uppgift; kursens uppgifter börjar i *Skapa ett fönster*.
 
 ## Kurskarta
 

@@ -18,8 +18,9 @@ chapter for one of three graphics APIs:
 - **DirectX 12** (Direct3D 12) – the text and code follow Microsoft's D3D12HelloWorld samples and the Direct3D 12
   documentation on Microsoft Learn.
 
-You don't only read about graphics programming: every chapter comes with a project that you change, build and run
-yourself, in your own IDE on your own computer. By the end of a chapter you have written the code it talks about.
+You don't only read about graphics programming: you write a program of your own, in your own IDE on your own
+computer, and every chapter adds to it. You write every line yourself – the course gives you no code to start from –
+so by the end of a chapter you have written the code it talks about.
 
 ## Prerequisites
 
@@ -95,8 +96,8 @@ best to follow them in order.
 
 Each chapter is a lesson in three parts:
 
-1. **The text** (on the left) explains the theory and the code, step by step, the way learnopengl.com does. Code
-   excerpts in the text are taken from the chapter's start files, so you can find every line again in your project.
+1. **The text** (on the left) explains the theory and the code, step by step, the way learnopengl.com does. The code
+   excerpts in the text are the code you write: together they make up the program the chapter builds.
 2. **Questions** in the text ("Check yourself") make sure you have understood the important points. Answer them
    as you read: once you have answered them, the tasks open up.
 3. **The tasks** (on the right) are the code you write – in your own IDE. The **Your project** panel is where you
@@ -112,16 +113,18 @@ compiler, and your program opens a real window on your screen. The app is your t
 *Setting up your IDE*, two chapters from here, shows how to set up the IDE, the compiler and the libraries for the
 API you have chosen.
 
-On the right of each chapter are the **tasks**. Each task is one change to the project: a function to call, a value
+On the right of each chapter are the **tasks**. Each task is one change to your program: a function to call, a value
 to change, a few lines to add. The text tells you when it is time for a task. If you get stuck, open the **Hint**.
-After a few attempts – or as soon as you have opened the hint – you can also show the **solution**, the code that
-belongs where the task's `// TODO:` comment is.
+After a few attempts – or as soon as you have opened the hint – you can also show the **solution**: the course's own
+code for the task, in a window of its own that you close again when you have compared it with yours.
 
 The tasks are in the **Your project** panel, together with everything that connects them to your own code. Where
 you keep that code is up to you – your own folders, any IDE:
 
-- **Save start files…** copies the chapter's files into a folder you pick: `main.cpp`, and later also shaders,
-  textures and models. In the projects of the coming chapters, `// TODO:` comments mark where your code goes.
+- You write your program from the first line yourself, starting with an empty `main.cpp` in *Creating a window*.
+  Each chapter continues in the program you wrote in the chapter before; the text says which one at its start.
+- **Save resources…** appears in chapters that use files of the course's own – textures, models, fonts, levels – and
+  copies just those into a folder you pick. Everything else, shader files included, is code you write.
 - When you have written a task's code, you **build** the program and **run** it from your IDE to see what it does.
   For each task the panel shows the **Expected result**: a picture of what your program's window should show when the
   task is done.
@@ -143,8 +146,8 @@ passes. The expected result is there to compare with what your program draws.
 
 ## Your first program
 
-The project of this chapter is not one you have to write: it is the finished *Hello Triangle* program, the program
-you will build yourself over the next chapters. It opens an 800×600 window, clears it to a dark teal colour and
+The program of this chapter is one you only look at: it is the finished *Hello Triangle* program, the program you
+will write yourself over the next chapters. It opens an 800×600 window, clears it to a dark teal colour and
 draws one orange triangle in the middle.
 
 :::opengl
@@ -276,9 +279,9 @@ Colour values in a shader go from 0.0 to 1.0, in the order red, green, blue, alp
 ```
 :::
 
-Once your IDE is set up, you can come back and try it: save this chapter's start files with **Save start files…**,
-change the colour to `(0.2, 0.8, 0.3, 1.0)`, build and run – the triangle keeps its shape and position, only its
-colour changes. It is not a task; the course's tasks start in *Creating a window*.
+You will be able to try this in *Hello Triangle*, once you have written the program yourself: change the colour to
+`(0.2, 0.8, 0.3, 1.0)`, build and run – the triangle keeps its shape and position, only its colour changes. It is not
+a task; the course's tasks start in *Creating a window*.
 
 ## Course map
 

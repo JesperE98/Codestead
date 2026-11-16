@@ -24,13 +24,12 @@ skriva i det. Vad bufferten *är* (vertex buffer, constant buffer …) avgörs a
 view, en constant buffer view.
 :::
 
-learnopengl.com:s kapitel har inget eget demoprogram, så det här kapitlets projekt är än en gång scenen från *Depth
-testing* – de två marmorkuberna, metallgolvet, kameran på (0, 0, 3) – och varje uppgift ändrar *hur* vertexdatan
+learnopengl.com:s kapitel har inget eget demoprogram, så du fortsätter än en gång i ditt program från *Djuptestning*,
+med dess scen – de två marmorkuberna, metallgolvet, kameran på (0, 0, 3) – och varje uppgift ändrar *hur* vertexdatan
 hamnar i buffrarna, inte *vad* som ritas. **Efter varje uppgift är bilden exakt densamma.** Det är själva poängen:
 uppgifterna kontrollerar din kod, och den oförändrade bilden bevisar att datan kom fram dit GPU:n väntar sig den.
 
-Kommentarerna `// TODO:` i projektet visar var din kod ska in. Efter varje uppgift bygger och kör du programmet i din
-IDE.
+Efter varje uppgift bygger och kör du programmet i din IDE.
 
 ## Filling buffers
 
@@ -45,7 +44,7 @@ kan ange en offset som säger *varifrån* vi vill fylla bufferten. Så kan vi l�
 av bufferns minne. Observera att bufferten måste ha tillräckligt med allokerat minne, så ett anrop till `glBufferData`
 behövs innan `glBufferSubData` anropas på bufferten.
 
-Gör nu den första uppgiften, **buffer-sub-data**: vid TODO:n i kubens VAO-block reserverar du först minnet och fyller
+Gör nu den första uppgiften, **buffer-sub-data**: i kubens VAO-block reserverar du först minnet och fyller
 det i ett andra steg:
 
 ```cpp
@@ -73,7 +72,7 @@ Det andra argumentet till `glMapBuffer`, `GL_WRITE_ONLY`, lovar att vi bara skri
 `glMapBuffer` är användbart för att mappa data direkt till en buffer, utan att först lagra den i ett tillfälligt
 minne. Tänk dig att läsa data direkt från en fil och kopiera in den i bufferns minne.
 
-Gör nu uppgiften **map-buffer**: fyll golvets buffer på det här sättet, vid TODO:n i golvets VAO-block. `memcpy`
+Gör nu uppgiften **map-buffer**: fyll golvets buffer på det här sättet, i golvets VAO-block. `memcpy`
 behöver `#include <cstring>` högst upp i `main.cpp`.
 :::
 :::vulkan

@@ -45,13 +45,13 @@ Tessellering ingår i varje Direct3D 12-enhet – den kom med feature level 11_0
 inget att begära eller slå på.
 :::
 
-## Projektet
+## Ditt program
 
-Starten är förra kapitlets lösning, terrängen på CPU:n, med GPU-versionens filer tillagda: `gpuheight`-shaders för
-vertex-steget (som skickar vidare kontrollpunkterna), control-/hull-steget (som skickar vidare dem och sätter varje nivå
-till 1 – mer om det nedan), ett tomt evaluation-/domain-steg, och fragment-steget som färgar efter höjd, som förut.
-Kameran, höjdkartan och färgerna är förra kapitlets, så de två kapitlen visar samma landskap från samma plats. Bygg och
-kör programmet: det visar den grå CPU-terrängen; kommentarerna `// TODO:` visar var GPU-versionen ska in.
+Du fortsätter i ditt program från *Tessellering: höjdkarta*, terrängen på CPU:n, och lägger till GPU-versionens filer:
+`gpuheight`-shaders för vertex-steget (som skickar vidare kontrollpunkterna), control-/hull-steget (som skickar vidare
+dem och sätter varje nivå till 1 – mer om det nedan), ett tomt evaluation-/domain-steg, och fragment-steget som färgar
+efter höjd, som förut. Kameran, höjdkartan och färgerna är förra kapitlets, så de två kapitlen visar samma landskap
+från samma plats. Bygg och kör programmet: det visar den grå CPU-terrängen; uppgifterna lägger till GPU-versionen.
 
 :::opengl
 :::ide vs rider
@@ -362,9 +362,10 @@ patch har, i själva topologin:
 1, 0, 0)` ritar de 1 600 kontrollpunkterna.
 :::
 
-Startens control-/hull-steg sätter varje nivå till 1, så tessellatorn gör inga nya punkter: varje patch blir en enda
-fyrhörning – två trianglar – med höjderna i sina fyra hörn. Gör nu den fjärde uppgiften, **tess-evaluation**. Bygg och
-kör: en **grov terräng** av 20 × 20 lutande kvadrater – rätt kontur, men topparna trubbiga och sjön bara en grund grop.
+Control-/hull-steget som du börjar med sätter varje nivå till 1, så tessellatorn gör inga nya punkter: varje patch
+blir en enda fyrhörning – två trianglar – med höjderna i sina fyra hörn. Gör nu den fjärde uppgiften,
+**tess-evaluation**. Bygg och kör: en **grov terräng** av 20 × 20 lutande kvadrater – rätt kontur, men topparna
+trubbiga och sjön bara en grund grop.
 
 ## Tesselleringsnivåer
 
@@ -433,13 +434,13 @@ layout(vertices = 4) out;
     if (gl_InvocationID == 0) {
 ```
 
-och inuti `if`-satsen, för den här uppgiften, `gl_TessLevelOuter[0]` … `[3]` och `gl_TessLevelInner[0]` … `[1]` = 8. En
-Vulkan-pipeline med tessellering **måste** ha både en control- och en evaluation shader – OpenGL kan utelämna control
-shadern och använda standardnivåer, Vulkan har inga sådana standardvärden. Därför skriver startens control shader nivå 1
-överallt: utan den hade förra uppgiftens pipeline inte gått att bygga.
+och inuti `if`-satsen, för den här uppgiften, `gl_TessLevelOuter[0]` … `[3]` och `gl_TessLevelInner[0]` … `[1]` = 8.
+En Vulkan-pipeline med tessellering **måste** ha både en control- och en evaluation shader – OpenGL kan utelämna
+control shadern och använda standardnivåer, Vulkan har inga sådana standardvärden. Därför skriver control shadern som
+du börjar med nivå 1 överallt: utan den hade förra uppgiftens pipeline inte gått att bygga.
 
 ```quiz
-Varför har starten i Vulkan-projektet redan en control shader som bara skriver nivå 1 överallt?
+Varför börjar Vulkan-programmet med en control shader som bara skriver nivå 1 överallt?
 - [ ] För att nivå 1 får tessellatorn att fördubbla vertexarna
 - [ ] För att evaluation shadern inte kan läsa `gl_TessCoord` utan den
 - [ ] För att Vulkan kräver att nivåerna skrivs en gång per bildruta av CPU:n
@@ -482,8 +483,8 @@ struct HSConstantOutput
 };
 ```
 
-För den här uppgiften sätter `PatchConstantFunction` alla sex till 8. En Direct3D-pipeline med tessellering behöver alltid
-en hull shader – det finns inga standardfaktorer – och därför skriver startens 1 överallt.
+För den här uppgiften sätter `PatchConstantFunction` alla sex till 8. En Direct3D-pipeline med tessellering behöver
+alltid en hull shader – det finns inga standardfaktorer – och därför skriver den som du börjar med 1 överallt.
 
 ```quiz
 Vilken del av Direct3D:s hull shader gör det som OpenGL:s block `if (gl_InvocationID == 0)` i control shadern gör?

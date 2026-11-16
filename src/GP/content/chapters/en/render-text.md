@@ -4,9 +4,9 @@ In this chapter we'll be adding the final enhancements to the game: a life syste
 feedback in the form of rendered text. This chapter heavily builds upon the Text Rendering chapter, so it is highly
 advised to work through that chapter first if you haven't already.
 
-The project is the `powerups` chapter's solution – which `audio` kept – with new `// TODO:` sections, a new text
-shader whose start bodies compile and draw nothing useful, and the Text Rendering chapter's font,
-`fonts/Inter-Bold.otf`, with its license `fonts/OFL.txt` (learnopengl's game uses another font).
+You continue in your program from *Powerups* – which *Audio* kept –, with a new text shader (the text shows it) and
+the Text Rendering chapter's font, `fonts/Inter-Bold.otf`, with its license `fonts/OFL.txt` (learnopengl's game uses
+another font); **Save resources…** in the panel copies both into your folder.
 :::opengl
 The text shader is `text_2d.vs` / `text_2d.fs`.
 :::

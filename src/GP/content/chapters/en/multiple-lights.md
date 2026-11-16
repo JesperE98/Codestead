@@ -80,39 +80,40 @@ example two light sources are close to the fragment, their combined contribution
 fragment compared to the fragment being lit by a single light source.
 
 :::opengl
-This chapter's project starts from the result of *Light casters*: the ten containers, the diffuse and specular maps,
-shininess 32, the camera at (0, 0, 3) looking down -z, and the lamp's VAO and `lightCubeShader`. The vertex shader is
-now called `multiple_lights.vs` (unchanged). `multiple_lights.fs` is a fresh skeleton: the `Material` struct, the
+You continue in your program from *Light casters*: the ten containers, the diffuse and specular maps, shininess 32,
+the camera at (0, 0, 3) looking down -z, and the lamp's VAO and `lightCubeShader`. Prepare it first. Rename the
+vertex shader to `multiple_lights.vs` (unchanged). Start `multiple_lights.fs` afresh: the `Material` struct, the
 inputs, `uniform vec3 viewPos;` and `uniform Material material;`, and a `main()` that computes `norm` and `viewDir`,
-sets `vec3 result = vec3(0.0);` and has three `// TODO:` comments, one for each phase. In `main.cpp` the render loop
-sets only `viewPos` and `material.shininess`, followed by three `// TODO:` comments for the lights' values; the
-`lightPos` global is gone, and a fourth `// TODO:` marks where the lamps are drawn.
+sets `vec3 result = vec3(0.0);` and writes `FragColor = vec4(result, 1.0);` – the three phases go in between. In
+`main.cpp` the render loop sets only `viewPos` and `material.shininess` (the lights' values come in the tasks), the
+`lightPos` global goes, and so does drawing the lamp – the tasks draw four of them.
 :::
 :::vulkan
-This chapter's project starts from the result of *Light casters*: the ten containers, the diffuse map (binding 0) and
-specular map (binding 1), shininess 32, the uniform buffer at binding 2, the camera at (0, 0, 3) looking down -z, and
-both pipelines – `lightingPipeline` now built from `shaders/multiple_lights.vert` / `.frag`, `lightCubePipeline` from
-`shaders/light_cube.*`. The vertex shader is unchanged. `multiple_lights.frag` is a fresh skeleton: the two samplers,
-`struct Material { float shininess; };`, the uniform block `{ mat4 view; mat4 proj; vec3 viewPos; Material material; }`,
-the inputs, and a `main()` that computes `norm` and `viewDir`, sets `vec3 result = vec3(0.0);` and has three
-`// TODO:` comments, one for each phase. In C++ the `Light` struct and the `lightPos` global are gone,
-`UniformBufferObject` ends with `Material material;`, `updateUniformBuffer()` sets `viewPos` and `material.shininess`
-followed by three `// TODO:` comments for the lights, and a fourth `// TODO:` in `recordCommandBuffer()` marks where
-the lamps are drawn.
+You continue in your program from *Light casters*: the ten containers, the diffuse map (binding 0) and specular map
+(binding 1), shininess 32, the uniform buffer at binding 2, the camera at (0, 0, 3) looking down -z, and both
+pipelines. Prepare it first. Build `lightingPipeline` from `shaders/multiple_lights.vert` / `.frag` now
+(`lightCubePipeline` stays with `shaders/light_cube.*`); the vertex shader is unchanged. Start `multiple_lights.frag`
+afresh: the two samplers, `struct Material { float shininess; };`, the uniform block
+`{ mat4 view; mat4 proj; vec3 viewPos; Material material; }`, the inputs, and a `main()` that computes `norm` and
+`viewDir`, sets `vec3 result = vec3(0.0);` and writes it out with alpha 1.0 – the three phases go in between. In C++
+remove the `Light` struct and the `lightPos` global, end `UniformBufferObject` with `Material material;`, let
+`updateUniformBuffer()` set only `viewPos` and `material.shininess` (the lights come in the tasks), and remove the
+lamp's draw from `recordCommandBuffer()` – the tasks draw four of them.
 :::
 :::d3d12
-This chapter's project starts from the result of *Light casters*: the ten containers, the diffuse and specular maps,
-shininess 32, the camera at (0, 0, 3) looking down -z, and the lamp's pipeline state `m_lightCubePipelineState`. The
-lit objects' shaders are now in `multiple_lights.hlsl`: `VSMain` is unchanged; there are the textures, `struct
-Material { float shininess; }`, the cbuffer `SceneConstantBuffer` with `view`, `projection`, `viewPos` and `material`
-(no light yet), and a fresh `PSMain` that computes `norm` and `viewDir`, sets `float3 result = float3(0.0f, 0.0f,
-0.0f);` and has three `// TODO:` comments, one for each phase. In `main.cpp` the C++ `Light` struct and the `lightPos`
-global are gone, `OnUpdate` sets only `viewPos` and `material.shininess`, followed by three `// TODO:` comments for
-the lights, and a fourth `// TODO:` in `PopulateCommandList` marks where the lamps are drawn.
+You continue in your program from *Light casters*: the ten containers, the diffuse and specular maps, shininess 32,
+the camera at (0, 0, 3) looking down -z, and the lamp's pipeline state `m_lightCubePipelineState`. Prepare it first.
+The lit objects' shaders move to `multiple_lights.hlsl`: `VSMain` is unchanged; it has the textures,
+`struct Material { float shininess; }`, the cbuffer `SceneConstantBuffer` with `view`, `projection`, `viewPos` and
+`material` (no light yet), and a fresh `PSMain` that computes `norm` and `viewDir`, sets
+`float3 result = float3(0.0f, 0.0f, 0.0f);` and returns it with alpha 1.0 – the three phases go in between. In
+`main.cpp` remove the C++ `Light` struct and the `lightPos` global, let `OnUpdate` set only `viewPos` and
+`material.shininess` (the lights come in the tasks), and remove the lamp's draw from `PopulateCommandList` – the tasks
+draw four of them.
 :::
 
-The `// TODO:` comments mark where your code goes. After each task, build and run the program in your IDE. Build it once
-now: with no light at all, all ten containers are black against the dark grey background.
+After each task, build and run the program in your IDE. Build it once now: with no light at all, all ten containers
+are black against the dark grey background.
 
 > As in *Light casters* we use learnopengl's camera at (0, 0, 3), so that all ten containers are in view. At the end
 > of this chapter you'll see that this hides most of the lamps: they are outside the window or behind containers.
@@ -1187,7 +1188,7 @@ shader and in `UniformBufferObject`.
 With the spotlight the constant buffer is complete: 160 bytes for the matrices, `viewPos` and the material, 64 for
 `dirLight`, 4 × 80 for `pointLights` and 96 for `spotLight` – 640 bytes, every field at the same offset in HLSL and
 C++. A constant buffer view must be a multiple of 256 bytes, so `CalculateConstantBufferByteSize` rounds the buffer
-and its view up to 768; the project already uses it, so nothing else changes.
+and its view up to 768; your program already uses it, so nothing else changes.
 :::
 
 Now do the task **spot-light**. When you build and run it, a bright disc appears on container 0, where the flashlight
@@ -1320,7 +1321,7 @@ to create your own atmospheres.
   **horror** scene and a **biochemical lab** – by tweaking the light's attribute values?
 
 :::opengl
-This is not a task in the project: try it once you have finished the tasks, and build and run the program to compare.
+This is not a task: try it once you have finished the tasks, and build and run the program to compare.
 Change the clear colour in `glClearColor` and the lights' colours in the render loop. For a desert, for example, make
 everything warm: a yellowish clear colour, a strong yellow-white directional light and orange point lights. For a horror
 scene, an almost black clear colour, a very weak directional light, dim reddish point lights with a short range (linear
@@ -1328,7 +1329,7 @@ scene, an almost black clear colour, a very weak directional light, dim reddish 
 lamps the point lights' colours too if you want them to match – that needs a colour uniform in `light_cube.fs`.
 :::
 :::vulkan
-This is not a task in the project: try it once you have finished the tasks, and build and run the program to compare.
+This is not a task: try it once you have finished the tasks, and build and run the program to compare.
 Change the clear colour (`clearValues[0].color` in `recordCommandBuffer()`) and the lights' colours in
 `updateUniformBuffer()`. For a desert, for example, make everything warm: a yellowish clear colour, a strong
 yellow-white directional light and orange point lights. For a horror scene, an almost black clear colour, a very weak
@@ -1337,7 +1338,7 @@ table in *Light casters*) and a narrow flashlight. If you want the lamps to show
 lamp shader a colour – for example in the push constants.
 :::
 :::d3d12
-This is not a task in the project: try it once you have finished the tasks, and build and run the program to compare.
+This is not a task: try it once you have finished the tasks, and build and run the program to compare.
 Change the clear colour (`clearColor` in `PopulateCommandList`) and the lights' colours in `OnUpdate`. For a desert, for
 example, make everything warm: a yellowish clear colour, a strong yellow-white directional light and orange point
 lights. For a horror scene, an almost black clear colour, a very weak directional light, dim reddish point lights with a

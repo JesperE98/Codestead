@@ -19,32 +19,32 @@ To create visually interesting scenes we want to at least simulate these 3 light
 simplest one: *ambient lighting*.
 
 :::opengl
-This chapter's project is the result of *Colors*: the coral cube, the white lamp at `lightPos` and the camera
-front-left of the cube. Two things were prepared. The cube's shaders are renamed to `basic_lighting.vs` and
-`basic_lighting.fs` (same contents as `colors.vs`/`colors.fs`; `Shader lightingShader("basic_lighting.vs",
-"basic_lighting.fs");`), and the vertex array has **6 floats per vertex** now – a position and a *normal vector*,
-which we'll get to in a moment. Both VAOs' position attributes already use the new stride, `6 * sizeof(float)`.
+You continue in your program from *Colors*: the coral cube, the white lamp at `lightPos` and the camera front-left
+of the cube. Prepare two things first. Rename the cube's shaders to `basic_lighting.vs` and `basic_lighting.fs` (same
+contents as `colors.vs`/`colors.fs`; `Shader lightingShader("basic_lighting.vs", "basic_lighting.fs");`). And give
+the vertex array **6 floats per vertex** – a position and a *normal vector*, which we'll get to in a moment (the
+section *Normal vectors* below shows the data) – with both VAOs' position attributes at the new stride,
+`6 * sizeof(float)`.
 :::
 :::vulkan
-This chapter's project is the result of *Colors*: the coral cube, the white lamp at `lightPos`, two pipelines made by
-`createPipeline(...)` and the camera front-left of the cube. Two things were prepared. The cube's shaders are renamed to
+You continue in your program from *Colors*: the coral cube, the white lamp at `lightPos`, two pipelines made by
+`createPipeline(...)` and the camera front-left of the cube. Prepare two things first. Rename the cube's shaders to
 `shaders/basic_lighting.vert` and `shaders/basic_lighting.frag` (same contents as before;
-`createPipeline("shaders/basic_lighting.vert.spv", "shaders/basic_lighting.frag.spv", 1, lightingPipeline)`), and every
-vertex has a **position and a normal vector** now – which we'll get to in a moment: `struct Vertex { glm::vec3 pos;
-glm::vec3 normal; }`.
+`createPipeline("shaders/basic_lighting.vert.spv", "shaders/basic_lighting.frag.spv", 1, lightingPipeline)`). And give
+every vertex a **position and a normal vector** – which we'll get to in a moment (the section *Normal vectors* below
+shows the data): `struct Vertex { glm::vec3 pos; glm::vec3 normal; }`.
 :::
 :::d3d12
-This chapter's project is the result of *Colors*: the coral cube, the white lamp at `lightPos`, two pipeline state
-objects and the camera front-left of the cube. Two things were prepared. The cube's shaders are renamed to
-`basic_lighting.hlsl` (same contents as `colors.hlsl`; both `D3DCompileFromFile` calls use the new name), and every
-vertex has a **position and a normal vector** now – which we'll get to in a moment: `struct Vertex { XMFLOAT3
-position; XMFLOAT3 normal; }`. The vertex buffer view's stride is `sizeof(Vertex)`, 24 bytes now, so the positions are
-still read correctly.
+You continue in your program from *Colors*: the coral cube, the white lamp at `lightPos`, two pipeline state objects
+and the camera front-left of the cube. Prepare two things first. Rename the cube's shaders to `basic_lighting.hlsl`
+(same contents as `colors.hlsl`; both `D3DCompileFromFile` calls use the new name). And give every vertex a **position
+and a normal vector** – which we'll get to in a moment (the section *Normal vectors* below shows the data):
+`struct Vertex { XMFLOAT3 position; XMFLOAT3 normal; }`. The vertex buffer view's stride is `sizeof(Vertex)`, 24 bytes
+now, so the positions are still read correctly.
 :::
 
-Most tasks of this chapter change code that is already there; the one `// TODO:` comment marks where the normal
-attribute goes. Build and run the program after each task to see the result. The start picture is the end of the
-previous chapter: a flat coral cube and a white lamp.
+Most tasks of this chapter change code that is already there. Build and run the program after each task to see the
+result. Once you have prepared it, the picture is the end of the previous chapter: a flat coral cube and a white lamp.
 
 ## Ambient lighting
 
@@ -154,9 +154,10 @@ A normal vector is a (unit) vector that is perpendicular to the surface of a ver
 surface (it's just a single point in space) we retrieve a normal vector by using its surrounding vertices to figure out
 the surface of the vertex. We can use a little trick to calculate the normal vectors for all the cube's vertices by
 using the cross product, but since a 3D cube is not a complicated shape we can simply manually add them to the vertex
-data. The updated vertex data array is already in the project; try to visualize that the normals are indeed vectors
-perpendicular to each plane's surface (a cube consists of 6 planes). The first face, the back face at z = -0.5, has
-the normal (0, 0, -1), pointing away from the cube:
+data. Add a normal to each of the 36 vertices: the six vertices of a face share its normal, and the faces come in the
+order back (0, 0, -1), front (0, 0, 1), left (-1, 0, 0), right (1, 0, 0), bottom (0, -1, 0) and top (0, 1, 0). Try to
+visualize that the normals are indeed vectors perpendicular to each plane's surface (a cube consists of 6 planes).
+The first face, the back face at z = -0.5, has the normal (0, 0, -1), pointing away from the cube:
 
 :::opengl
 ```cpp
@@ -180,7 +181,7 @@ pointer: 3 floats, starting 3 floats into each 6-float vertex:
 ```
 
 We only want to use the first 3 floats of each vertex for the lamp and ignore the last 3 floats, so we only need to
-update the lamp VAO's stride parameter – which the project has already done:
+update the lamp VAO's stride parameter – which you did when you prepared the program:
 
 ```cpp
     // note that we update the lamp's position attribute's stride to reflect the updated buffer data

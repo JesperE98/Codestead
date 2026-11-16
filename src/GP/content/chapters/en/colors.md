@@ -124,16 +124,18 @@ The first thing we need is an object to cast the light on and we'll use the infa
 chapters. We'll also be needing a light object to show where the light source is located in the 3D scene. For
 simplicity's sake we'll represent the light source with a cube as well.
 
-### The project
+### Your program
 
-The project of this chapter is already prepared for that. It is the result of *Camera*, reduced to what the lighting
-chapters start with: **one cube at the origin**, built from the same 36 vertices as before but with **positions only**
+You continue in your program from *Camera*. Before the first task, reduce it to what the lighting chapters start
+with: **one cube at the origin**, built from the same 36 vertices as before but with **positions only**
 – no texture coordinates and no textures any more, since we want to see the cube's colour, not a picture. The clear
 colour is a dark grey, (0.1, 0.1, 0.1), as in all of learnopengl's lighting chapters, so that the lamp stands out.
-The free camera of the previous chapter, with its W/A/S/D, mouse look and zoom, is still there.
+The free camera of the previous chapter, with its W/A/S/D, mouse look and zoom, stays. The cube's vertex shader
+becomes the one shown below, and the lamp's files (more about those below) start as copies of the cube's.
 
 :::opengl
-The files are `main.cpp`, `shader_m.h`, `colors.vs` and `colors.fs` (the shaders of the lit cube) and `light_cube.vs`
+The files are `main.cpp`, `shader_m.h`, `colors.vs` and `colors.fs` (the shaders of the lit cube; `colors.fs` writes
+plain white for now) and `light_cube.vs`
 and `light_cube.fs` (the shaders of the lamp – more about those below). learnopengl numbers its shader files per
 chapter (`1.colors.vs`); the course drops the numbers.
 
@@ -193,7 +195,7 @@ frame by `updateUniformBuffer()`, and the model matrix is a push constant. The `
 `glm::vec3 pos`, and `getAttributeDescriptions()` describes that one attribute.
 
 Since this chapter needs **two** graphics pipelines – one for the cube, one for the lamp – the old
-`createGraphicsPipeline()` has been split in two:
+`createGraphicsPipeline()` is split in two – move its code into these two functions:
 
 - `createPipelineLayout()` creates the pipeline layout – the descriptor set layout and the push constant range – once.
   Every pipeline uses it.
@@ -267,7 +269,7 @@ block, with `compileFlags` at its top, so that a second pipeline state can reuse
 vertices.
 :::
 
-The project's `// TODO:` comments mark where your code goes. Build and run the program at any time. At the start you see
+Build and run the program at any time. Once you have prepared it you see
 a flat **white** cube on the dark grey background – the cube's fragment shader still writes plain white.
 
 ### The default camera
@@ -554,8 +556,8 @@ source of the light).
 :::opengl
 To accomplish this we need to create a second set of shaders that we'll use to draw the light source cube, thus being
 safe from any changes to the lighting shaders. The vertex shader, `light_cube.vs`, is the same as the cube's vertex
-shader – it is already complete in the project. The fragment shader ensures the cube's color remains bright by
-defining a constant white color on the lamp:
+shader – a copy of `colors.vs`. The fragment shader ensures the cube's color remains bright by defining a constant
+white color on the lamp:
 
 ```glsl
 #version 330 core
@@ -577,8 +579,8 @@ The program is built next to `lightingShader`:
 :::vulkan
 To accomplish this we need a second set of shaders that we'll use to draw the light source cube, thus being safe from
 any changes to the lighting shaders. In Vulkan the shaders are part of a graphics pipeline, so the lamp gets **a
-second pipeline**. `shaders/light_cube.vert` is the same as the cube's vertex shader – it is already complete in the
-project. The fragment shader ensures the cube's color remains bright by defining a constant white color on the lamp,
+second pipeline**. `shaders/light_cube.vert` is the same as the cube's vertex shader – a copy of `colors.vert`. The
+fragment shader ensures the cube's color remains bright by defining a constant white color on the lamp,
 and it doesn't even declare the uniform block:
 
 ```glsl
@@ -611,7 +613,7 @@ fixed-function state; only the shaders differ.
 To accomplish this we need a second set of shaders that we'll use to draw the light source cube, thus being safe from
 any changes to the lighting shaders. In Direct3D 12 the shaders are part of a pipeline state object, so the lamp gets
 **a second pipeline state object**. In `light_cube.hlsl`, `VSMain` is the same as the cube's vertex shader – it is
-already complete in the project, and its cbuffer declares only the two matrices it needs. `PSMain` ensures the cube's
+a copy of the one in `colors.hlsl`, and its cbuffer declares only the two matrices it needs. `PSMain` ensures the cube's
 color remains bright by returning a constant white color:
 
 ```hlsl

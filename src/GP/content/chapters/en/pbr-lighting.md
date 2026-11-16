@@ -66,16 +66,16 @@ light sources relatively simple as we effectively only have to loop over the con
 take environment lighting into account in the IBL chapters, we do have to take the integral into account as light can
 come from any direction.
 
-## The project
+## Your program
 
-The project is the one you ran at the end of the previous chapter: learnopengl's PBR lighting scene. 7 × 7 spheres of
-radius 1, 2.5 units apart, at z = 0, with `metallic = row / 7` (the bottom row 0, the top row 0.857) and `roughness =
-clamp(col / 7, 0.05, 1.0)` (the left column 0.05, the right column 0.857); every sphere has the albedo (0.5, 0.0, 0.0)
-and an ao of 1.0. The roughness is clamped to at least 0.05 because perfectly smooth surfaces (a roughness of 0.0) tend
-to look a bit off with direct light: the highlight of a point light would become an infinitely small point. Four point
-lights hang at (-10, 10, 10), (10, 10, 10), (-10, -10, 10) and (10, -10, 10), each with the colour (300, 300, 300).
-learnopengl also draws a small sphere at each light; with the course's camera they are outside the view, so the course
-does not draw them.
+You continue in the program you prepared at the end of the previous chapter: learnopengl's PBR lighting scene. 7 × 7
+spheres of radius 1, 2.5 units apart, at z = 0, with `metallic = row / 7` (the bottom row 0, the top row 0.857) and
+`roughness = clamp(col / 7, 0.05, 1.0)` (the left column 0.05, the right column 0.857); every sphere has the albedo
+(0.5, 0.0, 0.0) and an ao of 1.0. The roughness is clamped to at least 0.05 because perfectly smooth surfaces (a
+roughness of 0.0) tend to look a bit off with direct light: the highlight of a point light would become an infinitely
+small point. Four point lights hang at (-10, 10, 10), (10, 10, 10), (-10, -10, 10) and (10, -10, 10), each with the
+colour (300, 300, 300). learnopengl also draws a small sphere at each light; with the course's camera they are outside
+the view, so the course does not draw them.
 
 A few numbers differ from learnopengl's program:
 
@@ -250,8 +250,7 @@ The pipeline state fixes the type of primitive (point, line, triangle, patch) th
 ```
 :::
 
-The `// TODO:` comments in the project mark where your code goes. Each task is one step of learnopengl's shader; build
-and run the program after each one to see how the spheres change.
+Each task is one step of learnopengl's shader; build and run the program after each one to see how the spheres change.
 
 ## A PBR surface model
 
@@ -749,7 +748,7 @@ exactly the 4 incoming light directions that can influence the fragment. Because
 these incoming light directions, e.g. the number of lights in the scene.
 
 What's left is to add an (improvised) ambient term to the direct lighting result Lo and we have the final lit colour of
-the fragment – the project already has it after the loop:
+the fragment – your program already has it after the loop:
 
 :::opengl vulkan
 ```glsl
@@ -1079,7 +1078,7 @@ The descriptor set layout gets five `VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER` 
 buffer (`camPos` and `pad1` follow the lights directly). `cleanup()` destroys the sampler and the images.
 :::
 :::d3d12
-`LoadTexture` (there since the start, unused so far) loads an image with `stbi_load` as RGBA, creates a
+`LoadTexture` (there since you prepared the program, unused so far) loads an image with `stbi_load` as RGBA, creates a
 `DXGI_FORMAT_R8G8B8A8_UNORM` texture with **one mip level** in a default heap, copies the pixels through an upload heap
 (`UpdateSubresources`), turns it into a `PIXEL_SHADER_RESOURCE` with a barrier and writes its SRV into a slot of the
 CBV/SRV heap. The heap grows to 6 descriptors, and the five maps take the slots 1–5 – consecutive, so one descriptor
@@ -1180,8 +1179,7 @@ nearly black; the next chapters replace it with light from an environment.
   the grid of spheres and the textured material.
 - [Fixed functions](https://vulkan-tutorial.com/Drawing_a_triangle/Graphics_pipeline_basics/Fixed_functions):
   vulkan-tutorial on the input assembly's topologies.
-- [Generating Mipmaps](https://vulkan-tutorial.com/Generating_Mipmaps): the `generateMipmaps` the project's
-  `loadTexture` uses.
+- [Generating Mipmaps](https://vulkan-tutorial.com/Generating_Mipmaps): the `generateMipmaps` that `loadTexture` uses.
 :::
 :::d3d12
 - [PBR / Lighting](https://learnopengl.com/PBR/Lighting): learnopengl's chapter this chapter follows, with screenshots of

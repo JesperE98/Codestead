@@ -38,7 +38,7 @@ two colour buffers of the bloom chapter, and the lighting pass is one more scree
 puts them together.
 
 ```quiz
-In the start's forward renderer the boxes overlap on the screen. Where does it do lighting work that deferred shading avoids?
+In the forward renderer you start with, the boxes overlap on the screen. Where does it do lighting work that deferred shading avoids?
 - [ ] It lights the background pixels, where no box is
 - [ ] It lights every box twice: once for the diffuse and once for the specular part
 - [x] A fragment of a box farther back is lit with all 32 lights, and then a nearer box covers it: that work is thrown away – deferred shading lights only the fragment that is left in each pixel
@@ -107,20 +107,21 @@ lights. It sits at **(0, 5, 9) and looks down at the grid** (yaw -90, pitch -35)
 between, above and below the boxes. Nothing moves; the program needs no input.
 
 :::opengl
-The start is a forward renderer: `main.cpp` draws the nine boxes into the window with `forward_shading.vs` /
-`forward_shading.fs`, and the fragment shader loops over all 32 lights for every fragment – learnopengl's lighting code,
-with the surface data coming straight from the vertex shader and the textures. The light uniforms are set every frame
-in a loop (`lights[i].Position`, `.Color`, `.Linear`, `.Quadratic`) together with `viewPos`. `renderCube()` and
-learnopengl's `renderQuad()` (a screen-filling quad drawn as a triangle strip) are at the end of `main.cpp`. The
-deferred shaders are there already: `g_buffer.vs` and `deferred_shading.vs` are complete, `g_buffer.fs` has its outputs
-but its `main` is a TODO, `deferred_shading.fs` reads the G-buffer but only shows the albedo, and
-`deferred_light_box.vs` / `.fs` are complete (they are used in the third task).
+Start from your program from *Bloom* in a new folder and turn it into a forward renderer: `main.cpp` draws the nine
+boxes into the window with `forward_shading.vs` / `forward_shading.fs`, and the fragment shader loops over all 32
+lights for every fragment – learnopengl's lighting code, with the surface data coming straight from the vertex shader
+and the textures. The light uniforms are set every frame in a loop (`lights[i].Position`, `.Color`, `.Linear`,
+`.Quadratic`) together with `viewPos`. `renderCube()` and learnopengl's `renderQuad()` (a screen-filling quad drawn as
+a triangle strip) are at the end of `main.cpp`. The deferred shaders are there already: `g_buffer.vs` and
+`deferred_shading.vs` are complete, `g_buffer.fs` starts with its outputs and an empty `main`, `deferred_shading.fs`
+reads the G-buffer but only shows the albedo, and `deferred_light_box.vs` / `.fs` are complete (they are used in the
+third task).
 :::
 :::vulkan
-The start is a forward renderer: `recordCommandBuffer()` draws the nine boxes into the window with `forwardPipeline`
-(`shaders/forward_shading.vert` / `.frag`) – a `for` loop over `objectPositions` with the model matrix as a push constant
-and `vkCmdDraw(commandBuffer, 36, 1, 0, 0)` – and the fragment shader loops over all 32 lights for every fragment. The
-lights are in the uniform buffer, after the matrices:
+Start from your program from *Bloom* in a new folder and turn it into a forward renderer: `recordCommandBuffer()`
+draws the nine boxes into the window with `forwardPipeline` (`shaders/forward_shading.vert` / `.frag`) – a `for` loop
+over `objectPositions` with the model matrix as a push constant and `vkCmdDraw(commandBuffer, 36, 1, 0, 0)` – and the
+fragment shader loops over all 32 lights for every fragment. The lights are in the uniform buffer, after the matrices:
 
 ```cpp
 struct Light {
@@ -131,36 +132,38 @@ struct Light {
 };
 ```
 
-std140 starts a `vec3` at a multiple of 16 bytes, like a `vec4`, so there is a 4-byte gap after each `vec3`. learnopengl's
-order is Position, Color, Linear, Quadratic; the course moves each float into the gap after a `vec3`, so the C++ struct
-has the shader's offsets without padding members (32 bytes per light). `updateUniformBuffer()` fills
+std140 starts a `vec3` at a multiple of 16 bytes, like a `vec4`, so there is a 4-byte gap after each `vec3`.
+learnopengl's order is Position, Color, Linear, Quadratic; the course moves each float into the gap after a `vec3`, so
+the C++ struct has the shader's offsets without padding members (32 bytes per light). `updateUniformBuffer()` fills
 `ubo.lights[i]` every frame (`linear` 0.7, `quadratic` 1.8) and `ubo.viewPos = cameraPos`; `createLights()` runs
 learnopengl's loop above once. The vertex buffer holds the cube (vertices 0..35) and the screen quad (36..41). The
 pipeline helper is `createPipeline(vertFile, fragFile, pipelineRenderPass, colorAttachmentCount, pipeline)`, with one
-blend state per colour attachment, as in the bloom chapter. `createTextureSampler(filter, addressMode, sampler)` enables
-anisotropic filtering only for `VK_FILTER_LINEAR` – a NEAREST sampler must return exactly one texel. The deferred
-shaders are in `shaders/`: `g_buffer.vert`, `deferred_shading.vert` (the screen quad) and `deferred_light_box.vert` are
-complete; `g_buffer.frag`, `deferred_shading.frag` and `deferred_light_box.frag` are TODOs that compile and write nothing.
+blend state per colour attachment, as in the bloom chapter. `createTextureSampler(filter, addressMode, sampler)`
+enables anisotropic filtering only for `VK_FILTER_LINEAR` – a NEAREST sampler must return exactly one texel. The
+deferred shaders are in `shaders/`: `g_buffer.vert`, `deferred_shading.vert` (the screen quad) and
+`deferred_light_box.vert` are complete; `g_buffer.frag`, `deferred_shading.frag` and `deferred_light_box.frag` start
+with an empty `main` that writes nothing.
 :::
 :::d3d12
-The start is a forward renderer: `PopulateCommandList` draws the nine boxes into the back buffer with `m_pipelineState`
-(`forward_shading.hlsl`) – their two maps (heap slots 1 and 2) in root parameter 2's table, and per box the model and
-normal matrices as root constants (`ModelConstants`, root parameter 0) – and the pixel shader loops over all 32 lights
-for every pixel. The lights are in the constant buffer (b1), filled in `OnUpdate` from the globals `lightPositions` /
-`lightColors` that `LoadAssets` computes with learnopengl's loop above (as `XMFLOAT3`s). HLSL packs
-`struct Light { float3 Position; float3 Color; float Linear; float Quadratic; }` in 16-byte rows: Position at offset 0,
-Color at 16 – a `float3` never crosses a row, so it can't start at 12 –, Linear at 28, Quadratic at 32, and each element
-of an array starts a new row, so a light takes 48 bytes. The C++ struct mirrors that with padding:
+Start from your program from *Bloom* in a new folder and turn it into a forward renderer: `PopulateCommandList` draws
+the nine boxes into the back buffer with `m_pipelineState` (`forward_shading.hlsl`) – their two maps (heap slots 1
+and 2) in root parameter 2's table, and per box the model and normal matrices as root constants (`ModelConstants`, root
+parameter 0) – and the pixel shader loops over all 32 lights for every pixel. The lights are in the constant buffer
+(b1), filled in `OnUpdate` from the globals `lightPositions` / `lightColors` that `LoadAssets` computes with
+learnopengl's loop above (as `XMFLOAT3`s). HLSL packs
+`struct Light { float3 Position; float3 Color; float Linear; float Quadratic; }` in 16-byte rows: Position at offset
+0, Color at 16 – a `float3` never crosses a row, so it can't start at 12 –, Linear at 28, Quadratic at 32, and each
+element of an array starts a new row, so a light takes 48 bytes. The C++ struct mirrors that with padding:
 `XMFLOAT3 Position; float padding0; XMFLOAT3 Color; float Linear; float Quadratic; float padding1[3];`. The deferred
-shader files are there: `g_buffer.hlsl` (its `PSMain` a TODO), `deferred_shading.hlsl` (it only shows the albedo) and
-`deferred_light_box.hlsl` (complete, used in the third task).
+shader files are there: `g_buffer.hlsl` (its `PSMain` empty for now), `deferred_shading.hlsl` (it only shows the
+albedo) and `deferred_light_box.hlsl` (complete, used in the third task).
 :::
 
-The `// TODO:` comments in the project mark where your code goes. Build and run the program in your IDE: the 3 × 3 grid
-of wooden boxes with steel frames from above and behind, the near row large at the bottom, the far row small at the top,
-black around them. The boxes' tops and the faces turned towards nearby lights are lit in warm pastel colours, the rest
-is dark – only the 0.1 ambient term. The lights themselves are invisible. Every fragment of every box was lit with all
-32 lights, including the fragments that a nearer box then covered.
+Build and run the program in your IDE: the 3 × 3 grid of wooden boxes with steel frames from above and behind, the
+near row large at the bottom, the far row small at the top, black around them. The boxes' tops and the faces turned
+towards nearby lights are lit in warm pastel colours, the rest is dark – only the 0.1 ambient term. The lights
+themselves are invisible. Every fragment of every box was lit with all 32 lights, including the fragments that a
+nearer box then covered.
 
 ## The G-buffer
 
@@ -210,8 +213,8 @@ An 8-bit UNORM channel stores 256 values between 0.0 and 1.0: it would clamp eve
 ```
 
 :::opengl
-The G-buffer is a framebuffer with three colour textures and a depth renderbuffer – learnopengl's code, in the start's
-TODO after the textures:
+The G-buffer is a framebuffer with three colour textures and a depth renderbuffer – learnopengl's code, after the
+textures are loaded:
 
 ```cpp
     // configure g-buffer framebuffer
@@ -335,13 +338,12 @@ learnopengl's two passes – the boxes into the G-buffer, then the screen quad i
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, gNormal);
         glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
-        // TODO: send the lights and the view position to the lighting pass
+        glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);        // (the lights and the view position: the next task)
         // finally render quad
         renderQuad();
 ```
 
-(The TODO is the next task.) `deferred_shading.fs` of the start reads the four values from the G-buffer and, for now,
+(Sending the lights is the next task.) `deferred_shading.fs` reads the four values from the G-buffer and, for now,
 writes `FragColor = vec4(Diffuse, 1.0); // for now: show the albedo`. Now do the first task, **g-buffer**, and delete
 the three textures, the renderbuffer and the framebuffer at the end of `main`.
 :::
@@ -448,9 +450,9 @@ In `recordCommandBuffer()`, the geometry pass comes first. It clears four attach
         gBufferClearValues[3].depthStencil = {1.0f, 0};
 ```
 
-Inside it: the viewport, the scissor, the vertex buffer, `geometryPipeline`, `containerDescriptorSet` and the start's box
-loop. After `vkCmdEndRenderPass` the G-buffer's colour images are in `VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL`. Then the
-window's render pass, with the screen quad instead of the boxes:
+Inside it: the viewport, the scissor, the vertex buffer, `geometryPipeline`, `containerDescriptorSet` and the box loop
+you started with. After `vkCmdEndRenderPass` the G-buffer's colour images are in
+`VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL`. Then the window's render pass, with the screen quad instead of the boxes:
 
 ```cpp
         // the screen quad, lit with the G-buffer's data (the viewport, scissor and vertex buffer set above still apply)
@@ -743,7 +745,7 @@ and then calculates the lighting as usual – learnopengl's code:
 ```
 
 The uniforms are the forward shader's: `struct Light { vec3 Position; vec3 Color; float Linear; float Quadratic; };`,
-`uniform Light lights[NR_LIGHTS];` and `uniform vec3 viewPos;`. In `main.cpp`, the TODO in the lighting pass sends them
+`uniform Light lights[NR_LIGHTS];` and `uniform vec3 viewPos;`. In `main.cpp`, the lighting pass sends them
 to `shaderLightingPass`, the same loop the forward pass had:
 
 ```cpp

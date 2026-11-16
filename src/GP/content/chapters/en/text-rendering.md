@@ -94,10 +94,19 @@ directory; they should be located at the root of your include directories. Inclu
 `#include <FreeType/ft2build.h>` will likely cause several header conflicts.
 
 **The course's font.** learnopengl uses the font Antonio Bold. The course uses **Inter Bold** (`fonts/Inter-Bold.otf`,
-reduced to the printable ASCII characters), which is free under the SIL Open Font License 1.1 – the license must travel
-with the font, so `fonts/OFL.txt` lies next to it in the project. The course's checks have no FreeType of their own:
-they stand in for it with the glyphs FreeType renders from this font at **48 and 24 pixels** (the size this chapter
-uses, and the one the game's text will use later). With the real FreeType in your program any size works.
+reduced to the printable ASCII characters), which is free under the SIL Open Font License 1.1 – the license must
+travel with the font, so `fonts/OFL.txt` lies next to it – **Save resources…** in the panel copies both into your
+folder. The course's checks have no FreeType of their own: they stand in for it with the glyphs FreeType renders from
+this font at **48 and 24 pixels** (the size this chapter uses, and the one the game's text will use later). With the
+real FreeType in your program any size works.
+
+**Your program.** Start from your program from *Blending* in a new folder (it has blending and a shader class) and
+strip it down to what text needs: no camera and no depth test (in Vulkan and Direct3D 12 no depth buffer), the clear
+colour (0.2, 0.3, 0.3), blending with `SRC_ALPHA` / `ONE_MINUS_SRC_ALPHA`, back-face culling on, and an orthographic
+projection of the window, `glm::ortho(0.0f, 800.0f, 0.0f, 600.0f)` – (x, y) in pixels from the bottom-left, y up. The
+text shaders are shown in the section *Shaders* below. In Vulkan and Direct3D 12 the text also needs objects of the
+kind you have created many times – an atlas image with its sampler, its descriptors, the pipeline and a vertex buffer
+the CPU writes into; the sections below describe each.
 
 FreeType loads these TrueType fonts and, for each glyph, generates a bitmap image and calculates several metrics.
 We can extract these bitmap images for generating textures and position each character glyph appropriately using the
@@ -395,12 +404,12 @@ its cell, row by row:
         }
 ```
 
-A FreeType bitmap is one byte per pixel, but its rows are `bitmap.pitch` bytes apart, which can be more than its
-width – so the copy goes row by row. `createAtlasImage()` (already in the project, called after `loadFont()`) uploads
-`atlasPixels` once through a staging buffer into an image of format **`VK_FORMAT_R8_UNORM`**: one 8-bit channel, which
-the shader reads as `.r` from 0.0 to 1.0 – OpenGL's `GL_RED`. There is no unpack alignment to set: the copy's
-`bufferRowLength` of 0 tells Vulkan that the rows in the buffer are tightly packed. The sampler is linear with
-`VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE`, learnopengl's settings.
+A FreeType bitmap is one byte per pixel, but its rows are `bitmap.pitch` bytes apart, which can be more than its width
+– so the copy goes row by row. `createAtlasImage()` (called after `loadFont()`, like the texture uploads of the
+earlier chapters) uploads `atlasPixels` once through a staging buffer into an image of format
+**`VK_FORMAT_R8_UNORM`**: one 8-bit channel, which the shader reads as `.r` from 0.0 to 1.0 – OpenGL's `GL_RED`. There
+is no unpack alignment to set: the copy's `bufferRowLength` of 0 tells Vulkan that the rows in the buffer are tightly
+packed. The sampler is linear with `VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE`, learnopengl's settings.
 
 (The `FREETYTPE` typo in the error message is learnopengl's own.)
 :::
@@ -719,7 +728,7 @@ The 2D quad requires 6 vertices of 4 floats each, so we reserve `6 * 4` floats o
 the content of the VBO's memory quite often we'll allocate the memory with `GL_DYNAMIC_DRAW`.
 :::
 :::vulkan
-The project already has it: a host-visible vertex buffer with room for `MAX_CHARACTERS` = 256 quads (6 ×
+Vulkan's counterpart is a host-visible vertex buffer with room for `MAX_CHARACTERS` = 256 quads (6 ×
 `Vertex { glm::vec4 vertex; }` each, attribute 0 of format `VK_FORMAT_R32G32B32A32_SFLOAT`), mapped once for the
 whole run into `vertexBufferMapped` – learnopengl's `GL_DYNAMIC_DRAW` buffer. Why room for 256 quads instead of
 learnopengl's one follows in the next section.

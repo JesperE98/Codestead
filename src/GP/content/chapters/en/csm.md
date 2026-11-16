@@ -19,7 +19,7 @@ the depth map, the light-space transform, the bias and PCF – and on the *Point
 rendered all faces of a cube map in one pass; here the same trick renders all cascades in one pass. Like those
 chapters it works the same way in every API, and it shows where {{api}} puts each piece.
 
-## The project
+## Your program
 
 The scene is learnopengl's: a wooden floor 50 × 50 units at y = -2 and ten wooden cubes floating above it, lit by a
 directional light like the sun, `lightDir = normalize(20, 50, 20)` (the direction towards the light). learnopengl
@@ -31,28 +31,27 @@ lightColor` (learnopengl's CSM shader multiplies the ambient by the wood colour 
 chapter's version).
 
 :::opengl
-The program asks for an OpenGL **4.1** core context, learnopengl's choice for this demo, and all shaders start with
-`#version 410 core`. The depth pass's geometry shader runs once per cascade with `layout (triangles, invocations = 5)
-in;` – *geometry shader instancing*, core since OpenGL 4.0. 4.1 is also the highest version macOS offers, so this
-chapter runs there too. `shader_m.h` is the course's `Shader` class with the optional geometry shader, as in *Point
-Shadows*.
+Start from your program from *Shadow Mapping* in a new folder. The program asks for an OpenGL **4.1** core context,
+learnopengl's choice for this demo, and all shaders start with `#version 410 core`. The depth pass's geometry shader
+runs once per cascade with `layout (triangles, invocations = 5) in;` – *geometry shader instancing*, core since OpenGL
+4.0. 4.1 is also the highest version macOS offers, so this chapter runs there too. `shader_m.h` is the course's
+`Shader` class with the optional geometry shader, as in *Point Shadows*.
 :::
 :::vulkan
-The project is built on the Vulkan *Shadow Mapping* project: its depth-only render pass (`depthMapRenderPass`), the
+Start from your program from *Shadow Mapping* in a new folder: its depth-only render pass (`depthMapRenderPass`), the
 `createPipeline` helper – here with an optional geometry shader file, as in *Point Shadows* –, `renderScene()` and the
-debug quad that shows the shadow map. The scene's per-frame data lives in a uniform buffer at binding 0, the wood texture
-at binding 1.
+debug quad that shows the shadow map. The scene's per-frame data lives in a uniform buffer at binding 0, the wood
+texture at binding 1.
 :::
 :::d3d12
-The project is built on the Direct3D 12 *Shadow Mapping* project: `RenderScene()` draws the floor and the cubes and is
+Start from your program from *Shadow Mapping* in a new folder: `RenderScene()` draws the floor and the cubes and is
 called by both passes, `m_depthPipelineState` renders depth only (no pixel shader, no render target), and
 `m_debugQuadPipelineState` shows the shadow map on a screen quad. The scene's per-frame data lives in a constant buffer;
 the cubes' placements are learnopengl's translate · rotate · scale in DirectXMath's row-vector order,
 `XMMatrixScaling(…) * XMMatrixRotationAxis(…) * XMMatrixTranslation(…)`.
 :::
 
-The `// TODO:` comments in the project mark where your code goes. Build and run it in your IDE: the lit floor and cubes
-– without any shadows yet.
+Build and run it in your IDE: the lit floor and cubes – without any shadows yet.
 
 ## Splitting the frustum
 
