@@ -6,6 +6,8 @@ läcker då ut runt ljuskällan. Det ger effektivt betraktaren illusionen att lj
 intensivt ljusa. Tänk på en gatlykta på natten sedd genom en kamera, eller solen genom ett dammigt fönster: ljuset verkar
 spilla över på det som finns runt omkring.
 
+![Det här har du byggt i slutet av kapitlet](images/results/bloom.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 Den här ljusläckan, eller glödeffekten, åstadkoms med en efterbehandlingseffekt som kallas *bloom*. Bloom ger alla
 starkt belysta områden i en scen en glödande effekt. Utan den är en ljuskub från de senaste kapitlen bara en vit kvadrat;
 med den glöder kvadraten, och ögat uppfattar den som ett ljus.

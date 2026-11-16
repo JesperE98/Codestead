@@ -8,6 +8,8 @@ och ytor som ligger nära varandra mörkare. Sådana områden skyms till stor de
 har färre vägar att ta sig ut, så områdena ser mörkare ut. Titta på hörnen och vecken i rummet du sitter i: ljuset där
 verkar lite mörkare.
 
+![Det här har du byggt i slutet av kapitlet](images/results/ssao.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 Tekniker för ambient occlusion är dyra eftersom de måste ta hänsyn till omgivande geometri. Man skulle kunna skjuta ut
 ett stort antal strålar från varje punkt för att avgöra hur skymd den är, men det blir snabbt alldeles för tungt för
 realtid. 2007 publicerade Crytek en teknik som kallas *screen-space ambient occlusion* (SSAO), för spelet Crysis.

@@ -6,6 +6,8 @@ animate a deforming mesh is *vertex animation*: store the position of every vert
 frames, and blend between them). That is simple and exact, but it costs memory for every vertex in every key, and an
 animation made for one mesh can't be reused on another.
 
+![What you will have built by the end of this chapter](images/results/skeletal-animation.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 Almost every game uses *skeletal animation* instead. An artist gives the mesh a **skeleton**: a small tree of **bones**,
 each with its own transform. Every vertex is attached to one or a few bones with **weights** that say how much each bone
 pulls it. An animation then only stores the bones' transforms over time – a handful of positions, rotations and scales

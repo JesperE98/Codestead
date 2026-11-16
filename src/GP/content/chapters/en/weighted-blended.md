@@ -7,6 +7,8 @@ Bavoil published in the *Journal of Computer Graphics Techniques* in 2013. It is
 pass over the transparent geometry into two extra render targets, one full-screen pass to put them together, no sorting
 and no per-pixel lists. It has been used in games and engines for particles, smoke, glass and foliage since.
 
+![What you will have built by the end of this chapter](images/results/weighted-blended.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 The idea in one sentence: replace the over operator, which depends on the order of the fragments, with a sum and a
 product, which don't. Everything else in the chapter is how to compute that sum and that product with fixed-function
 blending, and how {{api}} lets you blend differently into two render targets at once.

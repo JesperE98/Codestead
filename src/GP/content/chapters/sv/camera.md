@@ -4,6 +4,8 @@ I förra kapitlet gick vi igenom vymatrisen och hur vi kan använda den för att
 liten bit). {{api}} känner i sig inte till begreppet *kamera*, men vi kan försöka simulera en genom att flytta alla
 objekt i scenen åt motsatt håll, vilket ger illusionen av att det är vi som rör oss.
 
+![Det här har du byggt i slutet av kapitlet](images/results/camera.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 I det här kapitlet går vi igenom hur du sätter upp en kamera i {{api}}. Vi bygger en kamera i flygstil som låter dig
 röra dig fritt i en 3D-scen. Vi går också igenom tangentbords- och musinmatning och avslutar med en egen kameraklass.
 

@@ -8,6 +8,8 @@ little smaller" – and have it follow the planet wherever the planet goes, with
 hand. The structure that does this is a *scene graph*: a tree of objects in which each object's transform is relative
 to its parent's.
 
+![What you will have built by the end of this chapter](images/results/scene-graph.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 This chapter follows learnopengl's guest article *Scene Graph*, the first of two on organising a scene; the second,
 *Frustum Culling*, uses the graph to skip objects the camera can't see. Nothing in it is specific to an API: a scene
 graph is CPU-side code that ends in one model matrix per object, and the API only receives those matrices. What

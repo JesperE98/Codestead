@@ -5,6 +5,8 @@ and (usually) contains a texture with large parts of the sprite being transparen
 just a sprite as we've been using extensively, but when you put together hundreds or even thousands of these particles
 together you can create amazing effects.
 
+![What you will have built by the end of this chapter](images/results/particles.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 You continue in your program from *Collision resolution*.
 
 When working with particles, there is usually an object called a *particle emitter* or *particle generator* that,

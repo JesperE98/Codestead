@@ -8,6 +8,8 @@ before, the techniques are not specific to one API: they are ways of organising 
 work in OpenGL, Vulkan and DirectX 12 alike. Each chapter shows where {{api}} puts them – and where an article is about
 OpenGL itself (*DSA*), it says what the explicit APIs do instead.
 
+![What you will have built by the end of this chapter](images/results/oit-introduction.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 The first two chapters are about *order-independent transparency*, OIT for short. This one explains the problem and the
 families of solutions; the next one, *Weighted Blended*, implements one of them. In the *Blending* chapter of the
 *Advanced OpenGL* part you rendered semi-transparent windows and found that they only looked right when you sorted

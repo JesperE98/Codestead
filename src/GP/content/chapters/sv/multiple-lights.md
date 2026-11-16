@@ -5,6 +5,8 @@ lighting maps och olika typer av ljuskällor. I det här kapitlet ska vi kombine
 skapa en helt belyst scen med 6 aktiva ljuskällor. Vi simulerar ett solliknande ljus som en riktad ljuskälla, 4
 punktljus utspridda i scenen, och dessutom lägger vi till en ficklampa.
 
+![Det här har du byggt i slutet av kapitlet](images/results/multiple-lights.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 För att använda mer än en ljuskälla i scenen vill vi kapsla in belysningsberäkningarna i
 {{shaderLanguage}}-*funktioner*. Anledningen är att koden snabbt blir rörig när vi gör belysningsberäkningar med flera ljustyper som var
 och en kräver olika beräkningar. Om vi gjorde alla de här beräkningarna i main-funktionen skulle koden snabbt bli svår

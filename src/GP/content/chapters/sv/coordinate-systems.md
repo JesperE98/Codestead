@@ -9,6 +9,8 @@ rum) som vi själva bestämmer, och i vertex shadern transformera dessa koordina
 enhetskoordinater (NDC). Dessa NDC lämnas sedan till rastreringen, som gör om dem till 2D-koordinater/pixlar på din
 skärm.
 
+![Det här har du byggt i slutet av kapitlet](images/results/coordinate-systems.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 Att transformera koordinater till NDC görs oftast steg för steg: vi transformerar ett objekts vertexar till flera
 koordinatsystem innan vi till sist transformerar dem till NDC. Fördelen med att transformera dem via flera
 *mellanliggande* koordinatsystem är att vissa operationer/beräkningar är enklare i vissa koordinatsystem, vilket
@@ -107,6 +109,8 @@ Efter varje uppgift bygger och kör du programmet i din IDE.
 
 ## Helheten
 
+![Rummen en vertex passerar](images/viz-spaces.webp "Rummen en vertex passerar: lokalt rum (objekt), världsrum, vyrum och klipprum.")
+
 För att transformera koordinaterna från ett rum till nästa använder vi flera transformationsmatriser, där de
 viktigaste är *model*-, *view*- och *projection*-matrisen. Våra vertexkoordinater börjar i *lokalt rum* som *lokala
 koordinater* och bearbetas sedan vidare till *världskoordinater*, *vykoordinater*, *klippkoordinater* och hamnar
@@ -203,6 +207,8 @@ bara en matris som ditt program räknar ut och din vertex shader tillämpar.
 I slutet av varje körning av vertex shadern förväntar sig {{api}} att koordinaterna ligger inom ett visst intervall,
 och varje koordinat som hamnar utanför det *klipps*. Koordinater som klipps kastas bort, så de återstående
 koordinaterna blir fragment som syns på skärmen. Det är också därifrån *klipprum* (clip space) har fått sitt namn.
+
+![Clipping](images/viz-clipping.webp "Clipping: det som ligger utanför synfrustumet klipps bort före rasteriseringen.")
 
 Eftersom det inte är särskilt intuitivt att ange alla synliga koordinater inom intervallet `-1.0` till `1.0`,
 anger vi en egen uppsättning koordinater att arbeta i och omvandlar dem tillbaka till NDC så som {{api}} förväntar
@@ -578,6 +584,8 @@ Skalningen av x och y i projektionsmatrisen är densamma för alla vertexar. Ski
 ```
 
 ## Allt tillsammans
+
+![Viewport-transformen gör normaliserade enhetskoordinater till pixlar i fönstret.](images/viz-viewport.webp "Viewport-transformen gör normaliserade enhetskoordinater till pixlar i fönstret.")
 
 Vi skapar en transformationsmatris för vart och ett av stegen ovan: model-, view- och projection-matrisen. En
 vertexkoordinat transformeras sedan till klippkoordinater så här:

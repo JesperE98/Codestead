@@ -3,6 +3,8 @@
 Vi har kort använt och manipulerat färger i de tidigare kapitlen, men aldrig definierat dem ordentligt. Här går vi
 igenom vad färger är och börjar bygga scenen för de kommande kapitlen om *Lighting*.
 
+![Det här har du byggt i slutet av kapitlet](images/results/colors.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 I den verkliga världen kan färger anta vilket färgvärde som helst, och varje objekt har sin egen färg eller sina egna
 färger. I den digitala världen måste vi avbilda de (oändligt många) verkliga färgerna på (ett begränsat antal)
 digitala värden, och därför kan inte alla verkliga färger representeras digitalt. Färger representeras digitalt med en

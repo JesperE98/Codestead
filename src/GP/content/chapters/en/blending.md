@@ -1,5 +1,7 @@
 # Blending
 
+![What you will have built by the end of this chapter](images/results/blending.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 *Blending* is commonly known as the technique to implement *transparency* within objects. Transparency is all about
 objects (or parts of them) not having a solid colour, but having a combination of colours from the object itself and
 any other object behind it, with varying intensity. A coloured glass window is a transparent object: the glass has a
@@ -480,6 +482,8 @@ At the very edge of the texture the filter averages neighbouring texels, and wit
 While discarding fragments is great and all, it doesn't give us the flexibility to render semi-transparent images;
 we either render the fragment or completely discard it. To render images with different levels of transparency we
 have to enable *blending*.
+
+![Blending](images/viz-blending.webp "Blending: the fragment's colour is mixed with the colour already in the framebuffer, by its alpha.")
 
 Blending happens after the fragment shader: the colour the shader outputs – the *source* colour – is combined with
 the colour that is already in the colour buffer at that position – the *destination* colour. This is done with the

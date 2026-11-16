@@ -6,6 +6,8 @@ scene and make it easier for a viewer to observe spatial relationships between o
 depth to our scene and objects: without shadows, a cube floating above the floor and a cube standing on it look almost
 the same.
 
+![What you will have built by the end of this chapter](images/results/shadow-mapping.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 Shadows are a bit tricky to implement though, specifically because in current real-time research an ideal shadow
 algorithm hasn't been developed yet. There are several good shadow approximation techniques, but they all have their
 little quirks and annoyances which we have to take into account.

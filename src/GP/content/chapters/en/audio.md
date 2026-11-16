@@ -3,6 +3,8 @@
 The game's making great progress, but it still feels a bit empty as there's no audio whatsoever. In this chapter
 learnopengl fixes that – with music in the background and a sound effect whenever something hits something.
 
+![What you will have built by the end of this chapter](images/results/audio.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 {{api}} doesn't offer us any support for sound capabilities (like many other aspects of game development). A graphics
 API talks to the GPU and to nothing else.
 :::opengl

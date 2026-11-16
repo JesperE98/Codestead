@@ -49,6 +49,8 @@ public sealed partial class GpTool : LearningTool
     /// <summary>The text for the chosen API and IDE.</summary>
     public override string LessonText(string chapterId, string lang) => WithIdeHint(chapterId, CourseText.Lesson(chapterId, lang, Api, Ide));
 
+    public override byte[]? Picture(string path, string lang) => GpCourse.Picture(path, lang);
+
     public override IReadOnlyList<Reference> References(string chapterId) => CourseText.References(chapterId, Api);
 
     public override IReadOnlyList<string> TaskKeys(string chapterId) =>

@@ -1,5 +1,7 @@
 # Physically Based Bloom
 
+![What you will have built by the end of this chapter](images/results/physically-based-bloom.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 The *Bloom* chapter of the *Advanced Lighting* part made bright light glow: a bright pass wrote every fragment brighter
 than 1.0 into a second colour buffer, ten passes of a Gaussian blur smeared it, and the final pass added the blur to the
 scene before tone mapping. It works, and it is how many games did bloom for years. But it has weaknesses you see as

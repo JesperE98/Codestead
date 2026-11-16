@@ -6,6 +6,8 @@ bleeds around the light source. This effectively gives the viewer the illusion t
 are intensely bright. Think of a street lamp at night seen through a camera, or the sun through a dusty window: the
 light seems to spill over whatever is around it.
 
+![What you will have built by the end of this chapter](images/results/bloom.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 This light bleeding, or glow effect, is achieved with a post-processing effect called *bloom*. Bloom gives all brightly
 lit regions of a scene a glow-like effect. Without it, a light cube of the last chapters is just a white square; with
 it, the square glows, and the eye reads it as a light.

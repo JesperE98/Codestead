@@ -6,6 +6,8 @@ trianglar. Du vill förmodligen rita ganska många av dem, och scenen kan sluta 
 grässtrån som ska renderas varje bildruta. Eftersom varje strå bara är några trianglar renderas det nästan
 omedelbart. Men de tusentals ritanrop du måste göra sänker prestandan drastiskt.
 
+![Det här har du byggt i slutet av kapitlet](images/results/instancing.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 Om vi faktiskt skulle rendera så många objekt skulle det se ut ungefär så här i koden:
 
 :::opengl

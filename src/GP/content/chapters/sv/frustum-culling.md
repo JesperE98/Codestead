@@ -6,6 +6,8 @@ gratis. Varje vertex i varje objekt går fortfarande genom vertex shadern, och v
 CPU-tid att spela in och skicka. I en stor scen är de flesta objekt oftast *inte* i bild: bakom kameran, bredvid den,
 bortom det bortre planet. *Frustum culling* hittar dem på CPU:n, innan något draw-anrop görs, och hoppar över dem.
 
+![Det här har du byggt i slutet av kapitlet](images/results/frustum-culling.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 Idén är enkel: beskriv volymen kameran kan se – *synfrustumet* (view frustum, en stympad pyramid) – med sex plan, linda
 in varje objekt i en enkel *avgränsningsvolym* (bounding volume) som är billig att testa, och rita bara ett objekt vars
 avgränsningsvolym ligger åtminstone delvis innanför alla sex plan. Kapitlet följer learnopengls gästartikel *Frustum

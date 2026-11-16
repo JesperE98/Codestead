@@ -7,6 +7,8 @@ later normal and parallax mapping, HDR, bloom, deferred shading and SSAO. None o
 API: they are all maths in the shaders plus a few extra buffers and passes, and they work the same way in OpenGL,
 Vulkan and DirectX 12. Each chapter shows where {{api}} puts them.
 
+![What you will have built by the end of this chapter](images/results/advanced-lighting.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 In the lighting chapters we briefly introduced the Phong lighting model to bring a basic amount of realism into our
 scenes. The Phong model looks nice, but has a few nuances we'll focus on in this chapter.
 

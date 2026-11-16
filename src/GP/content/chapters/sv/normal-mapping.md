@@ -5,6 +5,8 @@ genom att lägga 2D-texturer på de platta trianglarna och dölja att polygonern
 hjälper, men tittar man riktigt nära på mesherna är det fortfarande ganska lätt att se de platta ytorna under. De flesta
 ytor i verkligheten är dock inte platta, utan har massor av (knottriga) detaljer.
 
+![Det här har du byggt i slutet av kapitlet](images/results/normal-mapping.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 Ta till exempel en tegelvägg. En tegelyta är ganska skrovlig och uppenbarligen inte helt platt: den har nedsänkta
 fogar och massor av små detaljer, hål och sprickor. Om vi tittade på en sådan tegelyta i en belyst scen skulle
 illusionen lätt brytas. Belysningen tar ingen hänsyn till de små sprickorna och hålen och struntar helt i de djupa

@@ -5,6 +5,8 @@ intressanta bilder. Men för att få någon större realism skulle vi behöva v�
 många färger. Det kostar en hel del extra, eftersom varje modell då behöver många fler vertexar och dessutom ett
 färgattribut för varje vertex.
 
+![Det här har du byggt i slutet av kapitlet](images/results/textures.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 Det som artister och programmerare i allmänhet föredrar är att använda en *textur*. En textur är en 2D-bild (det
 finns även 1D- och 3D-texturer) som används för att ge ett objekt detaljer; tänk dig en textur som ett papper med en
 fin tegelbild på, prydligt vikt runt ditt 3D-hus så att det ser ut som om huset har en fasad av sten. Eftersom vi kan

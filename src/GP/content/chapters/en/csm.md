@@ -7,6 +7,8 @@ reaches hundreds of units into the distance, and the shadow map would have to co
 500 units and each texel covers half a unit of ground – right in front of the camera, where half a unit fills a large
 part of the screen, the shadows turn into coarse, jagged blocks.
 
+![What you will have built by the end of this chapter](images/results/csm.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 The problem has a name: *perspective aliasing*. A perspective camera shows nearby things large and distant things
 small, but a shadow map spreads its texels evenly. Near the camera there are too few texels per pixel, far away far too
 many. *Cascaded shadow mapping* (CSM) answers with several shadow maps: split the camera's view frustum along its depth

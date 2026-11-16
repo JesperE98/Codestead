@@ -6,6 +6,8 @@ using simplified models that are much easier to process and look relatively simi
 on the physics of light as we understand it. One of those models is called the *Phong lighting model*. The major
 building blocks of the Phong lighting model consist of 3 components: ambient, diffuse and specular lighting.
 
+![What you will have built by the end of this chapter](images/results/basic-lighting.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 - **Ambient lighting**: even when it is dark there is usually still some light somewhere in the world (the moon, a
   distant light) so objects are almost never completely dark. To simulate this we use an ambient lighting constant
   that always gives the object some color.
@@ -123,6 +125,8 @@ give a significant visual impact on the object. Diffuse lighting gives the objec
 fragments are aligned to the light rays from a light source. Picture a light ray hitting a fragment: the light comes
 from the light source, the fragment has a *normal vector* sticking straight out of its surface, and θ is the angle
 between that normal and the direction towards the light.
+
+![Lighting per fragment](images/viz-fragment.webp "Lighting per fragment: every fragment gets its own interpolated normal and is lit on its own.")
 
 If the light ray is perpendicular to the object's surface the light has the greatest impact. To measure the angle
 between the light ray and the fragment we use something called a normal vector, that is a vector perpendicular to the

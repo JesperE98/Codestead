@@ -218,6 +218,8 @@ the rendering commands draw to the *back* buffer. As soon as all the rendering c
 the back buffer to the front buffer so the image can be displayed without still being rendered to, removing all
 the aforementioned artifacts.
 
+![Double buffering](images/viz-present.webp "Double buffering: the program draws into the back buffer while the screen shows the front buffer; then they swap.")
+
 ```quiz
 Why do windowing applications render into a back buffer instead of directly into the image that is on screen?
 - [ ] Because the GPU can only write to buffers that are not visible
@@ -947,6 +949,8 @@ We want to place all the rendering commands in the render loop, since we want to
 commands each iteration or frame of the loop. At the start of each frame we want to clear the screen. Otherwise
 we would still see the results from the previous frame (this could be the effect you're looking for, but usually
 you don't).
+
+![Commands](images/viz-commands.webp "Commands: the program records them in a command buffer, the GPU runs them later – while the CPU prepares the next frame.")
 
 :::opengl
 We can clear the screen's colour buffer using `glClear`, where we pass in buffer bits to specify which buffer we

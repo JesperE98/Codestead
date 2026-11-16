@@ -7,6 +7,8 @@ which buffer it fills; it fills the one that happens to be bound to `GL_ARRAY_BU
 *direct state access* (DSA): functions that take the object they work on as a parameter. learnopengl's guest article
 *DSA* introduces them, and this chapter follows it.
 
+![What you will have built by the end of this chapter](images/results/dsa.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 :::opengl
 You have used bind to edit since *Hello Triangle*. In this chapter you rewrite that chapter's program – the orange
 rectangle drawn from a vertex buffer, an element buffer and a vertex array object – with DSA, and then go one step

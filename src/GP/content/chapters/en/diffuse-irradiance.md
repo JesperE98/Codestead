@@ -7,6 +7,8 @@ that we can directly use it in our lighting equations: treating each cubemap tex
 effectively capture an environment's global lighting and general feel, giving objects a better sense of belonging in
 their environment.
 
+![What you will have built by the end of this chapter](images/results/diffuse-irradiance.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 As image based lighting algorithms capture the lighting of some (global) environment, its input is considered a more
 precise form of ambient lighting, even a crude approximation of global illumination. This makes IBL interesting for PBR
 as objects look significantly more physically accurate when we take the environment's lighting into account.

@@ -1,5 +1,7 @@
 # Blending
 
+![Det här har du byggt i slutet av kapitlet](images/results/blending.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 *Blending* är allmänt känt som tekniken för att åstadkomma *genomskinlighet* hos föremål. Genomskinlighet handlar om
 att föremål (eller delar av dem) inte har en heltäckande färg, utan en kombination av färger från föremålet självt och
 från andra föremål bakom det, med varierande styrka. Ett färgat glasfönster är ett genomskinligt föremål: glaset har en
@@ -477,6 +479,8 @@ Precis vid texturens kant tar filtret medelvärdet av närliggande texlar, och m
 Att kasta fragment är bra och så, men det ger oss inte flexibiliteten att rita halvgenomskinliga bilder; antingen
 ritar vi fragmentet eller så kastar vi det helt. För att rita bilder med olika grader av genomskinlighet måste vi slå
 på *blending*.
+
+![Blending](images/viz-blending.webp "Blending: fragmentets färg blandas med färgen som redan finns i framebuffern, efter dess alfa.")
 
 Blending sker efter fragment shadern: färgen som shadern skriver ut – *källfärgen* (source) – kombineras med färgen som
 redan finns i color buffern på den platsen – *målfärgen* (destination). Det görs med följande ekvation:

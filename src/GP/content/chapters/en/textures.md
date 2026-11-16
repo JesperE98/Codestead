@@ -5,6 +5,8 @@ images. However, to get a fair bit of realism we'd have to have many vertices so
 This takes up a considerable amount of extra overhead, since each model needs a lot more vertices and for each
 vertex a color attribute as well.
 
+![What you will have built by the end of this chapter](images/results/textures.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 What artists and programmers generally prefer is to use a *texture*. A texture is a 2D image (even 1D and 3D
 textures exist) used to add detail to an object; think of a texture as a piece of paper with a nice brick image on
 it, neatly folded over your 3D house so it looks like your house has a stone exterior. Because we can insert a lot

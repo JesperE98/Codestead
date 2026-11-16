@@ -7,6 +7,8 @@ equal to an exponential relationship of roughly 2.2 known as the *gamma* of a mo
 also closely match how human beings measure brightness, as brightness is also perceived with a similar (inverse) power
 relationship.
 
+![What you will have built by the end of this chapter](images/results/gamma-correction.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 Picture two rows of grey tones from black to white. In the first, each step adds the same amount to the value we send
 to the monitor: 0.0, 0.1, 0.2 … 1.0. To the human eye this row looks like an even scale: our eyes are more sensitive to
 changes in dark tones than in bright ones, and the monitor's curve happens to compensate for that. In the second row,

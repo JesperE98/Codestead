@@ -4,6 +4,8 @@ In the previous chapter we discussed the possibility of each object having a uni
 differently to light. This is great for giving each object a unique look in comparison to other objects, but still
 doesn't offer much flexibility on the visual output of an object.
 
+![What you will have built by the end of this chapter](images/results/lighting-maps.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 In the previous chapter we defined a material for an entire object as a whole. Objects in the real world however
 usually do not consist of a single material, but of several materials. Think of a car: its exterior consists of a
 shiny fabric, it has windows that partly reflect the surrounding environment, its tires are all but shiny so they

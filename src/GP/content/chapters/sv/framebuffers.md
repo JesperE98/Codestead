@@ -6,6 +6,8 @@ Kombinationen av de här buffrarna ligger någonstans i GPU-minnet och kallas en
 bild gått rakt in i fönstrets framebuffer – den vars färgbuffer visas på skärmen. I det här kapitlet skapar vi en egen
 framebuffer, ritar scenen i den och använder sedan det vi ritade som en textur.
 
+![Det här har du byggt i slutet av kapitlet](images/results/framebuffers.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 Alla renderingsoperationer vi har gjort hittills har skrivit till de renderbuffrar som hör till fönstrets framebuffer.
 Att i stället rita i en egen framebuffer kan verka som en onödig omväg, men det öppnar många dörrar: när scenen väl
 ligger i en textur kan en shader läsa varje pixel i den, och dess grannar, och ändra bilden som helhet. Det kallas

@@ -1,5 +1,7 @@
 # Banor
 
+![Det här har du byggt i slutet av kapitlet](images/results/levels.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 Ett spel av det här slaget handlar tyvärr inte bara om en enda glad grön boll, utan också om block – en hel mur av dem,
 som spelaren ska röja. Vi vill att blocken ska gå att konfigurera, så att de stöder både flera banor och olika
 blocklayouter. Hedgerow har fyra egna banor, var och en i learnopengls format, och ett block kan vara av två slag:

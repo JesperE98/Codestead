@@ -4,6 +4,8 @@ In the previous chapter we discussed the view matrix and how we can use the view
 (we moved backwards a little). {{api}} by itself is not familiar with the concept of a *camera*, but we can try to
 simulate one by moving all objects in the scene in the reverse direction, giving the illusion that we are moving.
 
+![What you will have built by the end of this chapter](images/results/camera.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 In this chapter we'll discuss how we can set up a camera in {{api}}. We will discuss a fly style camera that allows
 you to freely move around in a 3D scene. We'll also discuss keyboard and mouse input and finish with a custom camera
 class.

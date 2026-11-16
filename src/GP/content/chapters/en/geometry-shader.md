@@ -6,6 +6,8 @@ can then transform these vertices as it sees fit before sending them to the next
 geometry shader interesting is that it is able to convert the original primitive (set of vertices) to completely
 different primitives, possibly generating more vertices than were initially given.
 
+![What you will have built by the end of this chapter](images/results/geometry-shader.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 :::opengl
 In OpenGL the geometry shader is part of the core profile since version 3.2, so our 3.3 context always has it. You
 write it in GLSL like the other two stages, compile it as a `GL_GEOMETRY_SHADER` and link it into the same program.

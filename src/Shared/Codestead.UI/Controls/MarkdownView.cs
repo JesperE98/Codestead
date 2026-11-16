@@ -53,6 +53,15 @@ public sealed class MarkdownView : UserControl
 
     public double BaseFontSize { get; set; } = 16;
 
+    /// <summary>
+    /// Reads a picture of the text (<c>![alt](images/name.webp "caption")</c> alone in a paragraph): its bytes, or null
+    /// when there is none (the picture is then left out). Without it pictures are not shown.
+    /// </summary>
+    public Func<string, byte[]?>? ImageSource { get; set; }
+
+    /// <summary>Tooltip on animations (a click pauses them).</summary>
+    public string AnimationHint { get; set; } = "";
+
     public MarkdownView()
     {
         Content = root;
@@ -172,6 +181,8 @@ public sealed class MarkdownView : UserControl
                 AddInlines(tb.Inlines!, h.Inline);
                 return tb;
             }
+            case ParagraphBlock p when SoleImage(p) is { } picture:
+                return Picture(picture);
             case ParagraphBlock p:
             {
                 var tb = NewText();
@@ -229,6 +240,43 @@ public sealed class MarkdownView : UserControl
             }
         }
         return null;
+    }
+
+    /// <summary>A paragraph that is nothing but one picture.</summary>
+    private static LinkInline? SoleImage(ParagraphBlock p)
+    {
+        if (p.Inline is null) return null;
+        var items = p.Inline.Where(i => !(i is LiteralInline l && l.Content.IsEmptyOrWhitespace()) && i is not LineBreakInline).ToList();
+        return items.Count == 1 && items[0] is LinkInline { IsImage: true } image ? image : null;
+    }
+
+    /// <summary>A picture with its caption (the title), or nothing when it cannot be read.</summary>
+    private Control? Picture(LinkInline link)
+    {
+        if (ImageSource?.Invoke(link.Url ?? "") is not { Length: > 0 } bytes) return null;
+        AnimatedImage picture;
+        try
+        {
+            picture = new AnimatedImage(bytes, AnimationHint);
+        }
+        catch (Exception e) when (e is not OutOfMemoryException)
+        {
+            return null;
+        }
+        if (picture.FrameCount == 0) return null;
+        var alt = string.Concat(link.Select(i => i is LiteralInline l ? l.Content.ToString() : ""));
+        if (alt.Length > 0) Avalonia.Automation.AutomationProperties.SetName(picture, alt);
+        var box = new StackPanel { Spacing = 6, Margin = new Thickness(0, 10, 0, 12) };
+        picture.CornerRadius = new CornerRadius(8);
+        picture.ClipToBounds = true;
+        box.Children.Add(picture);
+        if (link.Title is { Length: > 0 } title)
+        {
+            var caption = new TextBlock { Text = title, FontSize = BaseFontSize * 0.82, TextWrapping = TextWrapping.Wrap, FontStyle = FontStyle.Italic };
+            caption.Classes.Add("muted");
+            box.Children.Add(caption);
+        }
+        return box;
     }
 
     private SelectableTextBlock NewText() => new()

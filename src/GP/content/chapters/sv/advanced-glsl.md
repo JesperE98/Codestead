@@ -5,6 +5,8 @@ går mer eller mindre igenom några intressanta sidor av {{shaderLanguage}} och 
 framöver – i grunden sådant som är *bra att veta* och *funktioner som kan göra livet enklare* när du skriver
 {{api}}-program tillsammans med {{shaderLanguage}}.
 
+![Det här har du byggt i slutet av kapitlet](images/results/advanced-glsl.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 Vi går igenom några intressanta *inbyggda variabler*, nya sätt att organisera shaderns indata och utdata, och ett
 mycket användbart verktyg som kallas *uniform buffer objects*.
 
@@ -817,6 +819,8 @@ HLSL kopplar ihop det ett steg skriver med det nästa läser via semantiken. Str
 :::
 
 ## Uniform buffer objects
+
+![Uniform-data når shaderna genom buffertar som programmet uppdaterar.](images/viz-uniforms.webp "Uniform-data når shaderna genom buffertar som programmet uppdaterar.")
 
 :::opengl
 Vi har använt OpenGL ett bra tag nu och lärt oss en del häftiga knep, men också stött på några irritationsmoment. När

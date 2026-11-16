@@ -1,5 +1,7 @@
 # Levels
 
+![What you will have built by the end of this chapter](images/results/levels.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 A game of this kind is unfortunately not just about a single happy green ball, but also about blocks – a whole wall of
 them, which the player has to clear. We want these blocks to be configurable such that they support both multiple
 levels and different block layouts. Hedgerow has four levels of its own, each in learnopengl's format, and a block

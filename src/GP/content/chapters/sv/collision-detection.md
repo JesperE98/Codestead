@@ -7,6 +7,8 @@ ursprungliga objektet. Sedan letar vi efter kollisioner mellan de enkla formerna
 prestanda. Några exempel på sådana kollisionsformer är cirklar, sfärer, rektanglar och lådor; de är mycket enklare att
 arbeta med än godtyckliga meshar med hundratals trianglar.
 
+![Det här har du byggt i slutet av kapitlet](images/results/collision-detection.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 Du fortsätter i ditt program från *Bollen*.
 
 De enkla formerna ger oss visserligen enklare och effektivare algoritmer, men de har en gemensam nackdel: de omsluter

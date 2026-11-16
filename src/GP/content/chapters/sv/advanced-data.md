@@ -4,6 +4,8 @@ I de flesta kapitlen har vi använt buffrar flitigt för att lagra data på GPU:
 några alternativa sätt att hantera buffrar: att fylla en buffer i delar, att skriva in i den via en pekare, att lagra
 vertexattributen i block i stället för omväxlande (interleaved), och att kopiera en buffer till en annan.
 
+![Det här har du byggt i slutet av kapitlet](images/results/advanced-data.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 :::opengl
 En buffer i OpenGL är i grunden ett objekt som hanterar en viss bit GPU-minne och inget mer. Vi ger bufferten en
 betydelse när vi binder den till ett visst *buffer target*. En buffer är bara en vertex array buffer när vi binder den

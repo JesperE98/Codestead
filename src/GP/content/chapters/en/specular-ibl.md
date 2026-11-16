@@ -1,5 +1,7 @@
 # Specular IBL
 
+![What you will have built by the end of this chapter](images/results/specular-ibl.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 In the previous chapter we've set up PBR in combination with image based lighting by pre-computing an irradiance map as
 the lighting's indirect diffuse portion. In this chapter we'll focus on the specular part of the reflectance equation:
 

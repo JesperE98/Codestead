@@ -6,6 +6,8 @@ obtained knowledge by creating a fully lit scene with 6 active light sources. We
 light as a directional light source, 4 point lights scattered throughout the scene and we'll be adding a flashlight
 as well.
 
+![What you will have built by the end of this chapter](images/results/multiple-lights.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 To use more than one light source in the scene we want to encapsulate the lighting calculations into
 {{shaderLanguage}} *functions*. The reason for that is that the code quickly gets nasty when we do lighting
 computations with multiple light types, each requiring different computations. If we were to do all these

@@ -7,6 +7,8 @@ det med *weighted blended order-independent transparency*, tekniken som Morgan M
 genomskinliga geometrin in i två extra render targets, ett pass över hela skärmen för att sätta ihop dem, ingen sortering
 och inga listor per pixel. Sedan dess har den använts i spel och motorer för partiklar, rök, glas och lövverk.
 
+![Det här har du byggt i slutet av kapitlet](images/results/weighted-blended.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 Idén i en mening: byt ut over-operatorn, som beror på fragmentens ordning, mot en summa och en produkt, som inte gör det.
 Resten av kapitlet handlar om hur man räknar ut den summan och den produkten med den fasta blendingen, och hur {{api}}
 låter dig blenda på olika sätt i två render targets samtidigt.

@@ -5,6 +5,8 @@ realism by wrapping 2D textures on these flat triangles, hiding the fact that th
 triangles. Textures help, but when you take a good close look at the meshes it is still quite easy to see the
 underlying flat surfaces. Most real-life surfaces aren't flat however and exhibit a lot of (bumpy) details.
 
+![What you will have built by the end of this chapter](images/results/normal-mapping.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 For instance, take a brick surface. A brick surface is quite a rough surface and obviously not completely flat: it
 contains sunken cement stripes and a lot of detailed little holes and cracks. If we were to view such a brick surface
 in a lit scene the immersion gets easily broken. The lighting doesn't take any of the small cracks and holes into

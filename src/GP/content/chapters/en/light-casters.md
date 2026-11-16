@@ -6,6 +6,8 @@ upon objects is called a **light caster**. In this chapter we'll discuss several
 Learning to simulate different light sources is yet another tool in your toolbox to further enrich your
 environments.
 
+![What you will have built by the end of this chapter](images/results/light-casters.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 We'll first discuss a directional light, then a point light which is an extension of what we had before, and lastly
 we'll discuss spotlights. In the next chapter we'll combine several of these different light types into one scene.
 

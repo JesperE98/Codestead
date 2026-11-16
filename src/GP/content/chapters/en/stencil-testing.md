@@ -5,6 +5,8 @@ test, has the option to discard fragments. After that the remaining fragments ar
 GPU could possibly discard even more fragments. The stencil test is based on the content of yet another buffer called
 the *stencil buffer* that we're allowed to update during rendering to achieve interesting effects.
 
+![What you will have built by the end of this chapter](images/results/stencil-testing.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 A stencil buffer (usually) contains 8 bits per *stencil value* that amounts to a total of 256 different stencil values
 per pixel. We can set these stencil values to values of our liking and we can discard or keep fragments whenever a
 particular fragment has a certain stencil value.

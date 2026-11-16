@@ -7,6 +7,8 @@ ett *mål* (target) i kontexten, och de funktioner du sedan anropar arbetar på 
 `GL_ARRAY_BUFFER`. OpenGL 4.5 lade till ett andra sätt, *direct state access* (DSA): funktioner som tar emot objektet de
 arbetar på som parameter. learnopengls gästartikel *DSA* presenterar dem, och det här kapitlet följer den.
 
+![Det här har du byggt i slutet av kapitlet](images/results/dsa.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 :::opengl
 Du har använt bind to edit sedan *Hello Triangle*. I det här kapitlet skriver du om det kapitlets program – den orange
 rektangeln, ritad från en vertex buffer, en element buffer och ett vertex array-objekt – med DSA, och går sedan ett steg

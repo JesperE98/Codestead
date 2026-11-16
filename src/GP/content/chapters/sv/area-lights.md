@@ -7,6 +7,8 @@ upp av de delar av ljuset som den kan se. Högdagrarna får ljusets form: på et
 rund högdager, men en rektangulär lampa ger ett utdraget, rektangulärt sken. Ljus från en yta är en integral över
 ytan, och att räkna ut den integralen snabbt är problemet som det här kapitlet löser.
 
+![Det här har du byggt i slutet av kapitlet](images/results/area-lights.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 Kapitlet följer learnopengls gästartikel *Area Lights*. Det använder **Linearly Transformed Cosines** (LTC), metoden
 av Eric Heitz, Jonathan Dupuy, Stephen Hill och David Neubelt (SIGGRAPH 2016). LTC belyser en yta med ett
 polygonformat ljus, inklusive den spekulära delen, med en handfull vektoroperationer och två texturuppslag per ljus.

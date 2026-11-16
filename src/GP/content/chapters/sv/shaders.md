@@ -5,6 +5,8 @@ specifikt steg i grafikpipelinen. I grunden är shaders inget annat än program 
 Shaders är också mycket isolerade program: de får inte kommunicera med varandra, och den enda kommunikation de har
 sker via deras indata och utdata.
 
+![Det här har du byggt i slutet av kapitlet](images/results/shaders.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 I förra kapitlet skrapade vi bara på ytan av shaders och hur man använder dem. Nu ska vi förklara shaders, och
 särskilt shaderspråket {{shaderLanguage}}, mer allmänt: vilka typer det har, hur data kommer in i och ut ur en
 shader, och hur programmet på CPU:n kan lämna värden till shaders medan programmet körs.
@@ -63,6 +65,8 @@ Alla uppgifter i det här kapitlet ändrar ett program som redan fungerar: varje
 ändra. Bygg och kör programmet efter varje uppgift för att se resultatet.
 
 ## {{shaderLanguage}}
+
+![Från shaderkälla till GPU-kod](images/viz-shaders.webp "Från shaderkälla till GPU-kod: drivrutinen (eller en kompilator i förväg) gör din text till instruktioner.")
 
 :::opengl
 Shaders skrivs i det C-liknande språket GLSL. GLSL är skräddarsytt för grafik och har användbara funktioner som är
@@ -473,6 +477,8 @@ Utdata och indata mellan stegen matchas efter sin semantik; en och samma struct 
 :::
 
 ## Uniforms
+
+![Uniforms](images/viz-uniforms.webp "Uniforms: värden som programmet sätter och som är desamma för varje vertex och fragment i en ritning.")
 
 :::opengl
 *Uniforms* är ett annat sätt att skicka data från vårt program på CPU:n till shaderna på GPU:n. Uniforms skiljer

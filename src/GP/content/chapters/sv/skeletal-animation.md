@@ -6,6 +6,8 @@ Ett sätt att animera ett mesh som deformeras är *vertexanimation*: lagra varje
 för några nyckelbildrutor, och blanda mellan dem). Det är enkelt och exakt, men det kostar minne för varje vertex i varje
 nyckel, och en animation gjord för ett mesh kan inte återanvändas på ett annat.
 
+![Det här har du byggt i slutet av kapitlet](images/results/skeletal-animation.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 Nästan alla spel använder i stället *skelettanimation*. En grafiker ger meshet ett **skelett**: ett litet träd av
 **ben** (bones), vart och ett med en egen transform. Varje vertex fästs vid ett eller några ben med **vikter** som säger
 hur mycket varje ben drar i den. En animation lagrar då bara benens transformer över tiden – en handfull positioner,

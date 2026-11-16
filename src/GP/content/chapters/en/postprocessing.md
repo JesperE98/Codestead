@@ -5,6 +5,8 @@ could create a blurry shake effect, inverse all the colors of the scene, do craz
 other interesting effects with relative ease – thanks to rendering into a texture first. This chapter makes extensive
 use of concepts from the Framebuffers and Anti Aliasing chapters.
 
+![What you will have built by the end of this chapter](images/results/postprocessing.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 In the Framebuffers chapter we demonstrated how we could use postprocessing to achieve interesting effects using just a
 single texture. In Hedgerow we're going to do something similar: we render the whole game into a **multisampled**
 colour buffer, resolve it into an ordinary texture – each pixel the average of its samples, so the edges are

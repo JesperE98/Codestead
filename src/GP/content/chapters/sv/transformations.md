@@ -6,6 +6,8 @@ deras vertices och ladda upp buffertarna på nytt varje bildruta, men det är kr
 beräkningskraft. Det finns mycket bättre sätt att *transformera* ett objekt, och det är att använda (flera)
 *matriser*. Det betyder inte att vi ska prata om kung fu och en stor digital artificiell värld.
 
+![Det här har du byggt i slutet av kapitlet](images/results/transformations.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 Matriser är mycket kraftfulla matematiska konstruktioner som verkar skrämmande till en början, men när du väl har
 vant dig vid dem visar de sig vara extremt användbara. För att diskutera matriser måste vi göra en liten dykning i
 matematiken. Men för att helt förstå transformationer måste vi först gå lite djupare in på vektorer innan vi

@@ -8,6 +8,8 @@ the simulation of fluids or crowds, or the mathematics of machine learning. A **
 directly: no vertices, no rasterizer, no fragments – just a program, a number of invocations, and the buffers and images
 it reads and writes.
 
+![What you will have built by the end of this chapter](images/results/compute-shaders.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 This chapter follows learnopengl's guest article *Compute Shaders: Introduction*. Its program is the "hello world" of
 compute: a compute shader fills a texture with a colour gradient that moves over time, and an ordinary screen quad shows
 the texture. Small as it is, it shows every piece: the compute pipeline, the work groups and their IDs, writing to an

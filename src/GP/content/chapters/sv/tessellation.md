@@ -7,6 +7,8 @@ trianglar som behövs, med höjderna lästa ur höjdkartan som en textur. Sedan 
 delas fint, patches långt bort grovt, och det avgörs på nytt varje bildruta. Det är **tessellering**, och kapitlet följer
 learnopengls gästartikel *Tessellation*.
 
+![Det här har du byggt i slutet av kapitlet](images/results/tessellation.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 Tessellering har funnits i alla API:er sedan Direct3D 11 och OpenGL 4.0. Den lägger till två programmerbara steg och ett
 fast steg mellan vertex shadern och rastreraren; namnen skiljer sig mellan API:erna, idéerna gör det inte. Kapitlet visar
 hur {{api}} ställer i ordning dem.

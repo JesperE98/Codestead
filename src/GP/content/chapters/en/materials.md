@@ -6,6 +6,8 @@ light without much scattering, resulting in small specular highlights, and other
 a larger radius. If we want to simulate several types of objects in {{api}} we have to define *material* properties
 specific to each surface.
 
+![What you will have built by the end of this chapter](images/results/materials.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 In the previous chapter we defined an object and light color to define the visual output of the object, combined
 with an ambient and specular intensity component. When describing a surface we can define a material color for each
 of the 3 lighting components: ambient, diffuse and specular lighting. By specifying a color for each of the

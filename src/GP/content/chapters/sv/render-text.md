@@ -4,6 +4,8 @@ I det här kapitlet lägger vi till de sista förbättringarna i spelet: ett sys
 återkoppling i form av renderad text. Kapitlet bygger mycket på kapitlet Textrendering, så det rekommenderas starkt att
 du går igenom det först om du inte redan har gjort det.
 
+![Det här har du byggt i slutet av kapitlet](images/results/render-text.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 Du fortsätter i ditt program från *Power-ups* – som *Ljud* behöll –, med en ny textshader (texten visar den) och
 typsnittet från kapitlet Textrendering, `fonts/Inter-Bold.otf`, med sin licens `fonts/OFL.txt` (learnopengls spel
 använder ett annat typsnitt); **Spara resursfilerna…** i panelen kopierar båda till din mapp.

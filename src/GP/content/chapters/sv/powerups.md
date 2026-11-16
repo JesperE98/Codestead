@@ -3,6 +3,8 @@
 Hedgerow är nästan klart, men det vore roligt att lägga till åtminstone en spelmekanik till, så att det inte bara blir
 ett vanligt spel av sin sort; vad sägs om power-ups?
 
+![Det här har du byggt i slutet av kapitlet](images/results/powerups.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
+
 Du fortsätter i ditt program från *Efterbehandling*.
 
 Idén är att varje gång ett block förstörs har blocket en liten chans att skapa en power-up. En sådan power-up faller

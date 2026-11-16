@@ -332,6 +332,14 @@ klar) med knappen **Mark as done**, och bilden av **förväntat resultat**: kurs
 - Snabbtestet sparar första lektionens startfiler och lösning i en tillfällig mapp med en egen struktur (huvudfilen
   flyttad till `src/<kapitel>.cpp`), väljer huvudfilen, kör *Check my code* och kräver att uppgiften bockas av.
 
+**Bilder i kapitlen.** Ett stycke som bara är en bild, `![alt](images/namn.webp "bildtext")`, visas av textvyn
+(`AnimatedImage`: PNG, JPEG, WebP och animerad GIF/WebP; bildrutor på en sekund eller mer är ett bildspel som tonar
+över; ett klick pausar). Bilderna ligger i `src/GP/content/images/` – `sv/`/`en/` för bilder med text i, annars
+gemensamma – och bäddas in; `PictureTests` kräver att varje bild finns och används. `images/visualizer/` fångar steg ur
+[Render Pipeline Visualizer](https://github.com/jesper-e98/RenderpipelineVisualizer) (`capture.js` med Playwright,
+`make_pictures.py`), och `src/GP/tools/RenderResults` + `images/make_results.py` renderar varje kapitels resultat
+med simulatorn till `images/results/<kapitel>.webp`.
+
 **Simulatorn är inte en riktig GPU.** Den förstår kursens kod och de vanliga misstagen (glömd `glClear`, avstängt
 vertexattribut, ingen pipeline bunden, saknade barriärer …) och säger till med meddelanden som `sim.<nyckel>` i
 UI-texterna. Den är numera osynlig för eleven: den kontrollerar elevens kod och ritar förväntat resultat. Kod utanför

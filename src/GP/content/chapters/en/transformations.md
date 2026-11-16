@@ -6,6 +6,8 @@ re-uploading their buffers each frame, but that's cumbersome and costs quite som
 better ways to *transform* an object, and that's by using (multiple) *matrix* objects. This doesn't mean we're going
 to talk about Kung Fu and a large digital artificial world.
 
+![What you will have built by the end of this chapter](images/results/transformations.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
+
 Matrices are very powerful mathematical constructs that seem scary at first, but once you grow accustomed to them
 they'll prove extremely useful. When discussing matrices, we'll have to make a small dive into some mathematics.
 However, to fully understand transformations we first have to delve a bit deeper into vectors before discussing
