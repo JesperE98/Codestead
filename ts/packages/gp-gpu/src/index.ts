@@ -84,5 +84,6 @@ import "./Readers/GlReader.js";
 export { GlReader } from "./Readers/GlReader.js";
 export { CppStatement } from "./Readers/CppStatement.js";
 export { CppStatements } from "./Readers/CppStatements.js";
-// import "./Readers/VulkanReader.js";
+import "./Readers/VulkanReader.js";
+export { VulkanReader } from "./Readers/VulkanReader.js";
 // import "./Readers/D3D12Reader.js";
