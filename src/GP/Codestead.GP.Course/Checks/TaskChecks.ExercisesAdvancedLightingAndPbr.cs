@@ -90,5 +90,16 @@ public static partial class TaskChecks
             // An orange light: the halo under it and the floor in its light orange instead of white.
             ["ex-orange-light"] = c => At(c, 400, 280, p => p[0] > p[2] + 0.25) && At(c, 400, 100, p => p[0] > p[2] + 0.3) && At(c, 400, 190, p => p[0] > 0.95),
         },
+        ["deferred-shading"] = new()
+        {
+            // The normals as colours: a box's top (0, 1, 0) green, a front (0, 0, 1) blue.
+            ["ex-show-normals"] = c => c.PixelIs(0.5, 0.5, 0.5, 1.0, 0.5) && c.PixelIs(700 / 800.0, 420 / 600.0, 0.5, 0.5, 1.0),
+            // The specular map as grey: the steel frame light, the wood dark.
+            ["ex-show-specular"] = c => At(c, 400, 300, p => Grey(p) && p[0] > 0.7) && At(c, 700, 420, p => Grey(p) && p[0] < 0.12) && At(c, 400, 160, p => Grey(p) && p[0] < 0.12),
+            // Lights that reach further: the lit box tops close to white.
+            ["ex-reach"] = c => At(c, 400, 300, p => p[0] > 0.9) && At(c, 400, 160, p => p[0] > 0.9),
+            // Warm lights: the steel frame and the wood lit orange, not white.
+            ["ex-warm-lights"] = c => At(c, 400, 300, p => p[0] > p[2] + 0.1 && p[0] > 0.18) && At(c, 400, 160, p => p[0] > p[2] + 0.2),
+        },
     };
 }
