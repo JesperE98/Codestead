@@ -2,8 +2,12 @@
   "title": "Mesh",
   "tasks": {
     "vertex-struct": {
-      "text": { "opengl": "In `mesh.h`, define `struct Vertex` with `glm::vec3 Position`, `glm::vec3 Normal` and `glm::vec2 TexCoords`, and `struct Texture` with `unsigned int id`, `std::string type` and `std::string path`." },
-      "hint": { "opengl": "The fields of a struct lie one after the other in memory, so an array of `Vertex` is exactly the interleaved buffer OpenGL needs (8 floats per vertex). `type` will be `\"texture_diffuse\"` or `\"texture_specular\"`." }
+      "text": {
+        "opengl": "In `mesh.h`, define `struct Vertex` with `glm::vec3 Position`, `glm::vec3 Normal` and `glm::vec2 TexCoords`, and `struct Texture` with `unsigned int id`, `std::string type` and `std::string path`."
+      },
+      "hint": {
+        "opengl": "The fields of a struct lie one after the other in memory, so an array of `Vertex` is exactly the interleaved buffer OpenGL needs (8 floats per vertex). `type` will be `\"texture_diffuse\"` or `\"texture_specular\"`."
+      }
     },
     "mesh-data": {
       "text": {
@@ -46,28 +50,72 @@
       }
     },
     "vertex-equality": {
-      "text": { "vulkan": "Make vertices comparable and hashable: `bool operator==(const Vertex& other) const` comparing all four members, and `template<> struct hash<Vertex>` in `namespace std` combining the members' hashes; enable glm's hashes with `#define GLM_ENABLE_EXPERIMENTAL` before `<glm/glm.hpp>` and `#include <glm/gtx/hash.hpp>`." },
-      "hint": { "vulkan": "Two equal vertices must give the same hash; an `std::unordered_map<Vertex, uint32_t>` needs both. vulkan-tutorial's shifts and xors, with `hash<uint32_t>()(vertex.materialIndex) << 1` at the end." }
+      "text": {
+        "vulkan": "Make vertices comparable and hashable: `bool operator==(const Vertex& other) const` comparing all four members, and `template<> struct hash<Vertex>` in `namespace std` combining the members' hashes; enable glm's hashes with `#define GLM_ENABLE_EXPERIMENTAL` before `<glm/glm.hpp>` and `#include <glm/gtx/hash.hpp>`."
+      },
+      "hint": {
+        "vulkan": "Two equal vertices must give the same hash; an `std::unordered_map<Vertex, uint32_t>` needs both. vulkan-tutorial's shifts and xors, with `hash<uint32_t>()(vertex.materialIndex) << 1` at the end."
+      }
     },
     "vertex-buffer": {
-      "text": { "vulkan": "Fill `createVertexBuffer()`: a host-visible staging buffer (`TRANSFER_SRC`), `memcpy` the vertices into it, a `DEVICE_LOCAL` vertex buffer (`TRANSFER_DST | VERTEX_BUFFER`), `copyBuffer(stagingBuffer, vertexBuffer, bufferSize)`, then destroy the staging buffer; write `copyBuffer` and destroy the vertex buffer in `cleanup()`." },
-      "hint": { "vulkan": "`createBuffer` makes both buffers; `copyBuffer` records `vkCmdCopyBuffer` between `beginSingleTimeCommands()` and `endSingleTimeCommands(commandBuffer)`." }
+      "text": {
+        "vulkan": "Fill `createVertexBuffer()`: a host-visible staging buffer (`TRANSFER_SRC`), `memcpy` the vertices into it, a `DEVICE_LOCAL` vertex buffer (`TRANSFER_DST | VERTEX_BUFFER`), `copyBuffer(stagingBuffer, vertexBuffer, bufferSize)`, then destroy the staging buffer; write `copyBuffer` and destroy the vertex buffer in `cleanup()`."
+      },
+      "hint": {
+        "vulkan": "`createBuffer` makes both buffers; `copyBuffer` records `vkCmdCopyBuffer` between `beginSingleTimeCommands()` and `endSingleTimeCommands(commandBuffer)`."
+      }
     },
     "index-buffer": {
-      "text": { "vulkan": "Do the same for the indices in `createIndexBuffer()` (`VK_BUFFER_USAGE_INDEX_BUFFER_BIT`, size `sizeof(indices[0]) * indices.size()`), and destroy the index buffer in `cleanup()`." },
-      "hint": { "vulkan": "Only the data and the usage flag differ from the vertex buffer." }
+      "text": {
+        "vulkan": "Do the same for the indices in `createIndexBuffer()` (`VK_BUFFER_USAGE_INDEX_BUFFER_BIT`, size `sizeof(indices[0]) * indices.size()`), and destroy the index buffer in `cleanup()`."
+      },
+      "hint": {
+        "vulkan": "Only the data and the usage flag differ from the vertex buffer."
+      }
     },
     "draw": {
-      "text": { "vulkan": "In `recordCommandBuffer()`, bind the vertex buffer and the index buffer (`VK_INDEX_TYPE_UINT32`), and after the push constant draw all indices with `vkCmdDrawIndexed`." },
-      "hint": { "vulkan": "`vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);` and `vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);` – the test square appears in texture-coordinate colours." }
+      "text": {
+        "vulkan": "In `recordCommandBuffer()`, bind the vertex buffer and the index buffer (`VK_INDEX_TYPE_UINT32`), and after the push constant draw all indices with `vkCmdDrawIndexed`."
+      },
+      "hint": {
+        "vulkan": "`vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);` and `vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);` – the test square appears in texture-coordinate colours."
+      }
     },
     "mesh-class": {
-      "text": { "d3d12": "Add `class Mesh`: public `vertices`, `indices` (`UINT`) and `textures`; a constructor that also takes the device and the mesh's CPU and GPU heap handles, stores everything (the GPU handle in `m_srvHandle`) and calls `SetupMesh(device, srvCpuHandle)`; `Draw(ID3D12GraphicsCommandList*)`; private buffers, views and `SetupMesh` (their bodies stay empty for now)." },
-      "hint": { "d3d12": "As learnopengl: `this->vertices = vertices;` etc., then set up the buffers. The CPU handle is where the mesh writes its texture views; the GPU handle is what `Draw` gives the command list." }
+      "text": {
+        "d3d12": "Add `class Mesh`: public `vertices`, `indices` (`UINT`) and `textures`; a constructor that also takes the device and the mesh's CPU and GPU heap handles, stores everything (the GPU handle in `m_srvHandle`) and calls `SetupMesh(device, srvCpuHandle)`; `Draw(ID3D12GraphicsCommandList*)`; private buffers, views and `SetupMesh` (their bodies stay empty for now)."
+      },
+      "hint": {
+        "d3d12": "As learnopengl: `this->vertices = vertices;` etc., then set up the buffers. The CPU handle is where the mesh writes its texture views; the GPU handle is what `Draw` gives the command list."
+      }
     },
     "mesh-textures": {
-      "text": { "d3d12": "In `SetupMesh`, create the mesh's two shader resource views at `srvHandle`: slot 0 the first `\"texture_diffuse\"`, slot 1 the first `\"texture_specular\"` (a null view if there is none)." },
-      "hint": { "d3d12": "Loop over `const char* slotTypes[] = { \"texture_diffuse\", \"texture_specular\" };`, find the texture with that `type`, `device->CreateShaderResourceView(resource, &srvDesc, srvHandle);` (R8G8B8A8_UNORM, TEXTURE2D, 1 mip level), then `srvHandle.Offset(1, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));`." }
+      "text": {
+        "d3d12": "In `SetupMesh`, create the mesh's two shader resource views at `srvHandle`: slot 0 the first `\"texture_diffuse\"`, slot 1 the first `\"texture_specular\"` (a null view if there is none)."
+      },
+      "hint": {
+        "d3d12": "Loop over `const char* slotTypes[] = { \"texture_diffuse\", \"texture_specular\" };`, find the texture with that `type`, `device->CreateShaderResourceView(resource, &srvDesc, srvHandle);` (R8G8B8A8_UNORM, TEXTURE2D, 1 mip level), then `srvHandle.Offset(1, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));`."
+      }
+    },
+    "ex-second-square": {
+      "text": "Put a second, smaller square to the right of the first one – in the same `vertices` and `indices`, drawn by the same draw call: from x = 1.5 to 2.5 and y = −0.5 to 0.5, with the same texture coordinates as the big one.",
+      "hint": "Four more vertices (numbers 4–7) and six more indices. The indices of the new triangles count from 4, not from 0. The buffers' sizes and `indices.size()` follow by themselves."
+    },
+    "ex-short-indices": {
+      "text": {
+        "opengl": "A mesh with fewer than 65 536 vertices fits its indices in 16 bits. Store the indices as `unsigned short` instead of `unsigned int` – everywhere the type of an index is part of the code.",
+        "vulkan": "The test square has only four vertices: its indices fit in 16 bits. Store them as `uint16_t` instead of `uint32_t` and tell Vulkan so. The square must look exactly the same.",
+        "d3d12": "A mesh with fewer than 65 536 vertices fits its indices in 16 bits. Store them as `UINT16` instead of `UINT` – everywhere the type of an index is part of the code."
+      },
+      "hint": {
+        "opengl": "Three places must agree in `mesh.h`: the type of the vector (member and constructor parameter), the size in `glBufferData` and the type in `glDrawElements` (`GL_UNSIGNED_SHORT`).",
+        "vulkan": "Two places must agree: the vector's element type and the index type in `vkCmdBindIndexBuffer` (`VK_INDEX_TYPE_UINT16`). The buffer's size already uses `sizeof(indices[0])`.",
+        "d3d12": "Three places must agree: the type of the vector (member and constructor parameter), the buffer size in `SetupMesh` and the index buffer view's `Format` (`DXGI_FORMAT_R16_UINT`)."
+      }
+    },
+    "ex-height-textures": {
+      "text": "Extend the naming convention in `Draw` with a fourth kind of texture, `\"texture_height\"`: they become `texture_height1`, `texture_height2`, … in the shader.",
+      "hint": "One more counter next to `diffuseNr`, `specularNr` and `normalNr`, and one more `else if` for the type name."
     }
   }
 }
