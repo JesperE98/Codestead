@@ -38,5 +38,19 @@ public static partial class TaskChecks
             // A weight that is larger near the camera: the green quad (nearer) counts more than the blue one where they overlap.
             ["ex-weight"] = c => c.Drew && At(c, 230, 300, p => p[0] < 0.03 && p[1] > p[2] + 0.06 && p[1] + p[2] > 0.6) && At(c, 200, 450, p => Half(p, 1)) && At(c, 250, 120, p => Half(p, 2)),
         },
+        ["skeletal-animation"] = new()
+        {
+            // Half speed: at 2.5 s the animation is at 1.25 s (leaning right; the chapter's is at 0.5 s, leaning left), at 0.5 s at 0.25 s.
+            ["ex-slow-motion"] = c => c.Drew && At(c, 2.5, 568, 100, Tentacle) && At(c, 2.5, 460, 300, Tentacle) && At(c, 2.5, 230, 100, Space) && At(c, 2.5, 400, 200, Space)
+                && At(c, 0.5, 230, 100, Tentacle) && At(c, 0.5, 568, 100, Space),
+            // The pose of 1.25 s, standing still: leaning right at 0.25 s too.
+            ["ex-freeze-pose"] = c => c.Drew && new[] { 0.25, 1.25 }.All(t => At(c, t, 568, 100, Tentacle) && At(c, t, 460, 300, Tentacle) && At(c, t, 230, 100, Space) && At(c, t, 400, 200, Space)),
+            // The base bone kept in its rest pose: the tentacle sways less far (the tip at x 490..530 at 1.25 s, 265..305 at 0.25 s).
+            ["ex-still-base"] = c => c.Drew && At(c, 1.25, 510, 100, Tentacle) && At(c, 1.25, 568, 100, Space) && At(c, 1.25, 400, 200, Space)
+                && At(c, 0.25, 285, 100, Tentacle) && At(c, 0.25, 230, 100, Space),
+            // The Upper bone's weight as red: bright in the middle of the tube, black at the foot and the tip.
+            ["ex-bone-weight"] = c => c.Drew && At(c, 1.25, 460, 300, p => p[0] > 0.85 && p[1] < 0.03 && p[2] < 0.03) && At(c, 1.25, 460, 250, p => p[0] > 0.4 && p[0] < 0.8 && p[1] < 0.03)
+                && At(c, 1.25, 400, 520, Black) && At(c, 1.25, 568, 100, Black) && At(c, 1.25, 100, 300, Space),
+        },
     };
 }
