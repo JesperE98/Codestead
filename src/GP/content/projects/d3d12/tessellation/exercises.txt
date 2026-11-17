@@ -1,0 +1,20 @@
+=== task: ex-solid
+--- file: main.cpp
+--- find:
+        psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
+--- replace:
+        psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+
+=== task: ex-max-level
+--- file: gpuheight.hlsl
+--- find:
+    const int MAX_TESS_LEVEL = 8;
+--- replace:
+    const int MAX_TESS_LEVEL = 16;
+
+=== task: ex-taller
+--- file: gpuheight.hlsl
+--- find:
+    float4 p = (p1 - p0) * v + p0 + normal * output.height;
+--- replace:
+    float4 p = (p1 - p0) * v + p0 + normal * output.height * 2.0f;

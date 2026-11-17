@@ -92,6 +92,30 @@
       "hint": {
         "d3d12": "At the top of `LoadAssets`: `snprintf(text, sizeof(text), \"Max available tess level: %d\\n\", D3D12_TESSELLATOR_MAX_TESSELLATION_FACTOR); OutputDebugStringA(text);`."
       }
+    },
+    "ex-solid": {
+      "text": "Switch the wireframe off and look at the filled terrain. Can you still tell where the patches are tessellated finely and where coarsely?",
+      "hint": {
+        "opengl": "The wireframe is one call before the render loop: `glPolygonMode` – `GL_FILL` is the default.",
+        "vulkan": "The wireframe is the rasterizer's `polygonMode` in the pipeline – `VK_POLYGON_MODE_FILL` is the normal one.",
+        "d3d12": "The wireframe is the rasterizer state's `FillMode` in the pipeline state – `D3D12_FILL_MODE_SOLID` is the normal one."
+      }
+    },
+    "ex-max-level": {
+      "text": "Let the patches near the camera be tessellated twice as finely: a highest level of 16 instead of 8. Where does the wireframe get denser – and where does it stay the same?",
+      "hint": {
+        "opengl": "One constant in the tessellation control shader (`gpuheight.tcs`). The far patches still get `MIN_TESS_LEVEL`.",
+        "vulkan": "One constant in the tessellation control shader (`gpuheight.tesc`) – recompile it. The far patches still get `MIN_TESS_LEVEL`.",
+        "d3d12": "One constant in the hull shader's patch constant function (`gpuheight.hlsl`). The far patches still get `MIN_TESS_LEVEL`."
+      }
+    },
+    "ex-taller": {
+      "text": "Make the mountains twice as high by moving the generated vertices twice as far along the normal – but keep the colours as they are.",
+      "hint": {
+        "opengl": "In the tessellation evaluation shader (`gpuheight.tes`) the height is used twice: for the colour (`Height`, passed on) and for the position (`normal * Height`). Double only the second.",
+        "vulkan": "In the tessellation evaluation shader (`gpuheight.tese`) the height is used twice: for the colour (`Height`, passed on) and for the position (`normal * Height`). Double only the second, and recompile.",
+        "d3d12": "In the domain shader (`gpuheight.hlsl`) the height is used twice: for the colour (`output.height`) and for the position (`normal * output.height`). Double only the second."
+      }
     }
   }
 }

@@ -1,0 +1,20 @@
+=== task: ex-solid
+--- file: main.cpp
+--- find:
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+--- replace:
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+=== task: ex-max-level
+--- file: gpuheight.tcs
+--- find:
+        const int MAX_TESS_LEVEL = 8;
+--- replace:
+        const int MAX_TESS_LEVEL = 16;
+
+=== task: ex-taller
+--- file: gpuheight.tes
+--- find:
+    vec4 p = (p1 - p0) * v + p0 + normal * Height;
+--- replace:
+    vec4 p = (p1 - p0) * v + p0 + normal * Height * 2.0;

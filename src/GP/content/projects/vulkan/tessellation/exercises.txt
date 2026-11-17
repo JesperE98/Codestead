@@ -1,0 +1,20 @@
+=== task: ex-solid
+--- file: main.cpp
+--- find:
+        rasterizer.polygonMode = VK_POLYGON_MODE_LINE; // wireframe: only the triangles' edges (learnopengl's GL_LINE)
+--- replace:
+        rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
+
+=== task: ex-max-level
+--- file: shaders/gpuheight.tesc
+--- find:
+        const int MAX_TESS_LEVEL = 8;
+--- replace:
+        const int MAX_TESS_LEVEL = 16;
+
+=== task: ex-taller
+--- file: shaders/gpuheight.tese
+--- find:
+    vec4 p = (p1 - p0) * v + p0 + normal * Height;
+--- replace:
+    vec4 p = (p1 - p0) * v + p0 + normal * Height * 2.0;

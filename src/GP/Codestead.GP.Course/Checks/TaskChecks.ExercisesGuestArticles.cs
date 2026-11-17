@@ -107,5 +107,16 @@ public static partial class TaskChecks
             ["ex-back-half"] = c => c.Drew && At(c, 420, 110, p => GreyOf(p, 212, 12)) && At(c, 230, 150, p => GreyOf(p, 142)) && At(c, 420, 160, p => GreyOf(p, 128))
                 && At(c, 400, 300, Ground) && At(c, 580, 390, Ground) && At(c, 150, 380, Ground),
         },
+        ["tessellation"] = new()
+        {
+            // Filled again: no gaps between the lines in either box of the full-size frame, the terrain's greys.
+            ["ex-solid"] = c => c.Drew && c.CoveredIn(300, 400, 499, 449, fullSize: true) > 0.99 && c.CoveredIn(250, 150, 449, 199, fullSize: true) > 0.99
+                && At(c, 420, 110, p => GreyOf(p, 212, 12)) && At(c, 400, 300, p => GreyOf(p, 90)) && At(c, 400, 40, Ground),
+            // Level 16 near the camera: the front box almost solid with lines (96 %, was 73 %), the back still open.
+            ["ex-max-level"] = c => c.Drew && c.CoveredIn(300, 400, 499, 449, fullSize: true) > 0.88 && c.CoveredIn(250, 150, 449, 199, fullSize: true) is > 0.3 and < 0.8
+                && At(c, 400, 40, Ground) && At(c, 400, 560, Ground),
+            // Displaced twice as far: the peaks reach up to y ≈ 40 (the greys from the height unchanged).
+            ["ex-taller"] = c => c.Drew && At(c, 420, 75, p => !Ground(p)) && At(c, 262, 60, p => !Ground(p)) && At(c, 580, 390, p => GreyOf(p, 28, 6)) && At(c, 400, 560, Ground),
+        },
     };
 }
