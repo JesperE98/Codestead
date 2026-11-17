@@ -15,7 +15,7 @@ describe("UninstallTests", () => {
       const { asset: a } = f.package("0.1.0", true);
       const t = await store.install(Fixture.tool("0.1.0", a, "win-x64"), a, http);
       // FileShare.None: libuv's UV_FS_O_EXLOCK opens the file without sharing it.
-      const fd = openSync(join(t.directory, "lib", "data.txt"), constants.O_RDONLY | (constants.UV_FS_O_EXLOCK ?? 0));
+      const fd = openSync(join(t.directory, "lib", "data.txt"), constants.O_RDONLY | ((constants as { UV_FS_O_EXLOCK?: number }).UV_FS_O_EXLOCK ?? 0));
       const release = (async () => {
         await new Promise((r) => setTimeout(r, 700));
         closeSync(fd);

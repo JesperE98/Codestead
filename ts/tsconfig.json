@@ -5,6 +5,8 @@
     "packages/*/test",
     "apps/*/src",
     "apps/*/test",
+    "apps/*/electron",
+    "apps/*/e2e",
     "vitest.config.ts"
   ]
 }

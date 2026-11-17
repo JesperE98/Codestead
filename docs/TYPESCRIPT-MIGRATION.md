@@ -49,3 +49,31 @@ TypeScript-versionerna kan lika mycket; då byter vi.
 - [ ] 4. GP
 - [ ] 5. Hubben och paketering
 - [ ] 6. Byte
+
+## Apparna
+
+### `ts/apps/hub` – hubben (Codestead)
+Översättning av `src/Hub/Codestead.Hub.Core` (i `src/core/`) och `src/Hub/Codestead.Hub` (React). Hubben installerar
+verktygen som i dag: den signerade katalogen (`catalog.json` + `.sig`, ECDSA P-256, nyckeln `build/catalog-signing.pub.pem`)
+från release-repot, de portabla paketen per plattform (`linux-x64` → `.tar.gz`, `win-x64` → `.zip`) med kontroll av
+storlek och SHA-256, installation per användare i `<CODESTEAD_HUB_DIR | ~/.local/share/codestead | %LOCALAPPDATA%\Codestead>/tools/<id>/<version>`
+med `current.json` i samma format som C#-hubben (de läser varandras installationer, så C#-versionerna av apparna
+installeras och uppdateras som förut), föregående version kvar för "Gå tillbaka", inställningarna i `Codestead/codestead-hub/state.json`
+och verktygens `profile.json`/`whatsnew.json` i deras egna mappar.
+
+- **Delar:** `src/core/` (ren TypeScript; det som behöver filsystem, nätverk eller processer – `ToolStore`, `CatalogClient`,
+  `CatalogVerifier`, `Archives` (tar.gz/zip utan beroenden), `Autostart`, `SingleInstance` (samma pipe/socket som C#-hubbens),
+  `TraySupport` – körs i Electrons main-process, med nätverket (`Http.ts`) och processerna injicerade som i C#),
+  `src/MainWindow*.ts(x)` (fönstrets tillstånd och vy), `electron/main.ts` (Program/App, IPC, fältet, `--smoke-test`, `--version`),
+  `electron/preload.ts` (`window.codestead`, typen `src/HubApi.ts`).
+- **Bygga:** i `ts/apps/hub`: `npm run build` (Vite: fönstret till `dist/`, main och preload var för sig till
+  `dist-electron/main.cjs` och `preload.cjs`). **Köra:** `npm start` (som root/i container: `npx electron . --no-sandbox`),
+  `npm run dev` (Vites dev-server med omladdning). `--smoke-test [--catalog <fil> --public-key <pem> --install <id>]`
+  fungerar som C#-hubbens (`packaging/hub-e2e.sh`).
+- **Testa:** `npx vitest run apps/hub` från `ts/` (Hub.Core-testerna och hubbens övriga tester, plus fönstret mot en
+  låtsad main-process). End-to-end: `npm run test:e2e` i `ts/apps/hub` – bygger appen och startar den med Playwright
+  (`_electron`; Playwright hittas där det är installerat, t.ex. globalt) mot en egen signerad katalog med lokala paket,
+  så inget laddas ner (`CODESTEAD_HUB_E2E=1` gör att `--catalog`/`--public-key` gäller utan `--smoke-test`). Utan
+  skärm startar testet en egen Xvfb; `CODESTEAD_E2E_SHOTS=<mapp>` sparar skärmbilder.
+- **Kvar (TODO):** självuppdatering (Velopack i C#; nu "inga uppdateringar", en nyare hubb i katalogen erbjuds som
+  nedladdning) och paketering kommer i fas 5.
