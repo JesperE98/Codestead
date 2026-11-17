@@ -20,8 +20,20 @@ export function systemPages(): Map<string, ManPage> {
     ["hostname", { summary: "Shows the computer's name", man: "NAME\n       hostname - show the system's host name\n\nDESCRIPTION\n       The name is also stored in the file /etc/hostname." }],
     ["uname", { summary: "Shows information about the system and the kernel", man: "NAME\n       uname - show system information\n\nOPTIONS\n       -a    everything\n       -r    the kernel version (kernel release)\n       -n    the host name\n       -m    hardware architecture (e.g. x86_64)" }],
     ["date", { summary: "Shows the date and time", man: "NAME\n       date - show the date and time" }],
-    ["env", { summary: "Shows environment variables", man: "NAME\n       env - show environment variables\n\nSYNOPSIS\n       env\n\nDESCRIPTION\n       Environment variables are named values that programs can read, e.g.\n       HOME (your home directory), PATH (where commands are looked up) and USER." }],
-    ["printenv", { summary: "Shows environment variables", man: "NAME\n       printenv - show environment variables\n\nSYNOPSIS\n       printenv [VARIABLE]...\n\nDESCRIPTION\n       Environment variables are named values that programs can read, e.g.\n       HOME (your home directory), PATH (where commands are looked up) and USER." }],
+    ["env", { summary: "Shows environment variables", man: `NAME
+       env - show environment variables
+
+SYNOPSIS
+       env
+
+${envDescription}` }],
+    ["printenv", { summary: "Shows environment variables", man: `NAME
+       printenv - show environment variables
+
+SYNOPSIS
+       printenv [VARIABLE]...
+
+${envDescription}` }],
     ["export", { summary: "Sets an environment variable", man: "NAME\n       export - make a variable available to programs that are started\n\nSYNOPSIS\n       export NAME=VALUE\n\nEXAMPLES\n       export EDITOR=nano\n       export PATH=\"$HOME/bin:$PATH\"\n\nDESCRIPTION\n       Variables set with export only apply to the current session. Put\n       the line in ~/.bashrc if it should apply every time you open a terminal." }],
     ["unset", { summary: "Removes a variable or function", man: "NAME\n       unset - remove a variable or function\n\nSYNOPSIS\n       unset NAME...\n       unset -f FUNCTION..." }],
     ["alias", { summary: "Creates a shortcut for a command", man: "NAME\n       alias - create command shortcuts\n\nSYNOPSIS\n       alias NAME='COMMAND'\n       alias\n\nEXAMPLES\n       alias ll='ls -la'\n       alias ..='cd ..'\n\nDESCRIPTION\n       Without arguments all aliases are listed. Put aliases in ~/.bashrc\n       to keep them permanently." }],

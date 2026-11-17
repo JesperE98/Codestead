@@ -12,8 +12,30 @@ const dnfMan = "NAME\n       dnf - package manager for Fedora, RHEL, Rocky Linux
 export function pkgPages(): Map<string, ManPage> {
   return new Map<string, ManPage>([
     // ---------- Pakethantering (pkg.ts) ----------
-    ["apt", { summary: "The package manager in Debian and Ubuntu", man: "NAME\n       apt - package manager for Debian, Ubuntu and similar\n\nSYNOPSIS\n       apt [-y] COMMAND [PACKAGE]...\n\nCOMMANDS\n       update          download new package lists from the repositories\n       upgrade         upgrade all installed packages\n       install PACKAGE install packages\n       remove PACKAGE  remove packages (configuration files are kept)\n       purge PACKAGE   remove packages and their configuration files\n       autoremove      remove dependencies that are no longer needed\n       search WORD     search for packages\n       show PACKAGE    show information about a package\n       list --installed   list installed packages\n       list --upgradable  list packages that can be upgraded\n\nOPTIONS\n       -y, --yes       answer yes to all questions\n\nDESCRIPTION\n       Most commands require root, so they are run with sudo:\n           sudo apt update && sudo apt upgrade" }],
-    ["apt-get", { summary: "Older, script-friendly variant of apt", man: "NAME\n       apt-get - package manager for Debian, Ubuntu and similar\n\nSYNOPSIS\n       apt-get [-y] COMMAND [PACKAGE]...\n\nCOMMANDS\n       update          download new package lists from the repositories\n       upgrade         upgrade all installed packages\n       install PACKAGE install packages\n       remove PACKAGE  remove packages (configuration files are kept)\n       purge PACKAGE   remove packages and their configuration files\n       autoremove      remove dependencies that are no longer needed\n\nOPTIONS\n       -y, --yes       answer yes to all questions\n\nDESCRIPTION\n       Most commands require root, so they are run with sudo:\n           sudo apt update && sudo apt upgrade" }],
+    ["apt", { summary: "The package manager in Debian and Ubuntu", man: `NAME
+       apt - package manager for Debian, Ubuntu and similar
+
+SYNOPSIS
+       apt [-y] COMMAND [PACKAGE]...
+
+COMMANDS
+${aptCommon}
+       search WORD     search for packages
+       show PACKAGE    show information about a package
+       list --installed   list installed packages
+       list --upgradable  list packages that can be upgraded
+
+${aptTail}` }],
+    ["apt-get", { summary: "Older, script-friendly variant of apt", man: `NAME
+       apt-get - package manager for Debian, Ubuntu and similar
+
+SYNOPSIS
+       apt-get [-y] COMMAND [PACKAGE]...
+
+COMMANDS
+${aptCommon}
+
+${aptTail}` }],
     ["pacman", { summary: "The package manager in Arch Linux", man: "NAME\n       pacman - package manager for Arch Linux and similar\n\nSYNOPSIS\n       pacman OPERATION [OPTIONS] [PACKAGE]...\n\nOPERATIONS (capital letter)\n       -S    sync: install packages from the repositories\n       -R    remove packages\n       -Q    query the database of installed packages\n\nCOMMON COMBINATIONS\n       pacman -Syu          refresh the package database and upgrade everything\n       pacman -S PACKAGE    install a package\n       pacman -Ss WORD      search for packages\n       pacman -Si PACKAGE   show information about a package\n       pacman -R PACKAGE    remove a package\n       pacman -Rs PACKAGE   remove a package and dependencies no longer needed\n       pacman -Q            list installed packages\n       pacman -Qi PACKAGE   information about an installed package\n\nOPTIONS\n       --noconfirm   don't ask for confirmation\n       --needed      don't reinstall packages that are already up to date\n\nDESCRIPTION\n       Arch is a \"rolling release\": packages are updated all the time.\n       Always run -Syu instead of just -Sy, otherwise you risk a\n       half-upgraded (partial upgrade) and broken installation." }],
     ["dnf", { summary: "The package manager in Fedora and Red Hat", man: dnfMan }],
     ["dnf5", { summary: "The package manager in Fedora and Red Hat", man: dnfMan }],
