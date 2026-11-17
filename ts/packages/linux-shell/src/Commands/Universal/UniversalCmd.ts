@@ -16,6 +16,14 @@ import type { FsNode } from "../../Vfs/FsNode.js";
 import * as VfsLib from "../../Vfs/VfsLib.js";
 import type { World } from "../../World.js";
 import * as UtilCmd from "../Util/UtilCmd.js";
+import { appImageRuntime } from "./UniversalCmd.AppImage.js";
+import { flatpak } from "./UniversalCmd.Flatpak.js";
+import { snap } from "./UniversalCmd.Snap.js";
+
+export * from "./UniversalCmd.AppImage.js";
+export * from "./UniversalCmd.Flatpak.js";
+export * from "./UniversalCmd.FlatpakStore.js";
+export * from "./UniversalCmd.Snap.js";
 
 export function isRoot(sh: Shell): boolean {
   return sh.currentUser().uid === 0;
@@ -65,7 +73,9 @@ export function appImageNode(w: World, owner: string, group: string | null = nul
   return node;
 }
 
-/** The group's commands, in the C# order: flatpak, snap, appimage-runtime. Wave 2 fills this in (see PORTING.md). */
+let list: CommandDef[] | null = null;
+
+/** The group's commands, in the C# order: flatpak, snap, appimage-runtime (built on first use). */
 export function all(): CommandDef[] {
-  return [];
+  return (list ??= [flatpak, snap, appImageRuntime]);
 }
