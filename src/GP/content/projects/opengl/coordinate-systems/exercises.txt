@@ -1,0 +1,29 @@
+=== task: ex-fov
+--- file: main.cpp
+--- find:
+        projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+--- replace:
+        projection = glm::perspective(glm::radians(90.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+
+=== task: ex-camera-up
+--- file: main.cpp
+--- find:
+        view       = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+--- replace:
+        view       = glm::translate(view, glm::vec3(0.0f, -1.0f, -3.0f));
+
+=== task: ex-ortho
+--- file: main.cpp
+--- find:
+        projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+--- replace:
+        projection = glm::ortho(-4.0f, 4.0f, -3.0f, 3.0f, 0.1f, 100.0f);
+
+=== task: ex-spin-all
+--- file: main.cpp
+--- find:
+            float angle = 20.0f * i;
+            if (i % 3 == 0) // every 3rd iteration (including the first) we set the angle using GLFW's time function.
+                angle = (float)glfwGetTime() * 25.0f;
+--- replace:
+            float angle = 20.0f * i + (float)glfwGetTime() * 25.0f; // every cube turns, each from its own start angle

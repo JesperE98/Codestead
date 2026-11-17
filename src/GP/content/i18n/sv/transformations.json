@@ -44,6 +44,34 @@
         "vulkan": "`constants.transform = transform;` före pushen. Varje ritning använder de push constants som spelades in före den. En negativ skalning vänder lådan upp och ner, den speglar den inte.",
         "d3d12": "Root constants spelas in med varje ritning, så den första ritningen behåller sin matris. En negativ skalning vrider lådan 180°, den speglar den inte."
       }
+    },
+    "ex-faster": {
+      "text": "Låt den första lådan cirkla runt mitten dubbelt så fort.",
+      "hint": {
+        "opengl": "Vinkeln i `glm::rotate` är tiden i radianer: en radian per sekund. Skala den.",
+        "vulkan": "Vinkeln i `glm::rotate` är tiden i radianer: en radian per sekund. Skala den.",
+        "d3d12": "Vinkeln i `XMMatrixRotationZ` är tiden i radianer: en radian per sekund. Skala den."
+      }
+    },
+    "ex-third-container": {
+      "text": "Rita en tredje låda som står still i nedre vänstra fjärdedelen: med mitten i (−0.5, −0.5) och halva sin vanliga storlek.",
+      "hint": {
+        "opengl": "Efter den andra ritningen: nollställ `transform` till identitetsmatrisen, translatera, skala sedan med 0.5, skicka matrisen med `glUniformMatrix4fv` och anropa `glDrawElements` en gång till.",
+        "vulkan": "Efter den andra ritningen: nollställ `transform` till identitetsmatrisen, translatera, skala sedan med 0.5, pusha den med `vkCmdPushConstants` och spela in ett `vkCmdDrawIndexed` till. Shadern vänder y, så (−0.5, −0.5) är nere till vänster även här.",
+        "d3d12": "Efter den andra ritningen: en ny matris – skala med 0.5 först, translatera sedan (DirectXMath läser från vänster till höger) – lagrad transponerad i rotkonstanterna, och ett `DrawIndexedInstanced` till."
+      }
+    },
+    "ex-no-flip": {
+      "text": "Den andra lådan krymper till ingenting och vänds upp och ner när sin(time) är negativ. Låt den pulsera mellan halv och full storlek i stället: skala med 0.75 + 0.25 · sin(time).",
+      "hint": "Bara skalfaktorn ändras; translationen och transformationernas ordning är kvar. Det minsta värdet blir 0.75 − 0.25 = 0.5, det största 1.0."
+    },
+    "ex-tilt": {
+      "text": "Vrid den andra lådan 45° kring sin egen mitt medan den fortsätter att växa och krympa där den står.",
+      "hint": {
+        "opengl": "Ett `glm::rotate` till (med `glm::radians(45.0f)` kring z) mellan translationen och skalningen: rotationen måste ske före förflyttningen, medan lådan fortfarande står i origo – och glm:s sista anrop utförs först.",
+        "vulkan": "Ett `glm::rotate` till (med `glm::radians(45.0f)` kring z) mellan translationen och skalningen: rotationen måste ske före förflyttningen, medan lådan fortfarande står i origo – och glm:s sista anrop utförs först.",
+        "d3d12": "Ett `XMMatrixRotationZ(XMConvertToRadians(45.0f))` till mellan skalningen och translationen: DirectXMath utför matriserna från vänster till höger, och rotationen måste ske medan lådan fortfarande står i origo."
+      }
     }
   }
 }

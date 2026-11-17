@@ -112,6 +112,30 @@
         "vulkan": "Cubes 0, 3, 6 and 9 now turn 25° per second; the others keep their fixed angle.",
         "d3d12": "Cubes 0, 3, 6 and 9 now turn 25° per second. The angle stays in degrees – `XMConvertToRadians(angle)` converts it."
       }
+    },
+    "ex-fov": {
+      "text": "Widen the field of view from 45° to 90°. What happens to the size of the cubes, and why?",
+      "hint": {
+        "opengl": "The field of view is the first argument of `glm::perspective` (in radians, so keep `glm::radians`).",
+        "vulkan": "The field of view is the first argument of `glm::perspective` (in radians, so keep `glm::radians`). Leave the y flip after it alone.",
+        "d3d12": "The field of view is the first argument of `XMMatrixPerspectiveFovRH` (in radians, so keep `XMConvertToRadians`)."
+      }
+    },
+    "ex-camera-up": {
+      "text": "Raise the camera by one unit, so it looks at the cubes from a little higher up (it still looks straight ahead).",
+      "hint": "There is no camera: the view matrix moves the whole scene the other way. The scene is already moved 3 units away along z – it also has to move 1 unit along y, in the direction opposite to the camera's."
+    },
+    "ex-ortho": {
+      "text": "Replace the perspective projection with an orthographic one that shows 8 × 6 units (x from −4 to 4, y from −3 to 3), with the same near and far planes. Compare the near and the far cubes.",
+      "hint": {
+        "opengl": "`glm::ortho(left, right, bottom, top, near, far)` instead of `glm::perspective`.",
+        "vulkan": "`glm::ortho(left, right, bottom, top, near, far)` instead of `glm::perspective` – the `GLM_FORCE_DEPTH_ZERO_TO_ONE` define makes it use Vulkan's depth range too, and the y flip after it still applies.",
+        "d3d12": "`XMMatrixOrthographicOffCenterRH(left, right, bottom, top, near, far)` instead of `XMMatrixPerspectiveFovRH`."
+      }
+    },
+    "ex-spin-all": {
+      "text": "Let every cube turn with the time, not only every third – each one starting from its own angle (20° · i), so they don't all line up.",
+      "hint": "Add the time-dependent part (time · 25°) to each cube's own angle instead of replacing the angle for some of them; the `i % 3` test is not needed any more."
     }
   }
 }

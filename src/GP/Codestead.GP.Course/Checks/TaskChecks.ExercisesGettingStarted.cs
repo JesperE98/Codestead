@@ -17,6 +17,28 @@ public static partial class TaskChecks
     private static bool GreyAt(CheckContext c, double x, double y) =>
         c.DrawnAt(x, y) && c.Pixel(x, y) is { } p && CheckContext.Near(p[0], p[1], 0.02) && CheckContext.Near(p[1], p[2], 0.02);
 
+    /// <summary>A colour is the frame's clear colour (±0.02 per channel).</summary>
+    private static bool IsClearColour(CheckContext c, double[] p) => c.Scene?.ClearColor is { } clear
+        && CheckContext.Near(p[0], clear[0], 0.02) && CheckContext.Near(p[1], clear[1], 0.02) && CheckContext.Near(p[2], clear[2], 0.02);
+
+    /// <summary>
+    /// How many points of a grid over a box (relative x0…x1, y0…y1, 0.025 apart) have another colour at time t2 than
+    /// at t1 (by more than 0.1 in some channel).
+    /// </summary>
+    private static int ChangedPoints(CheckContext c, double x0, double y0, double x1, double y1, double t1 = 1.0, double t2 = 2.3)
+    {
+        if (c.FrameAt(t1) is not { } a || c.FrameAt(t2) is not { } b) return 0;
+        int n = 0;
+        for (double y = y0; y <= y1 + 1e-9; y += 0.025)
+            for (double x = x0; x <= x1 + 1e-9; x += 0.025)
+            {
+                var p = a.AtRelative(x, y);
+                var q = b.AtRelative(x, y);
+                if (Math.Abs(p[0] - q[0]) > 0.1 || Math.Abs(p[1] - q[1]) > 0.1 || Math.Abs(p[2] - q[2]) > 0.1) n++;
+            }
+        return n;
+    }
+
     private static Dictionary<string, Dictionary<string, TaskCheck>> ExercisesGettingStarted => new()
     {
         // OpenGL has none: its program ends at once (no render loop yet). Nothing is drawn in any API.
@@ -63,6 +85,48 @@ public static partial class TaskChecks
                 Apis.Vulkan => c.Has(@"magFilter = VK_FILTER_NEAREST"),
                 _ => c.Has(@"Filter = D3D12_FILTER_(?:MIN_MAG_MIP_POINT|MIN_LINEAR_MAG_MIP_POINT|MIN_MAG_POINT_MIP_LINEAR|MIN_LINEAR_MAG_POINT_MIP_LINEAR)"),
             },
+        },
+        ["transformations"] = new()
+        {
+            // At 1 s the orbiting container has turned 2 radians instead of 1: its centre is near (0.62, 0.17) of the
+            // window instead of (0.85, 0.43).
+            ["ex-faster"] = c => c.DrawnAt(0.62, 0.17) && c.IsClear(0.85, 0.43),
+            // A small container at the bottom left (centre (0.25, 0.75), 0.25 × 0.25 of the window), clear around it.
+            ["ex-third-container"] = c => c.DrawnAt(0.25, 0.75) && c.DrawnAt(0.18, 0.68) && c.IsClear(0.25, 0.6) && c.IsClear(0.1, 0.75),
+            // At 4 s sin is −0.76: before, the top-left container was 0.76 wide (flipped); now 0.75 − 0.19 = 0.56 –
+            // its right edge moves from 0.44 to 0.39 of the window. At 1.57 s (sin = 1) it is the full size.
+            ["ex-no-flip"] = c => c.PixelAt(4.0, 0.25, 0.25) is { } mid && !IsClearColour(c, mid)
+                && c.PixelAt(4.0, 0.415, 0.25) is { } edge && IsClearColour(c, edge)
+                && c.PixelAt(1.5708, 0.48, 0.25) is { } full && !IsClearColour(c, full),
+            // The top-left container at 1 s (scale 0.84) turned 45°: a diamond – drawn straight right of its centre
+            // where the square ends, clear in the square's corner.
+            ["ex-tilt"] = c => c.DrawnAt(0.25, 0.25) && c.DrawnAt(0.5, 0.25) && c.IsClear(0.44, 0.06),
+        },
+        ["coordinate-systems"] = new()
+        {
+            // A 90° field of view: every cube is smaller, the middle one still in the centre, the space around it clear.
+            ["ex-fov"] = c => c.DrawnAt(0.5, 0.5) && c.IsClear(0.5, 0.3) && c.IsClear(0.25, 0.2) && c.IsClear(0.8, 0.5) && c.IsClear(0.5, 0.7),
+            // The camera one unit higher: the scene moves down – the middle cube now near the bottom edge, its old
+            // place clear.
+            ["ex-camera-up"] = c => c.DrawnAt(0.5, 0.88) && c.DrawnAt(0.2, 0.55) && c.IsClear(0.5, 0.45),
+            // Orthographic, 8 × 6 units: all cubes the same small size, wherever they are in depth.
+            ["ex-ortho"] = c => c.DrawnAt(0.5, 0.5) && c.DrawnAt(0.3, 0.8) && c.DrawnAt(0.67, 0.22) && c.IsClear(0.5, 0.3) && c.IsClear(0.5, 0.7),
+            // The cubes on the right (4 and 8) stood still before; now they turn too.
+            ["ex-spin-all"] = c => ChangedPoints(c, 0.75, 0.35, 0.95, 0.6) > 5,
+        },
+        // Keys and the mouse do not move the simulated camera: those exercises are checked in the code.
+        ["camera"] = new()
+        {
+            // From (−3, 0, 0) along +x: the middle cube still in the centre, cube 9 (−1.3, 1, −1.5) now big on the left,
+            // the right side (cubes 4 and 8 before) empty.
+            ["ex-side-view"] = c => c.DrawnAt(0.5, 0.5) && c.DrawnAt(0.2, 0.5) && c.IsClear(0.85, 0.45) && c.IsClear(0.75, 0.25),
+            ["ex-sprint"] = c => c.Shows && (c.Api == Apis.D3D12
+                ? c.Has(@"keys \[ VK_[LR]?SHIFT \]")
+                : c.Has(@"glfwGetKey \( window , GLFW_KEY_(?:LEFT|RIGHT)_SHIFT \)")),
+            ["ex-invert-mouse"] = c => c.Shows && (c.Has(@"yoffset = ypos - lastY") || c.Has(@"pitch -= yoffset")),
+            ["ex-ground"] = c => c.Shows && (c.Api == Apis.D3D12
+                ? c.Has(@"cameraPos = XMVectorSetY \( cameraPos , 0(?:\.0*)?f? \)")
+                : c.Has(@"cameraPos \. y = 0(?:\.0*)?f? ;")),
         },
     };
 }

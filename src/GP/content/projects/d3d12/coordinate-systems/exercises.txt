@@ -1,0 +1,29 @@
+=== task: ex-fov
+--- file: main.cpp
+--- find:
+    XMMATRIX projection = XMMatrixPerspectiveFovRH(XMConvertToRadians(45.0f), static_cast<float>(m_width) / static_cast<float>(m_height), 0.1f, 100.0f);
+--- replace:
+    XMMATRIX projection = XMMatrixPerspectiveFovRH(XMConvertToRadians(90.0f), static_cast<float>(m_width) / static_cast<float>(m_height), 0.1f, 100.0f);
+
+=== task: ex-camera-up
+--- file: main.cpp
+--- find:
+    XMMATRIX view = XMMatrixTranslation(0.0f, 0.0f, -3.0f);
+--- replace:
+    XMMATRIX view = XMMatrixTranslation(0.0f, -1.0f, -3.0f);
+
+=== task: ex-ortho
+--- file: main.cpp
+--- find:
+    XMMATRIX projection = XMMatrixPerspectiveFovRH(XMConvertToRadians(45.0f), static_cast<float>(m_width) / static_cast<float>(m_height), 0.1f, 100.0f);
+--- replace:
+    XMMATRIX projection = XMMatrixOrthographicOffCenterRH(-4.0f, 4.0f, -3.0f, 3.0f, 0.1f, 100.0f);
+
+=== task: ex-spin-all
+--- file: main.cpp
+--- find:
+        float angle = 20.0f * i;
+        if (i % 3 == 0)    // every 3rd cube (including the first) rotates with the time
+            angle = time * 25.0f;
+--- replace:
+        float angle = 20.0f * i + time * 25.0f;    // every cube turns, each from its own start angle
