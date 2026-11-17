@@ -136,5 +136,32 @@ public static partial class TaskChecks
             // The blue cube in 20-pixel squares, blue and white.
             ["ex-checkerboard"] = c => CountInBox(c, 0.6, 0.62, 0.92, 0.97, White) > 150 && CountInBox(c, 0.6, 0.62, 0.92, 0.97, p => p[2] > 0.95 && p[0] < 0.05) > 150 && At(c, 200, 450, Yellow),
         },
+        ["geometry-shader"] = new()
+        {
+            // Normals 0.5 long instead of 0.2: far more yellow, and it reaches well above the north pole.
+            ["ex-long-normals"] = c => c.CountPixels(Yellow) > 3000 && CountInBox(c, 0.4, 0.18, 0.6, 0.28, Yellow) > 150,
+            // The triangles' edges instead of the normals: yellow lines all over the planet's face, none sticking out above the pole.
+            ["ex-wireframe"] = c => CountInBox(c, 0.4, 0.4, 0.6, 0.6, Yellow) > 100 && CountInBox(c, 0.4, 0.18, 0.6, 0.28, Yellow) == 0 && At(c, 400, 300, p => !Background(p)),
+            // One line per triangle from its centre, along the face's normal (a cross product in the normals' geometry shader).
+            ["ex-face-normals"] = c => c.CountPixels(Yellow) > 2100 && c.CountPixels(Yellow) < 3000 && CountInBox(c, 0.4, 0.18, 0.6, 0.28, Yellow) > 60
+                && c.HasIn(c.Api switch { "opengl" => "normal_visualization.gs", "vulkan" => "shaders/normal_visualization.geom", _ => "normal_visualization.hlsl" }, @"cross \("),
+        },
+        ["instancing"] = new()
+        {
+            // The belt five times as high: rocks above the old band (whose top was at y ≈ 270).
+            ["ex-high-belt"] = c => CountInBox(c, 0.15, 0.3, 0.85, 0.44, p => !Background(p)) > 12,
+            // Three times as many rocks, still one draw call.
+            ["ex-more-rocks"] = c => c.CountPixels(Rock) > 350,
+            // Every third instance tinted red by its instance number.
+            ["ex-red-rocks"] = c => c.CountPixels(p => p[0] > 0.2 && p[0] > p[1] + 0.12 && Math.Abs(p[1] - p[2]) < 0.08) > 30 && c.CountPixels(Rock) > 60,
+        },
+        ["anti-aliasing"] = new()
+        {
+            // Two samples per pixel: an edge pixel is either half covered or not mixed at all – one grey between background and cube.
+            ["ex-two-samples"] = c => c.CountPixels(p => Grey(p) && p[0] > 0.36 && p[0] < 0.46) > 50
+                && c.CountPixels(p => Grey(p) && (p[0] > 0.15 && p[0] < 0.35 || p[0] > 0.48 && p[0] < 0.65)) == 0 && At(c, 400, 300, p => Grey(p) && Math.Abs(p[0] - 0.714) < 0.03),
+            // The mixed (anti-aliased) pixels in red along the cube's edges, the rest grey.
+            ["ex-show-edges"] = c => c.CountPixels(Red) > 100 && At(c, 400, 300, p => Grey(p) && Math.Abs(p[0] - 0.714) < 0.03),
+        },
     };
 }

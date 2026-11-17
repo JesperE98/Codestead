@@ -1,0 +1,39 @@
+=== task: ex-long-normals
+--- file: normal_visualization.hlsl
+--- find:
+static const float MAGNITUDE = 0.2f;
+--- replace:
+static const float MAGNITUDE = 0.5f;
+
+=== task: ex-wireframe
+--- file: normal_visualization.hlsl
+--- find:
+    GenerateLine(input[0], lineStream);    // first vertex normal
+    GenerateLine(input[1], lineStream);    // second vertex normal
+    GenerateLine(input[2], lineStream);    // third vertex normal
+--- replace:
+    // the triangle's three edges as one line strip: back to the first corner at the end
+    for (int i = 0; i < 4; i++)
+    {
+        GSOutput output;
+        output.position = mul(input[i % 3].position, projection);
+        lineStream.Append(output);
+    }
+
+=== task: ex-face-normals
+--- file: normal_visualization.hlsl
+--- find:
+    GenerateLine(input[0], lineStream);    // first vertex normal
+    GenerateLine(input[1], lineStream);    // second vertex normal
+    GenerateLine(input[2], lineStream);    // third vertex normal
+--- replace:
+    // one line per triangle: from its centre along the face's normal
+    float4 centre = (input[0].position + input[1].position + input[2].position) / 3.0f;
+    float3 a = input[0].position.xyz - input[1].position.xyz;
+    float3 b = input[2].position.xyz - input[1].position.xyz;
+    float3 normal = normalize(cross(b, a));    // outwards for a counter-clockwise triangle
+    GSOutput output;
+    output.position = mul(centre, projection);
+    lineStream.Append(output);
+    output.position = mul(centre + float4(normal, 0.0f) * MAGNITUDE, projection);
+    lineStream.Append(output);

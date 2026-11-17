@@ -1,0 +1,38 @@
+=== task: ex-high-belt
+--- file: main.cpp
+--- find:
+        float y = displacement * 0.4f; // keep height of asteroid field smaller compared to width of x and z
+--- replace:
+        float y = displacement * 2.0f; // five times as high as before
+
+=== task: ex-more-rocks
+--- file: main.cpp
+--- find:
+    unsigned int amount = 500;
+--- replace:
+    unsigned int amount = 1500;
+
+=== task: ex-red-rocks
+--- file: asteroids.vs
+--- find:
+out vec2 TexCoords;
+--- replace:
+out vec2 TexCoords;
+out vec3 Tint;
+--- file: asteroids.vs
+--- find:
+    TexCoords = aTexCoords;
+--- replace:
+    TexCoords = aTexCoords;
+    Tint = (gl_InstanceID % 3 == 0) ? vec3(1.0, 0.4, 0.3) : vec3(1.0); // every third rock reddish
+--- file: asteroids.fs
+--- find:
+in vec2 TexCoords;
+--- replace:
+in vec2 TexCoords;
+in vec3 Tint;
+--- file: asteroids.fs
+--- find:
+    FragColor = texture(texture_diffuse1, TexCoords);
+--- replace:
+    FragColor = texture(texture_diffuse1, TexCoords) * vec4(Tint, 1.0);

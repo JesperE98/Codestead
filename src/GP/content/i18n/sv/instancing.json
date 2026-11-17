@@ -56,6 +56,22 @@
         "vulkan": "`getInstancedBindingDescriptions()`: binding 1, `stride = sizeof(glm::mat4)`, `VK_VERTEX_INPUT_RATE_INSTANCE`; `getInstancedAttributeDescriptions()`: `[4]..[7]` på binding 1, platserna 4..7, `VK_FORMAT_R32G32B32A32_SFLOAT`, offset 0, 16, 32, 48. Bind `{rockVertexBuffer, instanceBuffer}`, `rockIndexBuffer`, `rockDescriptorSet`.",
         "d3d12": "Fyra element `{ \"INSTANCEMATRIX\", 0..3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 0/16/32/48, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 }`; shader: `float4x4(instanceRow0, …, instanceRow3)`. Lagra matriserna otransponerade. `m_rock.Load(…, 1 + 2 * m_planet.meshes.size())`; per mesh: `srvHandle`, `vertexBufferView`, `indexBufferView`."
       }
+    },
+    "ex-high-belt": {
+      "text": "Gör asteroidbältet fem gånger så högt: låt stenarnas slumpade höjd vara 2.0 gånger förskjutningen i stället för 0.4 gånger.",
+      "hint": "Ett tal i loopen som räknar ut modellmatriserna: faktorn i `float y = displacement * …`."
+    },
+    "ex-more-rocks": {
+      "text": "Tre gånger så många stenar: 1500 i stället för 500 – fortfarande med ett enda ritanrop.",
+      "hint": "Bara `amount` ändras; matrisbufferten och ritanropets antal instanser följer med."
+    },
+    "ex-red-rocks": {
+      "text": "Färga var tredje sten röd, (1.0, 0.4, 0.3) gånger dess textur – vald efter instansens nummer, inte efter något i matrisbufferten.",
+      "hint": {
+        "opengl": "I `asteroids.vs`: `gl_InstanceID % 3 == 0` avgör färgtonen, som skickas vidare till `asteroids.fs` som en `out vec3` och multiplicerar texturens färg.",
+        "vulkan": "I `asteroids.vert`: `gl_InstanceIndex % 3 == 0` avgör färgtonen, som skickas vidare till `asteroids.frag` på en ny location och multiplicerar texturens färg.",
+        "d3d12": "Ge `VSMain` indata `uint instanceID : SV_InstanceID`; `instanceID % 3 == 0` avgör färgtonen, som går till pixelshadern i `PSInput` och multiplicerar texturens färg."
+      }
     }
   }
 }

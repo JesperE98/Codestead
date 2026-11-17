@@ -68,6 +68,26 @@
         "vulkan": "The geometry shader declares the uniform buffer block and uses `ubo.proj`. `createPipeline(…default…, \"\", …, graphicsPipeline)` and `createPipeline(…normal_visualization…, normalPipeline)`; after the first draw: `vkCmdBindPipeline(…, normalPipeline)` and `vkCmdDrawIndexed` again. Remove `time`.",
         "d3d12": "`XMFLOAT4X4 normalMatrix` in `ModelConstants` = `XMMatrixTranspose(XMMatrixInverse(nullptr, model))`, stored transposed. `[maxvertexcount(6)] GSMain(triangle VSOutput input[3], inout LineStream<GSOutput> lineStream)`. After the first `m_model.Draw`: `SetPipelineState(m_normalPipelineState.Get())` and draw again."
       }
+    },
+    "ex-long-normals": {
+      "text": "Make the normal lines 0.5 units long instead of 0.2.",
+      "hint": {
+        "opengl": "One constant in the normals' geometry shader: `MAGNITUDE`.",
+        "vulkan": "One constant in the normals' geometry shader: `MAGNITUDE` – recompile it with `glslc`.",
+        "d3d12": "One constant in `normal_visualization.hlsl`: `MAGNITUDE`."
+      }
+    },
+    "ex-wireframe": {
+      "text": "Turn the normals' geometry shader into a wireframe shader: instead of three normal lines, let it output each triangle's three edges as one line strip. The planet gets a yellow net of its triangles.",
+      "hint": {
+        "opengl": "A line strip through the corners 0, 1, 2 and back to 0 – four vertices, each `projection * gl_in[i].gl_Position` – then `EndPrimitive()`. `max_vertices` must be at least 4.",
+        "vulkan": "A line strip through the corners 0, 1, 2 and back to 0 – four vertices, each `ubo.proj * gl_in[i].gl_Position` – then `EndPrimitive()`. `max_vertices` must be at least 4.",
+        "d3d12": "A line strip through the corners 0, 1, 2 and back to 0 – four `Append` calls, each with `mul(input[i].position, projection)`. `maxvertexcount` must be at least 4."
+      }
+    },
+    "ex-face-normals": {
+      "text": "Show the faces' normals instead of the vertices' normals: one line per triangle, starting at the triangle's centre and pointing along the normal of its plane.",
+      "hint": "The centre is the mean of the three corners. The plane's normal is the cross product of two edges, as in the explode shader's `GetNormal` – but mind the order: for a counter-clockwise triangle `cross(p2 − p1, p0 − p1)` points outwards; the other order points into the planet, where the depth test hides the lines."
     }
   }
 }

@@ -52,6 +52,18 @@
         "vulkan": "`float grayscale = 0.2126 * col.r + 0.7152 * col.g + 0.0722 * col.b;` then `outColor = vec4(vec3(grayscale), 1.0);`.",
         "d3d12": "`float grayscale = 0.2126f * col.r + 0.7152f * col.g + 0.0722f * col.b;` then `return float4(grayscale, grayscale, grayscale, 1.0f);`."
       }
+    },
+    "ex-two-samples": {
+      "text": "Use 2 samples per pixel instead of 4. The edges are still softened, but an edge pixel can now only be fully, half or not at all covered – look closely at the grey steps along the edges.",
+      "hint": {
+        "opengl": "The sample count is given twice and must be the same: in `glTexImage2DMultisample` and in `glRenderbufferStorageMultisample`.",
+        "vulkan": "`getMaxUsableSampleCount()` picks the count: let it choose `VK_SAMPLE_COUNT_2_BIT` first. Every image and pipeline that uses `msaaSamples` follows.",
+        "d3d12": "`SampleCount` is used by the render target, the depth buffer and the pipeline state: change it in one place."
+      }
+    },
+    "ex-show-edges": {
+      "text": "Make the anti-aliasing visible: in the post-processing shader, colour every pixel red that is neither the background nor the cube's green – the pixels the resolve has mixed.",
+      "hint": "Look at the resolved colour's green channel before turning it grey: the background has 0.1, the cube 1.0, and a mixed edge pixel something in between."
     }
   }
 }
