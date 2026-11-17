@@ -39,6 +39,10 @@ public static partial class TaskChecks
         return n;
     }
 
+    /// <summary>Some drawn pixel has a colour (±0.03 per channel): a small object somewhere in the frame, such as a lamp.</summary>
+    private static bool AnyPixelIs(CheckContext c, double r, double g, double b) =>
+        c.AnyDrawnPixel(p => CheckContext.Near(p[0], r, 0.03) && CheckContext.Near(p[1], g, 0.03) && CheckContext.Near(p[2], b, 0.03));
+
     private static Dictionary<string, Dictionary<string, TaskCheck>> ExercisesGettingStarted => new()
     {
         // OpenGL has none: its program ends at once (no render loop yet). Nothing is drawn in any API.
@@ -127,6 +131,39 @@ public static partial class TaskChecks
             ["ex-ground"] = c => c.Shows && (c.Api == Apis.D3D12
                 ? c.Has(@"cameraPos = XMVectorSetY \( cameraPos , 0(?:\.0*)?f? \)")
                 : c.Has(@"cameraPos \. y = 0(?:\.0*)?f? ;")),
+        },
+        ["colors"] = new()
+        {
+            // Coral (1, 0.5, 0.31) in green light: only the green part is reflected; the lamp is still white.
+            ["ex-green-light"] = c => c.PixelIs(0.28, 0.6, 0.0, 0.5, 0.0) && AnyPixelIs(c, 1.0, 1.0, 1.0),
+            // A cyan object reflects no red: in red light it is black.
+            ["ex-black-cube"] = c => c.PixelIs(0.28, 0.6, 0.0, 0.0, 0.0) && c.PixelIs(0.2, 0.55, 0.0, 0.0, 0.0),
+            // Warm light (1, 0.8, 0.6): the cube (1, 0.4, 0.19), and the lamp in the light's colour – no white left.
+            ["ex-lamp-colour"] = c => c.PixelIs(0.28, 0.6, 1.0, 0.4, 0.186) && AnyPixelIs(c, 1.0, 0.8, 0.6) && !AnyPixelIs(c, 1.0, 1.0, 1.0),
+        },
+        ["basic-lighting"] = new()
+        {
+            // The unlit left face shows only the ambient part: 0.3 × coral instead of 0.1 × coral.
+            ["ex-ambient"] = c => c.PixelIs(0.2, 0.6, 0.3, 0.15, 0.093),
+            // A shininess of 4: the highlight spreads over most of the lit face (bright out to its left edge).
+            ["ex-shininess"] = c => c.Pixel(0.3, 0.5) is { } a && a[0] > 0.88 && c.Pixel(0.31, 0.55) is { } b && b[0] > 0.88,
+            // Specular added after the object colour: the highlight turns whitish – more blue than coral can reflect
+            // (at most (0.1 + 1 + 0.5) × 0.31 = 0.5) – but not the white lamp.
+            ["ex-white-highlight"] = c => c.AnyDrawnPixel(p => p[2] > 0.55 && p[2] < 0.9 && p[1] > 0.6 && p[0] > 0.9),
+            // The light circles at height 1, radius 2: at 1 s it is at (1.68, 1, 1.08) – the lamp higher and further
+            // left on screen than the chapter's (2.68, 0.48, 2).
+            ["ex-orbit"] = c => c.PixelIs(0.655, 0.375, 1.0, 1.0, 1.0) && !c.PixelIs(0.866, 0.506, 1.0, 1.0, 1.0),
+        },
+        ["materials"] = new()
+        {
+            // Cyan plastic reflects no red: on the lit face red is (almost) nothing, green and blue are there.
+            ["ex-cyan-plastic"] = c => c.Pixel(0.42, 0.6) is { } p && p[0] < 0.05 && p[1] > 0.08 && p[2] > 0.12,
+            // Between 4.71 s and 4.83 s all three sines are negative: the chapter's cube goes black there (no light at
+            // all); with 0.5 + 0.5 · sin the light is about (0.44, 0.40, 0.46) and the lit face still shows.
+            ["ex-positive"] = c => BrightnessAt(c, 4.77, 0.42, 0.62) > 0.25,
+            // Gold under a steady white light: yellow-brown (green about 0.8 of red, little blue), the same at 1 s and 4 s.
+            ["ex-gold"] = c => c.Pixel(0.42, 0.6) is { } p && p[0] > 0.25 && p[1] > 0.7 * p[0] && p[1] < 0.95 * p[0] && p[2] < 0.5 * p[1]
+                && PixelAtIs(c, 4.0, 0.42, 0.6, p[0], p[1], p[2], 0.01),
         },
     };
 }

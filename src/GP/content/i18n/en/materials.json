@@ -36,6 +36,22 @@
         "vulkan": "`lightColor.x = static_cast<float>(std::sin(glfwGetTime() * 2.0));` … `glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);` – the specular part stays white.",
         "d3d12": "`XMVECTOR diffuseColor = XMLoadFloat3(&lightColor) * 0.5f;`, `XMVECTOR ambientColor = diffuseColor * 0.2f;`, then `XMStoreFloat3(&constantBufferData.light.ambient, ambientColor);` (and `diffuse`). The specular part stays white."
       }
+    },
+    "ex-cyan-plastic": {
+      "text": "Turn the coral cube into cyan plastic, with the values from the table of real materials: ambient (0.0, 0.1, 0.06), diffuse (0.0, 0.50980392, 0.50980392), specular (0.50196078, 0.50196078, 0.50196078) and shininess 0.25 · 128 = 32. Why does the cube never turn red, whatever colour the light has?",
+      "hint": {
+        "opengl": "Only the four `material.*` uniforms you set in the render loop change. The table gives the shininess as a fraction: multiply it by 128.",
+        "vulkan": "Only the four `ubo.material` fields change. The table gives the shininess as a fraction: multiply it by 128.",
+        "d3d12": "Only the four `constantBufferData.material` fields change. The table gives the shininess as a fraction: multiply it by 128."
+      }
+    },
+    "ex-positive": {
+      "text": "The light's colour comes from sines, and when they are negative the light takes colour away – for a moment the cube goes completely black. Keep every channel between 0 and 1 instead: 0.5 + 0.5 · sin(…), with the same speeds as now.",
+      "hint": "Change the three lines that compute `lightColor`; the diffuse and ambient colours are derived from it and follow by themselves."
+    },
+    "ex-gold": {
+      "text": "Show a gold cube under a steady white light: let the light's colour be (1, 1, 1) all the time, and use gold from the material table – ambient (0.24725, 0.1995, 0.0745), diffuse (0.75164, 0.60648, 0.22648), specular (0.628281, 0.555802, 0.366065), shininess 0.4 · 128 = 51.2.",
+      "hint": "Two places: the three lines that compute `lightColor` from the time (make them 1.0 – the diffuse and ambient parts still come out as 0.5 and 0.1), and the four material values."
     }
   }
 }

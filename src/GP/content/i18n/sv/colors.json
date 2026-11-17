@@ -36,6 +36,26 @@
         "vulkan": "`vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, lightCubePipeline);` – descriptor setet, vertex buffern, viewporten och scissor ligger kvar; bara pipelinen och push constant (`constants.model = model; vkCmdPushConstants(…)`) ändras.",
         "d3d12": "`m_commandList->SetPipelineState(m_lightCubePipelineState.Get());`, lagra modellmatrisen transponerad i `modelConstants.model`, `SetGraphicsRoot32BitConstants(0, …)`, `DrawInstanced(36, 1, 0, 0)`. Samma root signatur, så CBV-tabellen och vertex buffern ligger kvar."
       }
+    },
+    "ex-green-light": {
+      "text": "Belys den korallröda kuben med rent grönt ljus (0, 1, 0) i stället för vitt. Räkna först ut vilken färg kuben får – och kontrollera sedan.",
+      "hint": {
+        "opengl": "Bara `lightColor` ändras. Fragmentshadern multiplicerar de två färgerna kanal för kanal: (0·1.0, 1·0.5, 0·0.31).",
+        "vulkan": "Bara `ubo.lightColor` ändras. Fragmentshadern multiplicerar de två färgerna kanal för kanal: (0·1.0, 1·0.5, 0·0.31).",
+        "d3d12": "Bara `constantBufferData.lightColor` ändras. Pixelshadern multiplicerar de två färgerna kanal för kanal: (0·1.0, 1·0.5, 0·0.31)."
+      }
+    },
+    "ex-black-cube": {
+      "text": "Gör kuben cyan (0, 1, 1) och ljuset rent rött (1, 0, 0). Varför ser kuben svart ut?",
+      "hint": "Sätt båda färgerna. En cyan yta absorberar allt rött ljus – och rött är det enda det här ljuset innehåller, så ingenting reflekteras."
+    },
+    "ex-lamp-colour": {
+      "text": "Använd ett varmt ljus (1.0, 0.8, 0.6) – och låt lampan också visa den färgen, i stället för alltid vitt.",
+      "hint": {
+        "opengl": "Sätt ljusets färg för kuben som förut. Lampan har en egen shader: ge `light_cube.fs` en `uniform vec3 lightColor;`, skriv ut den, och sätt den med `lightCubeShader.setVec3` efter `lightCubeShader.use()`.",
+        "vulkan": "Sätt `ubo.lightColor` som förut. Lampan har en egen fragmentshader, men samma descriptor set: deklarera samma uniform-block (binding 2) i `light_cube.frag` och skriv ut `ubo.lightColor` – blocket syns redan i fragmentsteget. Kompilera om med `glslc`.",
+        "d3d12": "Sätt ljusets färg som förut. Lampans shaders läser samma constant buffer på b1, men `light_cube.hlsl` deklarerar bara dess två första matriser: lägg till de två färgerna efter dem, i samma ordning som i `colors.hlsl`, och returnera `lightColor`."
+      }
     }
   }
 }
