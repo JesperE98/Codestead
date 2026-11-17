@@ -31,6 +31,7 @@ import type { D3D12Reader } from "./D3D12Reader.js";
 import { DrawTextures } from "./DrawTextures.js";
 import { FrameRecorder, type RecordedDraw } from "./FrameRecorder.js";
 import { GameFrames } from "./GameFrames.js";
+import { GlReader } from "./GlReader.js";
 import { PipelineInfo } from "./PipelineInfo.js";
 import { PipelineState } from "./PipelineState.js";
 import { StbImage } from "./StbImage.js";
@@ -433,28 +434,13 @@ function topologyOf(name: string): Topology {
   if (name.includes("CONTROL_POINT_PATCHLIST")) return Topology.Patches;
   if (name.includes("TRIANGLESTRIP")) return Topology.TriangleStrip;
   if (name.includes("LINESTRIP")) return Topology.LineStrip;
-  return glTopologyOf(name);
-}
-
-/**
- * GlReader.TopologyOf (GlReader.Draw.cs), which the C# calls for the rest. A copy: the OpenGL reader is ported
- * separately and the readers must not depend on each other's modules (merge: import GlReader's once it is there).
- */
-function glTopologyOf(mode: string): Topology {
-  if (mode.includes("PATCHES")) return Topology.Patches;
-  if (mode.includes("TRIANGLE_STRIP")) return Topology.TriangleStrip;
-  if (mode.includes("TRIANGLE_FAN")) return Topology.TriangleFan;
-  if (mode.includes("TRIANGLE")) return Topology.Triangles;
-  if (mode.includes("LINE_STRIP") || mode.includes("LINE_LOOP")) return Topology.LineStrip;
-  if (mode.includes("LINE")) return Topology.Lines;
-  if (mode.includes("POINT")) return Topology.Points;
-  return Topology.Triangles;
+  return GlReader.topologyOf(name);
 }
 
 /**
  * VulkanReader.AllShaderBlocks (VulkanReader.Device.cs), which the C# calls: the uniform blocks / cbuffers of every
- * shader of the project (with several pipelines, the first shader alone may have none), each block type once. A copy,
- * as glTopologyOf.
+ * shader of the project (with several pipelines, the first shader alone may have none), each block type once. A copy:
+ * the Vulkan reader is ported separately (merge: import VulkanReader's once it is there).
  */
 function allShaderBlocks(project: GpuProject, extensions: string[], ...known: ShaderProgram[]): A.Global[] {
   const programs: ShaderProgram[] = [...known];
