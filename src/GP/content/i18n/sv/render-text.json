@@ -68,6 +68,22 @@
         "vulkan": "`for (GameObject& tile : level.Bricks) if (!tile.IsSolid && !tile.Destroyed) return false; return true;` – `RenderText(Text, \"You WON!!!\", 320.0f, game.Height / 2.0f - 20.0f, 1.0f, glm::vec3(0.0f, 1.0f, 0.0f));` och andra raden vid (130, Height / 2) i (1, 1, 0).",
         "d3d12": "`for (GameObject& tile : level.Bricks) if (!tile.IsSolid && !tile.Destroyed) return false; return true;` – `RenderText(Text, \"You WON!!!\", 320.0f, game.Height / 2.0f - 20.0f, 1.0f, XMFLOAT3(0.0f, 1.0f, 0.0f));` och andra raden vid (130, Height / 2) i (1, 1, 0). ESC stänger redan fönstret (WindowProc)."
       }
+    },
+    "ex-lives-colour": {
+      "text": "Rita livräknaren i guld, (1.0, 0.8, 0.2), och låt menytexten vara vit.",
+      "hint": "`RenderText` tar en färg som sista argument; utan den används standardfärgen vitt."
+    },
+    "ex-five-lives": {
+      "text": "Ge spelaren fem liv i stället för tre – även när ett nytt spel börjar efter att alla gått förlorade.",
+      "hint": "Två ställen: standardvärdet i `struct Game`, och där liven återställs när det sista har gått förlorat."
+    },
+    "ex-skip-menu": {
+      "text": "Hoppa över menyn: starta spelet i det aktiva läget, så att bollen skjuts iväg av det inspelade mellanslaget direkt.",
+      "hint": "Läget spelet börjar i är standardvärdet för `State` i `struct Game`. Vilken text ritar `Render` då, och vad visar räknaren när bollen har gått förlorad?"
+    },
+    "ex-title": {
+      "text": "Visa spelets namn ovanför menyn: ”HEDGEROW” i dubbel storlek, en bit ovanför ”Press ENTER to start”.",
+      "hint": "Ett anrop till av `RenderText` i grenen för `GAME_MENU` i `Render`, skala 2.0, till exempel på (290, höjden / 2 − 70). Här är y textens överkant och pekar nedåt, som allt annat i spelet."
     }
   }
 }

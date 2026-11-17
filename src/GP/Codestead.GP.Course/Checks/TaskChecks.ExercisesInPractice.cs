@@ -53,6 +53,9 @@ public static partial class TaskChecks
     /// <summary>An orange brick darkened to about a third (81, 40, 0).</summary>
     private static bool IpExDimOrange(double[] p) => p[0] > 0.18 && p[0] < 0.45 && p[1] < p[0] * 0.65 && p[1] > p[0] * 0.3 && p[2] < 0.05;
 
+    /// <summary>Gold text (1.0, 0.8, 0.2).</summary>
+    private static bool IpExGold(double[] p) => p[0] > 0.9 && p[1] > 0.7 && p[1] < 0.9 && p[2] < 0.35;
+
     private static Dictionary<string, Dictionary<string, TaskCheck>> ExercisesInPractice => new()
     {
         ["debugging"] = new()
@@ -176,6 +179,18 @@ public static partial class TaskChecks
             ["ex-short-confuse"] = c => c.Drew && At(c, 3.0, 200, 250, InvertedSky) && At(c, 4.0, 200, 250, DuskSky) && At(c, 4.0, 358, 588, IpExBrass),
             // Without the confuse test power-up: the normal picture at 3.0 s with the 150-pixel paddle (brass ends at 358 and 492).
             ["ex-no-confuse"] = c => c.Drew && At(c, 3.0, 200, 250, DuskSky) && At(c, 3.0, 358, 588, IpExBrass) && At(c, 3.0, 492, 588, IpExBrass),
+        },
+        ["render-text"] = new()
+        {
+            // "Lives:3" in gold (1.0, 0.8, 0.2); the menu still white.
+            ["ex-lives-colour"] = c => c.Drew && At(c, 3.0, 8, 12, IpExGold) && At(c, 3.0, 87, 17, IpExGold) && At(c, 3.0, 325, 302, TextWhite),
+            // "Lives:5": the 5's upright stroke at the upper left of the digit, where the 3 is open.
+            ["ex-five-lives"] = c => c.Drew && At(c, 3.0, 8, 12, TextWhite) && At(c, 3.0, 76, 11, TextWhite) && At(c, 3.0, 86, 16, TextWhite),
+            // No menu: the game runs from the start – at 3.0 s "Lives:2" (the ball was lost in frame 151), no menu text.
+            ["ex-skip-menu"] = c => c.Drew && At(c, 3.0, 81, 17, TextWhite) && At(c, 3.0, 87, 17, p => !TextWhite(p)) && At(c, 3.0, 325, 302, p => !TextWhite(p))
+                && At(c, 3.0, 312, 331, p => !TextWhite(p)),
+            // "HEDGEROW" at twice the size above the menu's two lines.
+            ["ex-title"] = c => c.Drew && IpExCountIn(c, 3.0, 290, 215, 590, 265, TextWhite) >= 10 && At(c, 3.0, 325, 302, TextWhite) && At(c, 3.0, 312, 331, TextWhite),
         },
     };
 }

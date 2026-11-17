@@ -68,6 +68,22 @@
         "vulkan": "`for (GameObject& tile : level.Bricks) if (!tile.IsSolid && !tile.Destroyed) return false; return true;` – `RenderText(Text, \"You WON!!!\", 320.0f, game.Height / 2.0f - 20.0f, 1.0f, glm::vec3(0.0f, 1.0f, 0.0f));` and the second line at (130, Height / 2) in (1, 1, 0).",
         "d3d12": "`for (GameObject& tile : level.Bricks) if (!tile.IsSolid && !tile.Destroyed) return false; return true;` – `RenderText(Text, \"You WON!!!\", 320.0f, game.Height / 2.0f - 20.0f, 1.0f, XMFLOAT3(0.0f, 1.0f, 0.0f));` and the second line at (130, Height / 2) in (1, 1, 0). ESC already closes the window (WindowProc)."
       }
+    },
+    "ex-lives-colour": {
+      "text": "Draw the lives counter in gold, (1.0, 0.8, 0.2), and keep the menu text white.",
+      "hint": "`RenderText` takes a colour as its last argument; without one it uses the default, white."
+    },
+    "ex-five-lives": {
+      "text": "Give the player five lives instead of three – also when a new game starts after losing them all.",
+      "hint": "Two places: the default value in `struct Game`, and where the lives are set back after the last one is lost."
+    },
+    "ex-skip-menu": {
+      "text": "Skip the menu: start the game in the active state, so the ball is launched by the scripted space bar straight away.",
+      "hint": "The state the game starts in is the default of `State` in `struct Game`. Which text does `Render` draw then, and what does the counter show after the ball is lost?"
+    },
+    "ex-title": {
+      "text": "Show the game's name above the menu: “HEDGEROW” at twice the normal size, a little above “Press ENTER to start”.",
+      "hint": "One more `RenderText` call in the `GAME_MENU` branch of `Render`, scale 2.0, at for example (290, height / 2 − 70). Here y is the top of the text and points down, like everything else in the game."
     }
   }
 }

@@ -1,0 +1,33 @@
+=== task: ex-lives-colour
+--- file: main.cpp
+--- find:
+        RenderText(Text, "Lives:" + std::to_string(game.Lives), 5.0f, 5.0f, 1.0f);
+--- replace:
+        RenderText(Text, "Lives:" + std::to_string(game.Lives), 5.0f, 5.0f, 1.0f, XMFLOAT3(1.0f, 0.8f, 0.2f));
+
+=== task: ex-five-lives
+--- file: main.cpp
+--- find:
+    unsigned int            Lives = 3;
+--- replace:
+    unsigned int            Lives = 5;
+--- file: main.cpp
+--- find:
+    game.Lives = 3;
+--- replace:
+    game.Lives = 5;
+
+=== task: ex-skip-menu
+--- file: main.cpp
+--- find:
+    GameState               State = GAME_MENU;
+--- replace:
+    GameState               State = GAME_ACTIVE;
+
+=== task: ex-title
+--- file: main.cpp
+--- find:
+        RenderText(Text, "Press ENTER to start", 250.0f, game.Height / 2.0f, 1.0f);
+--- replace:
+        RenderText(Text, "HEDGEROW", 290.0f, game.Height / 2.0f - 70.0f, 2.0f);
+        RenderText(Text, "Press ENTER to start", 250.0f, game.Height / 2.0f, 1.0f);
