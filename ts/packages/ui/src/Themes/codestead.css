@@ -12,6 +12,7 @@
   Each has a "soft" background, and on-accent is the text colour on accent.
 
   The theme follows the system unless the root element has data-theme="light" or "dark" (ThemeSwitcher).
+  The controls' styles (buttons, inputs) apply inside an element with class "cs-root" (LearningWindowView has it).
   Each --cs-x variable is the C# resource CsX (CsSurface2 → --cs-surface-2).
 */
 
@@ -188,14 +189,17 @@ body,
   letter-spacing: 0.8px;
 }
 
+/* A text block (Avalonia's TextBlock): spaces and line breaks as written, wrapped. */
 .cs-text {
   overflow-wrap: anywhere;
-  white-space: pre-line;
+  white-space: pre-wrap;
 }
 
 /* ---------- Buttons (Fluent's button, then the Codestead classes) ---------- */
 .cs-root button {
-  font: inherit;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: normal;
   color: inherit;
   background: var(--cs-control);
   border: 1px solid transparent;
@@ -355,7 +359,8 @@ body,
 .cs-root select,
 .cs-root input[type="text"],
 .cs-root textarea {
-  font: inherit;
+  font-family: inherit;
+  font-size: 14px;
   color: var(--cs-text);
   background: var(--cs-surface);
   border: 1px solid var(--cs-border);
@@ -675,6 +680,7 @@ body,
 }
 
 .cs-dialog-body {
+  flex: 1 1 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -768,6 +774,7 @@ body,
 
 /* ---------- Checkpoints (CheckpointView) ---------- */
 .cs-checkpoint {
+  font-size: 14px;
   border-radius: 10px;
   border: 1px solid var(--cs-border);
   background: var(--cs-surface);
@@ -806,7 +813,8 @@ body,
 }
 
 .cs-checkpoint-option input {
-  margin-top: 6px;
+  /* In line with the option's first line of text (a paragraph: 6px margin, 1.6 line height). */
+  margin-top: 11px;
   flex: none;
 }
 

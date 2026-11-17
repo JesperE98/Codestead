@@ -85,6 +85,7 @@ export class LearningWindow extends Store {
   renderCount = 0;
 
   private readonly checkpointCounts = new Map<string, number>();
+  private wasOpened = false;
   private stopListening: (() => void) | null = null;
 
   constructor(tool: LearningTool, options: LearningWindowOptions) {
@@ -365,7 +366,8 @@ export class LearningWindow extends Store {
 
   /** The window was opened (the view is on screen): the news after an update, the update offer, the game's welcome. */
   opened(): void {
-    if (this.smokeTest) return;
+    if (this.wasOpened || this.smokeTest) return;
+    this.wasOpened = true;
     this.tool.focusWorkbench();
     // After an update: what changed. The update offer waits until the news are closed.
     if (!this.showNewsAfterUpdate()) void this.offerUpdate();
