@@ -1,0 +1,58 @@
+=== task: ex-offset-left
+--- file: main.cpp
+--- find:
+    offsetConstants.xOffset = 0.5f;
+--- replace:
+    offsetConstants.xOffset = -0.5f;
+
+=== task: ex-invert
+--- file: shaders.hlsl
+--- find:
+    return input.color;
+}
+--- replace:
+    return float4(1.0f - input.color.rgb, 1.0f);
+}
+
+=== task: ex-pulse
+--- file: shaders.hlsl
+--- find:
+    float xOffset;
+};
+--- replace:
+    float xOffset;
+    float brightness;
+};
+--- file: shaders.hlsl
+--- find:
+    result.color = position;    // the position as the colour: x -> red, y -> green, z -> blue
+--- replace:
+    result.color = float4(position.xyz * brightness, 1.0f);    // the position as the colour, dimmed by brightness
+--- file: main.cpp
+--- find:
+#include <stdexcept>
+--- replace:
+#include <stdexcept>
+#include <chrono>
+#include <cmath>
+--- file: main.cpp
+--- find:
+    struct OffsetConstants
+    {
+        float xOffset;
+    };
+--- replace:
+    struct OffsetConstants
+    {
+        float xOffset;
+        float brightness;
+    };
+--- file: main.cpp
+--- find:
+    offsetConstants.xOffset = 0.5f;
+--- replace:
+    offsetConstants.xOffset = 0.5f;
+    static auto startTime = std::chrono::high_resolution_clock::now();
+    auto currentTime = std::chrono::high_resolution_clock::now();
+    float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+    offsetConstants.brightness = std::sin(time) / 2.0f + 0.5f;

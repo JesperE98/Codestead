@@ -1,0 +1,14 @@
+=== task: ex-texture-limit
+--- file: main.cpp
+--- find:
+        if (physicalDevice == VK_NULL_HANDLE) {
+            throw std::runtime_error("failed to find a suitable GPU!");
+        }
+--- replace:
+        if (physicalDevice == VK_NULL_HANDLE) {
+            throw std::runtime_error("failed to find a suitable GPU!");
+        }
+
+        VkPhysicalDeviceProperties properties;
+        vkGetPhysicalDeviceProperties(physicalDevice, &properties);
+        std::cout << "largest 2D texture: " << properties.limits.maxImageDimension2D << " pixels" << std::endl;

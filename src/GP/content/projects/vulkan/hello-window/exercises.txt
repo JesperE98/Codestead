@@ -1,0 +1,27 @@
+=== task: ex-clear-colour
+--- file: main.cpp
+--- find:
+        VkClearValue clearColor = {{{0.2f, 0.3f, 0.3f, 1.0f}}};
+--- replace:
+        VkClearValue clearColor = {{{0.6f, 0.2f, 0.4f, 1.0f}}};
+
+=== task: ex-window-size
+--- file: main.cpp
+--- find:
+const uint32_t WIDTH = 800;
+const uint32_t HEIGHT = 600;
+--- replace:
+const uint32_t WIDTH = 1024;
+const uint32_t HEIGHT = 576;
+
+=== task: ex-quit-key
+--- file: main.cpp
+--- find:
+        while (!glfwWindowShouldClose(window)) {
+            glfwPollEvents();
+--- replace:
+        while (!glfwWindowShouldClose(window)) {
+            glfwPollEvents();
+            if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+                glfwSetWindowShouldClose(window, GLFW_TRUE);
+            }

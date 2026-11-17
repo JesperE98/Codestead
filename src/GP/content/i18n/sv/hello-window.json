@@ -150,6 +150,34 @@
       "hint": {
         "d3d12": "Lägg till en `else`-gren till `if (PeekMessage(...))`. `Present(1, 0)` väntar på nästa vertical blank (vsync)."
       }
+    },
+    "ex-clear-colour": {
+      "text": "Rensa fönstret till hallonrött i stället: färgen (0.6, 0.2, 0.4).",
+      "hint": {
+        "opengl": "Bara rensningsfärgen ändras: de fyra talen i `glClearColor` är rött, grönt, blått och alfa.",
+        "vulkan": "Bara rensningsfärgen ändras: det `VkClearValue` som render passet rensar bilden till.",
+        "d3d12": "Bara rensningsfärgen ändras: arrayen `clearColor` som `ClearRenderTargetView` använder."
+      }
+    },
+    "ex-window-size": {
+      "text": "Gör fönstret 1024 × 576 pixlar (ett brett 16:9-fönster) i stället för 800 × 600.",
+      "hint": {
+        "opengl": "Storleken anges på ett ställe: konstanterna `SCR_WIDTH` och `SCR_HEIGHT` högst upp. Viewporten följer med av sig själv genom `framebuffer_size_callback`.",
+        "vulkan": "Storleken anges på ett ställe: konstanterna `WIDTH` och `HEIGHT` högst upp. Swap chainen tar sin storlek från fönstrets framebuffer.",
+        "d3d12": "Storleken anges på ett ställe: `width` och `height` i början av `wWinMain`. Både `AdjustWindowRect` och swap chainen använder dem."
+      }
+    },
+    "ex-quit-key": {
+      "text": {
+        "opengl": "Låt Q-tangenten också stänga fönstret, inte bara Escape.",
+        "vulkan": "Låt Escape-tangenten stänga fönstret, som i kapitlets OpenGL-version.",
+        "d3d12": "Låt Q-tangenten också stänga fönstret, inte bara Escape."
+      },
+      "hint": {
+        "opengl": "I `processInput`: ett `glfwGetKey`-test till, med `GLFW_KEY_Q` – slå ihop det med Escape-testet med `||` eller ge det en egen `if`.",
+        "vulkan": "I `mainLoop`, efter `glfwPollEvents()`: om `glfwGetKey(window, GLFW_KEY_ESCAPE)` är `GLFW_PRESS`, anropa `glfwSetWindowShouldClose` – loopen slutar vid nästa test.",
+        "d3d12": "I `WindowProc`, under `WM_KEYDOWN`: en bokstavstangents virtual-key-kod är dess versal, så jämför `wParam` med `'Q'` också."
+      }
     }
   }
 }

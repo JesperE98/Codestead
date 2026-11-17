@@ -1,0 +1,33 @@
+=== task: ex-tint
+--- file: shaders.hlsl
+--- find:
+    return lerp(texture1.Sample(clampSampler, input.texCoord), texture2.Sample(wrapSampler, float2(1.0f - input.texCoord.x, input.texCoord.y)), mixValue);
+--- replace:
+    return lerp(texture1.Sample(clampSampler, input.texCoord), texture2.Sample(wrapSampler, float2(1.0f - input.texCoord.x, input.texCoord.y)), mixValue) * input.color;
+
+=== task: ex-grey
+--- file: shaders.hlsl
+--- find:
+    return lerp(texture1.Sample(clampSampler, input.texCoord), texture2.Sample(wrapSampler, float2(1.0f - input.texCoord.x, input.texCoord.y)), mixValue);
+--- replace:
+    float4 colour = lerp(texture1.Sample(clampSampler, input.texCoord), texture2.Sample(wrapSampler, float2(1.0f - input.texCoord.x, input.texCoord.y)), mixValue);
+    float grey = dot(colour.rgb, float3(0.299f, 0.587f, 0.114f));
+    return float4(grey, grey, grey, 1.0f);
+
+=== task: ex-pixels
+--- file: main.cpp
+--- find:
+            { { 0.5f, 0.5f, 0.0f },   { 1.0f, 0.0f, 0.0f },  { 2.0f, 0.0f } },    // top right: red
+            { { 0.5f, -0.5f, 0.0f },  { 0.0f, 1.0f, 0.0f },  { 2.0f, 2.0f } },    // bottom right: green
+            { { -0.5f, -0.5f, 0.0f }, { 0.0f, 0.0f, 1.0f },  { 0.0f, 2.0f } },    // bottom left: blue
+            { { -0.5f, 0.5f, 0.0f },  { 1.0f, 1.0f, 0.0f },  { 0.0f, 0.0f } }     // top left: yellow
+--- replace:
+            { { 0.5f, 0.5f, 0.0f },   { 1.0f, 0.0f, 0.0f },  { 0.55f, 0.45f } },  // top right: red
+            { { 0.5f, -0.5f, 0.0f },  { 0.0f, 1.0f, 0.0f },  { 0.55f, 0.55f } },  // bottom right: green
+            { { -0.5f, -0.5f, 0.0f }, { 0.0f, 0.0f, 1.0f },  { 0.45f, 0.55f } },  // bottom left: blue
+            { { -0.5f, 0.5f, 0.0f },  { 1.0f, 1.0f, 0.0f },  { 0.45f, 0.45f } }   // top left: yellow
+--- file: main.cpp
+--- find:
+        samplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+--- replace:
+        samplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;

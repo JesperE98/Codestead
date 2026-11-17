@@ -1,0 +1,24 @@
+=== task: ex-clear-colour
+--- file: main.cpp
+--- find:
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+--- replace:
+        glClearColor(0.6f, 0.2f, 0.4f, 1.0f);
+
+=== task: ex-window-size
+--- file: main.cpp
+--- find:
+const unsigned int SCR_WIDTH = 800;
+const unsigned int SCR_HEIGHT = 600;
+--- replace:
+const unsigned int SCR_WIDTH = 1024;
+const unsigned int SCR_HEIGHT = 576;
+
+=== task: ex-quit-key
+--- file: main.cpp
+--- find:
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);
+--- replace:
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);

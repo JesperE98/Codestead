@@ -1,0 +1,33 @@
+=== task: ex-offset-left
+--- file: main.cpp
+--- find:
+        float offset = 0.5f;
+--- replace:
+        float offset = -0.5f;
+
+=== task: ex-invert
+--- file: shader.fs
+--- find:
+    FragColor = vec4(ourPosition, 1.0); // note how the position value is linearly interpolated to get all the different colors
+--- replace:
+    FragColor = vec4(1.0 - ourPosition, 1.0); // the inverted colour
+
+=== task: ex-pulse
+--- file: shader.fs
+--- find:
+in vec3 ourPosition;
+--- replace:
+in vec3 ourPosition;
+
+uniform float brightness;
+--- file: shader.fs
+--- find:
+    FragColor = vec4(ourPosition, 1.0); // note how the position value is linearly interpolated to get all the different colors
+--- replace:
+    FragColor = vec4(ourPosition * brightness, 1.0); // the position as the colour, dimmed by brightness
+--- file: main.cpp
+--- find:
+        ourShader.setFloat("xOffset", offset);
+--- replace:
+        ourShader.setFloat("xOffset", offset);
+        ourShader.setFloat("brightness", static_cast<float>(sin(glfwGetTime()) / 2.0 + 0.5));
