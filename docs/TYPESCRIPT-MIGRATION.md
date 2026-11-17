@@ -45,7 +45,34 @@ TypeScript-versionerna kan lika mycket; då byter vi.
 ## Läge
 - [x] 1. Grund – `ts/` (npm-workspace, TypeScript, Vitest), `@codestead/common`, CI-jobbet `TypeScript` i ci.yml
 - [x] 2. Gemensam kärna och UI – `learning` och `ui` (React): lärfönstret, markdown, dialoger, spelvyer; samma sparfiler som C#
-- [ ] 3. Linux – `linux-shell` (hela skalet, alla kommandon) och `linux-content` (alla kapitel lösta av sina lösningar i 4 distar och 11 språk) klara; kvar: appen `ts/apps/linux`
+- [x] 3. Linux – `linux-shell` (hela skalet, alla kommandon), `linux-content` (alla kapitel lösta av sina lösningar i 4 distar och 11 språk) och appen `ts/apps/linux` (Electron, terminalen i React, `--smoke-test`, e2e-test)
 - [ ] 4. GP
 - [ ] 5. Hubben och paketering
 - [ ] 6. Byte
+
+## Appen Codestead Linux (`ts/apps/linux`)
+Electron-appen: samma lärfönster (`@codestead/ui`) med Linux-verktyget och den simulerade terminalen.
+
+| C# | TypeScript |
+|---|---|
+| `Program.cs`, `AppHost` (`--version`, `--smoke-test`) | `electron/main.ts` |
+| `App.axaml(.cs)` (tema, Linux-färgen, lärfönstret) | `src/App.tsx`, `src/main.tsx` |
+| `ProductInfo.cs` (ur `build/Codestead.props`) | `src/ProductInfo.ts` (läser samma fil) |
+| `LinuxTool.cs`, `LinuxTool.Terminal.cs` | `src/LinuxTool.tsx`, `src/LinuxTool.Terminal.tsx` (titelraden) |
+| `Codestead.Terminal/TerminalView.cs`, `Ansi.ToInlines` | `src/Terminal/TerminalView.tsx`, `src/Terminal/AnsiText.tsx` |
+| `LearningWindow.SmokeTest.cs` | `src/SmokeTest.ts` |
+| `Codestead.UI.Storage` | `electron/FileStorage.ts` (samma mapp och filer: `state.json`, `shell.<distro>.json` …) |
+
+- **Bygga:** `npm run build` i `ts/apps/linux` – Vite bygger sidan till `dist/` och sedan, med
+  `vite.electron.config.ts`, main-processen och preload-skriptet var för sig till `dist-electron/main.cjs` och
+  `dist-electron/preload.cjs` (CommonJS: ett sandlådat preload-skript kan varken vara en ES-modul eller läsa egna filer).
+- **Köra:** `npm start` (efter `build`); `npm run smoke-test` skriver `SMOKE OK …`. Som root (container, CI) behöver
+  Electron `--no-sandbox`. Under utveckling: `npm run dev` (Vite) och `VITE_DEV_SERVER_URL=http://localhost:5173 npm start`.
+  `CODESTEAD_DATA_DIR` styr datamappen som i C#.
+- **Testa:** `npm test` (Vitest: terminalen, verktyget, lagringen) och `npm run test:e2e` (bygger appen och kör den med
+  Playwrights `_electron`: första kapitlet, `ls`, frågorna, första uppgiften bockas av, omstart, `--smoke-test`;
+  Playwright måste kunna hittas med `require("playwright")`, utan skärm startas Xvfb, `E2E_SHOTS=<mapp>` sparar bilder).
+- Fönstret: `contextIsolation`, ingen `nodeIntegration`, `sandbox`; preload ger `window.codestead` (`electron/api.ts`):
+  lagring (synkron, som i C#), webblänkar (bara http/https), fil- och mappväljare, version, avsluta.
+- Kvar (fas 5): uppdateringar (Velopack i C#; nu "inga uppdateringar") och paketering; typsnittet Inter följer inte med
+  än (C# bäddar in det), så systemets typsnitt används.
