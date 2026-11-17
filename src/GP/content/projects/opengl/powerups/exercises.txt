@@ -1,0 +1,27 @@
+=== task: ex-slow-fall
+--- file: main.cpp
+--- find:
+const glm::vec2 VELOCITY(0.0f, 150.0f);
+--- replace:
+const glm::vec2 VELOCITY(0.0f, 75.0f);
+
+=== task: ex-big-boost
+--- file: main.cpp
+--- find:
+        Player.Size.x += 50;
+--- replace:
+        Player.Size.x += 100;
+
+=== task: ex-short-confuse
+--- file: main.cpp
+--- find:
+    game.PowerUps.push_back(MakePowerUp("confuse", glm::vec3(1.0f, 0.3f, 0.3f), 15.0f, glm::vec2(480.0f, 160.0f), GetTexture("powerup_confuse").ID));
+--- replace:
+    game.PowerUps.push_back(MakePowerUp("confuse", glm::vec3(1.0f, 0.3f, 0.3f), 1.0f, glm::vec2(480.0f, 160.0f), GetTexture("powerup_confuse").ID));
+
+=== task: ex-no-confuse
+--- file: main.cpp
+--- find:
+    game.PowerUps.push_back(MakePowerUp("confuse", glm::vec3(1.0f, 0.3f, 0.3f), 15.0f, glm::vec2(480.0f, 160.0f), GetTexture("powerup_confuse").ID));
+
+--- replace:

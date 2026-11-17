@@ -164,5 +164,18 @@ public static partial class TaskChecks
             // Darker towards the corners: the corner bricks dim orange, the middle of the window as before.
             ["ex-vignette"] = c => c.Drew && At(c, 1.0, 13, 29, IpExDimOrange) && At(c, 1.0, 787, 29, IpExDimOrange) && At(c, 1.0, 400, 300, DuskSky),
         },
+        ["powerups"] = new()
+        {
+            // Half the falling speed: at 1.5 s the test power-ups are at y ≈ 272 (not yet at 385), and at 3.0 s none has
+            // reached the paddle – the normal picture.
+            ["ex-slow-fall"] = c => c.Drew && At(c, 1.5, 55, 280, p => Pill(p, 0.5, 0.5, 1.0)) && At(c, 1.5, 55, 395, p => p[2] < 0.5)
+                && At(c, 3.0, 200, 250, DuskSky) && At(c, 3.0, 358, 588, IpExBrass),
+            // pad-size-increase adds 100: the confused picture at 3.0 s with a 200-pixel paddle (mirrored at the top, reaching x = 270).
+            ["ex-big-boost"] = c => c.Drew && At(c, 3.0, 270, 10, InvertedPaddle) && At(c, 3.0, 442, 12, InvertedPaddle) && At(c, 3.0, 200, 250, InvertedSky),
+            // Confuse for one second (caught in frame 161): still confused at 3.0 s, the normal picture again at 4.0 s.
+            ["ex-short-confuse"] = c => c.Drew && At(c, 3.0, 200, 250, InvertedSky) && At(c, 4.0, 200, 250, DuskSky) && At(c, 4.0, 358, 588, IpExBrass),
+            // Without the confuse test power-up: the normal picture at 3.0 s with the 150-pixel paddle (brass ends at 358 and 492).
+            ["ex-no-confuse"] = c => c.Drew && At(c, 3.0, 200, 250, DuskSky) && At(c, 3.0, 358, 588, IpExBrass) && At(c, 3.0, 492, 588, IpExBrass),
+        },
     };
 }

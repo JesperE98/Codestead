@@ -52,6 +52,22 @@
         "vulkan": "Lägg kollisionshanteringen i `if (!(Ball.PassThrough && !box.IsSolid)) { … }`. ResetPlayer: `Effects.Chaos = Effects.Confuse = false; Ball.PassThrough = Ball.Sticky = false; Player.Color = glm::vec3(1.0f); Ball.Color = glm::vec3(1.0f);`",
         "d3d12": "Lägg kollisionshanteringen i `if (!(Ball.PassThrough && !box.IsSolid)) { … }`. ResetPlayer: `Effects.Chaos = Effects.Confuse = false; Ball.PassThrough = Ball.Sticky = false; Player.Color = XMFLOAT3(1.0f, 1.0f, 1.0f); Ball.Color = XMFLOAT3(1.0f, 1.0f, 1.0f);`"
       }
+    },
+    "ex-slow-fall": {
+      "text": "Låt power-upsen falla med halva farten. Hinner någon av test-power-upsen ner till racketet inom tre sekunder nu?",
+      "hint": "Varje power-up får samma hastighetskonstant när den skapas; `UpdatePowerUps` flyttar den med hastighet × `dt`."
+    },
+    "ex-big-boost": {
+      "text": "Låt power-upen pad-size-increase göra racketet 100 pixlar bredare i stället för 50.",
+      "hint": "Titta i `ActivatePowerUp`, i grenen för typen \"pad-size-increase\"."
+    },
+    "ex-short-confuse": {
+      "text": "Låt test-power-upen confuse (den som `Init` lägger i rad 4) vara i bara 1 sekund i stället för 15.",
+      "hint": "Varaktigheten är ett argument till `MakePowerUp`. När den tar slut stänger `UpdatePowerUps` av effekten igen."
+    },
+    "ex-no-confuse": {
+      "text": "Ta bort confuse-power-upen från testraden i `Init`, så att racketet bara fångar pad-size-increase.",
+      "hint": "En `push_back` mindre. De andra test-power-upsen ligger kvar där de är."
     }
   }
 }
