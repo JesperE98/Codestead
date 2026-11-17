@@ -332,6 +332,14 @@ klar) med knappen **Mark as done**, och bilden av **förväntat resultat**: kurs
 - Snabbtestet sparar första lektionens startfiler och lösning i en tillfällig mapp med en egen struktur (huvudfilen
   flyttad till `src/<kapitel>.cpp`), väljer huvudfilen, kör *Check my code* och kräver att uppgiften bockas av.
 
+**Övningar.** Efter kapitlets steg (learnopengls genomgång, `edits.txt`) kan ett kapitel ha övningar:
+`projects/<api>/<kapitel>/exercises.txt` i samma format, med id som börjar på `ex-`. Varje övning är en egen ändring av
+kapitlets färdiga program (`GpCourse.SolutionProject`), inte av en annan övning. Texterna ligger bland uppgifterna i
+`i18n/<språk>/<kapitel>.json`, kontrollerna i `Checks/TaskChecks.Exercises*.cs` (en övning utan kontroll bockar eleven
+i själv). Panelen visar stegen under "Follow along" och övningarna under "Exercises" (`TaskInfo.Section`).
+`TaskTests.EachExerciseIsSolvedByItsSolution` kräver att varje övning byggs rent och att en övning med kontroll inte
+godkänns av kapitlets program men av sin lösning; `CODESTEAD_GP_CHAPTERS=a,b` kör testerna för några kapitel.
+
 **Bilder i kapitlen.** Ett stycke som bara är en bild, `![alt](images/namn.webp "bildtext")`, visas av textvyn
 (`AnimatedImage`: PNG, JPEG, WebP och animerad GIF/WebP; bildrutor på en sekund eller mer är ett bildspel som tonar
 över; ett klick pausar). Bilderna ligger i `src/GP/content/images/` – `sv/`/`en/` för bilder med text i, annars

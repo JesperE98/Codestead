@@ -4,24 +4,31 @@
     "date": "2026-11-17",
     "changes": {
       "en": [
+        "**Exercises in every chapter**: after the chapter's steps (now under **Follow along**) come **Exercises** – about 220 small tasks of their own that test what the chapter taught, like the exercises in a maths book: change a colour, put a roof on the rectangle, a sepia filter, gold balls, a slower ball. Each starts from the chapter's finished program, has a hint, a solution in its own window and a picture of the expected result, and **Check my code** checks it.",
         "Every window that opens in the app can be closed again – with the ✕ in its corner, Escape or a click outside. The enlarged picture of an expected result used to stay open until the app was restarted."
       ],
       "sv": [
+        "**Övningar i varje kapitel**: efter kapitlets steg (nu under **Följ med**) kommer **Övningar** – runt 220 egna små uppgifter som testar det kapitlet lärde ut, som övningarna i en mattebok: byt en färg, sätt ett tak på rektangeln, ett sepiafilter, guldkulor, en långsammare boll. Varje övning utgår från kapitlets färdiga program, har ett tips, en lösning i eget fönster och en bild av förväntat resultat, och **Kontrollera min kod** rättar den.",
         "Varje fönster som öppnas i appen går att stänga igen – med ✕ i hörnet, Escape eller ett klick utanför. Den förstorade bilden av ett förväntat resultat låg tidigare kvar tills appen startades om."
       ],
       "de": [
+        "**Übungen in jedem Kapitel**: Nach den Schritten des Kapitels (jetzt unter **Mitmachen**) kommen **Übungen** – rund 220 eigene kleine Aufgaben, die prüfen, was das Kapitel vermittelt hat, wie die Übungen in einem Mathebuch: eine Farbe ändern, ein Dach auf das Rechteck setzen, ein Sepiafilter, goldene Kugeln, ein langsamerer Ball. Jede geht vom fertigen Programm des Kapitels aus, hat einen Tipp, eine Lösung im eigenen Fenster und ein Bild des erwarteten Ergebnisses, und **Meinen Code prüfen** prüft sie.",
         "Jedes Fenster, das sich in der App öffnet, lässt sich wieder schließen – mit dem ✕ in der Ecke, Escape oder einem Klick daneben. Das vergrößerte Bild eines erwarteten Ergebnisses blieb bisher offen, bis die App neu gestartet wurde."
       ],
       "fr": [
+        "**Des exercices dans chaque chapitre** : après les étapes du chapitre (désormais sous **Pas à pas**) viennent des **Exercices** – environ 220 petites tâches à part qui testent ce que le chapitre a enseigné, comme les exercices d'un livre de maths : changer une couleur, poser un toit sur le rectangle, un filtre sépia, des boules d'or, une balle plus lente. Chacun part du programme terminé du chapitre, a un indice, une solution dans sa propre fenêtre et une image du résultat attendu, et **Vérifier mon code** le corrige.",
         "Chaque fenêtre qui s'ouvre dans l'application peut être refermée – avec le ✕ dans son coin, Échap ou un clic à l'extérieur. L'image agrandie d'un résultat attendu restait auparavant ouverte jusqu'au redémarrage de l'application."
       ],
       "es": [
+        "**Ejercicios en cada capítulo**: tras los pasos del capítulo (ahora bajo **Paso a paso**) vienen **Ejercicios**: unas 220 pequeñas tareas propias que ponen a prueba lo que enseñó el capítulo, como los ejercicios de un libro de matemáticas: cambiar un color, poner un tejado al rectángulo, un filtro sepia, bolas de oro, una pelota más lenta. Cada uno parte del programa terminado del capítulo, tiene una pista, una solución en su propia ventana y una imagen del resultado esperado, y **Revisar mi código** lo corrige.",
         "Cada ventana que se abre en la aplicación se puede volver a cerrar: con la ✕ de su esquina, Escape o un clic fuera. La imagen ampliada de un resultado esperado se quedaba abierta hasta reiniciar la aplicación."
       ],
       "zh": [
+        "**每章都有练习**：在本章步骤（现在位于**跟着做**下）之后是**练习**——约 220 个独立的小任务，用来检验本章所学，就像数学书里的练习：改一种颜色、给矩形加个屋顶、做一个棕褐色滤镜、金色小球、让球变慢。每个练习都从本章完成的程序出发，带有提示、在单独窗口中显示的答案和预期结果图片，并由**检查我的代码**批改。",
         "应用中打开的每个窗口都可以关闭——点击角落的 ✕、按 Esc 或点击窗口外部。之前预期结果的放大图片会一直停留，直到重启应用。"
       ],
       "ja": [
+        "**すべての章に演習**：章の手順（今は **手順どおりに** の下）の後に **演習** があります。章で学んだことを試す約 220 の独立した小さな課題で、数学の教科書の練習問題のようなものです。色を変える、長方形に屋根を付ける、セピアフィルター、金色の球、ボールを遅くする、など。各演習は章の完成したプログラムから始まり、ヒント、専用ウィンドウの解答、期待される結果の画像があり、**コードを確認** で採点されます。",
         "アプリで開いたウィンドウはすべて閉じられるようになりました。隅の ✕、Esc キー、または外側のクリックで閉じます。これまで期待される結果の拡大画像は、アプリを再起動するまで閉じられませんでした。"
       ]
     }
