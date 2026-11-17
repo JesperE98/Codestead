@@ -68,7 +68,7 @@ public static partial class TaskChecks
         ["creating-a-window"] = new()
         {
             // Nothing is run without a surface yet, so the code says it: the properties are read and the limit printed.
-            ["ex-texture-limit"] = c => c.Built && c.Has(@"vkGetPhysicalDeviceProperties \( physicalDevice ,") && c.Has(@"(?:std :: )?(?:cout|cerr) <<[^;]*\. limits \. maxImageDimension2D|printf \([^;]*\. limits \. maxImageDimension2D"),
+            ["ex-texture-limit"] = c => c.Built && c.Has(@"vkGetPhysicalDeviceProperties \( \w+ ,") && c.Has(@"(?:std :: )?(?:cout|cerr) <<[^;]*\. limits \. maxImageDimension2D|printf \([^;]*\. limits \. maxImageDimension2D"),
             // Both the adapter test and the device ask for 12_0, none for 11_0 any more.
             ["ex-feature-level"] = c => c.Built && c.Count("D3D_FEATURE_LEVEL_12_0") >= 2 && !c.Has("D3D_FEATURE_LEVEL_11_0"),
         },
