@@ -155,5 +155,20 @@ public static partial class TaskChecks
             ["ex-work-groups"] = c => c.Drew && At(c, 5, 594, p => p[2] < 0.03) && At(c, 15, 594, p => p[2] > 0.97) && At(c, 5, 584, p => p[2] > 0.97) && At(c, 15, 584, p => p[2] < 0.03)
                 && At(c, 400, 299, p => Rg(p, 0.625, 0.5)) && At(c, 0, 0, p => p[1] > 0.97),
         },
+        ["area-lights"] = new()
+        {
+            // Intensity 4 for every light: the whole floor brighter (the lit floor in front about 1.4 times), the rectangles as before.
+            ["ex-intensity"] = c => c.Drew && At(c, 400, 450, p => p[0] > 0.54) && At(c, 240, 170, p => p[1] > 0.48) && At(c, 700, 250, p => p[0] > 0.4)
+                && At(c, 680, 190, p => p[0] > 0.95 && p[1] > 0.45 && p[1] < 0.65),
+            // Roughness 0.15: sharper, brighter reflections of the lights in the floor beyond the ring's middle; the rest as before.
+            ["ex-roughness"] = c => c.Drew && At(c, 400, 140, p => p[1] > 0.47 && p[1] > p[0]) && At(c, 240, 170, p => p[1] > 0.47 && p[2] > 0.4)
+                && At(c, 700, 250, p => p[0] > 0.25 && p[0] < 0.38) && At(c, 400, 90, p => p[1] > 0.95),
+            // Light 0 red: its rectangle pure red and the floor in front of it lit red.
+            ["ex-red-light"] = c => c.Drew && At(c, 680, 190, p => p[0] > 0.95 && p[1] < 0.05 && p[2] < 0.05) && At(c, 700, 250, p => p[0] > p[1] + 0.2 && p[1] < 0.1)
+                && At(c, 400, 90, p => p[1] > 0.95 && p[0] > 0.45 && p[0] < 0.65),
+            // One-sided lights, all facing the middle: the floor outside the ring dark, inside lit as before.
+            ["ex-one-sided"] = c => c.Drew && At(c, 400, 450, p => p[0] < 0.12) && At(c, 50, 330, p => p[0] < 0.08) && At(c, 700, 250, p => p[0] < 0.12)
+                && At(c, 240, 170, p => p[1] > 0.35) && At(c, 680, 190, p => p[0] > 0.95 && p[1] > 0.45 && p[1] < 0.65),
+        },
     };
 }
