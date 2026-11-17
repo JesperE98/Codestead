@@ -86,4 +86,5 @@ export { CppStatement } from "./Readers/CppStatement.js";
 export { CppStatements } from "./Readers/CppStatements.js";
 import "./Readers/VulkanReader.js";
 export { VulkanReader } from "./Readers/VulkanReader.js";
-// import "./Readers/D3D12Reader.js";
+import "./Readers/D3D12Reader.js";
+export { D3D12Reader } from "./Readers/D3D12Reader.js";
