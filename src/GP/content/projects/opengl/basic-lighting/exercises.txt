@@ -1,0 +1,30 @@
+=== task: ex-ambient
+--- file: basic_lighting.fs
+--- find:
+    float ambientStrength = 0.1;
+--- replace:
+    float ambientStrength = 0.3;
+
+=== task: ex-shininess
+--- file: basic_lighting.fs
+--- find:
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
+--- replace:
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 4);
+
+=== task: ex-white-highlight
+--- file: basic_lighting.fs
+--- find:
+    vec3 result = (ambient + diffuse + specular) * objectColor;
+--- replace:
+    vec3 result = (ambient + diffuse) * objectColor + specular; // the highlight keeps the light's colour
+
+=== task: ex-orbit
+--- file: main.cpp
+--- find:
+        lightPos.x = static_cast<float>(1.0 + sin(glfwGetTime()) * 2.0);
+        lightPos.y = static_cast<float>(sin(glfwGetTime() / 2.0) * 1.0);
+--- replace:
+        lightPos.x = static_cast<float>(sin(glfwGetTime()) * 2.0);
+        lightPos.y = 1.0f;
+        lightPos.z = static_cast<float>(cos(glfwGetTime()) * 2.0);

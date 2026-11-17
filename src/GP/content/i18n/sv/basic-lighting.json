@@ -72,6 +72,30 @@
         "vulkan": "`lightPos.x = static_cast<float>(1.0 + std::sin(glfwGetTime()) * 2.0);` – `updateUniformBuffer()` körs före `recordCommandBuffer()`, så lampan ritas där ljuset är.",
         "d3d12": "`float time = std::chrono::duration<float, std::chrono::seconds::period>(currentFrame - startTime).count();` – `OnUpdate` körs före `PopulateCommandList`, så lampan ritas där ljuset är."
       }
+    },
+    "ex-ambient": {
+      "text": "Höj ambient-styrkan från 0.1 till 0.3. Titta på sidan som ljuset inte når – vad gör en stark ambient-del med bilden?",
+      "hint": {
+        "opengl": "`ambientStrength` i `basic_lighting.fs`.",
+        "vulkan": "`ambientStrength` i `basic_lighting.frag` – kompilera om den med `glslc`.",
+        "d3d12": "`ambientStrength` i `PSMain` i `basic_lighting.hlsl`."
+      }
+    },
+    "ex-shininess": {
+      "text": "Sänk glansen (shininess) från 32 till 4. Hur ändras högdagerns storlek och skärpa – och vilket slags material liknar kuben nu?",
+      "hint": "Glansen är exponenten i `pow` i den spekulära delen: ju mindre den är, desto långsammare avtar `spec` bort från den perfekta reflektionen."
+    },
+    "ex-white-highlight": {
+      "text": "En högdager är ljus som speglas direkt i ytan, så den borde ha ljusets färg, inte föremålets. Låt den spekulära delen hoppa över föremålets färg, så att högdagern blir vit.",
+      "hint": "Bara den sista summan ändras: multiplicera ambient + diffuse med föremålets färg och lägg till den spekulära delen efteråt."
+    },
+    "ex-orbit": {
+      "text": "Låt ljuset cirkla runt kuben i stället: på höjden 1, med radien 2, där x = 2 · sin(time) och z = 2 · cos(time).",
+      "hint": {
+        "opengl": "Byt ut de två raderna som flyttar `lightPos` i början av bildrutan: nu följer x och z tiden, y är 1. Lampan följer med av sig själv, eftersom den ritas vid `lightPos`.",
+        "vulkan": "Byt ut de två raderna som flyttar `lightPos` varje bildruta: nu följer x och z tiden, y är 1. Lampan följer med av sig själv, eftersom den ritas vid `lightPos`.",
+        "d3d12": "Byt ut de två raderna som flyttar `lightPos` varje bildruta: nu följer x och z tiden, y är 1. Lampan följer med av sig själv, eftersom den ritas vid `lightPos`."
+      }
     }
   }
 }

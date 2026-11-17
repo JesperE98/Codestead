@@ -1,0 +1,44 @@
+=== task: ex-offset-left
+--- file: main.cpp
+--- find:
+        constants.xOffset = 0.5f;
+--- replace:
+        constants.xOffset = -0.5f;
+
+=== task: ex-invert
+--- file: shaders/shader.frag
+--- find:
+    outColor = vec4(fragColor, 1.0);
+--- replace:
+    outColor = vec4(1.0 - fragColor, 1.0);
+
+=== task: ex-pulse
+--- file: shaders/shader.vert
+--- find:
+    float xOffset;
+} pc;
+--- replace:
+    float xOffset;
+    float brightness;
+} pc;
+--- file: shaders/shader.vert
+--- find:
+    fragColor = inPosition; // the position as the color (negative values become 0)
+--- replace:
+    fragColor = inPosition * pc.brightness; // the position as the color, dimmed by brightness
+--- file: main.cpp
+--- find:
+struct PushConstants {
+    float xOffset;
+};
+--- replace:
+struct PushConstants {
+    float xOffset;
+    float brightness;
+};
+--- file: main.cpp
+--- find:
+        constants.xOffset = 0.5f;
+--- replace:
+        constants.xOffset = 0.5f;
+        constants.brightness = static_cast<float>(std::sin(glfwGetTime()) / 2.0 + 0.5);

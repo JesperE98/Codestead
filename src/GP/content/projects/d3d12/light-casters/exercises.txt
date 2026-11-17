@@ -1,0 +1,40 @@
+=== task: ex-wide-cone
+--- file: main.cpp
+--- find:
+    constantBufferData.light.cutOff = std::cos(XMConvertToRadians(12.5f));
+    constantBufferData.light.outerCutOff = std::cos(XMConvertToRadians(17.5f));
+--- replace:
+    constantBufferData.light.cutOff = std::cos(XMConvertToRadians(25.0f));
+    constantBufferData.light.outerCutOff = std::cos(XMConvertToRadians(30.0f));
+
+=== task: ex-red-light
+--- file: main.cpp
+--- find:
+    constantBufferData.light.diffuse = XMFLOAT3(0.8f, 0.8f, 0.8f);
+    constantBufferData.light.specular = XMFLOAT3(1.0f, 1.0f, 1.0f);
+--- replace:
+    constantBufferData.light.diffuse = XMFLOAT3(0.8f, 0.0f, 0.0f);    // a red flashlight
+    constantBufferData.light.specular = XMFLOAT3(1.0f, 0.0f, 0.0f);
+
+=== task: ex-short-range
+--- file: main.cpp
+--- find:
+    constantBufferData.light.linearTerm = 0.09f;
+    constantBufferData.light.quadraticTerm = 0.032f;
+--- replace:
+    constantBufferData.light.linearTerm = 0.35f;    // a range of about 13 units
+    constantBufferData.light.quadraticTerm = 0.44f;
+
+=== task: ex-fading
+--- file: main.cpp
+--- find:
+    constantBufferData.light.diffuse = XMFLOAT3(0.8f, 0.8f, 0.8f);
+    constantBufferData.light.specular = XMFLOAT3(1.0f, 1.0f, 1.0f);
+--- replace:
+    // a failing battery: the flashlight fades out and in again
+    static auto startTime = std::chrono::high_resolution_clock::now();
+    auto currentTime = std::chrono::high_resolution_clock::now();
+    float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+    float strength = 0.5f + 0.5f * std::sin(time * 2.0f);
+    constantBufferData.light.diffuse = XMFLOAT3(0.8f * strength, 0.8f * strength, 0.8f * strength);
+    constantBufferData.light.specular = XMFLOAT3(strength, strength, strength);

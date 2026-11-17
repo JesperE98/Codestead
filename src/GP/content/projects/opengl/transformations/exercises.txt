@@ -1,0 +1,37 @@
+=== task: ex-faster
+--- file: main.cpp
+--- find:
+        transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+--- replace:
+        transform = glm::rotate(transform, (float)glfwGetTime() * 2.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+
+=== task: ex-third-container
+--- file: main.cpp
+--- find:
+        // now with the uniform matrix being replaced with new transformations, draw it again.
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+--- replace:
+        // now with the uniform matrix being replaced with new transformations, draw it again.
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+        // a third container: half the size, standing still at the bottom left
+        transform = glm::mat4(1.0f);
+        transform = glm::translate(transform, glm::vec3(-0.5f, -0.5f, 0.0f));
+        transform = glm::scale(transform, glm::vec3(0.5f, 0.5f, 0.5f));
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+=== task: ex-no-flip
+--- file: main.cpp
+--- find:
+        float scaleAmount = static_cast<float>(sin(glfwGetTime()));
+--- replace:
+        float scaleAmount = static_cast<float>(0.75 + 0.25 * sin(glfwGetTime()));
+
+=== task: ex-tilt
+--- file: main.cpp
+--- find:
+        transform = glm::scale(transform, glm::vec3(scaleAmount, scaleAmount, scaleAmount));
+--- replace:
+        transform = glm::rotate(transform, glm::radians(45.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        transform = glm::scale(transform, glm::vec3(scaleAmount, scaleAmount, scaleAmount));

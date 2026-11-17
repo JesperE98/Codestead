@@ -72,6 +72,30 @@
         "vulkan": "`glfwSetScrollCallback(window, scroll_callback);` – `fov -= static_cast<float>(yoffset);` then clamp. `updateUniformBuffer()` already rebuilds the projection every frame.",
         "d3d12": "`OnMouseWheel(static_cast<float>(GET_WHEEL_DELTA_WPARAM(wParam)) / WHEEL_DELTA);` – one notch is `WHEEL_DELTA` (120); away from you is positive and zooms in."
       }
+    },
+    "ex-side-view": {
+      "text": "Start the camera on the left side of the scene: at (−3, 0, 0), looking along +x at the middle cube. Make sure the first mouse movement doesn't swing the view back to where it used to look.",
+      "hint": "Three globals change: `cameraPos`, `cameraFront` and `yaw`. The mouse callback rebuilds `cameraFront` from `yaw` and `pitch` – with a yaw of 0° the direction is (cos 0°, 0, sin 0°) = (1, 0, 0)."
+    },
+    "ex-sprint": {
+      "text": "Let the camera run: while Shift is held down, it moves twice as fast.",
+      "hint": {
+        "opengl": "In `processInput`, right after `cameraSpeed` is computed: if `GLFW_KEY_LEFT_SHIFT` is pressed, double it. All four directions use the same `cameraSpeed`.",
+        "vulkan": "In `processInput`, right after `cameraSpeed` is computed: if `GLFW_KEY_LEFT_SHIFT` is pressed, double it. All four directions use the same `cameraSpeed`.",
+        "d3d12": "Right after `cameraSpeed` is computed: if `keys[VK_SHIFT]` is set, double it. `WindowProc` already records every key in `keys`, Shift too."
+      }
+    },
+    "ex-invert-mouse": {
+      "text": "Invert the vertical mouse axis, like the controls of a flight simulator: pushing the mouse away from you makes the camera look down.",
+      "hint": "The mouse callback turns the change in y into `yoffset` – it is reversed already, because window coordinates grow downwards. Reverse it once more."
+    },
+    "ex-ground": {
+      "text": "Make it a true FPS camera: you walk on the ground, so looking up or down and pressing W must not lift you off it or sink you under it (keep the camera at y = 0).",
+      "hint": {
+        "opengl": "At the end of `processInput`, after all four keys: force the camera's height back to the ground with `cameraPos.y = 0.0f;`.",
+        "vulkan": "At the end of `processInput`, after all four keys: force the camera's height back to the ground with `cameraPos.y = 0.0f;`.",
+        "d3d12": "After the four keys: force the camera's height back to the ground. An `XMVECTOR` has no `.y` to assign; `XMVectorSetY(cameraPos, 0.0f)` returns a copy with a new y."
+      }
     }
   }
 }

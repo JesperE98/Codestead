@@ -44,6 +44,34 @@
         "vulkan": "`constants.transform = transform;` before pushing. Each draw uses the push constants recorded before it. A negative scale turns the container upside down, it doesn't mirror it.",
         "d3d12": "Root constants are recorded with each draw, so the first draw keeps its matrix. A negative scale turns the container by 180°, it doesn't mirror it."
       }
+    },
+    "ex-faster": {
+      "text": "Let the first container circle the centre twice as fast.",
+      "hint": {
+        "opengl": "The angle of `glm::rotate` is the time in radians: one radian per second. Scale it.",
+        "vulkan": "The angle of `glm::rotate` is the time in radians: one radian per second. Scale it.",
+        "d3d12": "The angle of `XMMatrixRotationZ` is the time in radians: one radian per second. Scale it."
+      }
+    },
+    "ex-third-container": {
+      "text": "Draw a third container that stands still in the bottom left quarter: centred at (−0.5, −0.5) and half its normal size.",
+      "hint": {
+        "opengl": "After the second draw: reset `transform` to the identity, translate, then scale by 0.5, send the matrix with `glUniformMatrix4fv` and call `glDrawElements` once more.",
+        "vulkan": "After the second draw: reset `transform` to the identity, translate, then scale by 0.5, push it with `vkCmdPushConstants` and record one more `vkCmdDrawIndexed`. The shader flips y, so (−0.5, −0.5) is the bottom left here too.",
+        "d3d12": "After the second draw: a new matrix – scale by 0.5 first, then translate (DirectXMath reads left to right) – stored transposed in the root constants, and one more `DrawIndexedInstanced`."
+      }
+    },
+    "ex-no-flip": {
+      "text": "The second container shrinks to nothing and turns upside down whenever sin(time) is negative. Let it pulse between half and full size instead: scale by 0.75 + 0.25 · sin(time).",
+      "hint": "Only the scale amount changes; the translation and the order of the transformations stay. Its smallest value is 0.75 − 0.25 = 0.5, its largest 1.0."
+    },
+    "ex-tilt": {
+      "text": "Turn the second container 45° about its own centre while it keeps growing and shrinking where it is.",
+      "hint": {
+        "opengl": "One more `glm::rotate` (with `glm::radians(45.0f)` about z) between the translation and the scale: the rotation must happen before the move, when the container is still at the origin – and glm's last call is applied first.",
+        "vulkan": "One more `glm::rotate` (with `glm::radians(45.0f)` about z) between the translation and the scale: the rotation must happen before the move, when the container is still at the origin – and glm's last call is applied first.",
+        "d3d12": "One more `XMMatrixRotationZ(XMConvertToRadians(45.0f))` between the scaling and the translation: DirectXMath applies the matrices from left to right, and the rotation must happen while the container is still at the origin."
+      }
     }
   }
 }

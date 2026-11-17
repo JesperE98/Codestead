@@ -36,6 +36,22 @@
         "vulkan": "`lightColor.x = static_cast<float>(std::sin(glfwGetTime() * 2.0));` … `glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);` – den spekulära delen förblir vit.",
         "d3d12": "`XMVECTOR diffuseColor = XMLoadFloat3(&lightColor) * 0.5f;`, `XMVECTOR ambientColor = diffuseColor * 0.2f;`, sedan `XMStoreFloat3(&constantBufferData.light.ambient, ambientColor);` (och `diffuse`). Den spekulära delen förblir vit."
       }
+    },
+    "ex-cyan-plastic": {
+      "text": "Gör den korallröda kuben till cyan plast, med värdena från tabellen över verkliga material: ambient (0.0, 0.1, 0.06), diffuse (0.0, 0.50980392, 0.50980392), specular (0.50196078, 0.50196078, 0.50196078) och glans 0.25 · 128 = 32. Varför blir kuben aldrig röd, vilken färg ljuset än har?",
+      "hint": {
+        "opengl": "Bara de fyra `material.*`-uniforms du sätter i renderingsloopen ändras. Tabellen anger glansen som en andel: multiplicera den med 128.",
+        "vulkan": "Bara de fyra fälten i `ubo.material` ändras. Tabellen anger glansen som en andel: multiplicera den med 128.",
+        "d3d12": "Bara de fyra fälten i `constantBufferData.material` ändras. Tabellen anger glansen som en andel: multiplicera den med 128."
+      }
+    },
+    "ex-positive": {
+      "text": "Ljusets färg kommer från sinusar, och när de är negativa tar ljuset bort färg – en stund blir kuben helt svart. Håll i stället varje kanal mellan 0 och 1: 0.5 + 0.5 · sin(…), med samma hastigheter som nu.",
+      "hint": "Ändra de tre raderna som räknar ut `lightColor`; den diffusa och den ambienta färgen härleds ur den och följer med av sig själva."
+    },
+    "ex-gold": {
+      "text": "Visa en guldkub under ett stadigt vitt ljus: låt ljusets färg vara (1, 1, 1) hela tiden, och använd guld ur materialtabellen – ambient (0.24725, 0.1995, 0.0745), diffuse (0.75164, 0.60648, 0.22648), specular (0.628281, 0.555802, 0.366065), glans 0.4 · 128 = 51.2.",
+      "hint": "Två ställen: de tre raderna som räknar ut `lightColor` från tiden (gör dem till 1.0 – den diffusa och den ambienta delen blir fortfarande 0.5 och 0.1), och de fyra materialvärdena."
     }
   }
 }

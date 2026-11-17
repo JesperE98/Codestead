@@ -36,6 +36,26 @@
         "vulkan": "`vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, lightCubePipeline);` – the descriptor set, vertex buffer, viewport and scissor stay bound; only the pipeline and the push constant (`constants.model = model; vkCmdPushConstants(…)`) change.",
         "d3d12": "`m_commandList->SetPipelineState(m_lightCubePipelineState.Get());`, store the model transposed in `modelConstants.model`, `SetGraphicsRoot32BitConstants(0, …)`, `DrawInstanced(36, 1, 0, 0)`. Same root signature, so the CBV table and the vertex buffer stay bound."
       }
+    },
+    "ex-green-light": {
+      "text": "Light the coral cube with pure green light (0, 1, 0) instead of white. Work out first which colour the cube will get – then check.",
+      "hint": {
+        "opengl": "Only `lightColor` changes. The fragment shader multiplies the two colours channel by channel: (0·1.0, 1·0.5, 0·0.31).",
+        "vulkan": "Only `ubo.lightColor` changes. The fragment shader multiplies the two colours channel by channel: (0·1.0, 1·0.5, 0·0.31).",
+        "d3d12": "Only `constantBufferData.lightColor` changes. The pixel shader multiplies the two colours channel by channel: (0·1.0, 1·0.5, 0·0.31)."
+      }
+    },
+    "ex-black-cube": {
+      "text": "Make the cube cyan (0, 1, 1) and the light pure red (1, 0, 0). Why does the cube look black?",
+      "hint": "Set both colours. A cyan surface absorbs all red light – and red is the only thing this light contains, so nothing is reflected."
+    },
+    "ex-lamp-colour": {
+      "text": "Use a warm light (1.0, 0.8, 0.6) – and let the lamp show that colour too, instead of always white.",
+      "hint": {
+        "opengl": "Set the light colour for the cube as before. The lamp has its own shader: give `light_cube.fs` a `uniform vec3 lightColor;`, output it, and set it with `lightCubeShader.setVec3` after `lightCubeShader.use()`.",
+        "vulkan": "Set `ubo.lightColor` as before. The lamp has its own fragment shader, but the same descriptor set: declare the same uniform block (binding 2) in `light_cube.frag` and output `ubo.lightColor` – the block is already visible to the fragment stage. Recompile with `glslc`.",
+        "d3d12": "Set the light colour as before. The lamp's shaders read the same constant buffer at b1, but `light_cube.hlsl` only declares its first two matrices: add the two colours after them, in the same order as in `colors.hlsl`, and return `lightColor`."
+      }
     }
   }
 }

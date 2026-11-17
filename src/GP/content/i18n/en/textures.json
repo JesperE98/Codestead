@@ -202,6 +202,30 @@
       "hint": {
         "d3d12": "Like the samples' `Win32Application`, which keeps the app's pointer in the window's user data. `WM_KEYDOWN` repeats while a key is held; check `pApp != nullptr`."
       }
+    },
+    "ex-tint": {
+      "text": "Bring the vertex colours back on top of the two textures: tint the mixed picture with them, so it turns red towards one corner, green towards another and so on.",
+      "hint": {
+        "opengl": "The `tint` step did it with one texture: multiply the result of `mix(...)` by `vec4(ourColor, 1.0)` – `ourColor` still arrives in `shader.fs`.",
+        "vulkan": "The `tint` step did it with one texture: multiply the result of `mix(...)` by `vec4(fragColor, 1.0)` – `fragColor` still arrives in `shader.frag`. Recompile with `glslc`.",
+        "d3d12": "The `tint` step did it with one texture: multiply the result of `lerp(...)` by `input.color` – it still arrives in `PSMain`."
+      }
+    },
+    "ex-grey": {
+      "text": "Show the rectangle in black and white: turn the mixed colour into a grey of the same brightness.",
+      "hint": {
+        "opengl": "Keep the mixed colour in a `vec4` first. The brightness of a colour as the eye sees it: `dot(colour.rgb, vec3(0.299, 0.587, 0.114))` – then use that one value for red, green and blue.",
+        "vulkan": "Keep the mixed colour in a `vec4` first. The brightness of a colour as the eye sees it: `dot(colour.rgb, vec3(0.299, 0.587, 0.114))` – then use that one value for red, green and blue.",
+        "d3d12": "Keep the lerped colour in a `float4` first. The brightness of a colour as the eye sees it: `dot(colour.rgb, float3(0.299f, 0.587f, 0.114f))` – then return that one value as red, green and blue."
+      }
+    },
+    "ex-pixels": {
+      "text": "Zoom in on the middle of the pictures until you can see their single texels: texture coordinates from 0.45 to 0.55 only (the centre tenth of each image), and a magnification filter that picks the nearest texel instead of blending.",
+      "hint": {
+        "opengl": "The texture coordinates are the last two numbers of each vertex. The filter: `GL_TEXTURE_MAG_FILTER` with `GL_NEAREST` – set it for both textures.",
+        "vulkan": "The texture coordinates are the third part of each `Vertex`. The filter: `samplerInfo.magFilter = VK_FILTER_NEAREST` – both samplers are made from the same `samplerInfo`.",
+        "d3d12": "The texture coordinates are the third part of each vertex. The filter: a `Filter` with `MAG_..._POINT` in it, such as `D3D12_FILTER_MIN_MAG_MIP_POINT`, on `samplers[0]` – `samplers[1]` is copied from it."
+      }
     }
   }
 }

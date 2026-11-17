@@ -1,0 +1,37 @@
+=== task: ex-wide-cone
+--- file: main.cpp
+--- find:
+        ubo.light.cutOff = glm::cos(glm::radians(12.5f));
+        ubo.light.outerCutOff = glm::cos(glm::radians(17.5f));
+--- replace:
+        ubo.light.cutOff = glm::cos(glm::radians(25.0f));
+        ubo.light.outerCutOff = glm::cos(glm::radians(30.0f));
+
+=== task: ex-red-light
+--- file: main.cpp
+--- find:
+        ubo.light.diffuse  = glm::vec3(0.8f, 0.8f, 0.8f);
+        ubo.light.specular = glm::vec3(1.0f, 1.0f, 1.0f);
+--- replace:
+        ubo.light.diffuse  = glm::vec3(0.8f, 0.0f, 0.0f); // a red flashlight
+        ubo.light.specular = glm::vec3(1.0f, 0.0f, 0.0f);
+
+=== task: ex-short-range
+--- file: main.cpp
+--- find:
+        ubo.light.linear    = 0.09f;
+        ubo.light.quadratic = 0.032f;
+--- replace:
+        ubo.light.linear    = 0.35f; // a range of about 13 units
+        ubo.light.quadratic = 0.44f;
+
+=== task: ex-fading
+--- file: main.cpp
+--- find:
+        ubo.light.diffuse  = glm::vec3(0.8f, 0.8f, 0.8f);
+        ubo.light.specular = glm::vec3(1.0f, 1.0f, 1.0f);
+--- replace:
+        // a failing battery: the flashlight fades out and in again
+        float strength = static_cast<float>(0.5 + 0.5 * std::sin(glfwGetTime() * 2.0));
+        ubo.light.diffuse  = glm::vec3(0.8f) * strength;
+        ubo.light.specular = glm::vec3(1.0f) * strength;

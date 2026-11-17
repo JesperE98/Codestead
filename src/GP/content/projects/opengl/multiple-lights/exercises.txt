@@ -1,0 +1,63 @@
+=== task: ex-flashlight-off
+--- file: main.cpp
+--- find:
+        lightingShader.setVec3("spotLight.diffuse", 1.0f, 1.0f, 1.0f);
+        lightingShader.setVec3("spotLight.specular", 1.0f, 1.0f, 1.0f);
+--- replace:
+        lightingShader.setVec3("spotLight.diffuse", 0.0f, 0.0f, 0.0f); // the flashlight is switched off
+        lightingShader.setVec3("spotLight.specular", 0.0f, 0.0f, 0.0f);
+
+=== task: ex-night
+--- file: main.cpp
+--- find:
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+--- replace:
+        glClearColor(0.02f, 0.02f, 0.05f, 1.0f); // a night sky
+--- file: main.cpp
+--- find:
+        lightingShader.setVec3("dirLight.ambient", 0.05f, 0.05f, 0.05f);
+        lightingShader.setVec3("dirLight.diffuse", 0.4f, 0.4f, 0.4f);
+        lightingShader.setVec3("dirLight.specular", 0.5f, 0.5f, 0.5f);
+--- replace:
+        // moonlight: weak and blue
+        lightingShader.setVec3("dirLight.ambient", 0.0f, 0.0f, 0.02f);
+        lightingShader.setVec3("dirLight.diffuse", 0.05f, 0.05f, 0.2f);
+        lightingShader.setVec3("dirLight.specular", 0.1f, 0.1f, 0.3f);
+
+=== task: ex-coloured-lights
+--- file: main.cpp
+--- find:
+        lightingShader.setVec3("pointLights[0].diffuse", 0.8f, 0.8f, 0.8f);
+        lightingShader.setVec3("pointLights[0].specular", 1.0f, 1.0f, 1.0f);
+--- replace:
+        lightingShader.setVec3("pointLights[0].diffuse", glm::vec3(1.0f, 0.1f, 0.1f) * 0.8f); // red
+        lightingShader.setVec3("pointLights[0].specular", 1.0f, 0.1f, 0.1f);
+--- file: main.cpp
+--- find:
+        lightingShader.setVec3("pointLights[1].diffuse", 0.8f, 0.8f, 0.8f);
+        lightingShader.setVec3("pointLights[1].specular", 1.0f, 1.0f, 1.0f);
+--- replace:
+        lightingShader.setVec3("pointLights[1].diffuse", glm::vec3(0.1f, 1.0f, 0.1f) * 0.8f); // green
+        lightingShader.setVec3("pointLights[1].specular", 0.1f, 1.0f, 0.1f);
+--- file: main.cpp
+--- find:
+        lightingShader.setVec3("pointLights[2].diffuse", 0.8f, 0.8f, 0.8f);
+        lightingShader.setVec3("pointLights[2].specular", 1.0f, 1.0f, 1.0f);
+--- replace:
+        lightingShader.setVec3("pointLights[2].diffuse", glm::vec3(0.1f, 0.1f, 1.0f) * 0.8f); // blue
+        lightingShader.setVec3("pointLights[2].specular", 0.1f, 0.1f, 1.0f);
+--- file: main.cpp
+--- find:
+        lightingShader.setVec3("pointLights[3].diffuse", 0.8f, 0.8f, 0.8f);
+        lightingShader.setVec3("pointLights[3].specular", 1.0f, 1.0f, 1.0f);
+--- replace:
+        lightingShader.setVec3("pointLights[3].diffuse", glm::vec3(1.0f, 1.0f, 0.1f) * 0.8f); // yellow
+        lightingShader.setVec3("pointLights[3].specular", 1.0f, 1.0f, 0.1f);
+
+=== task: ex-moving-lamp
+--- file: main.cpp
+--- find:
+        lightingShader.setVec3("pointLights[0].position", pointLightPositions[0]);
+--- replace:
+        pointLightPositions[0].x = static_cast<float>(0.7 + sin(glfwGetTime()) * 1.5); // the first lamp swings from side to side
+        lightingShader.setVec3("pointLights[0].position", pointLightPositions[0]);

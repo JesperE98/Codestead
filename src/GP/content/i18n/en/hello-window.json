@@ -150,6 +150,34 @@
       "hint": {
         "d3d12": "Add an `else` branch to the `if (PeekMessage(...))`. `Present(1, 0)` waits for the next vertical blank (vsync)."
       }
+    },
+    "ex-clear-colour": {
+      "text": "Clear the window to a raspberry red instead: the colour (0.6, 0.2, 0.4).",
+      "hint": {
+        "opengl": "Only the clear colour changes: the four numbers in `glClearColor` are red, green, blue and alpha.",
+        "vulkan": "Only the clear colour changes: the `VkClearValue` that the render pass clears the image to.",
+        "d3d12": "Only the clear colour changes: the `clearColor` array that `ClearRenderTargetView` uses."
+      }
+    },
+    "ex-window-size": {
+      "text": "Make the window 1024 × 576 pixels (a wide 16:9 window) instead of 800 × 600.",
+      "hint": {
+        "opengl": "The size is set in one place: the constants `SCR_WIDTH` and `SCR_HEIGHT` at the top. The viewport follows by itself through `framebuffer_size_callback`.",
+        "vulkan": "The size is set in one place: the constants `WIDTH` and `HEIGHT` at the top. The swap chain takes its size from the window's framebuffer.",
+        "d3d12": "The size is set in one place: `width` and `height` at the start of `wWinMain`. `AdjustWindowRect` and the swap chain both use them."
+      }
+    },
+    "ex-quit-key": {
+      "text": {
+        "opengl": "Let the Q key close the window too, as well as Escape.",
+        "vulkan": "Let the Escape key close the window, as in the OpenGL version of the chapter.",
+        "d3d12": "Let the Q key close the window too, as well as Escape."
+      },
+      "hint": {
+        "opengl": "In `processInput`: one more `glfwGetKey` test, with `GLFW_KEY_Q` – combine it with the Escape test using `||` or give it its own `if`.",
+        "vulkan": "In `mainLoop`, after `glfwPollEvents()`: if `glfwGetKey(window, GLFW_KEY_ESCAPE)` is `GLFW_PRESS`, call `glfwSetWindowShouldClose` – the loop ends at the next test.",
+        "d3d12": "In `WindowProc`, under `WM_KEYDOWN`: the virtual-key code of a letter key is its capital letter, so compare `wParam` with `'Q'` too."
+      }
     }
   }
 }

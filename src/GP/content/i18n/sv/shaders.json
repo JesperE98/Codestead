@@ -72,6 +72,30 @@
         "vulkan": "Färger under 0 kläms till 0 – det förklarar det svarta hörnet.",
         "d3d12": "x blir rött, y grönt, z blått. Negativa värden kläms till 0 när färgen skrivs – därför är ett hörn svart."
       }
+    },
+    "ex-offset-left": {
+      "text": "Flytta triangeln till fönstrets vänstra halva i stället, lika långt.",
+      "hint": {
+        "opengl": "Inga shaderändringar: vertexshadern lägger redan till `xOffset`. Bara värdet du sätter från C++ byter tecken.",
+        "vulkan": "Inga shaderändringar: vertexshadern lägger redan till `pc.xOffset`. Bara värdet du pushar byter tecken.",
+        "d3d12": "Inga shaderändringar: vertexshadern lägger redan till `xOffset`. Bara rotkonstanten du sätter byter tecken."
+      }
+    },
+    "ex-invert": {
+      "text": "Invertera triangelns färger, som ett fotonegativ: varje kanal blir 1 minus sitt värde.",
+      "hint": {
+        "opengl": "En rad i `shader.fs`: dra den interpolerade färgen från `1.0` innan den blir `FragColor` (GLSL låter dig skriva `1.0 - enVec3`).",
+        "vulkan": "En rad i `shader.frag`: dra den interpolerade färgen från `1.0` innan den blir `outColor` – kompilera sedan om den med `glslc`.",
+        "d3d12": "En rad i `PSMain`: returnera `1.0f` minus färgens `rgb`, med alfa `1.0f`."
+      }
+    },
+    "ex-pulse": {
+      "text": "Låt triangelns färger pulsera: multiplicera dem med en ljusstyrka på `sin(time) / 2 + 0.5`, som skickas från C++ varje bildruta precis som förskjutningen.",
+      "hint": {
+        "opengl": "En andra uniform, `uniform float brightness;`, i `shader.fs` multiplicerar `ourPosition`; sätt den bredvid `xOffset` med `ourShader.setFloat` och `glfwGetTime()`.",
+        "vulkan": "En andra float i push constant-blocket – i `shader.vert` och i C++-structen `PushConstants`, i samma ordning. Push-konstanterna når bara vertexsteget, så dämpa `fragColor` där. Tiden: `glfwGetTime()`.",
+        "d3d12": "En andra float efter `xOffset` – i `cbuffer` och i C++-structen `OffsetConstants`, i samma ordning (`sizeof / 4` växer av sig själv). Dämpa `result.color` i `VSMain` (behåll alfa 1), och ta tiden från `std::chrono` som uniform-steget gjorde."
+      }
     }
   }
 }

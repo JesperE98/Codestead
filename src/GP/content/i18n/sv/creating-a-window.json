@@ -52,6 +52,14 @@
     "command-queue": {
       "text": { "d3d12": "Beskriv och skapa kommandokön: en `D3D12_COMMAND_QUEUE_DESC` med `Type = D3D12_COMMAND_LIST_TYPE_DIRECT`, sedan `m_device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_commandQueue))`." },
       "hint": { "d3d12": "Börja med `D3D12_COMMAND_QUEUE_DESC queueDesc = {};` och sätt `Flags = D3D12_COMMAND_QUEUE_FLAG_NONE`. En direct-kö tar alla sorters kommandon (ritning, beräkning, kopiering)." }
+    },
+    "ex-texture-limit": {
+      "text": "Fråga den GPU du valt hur stor 2D-textur den klarar, och skriv ut svaret (i pixlar per sida) i konsolen.",
+      "hint": "När `pickPhysicalDevice` har valt `physicalDevice`: `vkGetPhysicalDeviceProperties` fyller i en `VkPhysicalDeviceProperties`, vars `limits` innehåller GPU:ns gränser – den du söker heter `maxImageDimension2D`."
+    },
+    "ex-feature-level": {
+      "text": "Godta bara en GPU som klarar feature level 12_0 (i stället för 11_0) – både när du testar adaptrarna och när du skapar devicen.",
+      "hint": "Feature level förekommer två gånger: i `GetHardwareAdapter`s testanrop till `D3D12CreateDevice` och i det riktiga anropet i `LoadPipeline`. Båda tar `D3D_FEATURE_LEVEL_12_0`."
     }
   }
 }
