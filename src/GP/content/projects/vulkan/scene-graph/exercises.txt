@@ -1,0 +1,34 @@
+=== task: ex-reverse
+--- file: main.cpp
+--- find:
+        setLocalRotation(ourEntity.transform, glm::vec3(0.0f, 20.0f * currentFrame, 0.0f));
+--- replace:
+        setLocalRotation(ourEntity.transform, glm::vec3(0.0f, -20.0f * currentFrame, 0.0f));
+
+=== task: ex-child-scale
+--- file: main.cpp
+--- find:
+        const float scale = 0.6f;
+--- replace:
+        const float scale = 0.8f;
+
+=== task: ex-moon
+--- file: main.cpp
+--- find:
+        updateSelfAndChild(ourEntity, glm::mat4(1.0f));
+    }
+--- replace:
+        // a moon above the root: a second child of the root, beside the chain
+        addChild(ourEntity, ourModel);
+        setLocalPosition(ourEntity.children.back().transform, glm::vec3(0.0f, 2.5f, 0.0f));
+        setLocalScale(ourEntity.children.back().transform, glm::vec3(0.3f, 0.3f, 0.3f));
+        updateSelfAndChild(ourEntity, glm::mat4(1.0f));
+    }
+
+=== task: ex-spiral
+--- file: main.cpp
+--- find:
+                setLocalScale(lastEntity->transform, glm::vec3(scale, scale, scale));
+--- replace:
+                setLocalScale(lastEntity->transform, glm::vec3(scale, scale, scale));
+                setLocalRotation(lastEntity->transform, glm::vec3(0.0f, 0.0f, 30.0f));

@@ -52,5 +52,18 @@ public static partial class TaskChecks
             ["ex-bone-weight"] = c => c.Drew && At(c, 1.25, 460, 300, p => p[0] > 0.85 && p[1] < 0.03 && p[2] < 0.03) && At(c, 1.25, 460, 250, p => p[0] > 0.4 && p[0] < 0.8 && p[1] < 0.03)
                 && At(c, 1.25, 400, 520, Black) && At(c, 1.25, 568, 100, Black) && At(c, 1.25, 100, 300, Space),
         },
+        ["scene-graph"] = new()
+        {
+            // Turned the other way: at 2.0 s the chain comes out of the screen, down to the right.
+            ["ex-reverse"] = c => c.Shows && At(c, 2.0, 238, 320, Planet) && At(c, 2.0, 380, 380, Planet) && At(c, 2.0, 490, 435, Planet) && At(c, 2.0, 575, 465, Planet)
+                && At(c, 2.0, 385, 273, Space) && At(c, 2.0, 456, 250, Space),
+            // Children 0.8 times their parent: larger and farther apart (the positions are scaled too), the chain reaching x ≈ 690.
+            ["ex-child-scale"] = c => c.Shows && At(c, 2.0, 238, 320, Planet) && At(c, 2.0, 475, 240, Planet) && At(c, 2.0, 650, 180, Planet) && At(c, 2.0, 600, 500, Space),
+            // A second child of the root, high above it; the chain as before.
+            ["ex-moon"] = c => c.Shows && At(c, 2.0, 222, 185, Planet) && At(c, 2.0, 238, 320, Planet) && At(c, 2.0, 385, 273, Planet) && At(c, 2.0, 456, 250, Planet) && At(c, 2.0, 222, 230, Space),
+            // Every child tilted 30° about z on top of its parent: the chain curls upwards.
+            ["ex-spiral"] = c => c.Shows && At(c, 2.0, 238, 320, Planet) && At(c, 2.0, 450, 207, Planet) && At(c, 2.0, 468, 152, Planet)
+                && At(c, 2.0, 456, 250, Space) && At(c, 2.0, 494, 238, Space),
+        },
     };
 }

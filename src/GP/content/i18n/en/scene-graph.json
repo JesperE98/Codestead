@@ -44,6 +44,30 @@
         "vulkan": "`float currentFrame = static_cast<float>(glfwGetTime()); setLocalRotation(ourEntity.transform, glm::vec3(0.0f, 20.0f * currentFrame, 0.0f)); updateSelfAndChild(ourEntity, glm::mat4(1.0f));` – only the root is dirty, so the update recomputes it and, through it, all its children.",
         "d3d12": "`static auto startTime = std::chrono::high_resolution_clock::now(); float time = std::chrono::duration<float, std::chrono::seconds::period>(currentFrame - startTime).count();` then `setLocalRotation(m_ourEntity.transform, XMFLOAT3(0.0f, 20.0f * time, 0.0f)); updateSelfAndChild(m_ourEntity, XMMatrixIdentity());`."
       }
+    },
+    "ex-reverse": {
+      "text": "Turn the scene graph the other way round: −20° per second. Does every child follow the root without any change to them?",
+      "hint": {
+        "opengl": "Only the root's rotation is set from the time (`setLocalRotation` in the render loop) – change its sign. The children get their new matrices from `updateSelfAndChild`.",
+        "vulkan": "Only the root's rotation is set from the time (`setLocalRotation` before the frame is drawn) – change its sign. The children get their new matrices from `updateSelfAndChild`.",
+        "d3d12": "Only the root's rotation is set from the time (`setLocalRotation` in `OnUpdate`) – change its sign. The children get their new matrices from `updateSelfAndChild`."
+      }
+    },
+    "ex-child-scale": {
+      "text": "Make every child 0.8 times the size of its parent instead of 0.6. Look at the distances too: why do the planets also end up farther apart?",
+      "hint": "One constant, `scale`, where the chain is built. A child's local position (3.5, 0, 0) is multiplied by its parent's whole model matrix – the parent's scale included."
+    },
+    "ex-moon": {
+      "text": "Give the root planet a moon: a second child of the root (beside the chain), 2.5 above it and 0.3 times its size.",
+      "hint": {
+        "opengl": "After the chain is built: `addChild(ourEntity, ourModel)`, then set the position and scale of `ourEntity.children.back()` – and update the graph again before the loop. `drawSelfAndChild` draws every child, so the moon needs nothing more.",
+        "vulkan": "After the chain is built: `addChild(ourEntity, ourModel)`, then set the position and scale of `ourEntity.children.back()` – and update the graph again. `drawSelfAndChild` records every child, so the moon needs nothing more.",
+        "d3d12": "After the chain is built: `addChild(m_ourEntity, m_model)`, then set the position and scale of `m_ourEntity.children.back()` – and update the graph again. `drawSelfAndChild` records every child, so the moon needs nothing more."
+      }
+    },
+    "ex-spiral": {
+      "text": "Tilt every child of the chain by 30° about its z axis, relative to its parent. The chain should curl upwards, ever more steeply.",
+      "hint": "One more `setLocalRotation` in the loop that builds the chain, (0, 0, 30) degrees. Since each rotation is applied on top of the parent's, the tilts add up along the chain: the tenth child is turned 300°."
     }
   }
 }
