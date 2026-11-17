@@ -44,8 +44,8 @@ TypeScript-versionerna kan lika mycket; då byter vi.
 
 ## Läge
 - [x] 1. Grund – `ts/` (npm-workspace, TypeScript, Vitest), `@codestead/common`, CI-jobbet `TypeScript` i ci.yml
-- [ ] 2. Gemensam kärna och UI
-- [ ] 3. Linux
+- [x] 2. Gemensam kärna och UI – `learning` och `ui` (React): lärfönstret, markdown, dialoger, spelvyer; samma sparfiler som C#
+- [ ] 3. Linux – `linux-shell` (hela skalet, alla kommandon) och `linux-content` (alla kapitel lösta av sina lösningar i 4 distar och 11 språk) klara; kvar: appen `ts/apps/linux`
 - [ ] 4. GP
 - [ ] 5. Hubben och paketering
 - [ ] 6. Byte
