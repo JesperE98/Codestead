@@ -59,5 +59,16 @@ public static partial class TaskChecks
             // The wall turns: the picture changes over time.
             ["ex-turn"] = c => c.Drew && c.ChangesOverTime,
         },
+        ["parallax-mapping"] = new()
+        {
+            // The depth map as grey: the mortar white, a brick surface black.
+            ["ex-show-depth"] = c => At(c, 400, 350, p => Grey(p) && p[0] > 0.7) && At(c, 500, 450, p => Grey(p) && p[0] < 0.1),
+            // heightScale 0.25: the bricks shifted further (where the solution has a brick, mortar now and the other way round).
+            ["ex-height-scale"] = c => At(c, 207, 467, p => p[0] < 0.2) && At(c, 302, 387, p => p[0] < 0.3) && At(c, 237, 372, p => p[0] > 0.5),
+            // No discard: bricks where the solution shows the background at the quad's edges.
+            ["ex-no-discard"] = c => c.DrawnAt(642 / 800.0, 307 / 600.0) && c.DrawnAt(142 / 800.0, 392 / 600.0) && c.DrawnAt(467 / 800.0, 177 / 600.0),
+            // −70°: a flatter, lower quad – the middle drawn, the solution's lower and upper parts now background.
+            ["ex-steeper"] = c => c.DrawnAt(0.5, 350 / 600.0) && c.IsClear(500 / 800.0, 450 / 600.0) && c.IsClear(0.5, 170 / 600.0),
+        },
     };
 }
