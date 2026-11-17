@@ -48,6 +48,38 @@
         "vulkan": "`float radius;` after `quadratic` makes the struct 36 bytes, and std140 rounds an array element up to 48: C++ adds `float pad1, pad2, pad3;`. In `updateUniformBuffer()`: `constant`, `maxBrightness` with `std::fmaxf`, learnopengl's `radius` formula, `ubo.lights[i].radius = radius;`. Shader: `float radius;` in `Light`, the distance first, then `if (distance < ubo.lights[i].radius) { … }`.",
         "d3d12": "C++ `Light`: `float Radius; float padding1[2];` after `Quadratic`. In `OnUpdate`: `const float constant = 1.0f;`, `const float maxBrightness = std::fmax(std::fmax(lightColors[i].x, lightColors[i].y), lightColors[i].z);`, learnopengl's `radius` formula, `constantBufferData.lights[i].Radius = radius;`. HLSL: `float Radius;` in `Light`, the distance first, then `if (distance < lights[i].Radius) { … }`."
       }
+    },
+    "ex-show-normals": {
+      "text": "Show the G-buffer's normals instead of the lit picture, mapped from −1…1 to 0…1: the boxes' tops turn green, their fronts blue, their sides red or teal.",
+      "hint": {
+        "opengl": "In the lighting pass, `deferred_shading.fs`: write `Normal * 0.5 + 0.5` to `FragColor` instead of `lighting`. The light cubes are drawn afterwards, so they stay.",
+        "vulkan": "In the lighting pass, `deferred_shading.frag`: write `Normal * 0.5 + 0.5` to `outColor` instead of `lighting`. The light cubes are drawn afterwards, so they stay.",
+        "d3d12": "In the lighting pass, `deferred_shading.hlsl`: return `Normal * 0.5f + 0.5f` instead of `lighting`. The light cubes are drawn afterwards, so they stay."
+      }
+    },
+    "ex-show-specular": {
+      "text": "Show the specular intensity stored in the G-buffer as grey: the steel frames light, the wood almost black. Why is the background white?",
+      "hint": {
+        "opengl": "The specular value is the alpha channel of `gAlbedoSpec` – `Specular` in `deferred_shading.fs`; write it as a grey colour to `FragColor`. Think about the colour the G-buffer was cleared to – alpha included.",
+        "vulkan": "The specular value is the alpha channel of `gAlbedoSpec` – `Specular` in `deferred_shading.frag`; write it as a grey colour to `outColor`. Think about the value the G-buffer was cleared to – alpha included.",
+        "d3d12": "The specular value is the alpha channel of `gAlbedoSpec` – `Specular` in `deferred_shading.hlsl`; return it in r, g and b. Think about the value the G-buffer was cleared to – alpha included."
+      }
+    },
+    "ex-reach": {
+      "text": "Let the lights reach further: attenuation with linear 0.22 and quadratic 0.20 instead of 0.7 and 1.8. The scene gets much brighter – and the light volumes' radius grows by itself.",
+      "hint": {
+        "opengl": "The two constants `linear` and `quadratic` in the loop that sets the lights' uniforms; the radius is computed from them right after, so the volumes follow.",
+        "vulkan": "The two constants `linear` and `quadratic` in the loop that fills `ubo.lights`; the radius is computed from them right after, so the volumes follow.",
+        "d3d12": "The two constants `linear` and `quadratic` in the loop that fills `constantBufferData.lights`; the radius is computed from them right after, so the volumes follow."
+      }
+    },
+    "ex-warm-lights": {
+      "text": "Make all 32 lights warm: keep each light's random red, but multiply its green by 0.6 and its blue by 0.2. The light cubes and the light on the boxes turn orange.",
+      "hint": {
+        "opengl": "Where the random colours are pushed into `lightColors` (after `srand(13)`). Keep the three `rand()` calls as they are, so the positions of the lights do not change.",
+        "vulkan": "Where the random colours are pushed into `lightColors` (after `srand(13)`). Keep the three `rand()` calls as they are, so the positions of the lights do not change.",
+        "d3d12": "Where the random colours are pushed into `lightColors` (after `srand(13)`). Keep the three `rand()` calls as they are, so the positions of the lights do not change."
+      }
     }
   }
 }

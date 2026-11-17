@@ -1,0 +1,29 @@
+=== task: ex-show-normals
+--- file: shaders/normal_mapping.frag
+--- find:
+    outColor = vec4(ambient + diffuse + specular, 1.0);
+--- replace:
+    outColor = vec4(normal * 0.5 + 0.5, 1.0);
+
+=== task: ex-flat
+--- file: shaders/normal_mapping.frag
+--- find:
+    normal = normalize(normal * 2.0 - 1.0);  // this normal is in tangent space
+--- replace:
+    normal = normalize(normal * 2.0 - 1.0);  // this normal is in tangent space
+    normal = vec3(0.0, 0.0, 1.0); // the surface's own normal: no bumps
+
+=== task: ex-stronger-bumps
+--- file: shaders/normal_mapping.frag
+--- find:
+    normal = normalize(normal * 2.0 - 1.0);  // this normal is in tangent space
+--- replace:
+    normal = normalize(normal * 2.0 - 1.0);  // this normal is in tangent space
+    normal = normalize(vec3(normal.xy * 3.0, normal.z)); // tilt it three times as much
+
+=== task: ex-turn
+--- file: main.cpp
+--- find:
+        model = glm::rotate(model, glm::radians(-30.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0))); // a fixed angle (learnopengl turns it with time: glfwGetTime() * -10.0 degrees)
+--- replace:
+        model = glm::rotate(model, glm::radians((float)glfwGetTime() * -10.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));

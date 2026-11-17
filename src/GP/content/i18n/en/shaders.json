@@ -72,6 +72,30 @@
         "vulkan": "Colours below 0 are clamped to 0 – which explains the black corner.",
         "d3d12": "x becomes red, y green, z blue. Negative values are clamped to 0 when the colour is written – which is why one corner is black."
       }
+    },
+    "ex-offset-left": {
+      "text": "Move the triangle to the left half of the window instead, by the same distance.",
+      "hint": {
+        "opengl": "No shader changes: the vertex shader already adds `xOffset`. Only the value you set from C++ changes sign.",
+        "vulkan": "No shader changes: the vertex shader already adds `pc.xOffset`. Only the value you push changes sign.",
+        "d3d12": "No shader changes: the vertex shader already adds `xOffset`. Only the root constant you set changes sign."
+      }
+    },
+    "ex-invert": {
+      "text": "Invert the triangle's colours, like a photo negative: every channel becomes 1 minus its value.",
+      "hint": {
+        "opengl": "One line in `shader.fs`: subtract the interpolated colour from `1.0` before it becomes `FragColor` (GLSL lets you write `1.0 - aVec3`).",
+        "vulkan": "One line in `shader.frag`: subtract the interpolated colour from `1.0` before it becomes `outColor` – then recompile it with `glslc`.",
+        "d3d12": "One line in `PSMain`: return `1.0f` minus the colour's `rgb`, with an alpha of `1.0f`."
+      }
+    },
+    "ex-pulse": {
+      "text": "Let the triangle's colours pulse: multiply them by a brightness of `sin(time) / 2 + 0.5`, sent from C++ every frame like the offset.",
+      "hint": {
+        "opengl": "A second uniform, `uniform float brightness;`, in `shader.fs` multiplies `ourPosition`; set it next to `xOffset` with `ourShader.setFloat` and `glfwGetTime()`.",
+        "vulkan": "A second float in the push constant block – in `shader.vert` and in the C++ `PushConstants` struct, in the same order. The push constants reach only the vertex stage, so dim `fragColor` there. Time: `glfwGetTime()`.",
+        "d3d12": "A second float after `xOffset` – in the `cbuffer` and in the C++ `OffsetConstants` struct, in the same order (`sizeof / 4` grows by itself). Dim `result.color` in `VSMain` (keep its alpha 1), and take the time from `std::chrono` as the uniform step did."
+      }
     }
   }
 }

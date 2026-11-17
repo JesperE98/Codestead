@@ -25,9 +25,9 @@ public static class ProjectChecker
         var messages = new List<CheckMessage>();
         if (read.Missing.Count > 0)
             messages.Add(new CheckMessage("ide.missing", new Dictionary<string, string> { ["files"] = string.Join(", ", read.Missing) }, true));
-        var tasks = GpCourse.Tasks(chapterId, api);
+        var tasks = GpCourse.AllTasks(chapterId, api);
         if (read.Project.Files.Count == 0)
-            return new CheckReport(chapterId, api, tasks.Select(t => new TaskResult(t.Id, GpCourse.TaskKey(chapterId, t.Id, api), false)).ToList(), messages, null);
+            return new CheckReport(chapterId, api, tasks.Select(t => new TaskResult(t.Id, GpCourse.TaskKey(chapterId, t.Id, api), false, TaskChecks.For(chapterId, t.Id) is not null)).ToList(), messages, null);
         var context = new CheckContext(api, read.Project, Simulator.Build(read.Project, api));
         cancel.ThrowIfCancellationRequested();
         if (context.Build.Diagnostics.FirstOrDefault(d => d.IsError) is { } error)
@@ -38,8 +38,9 @@ public static class ProjectChecker
         foreach (var task in tasks)
         {
             cancel.ThrowIfCancellationRequested();
-            bool passed = TaskChecks.For(chapterId, task.Id) is { } check && Safe(check, context);
-            results.Add(new TaskResult(task.Id, GpCourse.TaskKey(chapterId, task.Id, api), passed));
+            var check = TaskChecks.For(chapterId, task.Id);
+            bool passed = check is not null && Safe(check, context);
+            results.Add(new TaskResult(task.Id, GpCourse.TaskKey(chapterId, task.Id, api), passed, check is not null));
         }
         cancel.ThrowIfCancellationRequested();
         BuildFacts? facts = null;

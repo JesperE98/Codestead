@@ -1,0 +1,38 @@
+=== task: ex-short-indices
+--- file: mesh.h
+--- find:
+    std::vector<unsigned int> indices;
+--- replace:
+    std::vector<unsigned short> indices;
+--- file: mesh.h
+--- find:
+    Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures)
+--- replace:
+    Mesh(std::vector<Vertex> vertices, std::vector<unsigned short> indices, std::vector<Texture> textures)
+--- file: mesh.h
+--- find:
+        glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(indices.size()), GL_UNSIGNED_INT, 0);
+--- replace:
+        glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(indices.size()), GL_UNSIGNED_SHORT, 0);
+--- file: mesh.h
+--- find:
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
+--- replace:
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned short), &indices[0], GL_STATIC_DRAW);
+
+=== task: ex-height-textures
+--- file: mesh.h
+--- find:
+        unsigned int normalNr   = 1;
+--- replace:
+        unsigned int normalNr   = 1;
+        unsigned int heightNr   = 1;
+--- file: mesh.h
+--- find:
+            else if (name == "texture_normal")
+                number = std::to_string(normalNr++);
+--- replace:
+            else if (name == "texture_normal")
+                number = std::to_string(normalNr++);
+            else if (name == "texture_height")
+                number = std::to_string(heightNr++);

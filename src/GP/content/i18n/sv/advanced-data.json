@@ -2,8 +2,12 @@
   "title": "Advanced Data",
   "tasks": {
     "buffer-sub-data": {
-      "text": { "opengl": "Fyll kubens buffer i två steg: reservera minnet med `glBufferData(…, NULL, …)`, kopiera sedan in `cubeVertices` från byte 0 med `glBufferSubData`." },
-      "hint": { "opengl": "`glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), NULL, GL_STATIC_DRAW);` sedan `glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(cubeVertices), &cubeVertices);` – target, offset i byte, storlek, data." }
+      "text": {
+        "opengl": "Fyll kubens buffer i två steg: reservera minnet med `glBufferData(…, NULL, …)`, kopiera sedan in `cubeVertices` från byte 0 med `glBufferSubData`."
+      },
+      "hint": {
+        "opengl": "`glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), NULL, GL_STATIC_DRAW);` sedan `glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(cubeVertices), &cubeVertices);` – target, offset i byte, storlek, data."
+      }
     },
     "map-buffer": {
       "text": {
@@ -16,12 +20,20 @@
       }
     },
     "map-memory": {
-      "text": { "vulkan": "Kopiera vertexarna del för del i `createVertexBuffer()`: mappa bara kubens intervall (offset 0, `sizeof(Vertex) * 36`), kopiera och gör unmap, sedan golvets intervall (offset `cubeSize`, `sizeof(Vertex) * 6`)." },
-      "hint": { "vulkan": "`vkMapMemory(device, vertexBufferMemory, offset, size, 0, &data)` mappar bara det intervallet och pekar på dess första byte. Kopiera `vertices.data() + 36` för golvet. Gör unmap innan du mappar nästa intervall." }
+      "text": {
+        "vulkan": "Kopiera vertexarna del för del i `createVertexBuffer()`: mappa bara kubens intervall (offset 0, `sizeof(Vertex) * 36`), kopiera och gör unmap, sedan golvets intervall (offset `cubeSize`, `sizeof(Vertex) * 6`)."
+      },
+      "hint": {
+        "vulkan": "`vkMapMemory(device, vertexBufferMemory, offset, size, 0, &data)` mappar bara det intervallet och pekar på dess första byte. Kopiera `vertices.data() + 36` för golvet. Gör unmap innan du mappar nästa intervall."
+      }
     },
     "update-buffer": {
-      "text": { "vulkan": "Skriv uniform buffern med `vkCmdUpdateBuffer`: skapa den som device-local transfer destination (ingen mappning), spela in uppdateringen och en buffer-barriär i `updateUniformBuffer(commandBuffer)`, och anropa den före render passet." },
-      "hint": { "vulkan": "`VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT` i `VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT`. Barriär: `TRANSFER_WRITE` → `UNIFORM_READ`, steg `TRANSFER` → `VERTEX_SHADER`. Anropa den direkt efter `vkBeginCommandBuffer`; ta bort anropet i `drawFrame()`." }
+      "text": {
+        "vulkan": "Skriv uniform buffern med `vkCmdUpdateBuffer`: skapa den som device-local transfer destination (ingen mappning), spela in uppdateringen och en buffer-barriär i `updateUniformBuffer(commandBuffer)`, och anropa den före render passet."
+      },
+      "hint": {
+        "vulkan": "`VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT` i `VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT`. Barriär: `TRANSFER_WRITE` → `UNIFORM_READ`, steg `TRANSFER` → `VERTEX_SHADER`. Anropa den direkt efter `vkBeginCommandBuffer`; ta bort anropet i `drawFrame()`."
+      }
     },
     "batched-attributes": {
       "text": {
@@ -48,8 +60,32 @@
       }
     },
     "default-heap": {
-      "text": { "d3d12": "Lägg kubens vertex buffer i en default heap: fyll en upload buffer `vertexBufferUploadHeap` med de två blocken och kopiera den till `m_vertexBuffer` med `CopyBufferRegion`." },
-      "hint": { "d3d12": "`m_vertexBuffer`: `D3D12_HEAP_TYPE_DEFAULT`, `D3D12_RESOURCE_STATE_COMMON`. Deklarera `vertexBufferUploadHeap` före vertex buffer-blocket så att den lever tills command listen har exekverats. Sedan barriären COPY_DEST → VERTEX_AND_CONSTANT_BUFFER." }
+      "text": {
+        "d3d12": "Lägg kubens vertex buffer i en default heap: fyll en upload buffer `vertexBufferUploadHeap` med de två blocken och kopiera den till `m_vertexBuffer` med `CopyBufferRegion`."
+      },
+      "hint": {
+        "d3d12": "`m_vertexBuffer`: `D3D12_HEAP_TYPE_DEFAULT`, `D3D12_RESOURCE_STATE_COMMON`. Deklarera `vertexBufferUploadHeap` före vertex buffer-blocket så att den lever tills command listen har exekverats. Sedan barriären COPY_DEST → VERTEX_AND_CONSTANT_BUFFER."
+      }
+    },
+    "ex-half-floor": {
+      "text": {
+        "opengl": "Kopiera bara den första halvan av golvets bytes till den andra bufferten. Vad händer med golvets andra triangel?",
+        "vulkan": "Kopiera bara positionerna för de 39 första vertexarna till staging-bufferten – kuberna och golvets första triangel. Vad händer med golvets andra triangel?",
+        "d3d12": "Kopiera bara den första halvan av golvets bytes till kopiebufferten. Vad händer med golvets andra triangel?"
+      },
+      "hint": {
+        "opengl": "Storleksargumentet till `glCopyBufferSubData`: `sizeof(planeVertices) / 2`. Resten av kopian skrevs aldrig – här är den nollor, så den andra triangeln krymper ihop till en punkt.",
+        "vulkan": "Storleken i positionsblockets `memcpy`: `sizeof(glm::vec3) * 39`. De tre sista positionerna skrivs aldrig – här är de nollor, så golvets andra triangel krymper ihop till en punkt.",
+        "d3d12": "Storleksargumentet till `CopyBufferRegion`: `planeVertexBufferSize / 2`. Resten av kopian skrevs aldrig – här är den nollor, så den andra triangeln krymper ihop till en punkt."
+      }
+    },
+    "ex-swap-blocks": {
+      "text": "Lagra kubens två block i omvänd ordning – först alla texturkoordinater, sedan alla positioner – och justera var varje attribut börjar. Bilden ska förbli exakt densamma.",
+      "hint": {
+        "opengl": "De två `glBufferSubData`-anropen byter offset, och det gör även sista argumenten i de två `glVertexAttribPointer`-anropen: positionerna börjar nu vid `sizeof(cubeTexCoords)`, texturkoordinaterna vid 0.",
+        "vulkan": "De två mappade områdena byter plats (texturkoordinaterna vid 0, positionerna vid `texCoordsSize`), och det gör även de två offseten till `vkCmdBindVertexBuffers`.",
+        "d3d12": "De två `memcpy`-anropen byter plats, och det gör även de två vertexbuffervyernas `BufferLocation`: positionerna börjar nu vid `sizeof(cubeTexCoords)`."
+      }
     }
   }
 }

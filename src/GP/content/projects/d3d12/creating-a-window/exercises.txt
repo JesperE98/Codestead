@@ -1,0 +1,13 @@
+=== task: ex-feature-level
+--- file: main.cpp
+--- find:
+        if (SUCCEEDED(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, __uuidof(ID3D12Device), nullptr)))
+--- replace:
+        if (SUCCEEDED(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_12_0, __uuidof(ID3D12Device), nullptr)))
+--- file: main.cpp
+--- find:
+        D3D_FEATURE_LEVEL_11_0,
+        IID_PPV_ARGS(&m_device)
+--- replace:
+        D3D_FEATURE_LEVEL_12_0,
+        IID_PPV_ARGS(&m_device)

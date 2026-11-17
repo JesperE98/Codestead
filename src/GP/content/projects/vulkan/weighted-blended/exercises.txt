@@ -1,0 +1,64 @@
+=== task: ex-opacity
+--- file: main.cpp
+--- find:
+        constants.color = glm::vec4(0.0f, 1.0f, 0.0f, 0.5f);
+--- replace:
+        constants.color = glm::vec4(0.0f, 1.0f, 0.0f, 0.8f);
+
+=== task: ex-order
+--- file: main.cpp
+--- find:
+        // draw green quad
+        constants.mvp = vp * greenModelMat;
+        constants.color = glm::vec4(0.0f, 1.0f, 0.0f, 0.5f);
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdDraw(commandBuffer, 6, 1, 0, 0);
+
+        // draw blue quad
+        constants.mvp = vp * blueModelMat;
+        constants.color = glm::vec4(0.0f, 0.0f, 1.0f, 0.5f);
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdDraw(commandBuffer, 6, 1, 0, 0);
+--- replace:
+        // draw blue quad
+        constants.mvp = vp * blueModelMat;
+        constants.color = glm::vec4(0.0f, 0.0f, 1.0f, 0.5f);
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdDraw(commandBuffer, 6, 1, 0, 0);
+
+        // draw green quad
+        constants.mvp = vp * greenModelMat;
+        constants.color = glm::vec4(0.0f, 1.0f, 0.0f, 0.5f);
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdDraw(commandBuffer, 6, 1, 0, 0);
+
+=== task: ex-red-transparent
+--- file: main.cpp
+--- find:
+        // draw red quad
+        constants.mvp = vp * redModelMat;
+        constants.color = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdDraw(commandBuffer, 6, 1, 0, 0);
+--- replace:
+        // (the red quad is drawn with the transparent ones now)
+--- file: main.cpp
+--- find:
+        // draw green quad
+        constants.mvp = vp * greenModelMat;
+--- replace:
+        // draw red quad, half transparent
+        constants.mvp = vp * redModelMat;
+        constants.color = glm::vec4(1.0f, 0.0f, 0.0f, 0.5f);
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdDraw(commandBuffer, 6, 1, 0, 0);
+
+        // draw green quad
+        constants.mvp = vp * greenModelMat;
+
+=== task: ex-weight
+--- file: shaders/transparent.frag
+--- find:
+    float weight = clamp(pow(min(1.0, pc.color.a * 10.0) + 0.01, 3.0) * 1e8 * pow(1.0 - gl_FragCoord.z * 0.9, 3.0), 1e-2, 3e3);
+--- replace:
+    float weight = 1.0 - gl_FragCoord.z;

@@ -1,0 +1,30 @@
+=== task: ex-speed
+--- file: computeShader.hlsl
+--- find:
+    float speed = 100.0f;
+--- replace:
+    float speed = 200.0f;
+
+=== task: ex-disc
+--- file: computeShader.hlsl
+--- find:
+    imgOutput[texelCoord] = value;
+--- replace:
+    // a white disc of radius 100 texels in the middle of the texture
+    if (distance(float2(texelCoord), float2(400.0f, 300.0f)) < 100.0f)
+        value = float4(1.0f, 1.0f, 1.0f, 1.0f);
+    imgOutput[texelCoord] = value;
+
+=== task: ex-work-groups
+--- file: computeShader.hlsl
+--- find:
+void CSMain(uint3 dispatchThreadID : SV_DispatchThreadID)
+--- replace:
+void CSMain(uint3 dispatchThreadID : SV_DispatchThreadID, uint3 groupID : SV_GroupID)
+--- file: computeShader.hlsl
+--- find:
+    imgOutput[texelCoord] = value;
+--- replace:
+    // blue in every other thread group: a checkerboard of 10 x 10 squares
+    value.z = float((groupID.x + groupID.y) % 2);
+    imgOutput[texelCoord] = value;

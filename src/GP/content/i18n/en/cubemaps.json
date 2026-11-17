@@ -56,6 +56,22 @@
         "vulkan": "`float ratio = 1.00 / 1.52; vec3 R = refract(I, normalize(fragNormal), ratio);` instead of `reflect`.",
         "d3d12": "`float ratio = 1.00f / 1.52f; float3 R = refract(I, normalize(input.normal), ratio);` instead of `reflect`."
       }
+    },
+    "ex-diamond": {
+      "text": "Turn the glass cubes into diamond: refractive index 2.42 instead of 1.52. The light bends more, and other parts of the sky show in the cubes.",
+      "hint": "Only the ratio changes: 1.00 / 2.42 (from air into diamond)."
+    },
+    "ex-tinted-glass": {
+      "text": "Tint the glass green: multiply the refracted colour by (0.6, 1.0, 0.8). The sky around the cubes stays as it is.",
+      "hint": "In the cubes' fragment shader only – the skybox has its own shader."
+    },
+    "ex-half-mirror": {
+      "text": "Combine the two effects of the chapter: let the cubes be half mirror and half glass – the mean of the reflected and the refracted colour.",
+      "hint": {
+        "opengl": "Sample the skybox twice: once in the direction `reflect(I, normal)` and once in the refracted direction, then `mix(…, …, 0.5)`.",
+        "vulkan": "Sample the skybox twice: once in the direction `reflect(I, normal)` and once in the refracted direction, then `mix(…, …, 0.5)`.",
+        "d3d12": "Sample the skybox twice: once in the direction `reflect(I, normal)` and once in the refracted direction, then `lerp(…, …, 0.5f)`."
+      }
     }
   }
 }

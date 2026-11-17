@@ -48,6 +48,22 @@
         "vulkan": "`#include <map>`. En map håller sina nycklar sorterade (minst först), så baklänges får du det bortersta fönstret först. Använd `glm::translate(model, it->second)`.",
         "d3d12": "`#include <map>`; `float distance = XMVectorGetX(XMVector3Length(cameraPos - XMLoadFloat3(&windows[i])));` och `XMMatrixTranslation(it->second.x, it->second.y, it->second.z)`."
       }
+    },
+    "ex-opaque-glass": {
+      "text": "Stäng av blandningen och titta på fönstren: glaset ritas i sin egen röda färg, och ingenting bakom syns längre igenom.",
+      "hint": {
+        "opengl": "`glDisable(GL_BLEND)` i stället för `glEnable(GL_BLEND)` – alfavärdet ignoreras då helt enkelt.",
+        "vulkan": "`blendEnable = VK_FALSE` i färgblandningens attachment – alfavärdet ignoreras då helt enkelt.",
+        "d3d12": "`BlendEnable = FALSE` i den genomskinliga pipelinens blend state – alfavärdet ignoreras då helt enkelt."
+      }
+    },
+    "ex-threshold": {
+      "text": "Höj gränsen för discard från 0.1 till 0.6: nu kastas även det halvgenomskinliga glaset (alfa ≈ 0.55) bort, och bara fönstrens ramar blir kvar.",
+      "hint": "Ett tal i shaderns `if` före `discard`."
+    },
+    "ex-sixth-window": {
+      "text": "Lägg till ett sjätte fönster i (−0.8, 0.0, 1.0), nära kameran till vänster. Kontrollera att det blandas rätt med allt bakom det – utan att ändra sorteringen.",
+      "hint": "Bara listan med fönsterpositioner växer; sorteringen efter avstånd och ritloopen tar hand om det nya fönstret av sig själva."
     }
   }
 }

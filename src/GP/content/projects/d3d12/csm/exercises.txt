@@ -1,0 +1,22 @@
+=== task: ex-half-shadow
+--- file: shadow_mapping.hlsl
+--- find:
+    float3 lighting = (ambient + (1.0f - shadow) * (diffuse + specular)) * color;
+--- replace:
+    float3 lighting = (ambient + (1.0f - 0.5f * shadow) * (diffuse + specular)) * color;
+
+=== task: ex-sun-left
+--- file: main.cpp
+--- find:
+const XMVECTOR lightDir = XMVector3Normalize(XMVectorSet(20.0f, 50.0f, 20.0f, 0.0f));
+--- replace:
+const XMVECTOR lightDir = XMVector3Normalize(XMVectorSet(-20.0f, 50.0f, 20.0f, 0.0f));
+
+=== task: ex-debug-layer
+--- file: main.cpp
+--- find:
+bool showQuad = false;
+int debugLayer = 2;    // the third cascade (20 to 50 units from the camera)
+--- replace:
+bool showQuad = true;
+int debugLayer = 0;    // the first cascade (0.1 to 10 units from the camera)

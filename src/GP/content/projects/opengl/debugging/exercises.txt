@@ -1,0 +1,24 @@
+=== task: ex-v-grey
+--- file: debugging.fs
+--- find:
+    FragColor = vec4(TexCoords, 0.0, 1.0);
+--- replace:
+    FragColor = vec4(vec3(TexCoords.y), 1.0);
+
+=== task: ex-tiles
+--- file: debugging.fs
+--- find:
+    FragColor = vec4(TexCoords, 0.0, 1.0);
+--- replace:
+    FragColor = vec4(fract(TexCoords * 3.0), 0.0, 1.0);
+
+=== task: ex-highlight
+--- file: debugging.fs
+--- find:
+    FragColor = vec4(TexCoords, 0.0, 1.0);
+    // FragColor = texture(tex, TexCoords);
+--- replace:
+    if (TexCoords.x > 0.5)
+        FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+    else
+        FragColor = texture(tex, TexCoords);

@@ -52,6 +52,22 @@
         "vulkan": "Wrap the resolution in `if (!(Ball.PassThrough && !box.IsSolid)) { … }`. ResetPlayer: `Effects.Chaos = Effects.Confuse = false; Ball.PassThrough = Ball.Sticky = false; Player.Color = glm::vec3(1.0f); Ball.Color = glm::vec3(1.0f);`",
         "d3d12": "Wrap the resolution in `if (!(Ball.PassThrough && !box.IsSolid)) { … }`. ResetPlayer: `Effects.Chaos = Effects.Confuse = false; Ball.PassThrough = Ball.Sticky = false; Player.Color = XMFLOAT3(1.0f, 1.0f, 1.0f); Ball.Color = XMFLOAT3(1.0f, 1.0f, 1.0f);`"
       }
+    },
+    "ex-slow-fall": {
+      "text": "Let the power-ups fall at half the speed. Do any of the test power-ups reach the paddle within three seconds now?",
+      "hint": "Every power-up gets the same velocity constant when it is made; `UpdatePowerUps` moves it by velocity × `dt`."
+    },
+    "ex-big-boost": {
+      "text": "Make the pad-size-increase power-up widen the paddle by 100 pixels instead of 50.",
+      "hint": "Look in `ActivatePowerUp`, at the branch for the type \"pad-size-increase\"."
+    },
+    "ex-short-confuse": {
+      "text": "Let the confuse test power-up (the one `Init` puts in row 4) last only 1 second instead of 15.",
+      "hint": "The duration is an argument of `MakePowerUp`. When it runs out, `UpdatePowerUps` switches the effect off again."
+    },
+    "ex-no-confuse": {
+      "text": "Remove the confuse power-up from the test row in `Init`, so the paddle only catches pad-size-increase.",
+      "hint": "One `push_back` fewer. The other test power-ups stay where they are."
     }
   }
 }

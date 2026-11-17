@@ -129,6 +129,39 @@ public static class GpCourse
 
     private static readonly Dictionary<string, List<CourseTask>> TaskCache = new(StringComparer.Ordinal);
 
+    /// <summary>The id prefix of a chapter's exercises ("ex-two-triangles"): small tasks of their own after the steps.</summary>
+    public const string ExercisePrefix = "ex-";
+
+    public static bool IsExercise(string taskId) => taskId.StartsWith(ExercisePrefix, StringComparison.Ordinal);
+
+    /// <summary>
+    /// A chapter's exercises for an API (projects/&lt;api&gt;/&lt;chapter&gt;/exercises.txt): each one changes the chapter's
+    /// finished program on its own, not the exercise before it.
+    /// </summary>
+    public static IReadOnlyList<CourseTask> Exercises(string chapterId, string api)
+    {
+        lock (ExerciseCache)
+        {
+            var key = $"{api}/{chapterId}";
+            if (!ExerciseCache.TryGetValue(key, out var exercises))
+                ExerciseCache[key] = exercises = Resources.Read($"projects/{api}/{chapterId}/exercises.txt") is { } text ? Edits.Parse(text) : [];
+            return exercises;
+        }
+    }
+
+    private static readonly Dictionary<string, List<CourseTask>> ExerciseCache = new(StringComparer.Ordinal);
+
+    /// <summary>The steps of a chapter followed by its exercises: what the learner ticks, in order.</summary>
+    public static IReadOnlyList<CourseTask> AllTasks(string chapterId, string api) => [.. Tasks(chapterId, api), .. Exercises(chapterId, api)];
+
+    /// <summary>The chapter's finished program: the start project with every step's edits.</summary>
+    public static GpuProject SolutionProject(string chapterId, string api)
+    {
+        var project = StartProject(chapterId, api);
+        foreach (var edit in Tasks(chapterId, api).SelectMany(t => t.Edits)) Edits.Apply(project, edit);
+        return project;
+    }
+
     /// <summary>The project a chapter starts with for an API (a lesson without its own project uses the previous one's).</summary>
     public static GpuProject StartProject(string chapterId, string api)
     {

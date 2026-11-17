@@ -72,6 +72,30 @@
         "vulkan": "`glfwSetScrollCallback(window, scroll_callback);` – `fov -= static_cast<float>(yoffset);` och begränsa sedan. `updateUniformBuffer()` bygger redan om projektionen varje bildruta.",
         "d3d12": "`OnMouseWheel(static_cast<float>(GET_WHEEL_DELTA_WPARAM(wParam)) / WHEEL_DELTA);` – ett hack är `WHEEL_DELTA` (120); bort från dig är positivt och zoomar in."
       }
+    },
+    "ex-side-view": {
+      "text": "Starta kameran på scenens vänstra sida: i (−3, 0, 0), med blicken längs +x mot mittkuben. Se till att musens första rörelse inte svänger tillbaka vyn dit den brukade titta.",
+      "hint": "Tre globala variabler ändras: `cameraPos`, `cameraFront` och `yaw`. Musens callback bygger om `cameraFront` från `yaw` och `pitch` – med yaw 0° blir riktningen (cos 0°, 0, sin 0°) = (1, 0, 0)."
+    },
+    "ex-sprint": {
+      "text": "Låt kameran springa: medan Shift hålls nere rör den sig dubbelt så fort.",
+      "hint": {
+        "opengl": "I `processInput`, direkt efter att `cameraSpeed` räknats ut: om `GLFW_KEY_LEFT_SHIFT` är nedtryckt, dubbla den. Alla fyra riktningarna använder samma `cameraSpeed`.",
+        "vulkan": "I `processInput`, direkt efter att `cameraSpeed` räknats ut: om `GLFW_KEY_LEFT_SHIFT` är nedtryckt, dubbla den. Alla fyra riktningarna använder samma `cameraSpeed`.",
+        "d3d12": "Direkt efter att `cameraSpeed` räknats ut: om `keys[VK_SHIFT]` är satt, dubbla den. `WindowProc` noterar redan varje tangent i `keys`, även Shift."
+      }
+    },
+    "ex-invert-mouse": {
+      "text": "Invertera musens lodräta axel, som styrningen i en flygsimulator: när du skjuter musen ifrån dig tittar kameran nedåt.",
+      "hint": "Musens callback gör om ändringen i y till `yoffset` – den är redan omvänd, eftersom fönsterkoordinaterna växer nedåt. Vänd den en gång till."
+    },
+    "ex-ground": {
+      "text": "Gör den till en riktig FPS-kamera: du går på marken, så att titta upp eller ner och trycka W får inte lyfta dig från den eller sänka dig under den (håll kameran på y = 0).",
+      "hint": {
+        "opengl": "Sist i `processInput`, efter alla fyra tangenterna: tvinga tillbaka kamerans höjd till marken med `cameraPos.y = 0.0f;`.",
+        "vulkan": "Sist i `processInput`, efter alla fyra tangenterna: tvinga tillbaka kamerans höjd till marken med `cameraPos.y = 0.0f;`.",
+        "d3d12": "Efter de fyra tangenterna: tvinga tillbaka kamerans höjd till marken. En `XMVECTOR` har ingen `.y` att tilldela; `XMVectorSetY(cameraPos, 0.0f)` ger en kopia med nytt y."
+      }
     }
   }
 }

@@ -1,0 +1,22 @@
+=== task: ex-flatter
+--- file: main.cpp
+--- find:
+    float yScale = 64.0f / 256.0f, yShift = 16.0f; // apply a scale and a shift to the height data
+--- replace:
+    float yScale = 32.0f / 256.0f, yShift = 16.0f; // apply a scale and a shift to the height data
+
+=== task: ex-water
+--- file: cpuheight.hlsl
+--- find:
+    return float4(h, h, h, 1.0f);
+--- replace:
+    if (input.height < -6.0f)
+        return float4(0.1f, 0.3f, 0.6f, 1.0f);    // water below height -6
+    return float4(h, h, h, 1.0f);
+
+=== task: ex-back-half
+--- file: main.cpp
+--- find:
+    for (int strip = 0; strip < m_numStrips; strip++)
+--- replace:
+    for (int strip = 0; strip < m_numStrips / 2; strip++)

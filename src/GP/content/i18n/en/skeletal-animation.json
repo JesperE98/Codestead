@@ -72,6 +72,30 @@
         "vulkan": "`UpdateAnimation(animator, deltaTime);` in `mainLoop()`, after `processInput()` – learnopengl's `animator.UpdateAnimation(deltaTime)`. `updateUniformBuffer()` copies the new matrices every frame already.",
         "d3d12": "`UpdateAnimation(m_animator, deltaTime);` – learnopengl's `animator.UpdateAnimation(deltaTime)`."
       }
+    },
+    "ex-slow-motion": {
+      "text": "Play the animation in slow motion, at half speed: one sway should now take 4 seconds instead of 2.",
+      "hint": "The animator only moves forward by the time it is given each frame – halve what you pass to `UpdateAnimation`. Nothing in the bones or the shader changes."
+    },
+    "ex-freeze-pose": {
+      "text": "Stop the tentacle in the pose it has at 1.25 s (leaning to the right) and keep it there, whatever the clock says.",
+      "hint": {
+        "opengl": "`UpdateAnimation` adds its argument to the animator's time and computes the bone matrices. Call it once after `InitAnimator`, with 1.25 seconds, and no longer in the render loop.",
+        "vulkan": "`UpdateAnimation` adds its argument to the animator's time and computes the bone matrices. Call it once after `InitAnimator`, with 1.25 seconds, and no longer in `mainLoop`.",
+        "d3d12": "`UpdateAnimation` adds its argument to the animator's time and computes the bone matrices. Call it once after `InitAnimator`, with 1.25 seconds, and no longer in `OnUpdate`."
+      }
+    },
+    "ex-still-base": {
+      "text": "Keep the bottom bone (`Base`) in its rest pose while the other three still play the animation. How much less does the tentacle sway?",
+      "hint": "`CalculateBoneTransform` replaces a node's own transform with its bone's animated one. Skip that for the node named `\"Base\"`: it keeps `node->transformation`, and its children still build on it."
+    },
+    "ex-bone-weight": {
+      "text": "Make a debug view of the skinning: paint the tentacle red by how much the `Upper` bone (id 2) moves each vertex – black where it has no influence, bright red where it alone decides.",
+      "hint": {
+        "opengl": "In `anim_model.vs`, add up `weights[i]` for every slot whose `boneIds[i]` is 2 and pass the sum on with an `out float`; `anim_model.fs` writes it as the red channel instead of the texture.",
+        "vulkan": "In `anim_model.vert`, add up `weights[i]` for every slot whose `boneIds[i]` is 2 and pass the sum on in a new output location; `anim_model.frag` writes it as the red channel instead of the texture. Recompile both.",
+        "d3d12": "In `VSMain`, add up `weights[i]` for every slot whose `boneIds[i]` is 2 and pass the sum on in a new `PSInput` member (any semantic of your own); `PSMain` returns it as the red channel instead of the texture."
+      }
     }
   }
 }

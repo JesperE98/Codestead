@@ -36,6 +36,34 @@
         "vulkan": "Global `vec3 gridSamplingDisk[20] = vec3[](…)` (a cube's 8 corners and 12 edge middles). `float diskRadius = (1.0 + (viewDistance / ubo.far_plane)) / 25.0;`, loop `i < samples` (20): `texture(depthMap, fragToLight + gridSamplingDisk[i] * diskRadius).r * ubo.far_plane`, `if (currentDepth - bias > closestDepth) shadow += 1.0;`, then `shadow /= float(samples);`.",
         "d3d12": "`static const float3 gridSamplingDisk[20] = { … };` (a cube's 8 corners and 12 edge middles). `float diskRadius = (1.0f + (viewDistance / far_plane)) / 25.0f;`, loop `i < samples` (20): `depthMap.Sample(shadowSampler, fragToLight + gridSamplingDisk[i] * diskRadius).r * far_plane`, `if (currentDepth - bias > closestDepth) shadow += 1.0f;`, then `shadow /= float(samples);`."
       }
+    },
+    "ex-animate-light": {
+      "text": "Let the light move back and forth through the room: its z goes as sin(time × 0.5) × 3. Watch the cube's shadow slide over the wall.",
+      "hint": {
+        "opengl": "learnopengl's line is already in the render loop, commented out – before the cube map's matrices are made, so the depth pass and the lighting see the same position.",
+        "vulkan": "Set `lightPos.z` at the top of `updateUniformBuffer()`, from `glfwGetTime()`, before the six shadow matrices are made – so the depth pass and the lighting see the same position.",
+        "d3d12": "Set `lightPos.z` in `OnUpdate()` before the six shadow matrices are made, from a time since the start: a `static auto startTime = std::chrono::high_resolution_clock::now();` and the `duration` up to `currentFrame`."
+      }
+    },
+    "ex-far-plane": {
+      "text": "Lower the shadow cube map's far plane from 25 to 6. Why does everything further than 6 units from the light suddenly lie in shadow?",
+      "hint": "Only `far_plane` changes. The depth pass no longer draws anything beyond 6 units, so there the cube map keeps the value it was cleared to: 1.0 – that is 6 units once multiplied by `far_plane`. Compare that with the fragment's real distance."
+    },
+    "ex-add-cube": {
+      "text": "Add a sixth cube to the room, at (1.5, −1, −2.5) with scale 0.5, so that you see both it and the shadow it throws on the back wall.",
+      "hint": {
+        "opengl": "`renderScene` draws the scene for both passes – add the cube there (translate, scale, `setMat4(\"model\", …)`, `renderCube()`) and it lands in the cube map and in the picture.",
+        "vulkan": "`renderScene` records the scene for both passes – add the cube there (its model matrix in the push constants, then `vkCmdDraw`) and it lands in the cube map and in the picture.",
+        "d3d12": "`RenderScene` records the scene for both passes – add the cube there (scaling × translation, its model and normal matrix in the root constants, then `DrawInstanced`) and it lands in the cube map and in the picture."
+      }
+    },
+    "ex-move-light": {
+      "text": "Move the light up near the ceiling, to (−1.5, 4, −1), right above the rotated cube in the top left. Its shadow now falls down over the back wall.",
+      "hint": {
+        "opengl": "Only `lightPos` changes – the six cube map views are made from it every frame. The light and the camera are no longer on one line, so the cube no longer hides its own shadow.",
+        "vulkan": "Only the global `lightPos` changes – the six cube map views are made from it every frame. The light and the camera are no longer on one line, so the cube no longer hides its own shadow.",
+        "d3d12": "Only the global `lightPos` changes – the six cube map views are made from it every frame. The light and the camera are no longer on one line, so the cube no longer hides its own shadow."
+      }
     }
   }
 }

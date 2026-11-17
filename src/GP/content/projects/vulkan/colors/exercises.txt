@@ -1,0 +1,39 @@
+=== task: ex-green-light
+--- file: main.cpp
+--- find:
+        ubo.lightColor  = glm::vec3(1.0f, 1.0f, 1.0f);
+--- replace:
+        ubo.lightColor  = glm::vec3(0.0f, 1.0f, 0.0f);
+
+=== task: ex-black-cube
+--- file: main.cpp
+--- find:
+        ubo.objectColor = glm::vec3(1.0f, 0.5f, 0.31f);
+        ubo.lightColor  = glm::vec3(1.0f, 1.0f, 1.0f);
+--- replace:
+        ubo.objectColor = glm::vec3(0.0f, 1.0f, 1.0f);
+        ubo.lightColor  = glm::vec3(1.0f, 0.0f, 0.0f);
+
+=== task: ex-lamp-colour
+--- file: main.cpp
+--- find:
+        ubo.lightColor  = glm::vec3(1.0f, 1.0f, 1.0f);
+--- replace:
+        ubo.lightColor  = glm::vec3(1.0f, 0.8f, 0.6f);
+--- file: shaders/light_cube.frag
+--- find:
+layout(location = 0) out vec4 outColor;
+--- replace:
+layout(binding = 2) uniform UniformBufferObject {
+    mat4 view;
+    mat4 proj;
+    vec3 objectColor;
+    vec3 lightColor;
+} ubo;
+
+layout(location = 0) out vec4 outColor;
+--- file: shaders/light_cube.frag
+--- find:
+    outColor = vec4(1.0); // set all 4 vector values to 1.0
+--- replace:
+    outColor = vec4(ubo.lightColor, 1.0); // the lamp shines in the light's colour

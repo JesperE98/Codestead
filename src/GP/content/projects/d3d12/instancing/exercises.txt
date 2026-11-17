@@ -1,0 +1,39 @@
+=== task: ex-high-belt
+--- file: main.cpp
+--- find:
+        float y = displacement * 0.4f; // keep height of asteroid field smaller compared to width of x and z
+--- replace:
+        float y = displacement * 2.0f; // five times as high as before
+
+=== task: ex-more-rocks
+--- file: main.cpp
+--- find:
+    static const UINT amount = 500;
+--- replace:
+    static const UINT amount = 1500;
+
+=== task: ex-red-rocks
+--- file: asteroids.hlsl
+--- find:
+    float2 texCoords : TEXCOORD;
+};
+--- replace:
+    float2 texCoords : TEXCOORD;
+    float3 tint : COLOR;
+};
+--- file: asteroids.hlsl
+--- find:
+    float4 instanceRow2 : INSTANCEMATRIX2, float4 instanceRow3 : INSTANCEMATRIX3)
+--- replace:
+    float4 instanceRow2 : INSTANCEMATRIX2, float4 instanceRow3 : INSTANCEMATRIX3, uint instanceID : SV_InstanceID)
+--- file: asteroids.hlsl
+--- find:
+    result.texCoords = texCoords;
+--- replace:
+    result.texCoords = texCoords;
+    result.tint = (instanceID % 3 == 0) ? float3(1.0f, 0.4f, 0.3f) : float3(1.0f, 1.0f, 1.0f);    // every third rock reddish
+--- file: asteroids.hlsl
+--- find:
+    return texture_diffuse1.Sample(wrapSampler, input.texCoords);
+--- replace:
+    return texture_diffuse1.Sample(wrapSampler, input.texCoords) * float4(input.tint, 1.0f);

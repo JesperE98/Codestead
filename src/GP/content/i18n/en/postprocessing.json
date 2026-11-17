@@ -48,6 +48,34 @@
     "shake": {
       "text": "Remove the try-out line again; instead shake the screen when the ball hits a solid block: set `ShakeTime` to 0.05 seconds and `Effects.Shake`, and in `Update` count ShakeTime down and stop the shake when it is over.",
       "hint": "In DoCollisions: `if (!box.IsSolid) box.Destroyed = true; else { ShakeTime = 0.05f; Effects.Shake = true; }`. In Update after the particles: `if (ShakeTime > 0.0f) { ShakeTime -= dt; if (ShakeTime <= 0.0f) Effects.Shake = false; }`. `float ShakeTime = 0.0f;` with the globals."
+    },
+    "ex-greyscale": {
+      "text": "Add a greyscale look: when no effect is on, show the game in shades of grey, using the luminance 0.2126 r + 0.7152 g + 0.0722 b.",
+      "hint": {
+        "opengl": "In `post_processing.fs`, the last `else` (no effect): sample the scene, take the `dot` of its colour with (0.2126, 0.7152, 0.0722) and output that value as red, green and blue.",
+        "vulkan": "In `shaders/post_processing.frag`, the last `else` (no effect): sample the scene, take the `dot` of its colour with (0.2126, 0.7152, 0.0722) and output that value as red, green and blue. Recompile it with `glslc`.",
+        "d3d12": "In the pixel shader in `post_processing.hlsl`, the last `else` (no effect): sample the scene, take the `dot` of its colour with (0.2126, 0.7152, 0.0722) and return that value as red, green and blue."
+      }
+    },
+    "ex-long-shake": {
+      "text": "Make the screen shake when the ball hits a solid stone last half a second instead of 0.05 seconds.",
+      "hint": "`DoCollisions` starts the shake by setting `ShakeTime`; `Update` counts it down with `dt` and switches the effect off at 0."
+    },
+    "ex-flip-only": {
+      "text": "Turn on the confuse effect from the start, but change it so that it only turns the picture upside down and mirrors it – without inverting the colours.",
+      "hint": {
+        "opengl": "Set `Confuse` to true where the PostProcessor's flags get their values. The flipping is done in the vertex shader `post_processing.vs`; the inversion is the `1.0 - …` in the confuse branch of `post_processing.fs`.",
+        "vulkan": "Set `Confuse` to true where the PostProcessor's flags get their values. The flipping is done in the vertex shader `shaders/post_processing.vert`; the inversion is the `1.0 - …` in the confuse branch of `shaders/post_processing.frag` (recompile it with `glslc`).",
+        "d3d12": "Set `Confuse` to true where the PostProcessor's flags get their values. The flipping is done in `VSMain` in `post_processing.hlsl`; the inversion is the `1.0f - …` in the confuse branch of `PSMain`."
+      }
+    },
+    "ex-vignette": {
+      "text": "Add a vignette: when no effect is on, darken the picture towards its edges – multiply the colour by 1 − (the distance of the texture coordinate from the centre (0.5, 0.5)).",
+      "hint": {
+        "opengl": "In the last `else` of `post_processing.fs`: `length(TexCoords - vec2(0.5))` is 0 in the middle and about 0.7 in the corners.",
+        "vulkan": "In the last `else` of `shaders/post_processing.frag`: `length(TexCoords - vec2(0.5))` is 0 in the middle and about 0.7 in the corners. Recompile it with `glslc`.",
+        "d3d12": "In the last `else` of the pixel shader: `length(input.texCoord - float2(0.5f, 0.5f))` is 0 in the middle and about 0.7 in the corners."
+      }
     }
   }
 }

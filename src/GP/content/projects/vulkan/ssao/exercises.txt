@@ -1,0 +1,28 @@
+=== task: ex-warm-light
+--- file: main.cpp
+--- find:
+glm::vec3 lightColor = glm::vec3(0.2f, 0.2f, 0.7f);
+--- replace:
+glm::vec3 lightColor = glm::vec3(0.8f, 0.5f, 0.2f);
+
+=== task: ex-ambient-only
+--- file: shaders/ssao_lighting.frag
+--- find:
+    outColor = vec4(lighting, 1.0);
+--- replace:
+    outColor = vec4(ambient, 1.0);
+
+=== task: ex-radius
+--- file: shaders/ssao.frag
+--- find:
+float radius = 0.5;
+--- replace:
+float radius = 1.5;
+
+=== task: ex-ao-power
+--- file: shaders/ssao.frag
+--- find:
+    occlusion = 1.0 - (occlusion / kernelSize);
+--- replace:
+    occlusion = 1.0 - (occlusion / kernelSize);
+    occlusion = pow(occlusion, 3.0); // a stronger effect: dark corners get darker

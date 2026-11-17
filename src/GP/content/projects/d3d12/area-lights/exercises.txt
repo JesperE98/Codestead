@@ -1,0 +1,27 @@
+=== task: ex-intensity
+--- file: main.cpp
+--- find:
+    float intensity = 2.0f;
+--- replace:
+    float intensity = 4.0f;
+
+=== task: ex-roughness
+--- file: main.cpp
+--- find:
+const float ROUGHNESS = 0.5f;
+--- replace:
+const float ROUGHNESS = 0.15f;
+
+=== task: ex-red-light
+--- file: main.cpp
+--- find:
+    { XMFLOAT3(0.0f, 0.0f, 0.0f), XMConvertToRadians(  0.0f), XMFLOAT3(1.0f, 0.55f, 0.25f) },
+--- replace:
+    { XMFLOAT3(0.0f, 0.0f, 0.0f), XMConvertToRadians(  0.0f), XMFLOAT3(1.0f, 0.0f, 0.0f) },
+
+=== task: ex-one-sided
+--- file: main.cpp
+--- find:
+    bool twoSided = true;
+--- replace:
+    bool twoSided = false;

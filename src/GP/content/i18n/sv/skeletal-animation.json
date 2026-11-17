@@ -72,6 +72,30 @@
         "vulkan": "`UpdateAnimation(animator, deltaTime);` i `mainLoop()`, efter `processInput()` – learnopengls `animator.UpdateAnimation(deltaTime)`. `updateUniformBuffer()` kopierar redan de nya matriserna varje bildruta.",
         "d3d12": "`UpdateAnimation(m_animator, deltaTime);` – learnopengls `animator.UpdateAnimation(deltaTime)`."
       }
+    },
+    "ex-slow-motion": {
+      "text": "Spela animationen i slow motion, i halv fart: en svajning ska nu ta 4 sekunder i stället för 2.",
+      "hint": "Animatorn går bara framåt med den tid den får varje bildruta – halvera det du skickar till `UpdateAnimation`. Inget i benen eller shadern ändras."
+    },
+    "ex-freeze-pose": {
+      "text": "Stoppa tentakeln i den pose den har vid 1,25 s (lutad åt höger) och låt den stå kvar så, vad klockan än visar.",
+      "hint": {
+        "opengl": "`UpdateAnimation` lägger sitt argument till animatorns tid och räknar ut benmatriserna. Anropa den en gång efter `InitAnimator`, med 1,25 sekunder, och inte längre i renderloopen.",
+        "vulkan": "`UpdateAnimation` lägger sitt argument till animatorns tid och räknar ut benmatriserna. Anropa den en gång efter `InitAnimator`, med 1,25 sekunder, och inte längre i `mainLoop`.",
+        "d3d12": "`UpdateAnimation` lägger sitt argument till animatorns tid och räknar ut benmatriserna. Anropa den en gång efter `InitAnimator`, med 1,25 sekunder, och inte längre i `OnUpdate`."
+      }
+    },
+    "ex-still-base": {
+      "text": "Låt det nedersta benet (`Base`) stå kvar i vilopositionen medan de tre andra fortsätter att spela animationen. Hur mycket mindre svajar tentakeln?",
+      "hint": "`CalculateBoneTransform` byter ut en nods egen transform mot dess bens animerade. Hoppa över det för noden som heter `\"Base\"`: den behåller `node->transformation`, och dess barn bygger fortfarande vidare på den."
+    },
+    "ex-bone-weight": {
+      "text": "Gör en felsökningsvy av skinningen: måla tentakeln röd efter hur mycket benet `Upper` (id 2) flyttar varje vertex – svart där det inte påverkar alls, klarröd där det ensamt bestämmer.",
+      "hint": {
+        "opengl": "I `anim_model.vs`: summera `weights[i]` för varje plats där `boneIds[i]` är 2 och skicka vidare summan med en `out float`; `anim_model.fs` skriver den som röd kanal i stället för texturen.",
+        "vulkan": "I `anim_model.vert`: summera `weights[i]` för varje plats där `boneIds[i]` är 2 och skicka vidare summan på en ny output-location; `anim_model.frag` skriver den som röd kanal i stället för texturen. Kompilera om båda.",
+        "d3d12": "I `VSMain`: summera `weights[i]` för varje plats där `boneIds[i]` är 2 och skicka vidare summan i en ny medlem i `PSInput` (med en egen semantik); `PSMain` returnerar den som röd kanal i stället för texturen."
+      }
     }
   }
 }

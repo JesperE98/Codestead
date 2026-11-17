@@ -48,6 +48,30 @@
         "vulkan": "The other two pipelines get `VK_TRUE`; destroy `outlinePipeline` in `cleanup()`. `model = glm::scale(model, glm::vec3(scale, scale, scale))` after the translate. Nothing to restore afterwards: each pipeline carries its own state.",
         "d3d12": "Before `m_singleColorPipelineState`: `FrontFace.StencilFunc = D3D12_COMPARISON_FUNC_NOT_EQUAL`, `BackFace = FrontFace`, `StencilWriteMask = 0x00`, `DepthEnable = FALSE`. Then `SetPipelineState(m_singleColorPipelineState.Get())` and `model = XMMatrixScaling(scale, scale, scale) * XMMatrixTranslation(…)` per cube."
       }
+    },
+    "ex-orange-outline": {
+      "text": "Make the outline orange: (1.0, 0.6, 0.0).",
+      "hint": {
+        "opengl": "The outline's colour comes from one place: `stencil_single_color.fs`.",
+        "vulkan": "The outline's colour comes from one place: `shaders/stencil_single_color.frag` – recompile it with `glslc`.",
+        "d3d12": "The outline's colour comes from one place: the pixel shader in `stencil_single_color.hlsl`."
+      }
+    },
+    "ex-thick-outline": {
+      "text": "Make the outline twice as thick.",
+      "hint": "The outline is the difference between a cube and its enlarged copy: enlarge the copy more – `scale` 1.2 instead of 1.1."
+    },
+    "ex-left-only": {
+      "text": "Outline only the left cube – as if it were the one the player has selected.",
+      "hint": "Both cubes are still drawn normally (and write 1 into the stencil buffer); only the second, enlarged draw of the right cube goes."
+    },
+    "ex-silhouette": {
+      "text": "Turn the outline into a silhouette: let the single colour cover the cubes themselves instead of the ring around them – by changing nothing but the stencil test's comparison.",
+      "hint": {
+        "opengl": "The enlarged cubes are now drawn where the stencil value is *not* 1. Draw them only where it *is* 1: `GL_EQUAL` in the second `glStencilFunc`.",
+        "vulkan": "The outline pipeline passes where the stencil value is *not* 1. Make it pass only where it *is* 1: `VK_COMPARE_OP_EQUAL` for `outlinePipeline`.",
+        "d3d12": "The single-colour pipeline state passes where the stencil value is *not* 1. Make it pass only where it *is* 1: `D3D12_COMPARISON_FUNC_EQUAL`."
+      }
     }
   }
 }

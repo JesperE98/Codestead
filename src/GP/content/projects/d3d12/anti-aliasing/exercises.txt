@@ -1,0 +1,16 @@
+=== task: ex-two-samples
+--- file: main.cpp
+--- find:
+    static const UINT SampleCount = 4;
+--- replace:
+    static const UINT SampleCount = 2;
+
+=== task: ex-show-edges
+--- file: aa_post.hlsl
+--- find:
+    return float4(grayscale, grayscale, grayscale, 1.0f);
+--- replace:
+    // neither the background (green 0.1) nor the cube (green 1.0): a pixel the resolve has mixed - show it in red
+    if (col.g > 0.12f && col.g < 0.98f)
+        return float4(1.0f, 0.0f, 0.0f, 1.0f);
+    return float4(grayscale, grayscale, grayscale, 1.0f);

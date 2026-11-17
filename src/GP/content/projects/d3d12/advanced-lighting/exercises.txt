@@ -1,0 +1,64 @@
+=== task: ex-specular-only
+--- file: advanced_lighting.hlsl
+--- find:
+    return float4(ambient + diffuse + specular, 1.0f);
+--- replace:
+    return float4(specular, 1.0f);
+
+=== task: ex-blue-light
+--- file: advanced_lighting.hlsl
+--- find:
+    float3 specular = float3(0.3f, 0.3f, 0.3f) * spec;    // assuming bright white light color
+--- replace:
+    float3 specular = float3(0.3f, 0.3f, 0.3f) * spec;    // assuming bright white light color
+    float3 lightColor = float3(0.3f, 0.6f, 1.0f);
+    diffuse *= lightColor;
+    specular *= lightColor;
+
+=== task: ex-move-light
+--- file: main.cpp
+--- find:
+XMFLOAT3 lightPos(0.0f, 0.0f, 0.0f);
+--- replace:
+XMFLOAT3 lightPos(-2.0f, 0.0f, 0.0f);
+
+=== task: ex-two-lights
+--- file: advanced_lighting.hlsl
+--- find:
+    float3 lightPos;
+};
+--- replace:
+    float3 lightPos;
+    float3 lightPos2;
+};
+--- file: advanced_lighting.hlsl
+--- find:
+    float3 specular = float3(0.3f, 0.3f, 0.3f) * spec;    // assuming bright white light color
+--- replace:
+    float3 specular = float3(0.3f, 0.3f, 0.3f) * spec;    // assuming bright white light color
+    // the second light (Blinn-Phong)
+    float3 lightDir2 = normalize(lightPos2 - input.fragPos);
+    float3 halfwayDir2 = normalize(lightDir2 + viewDir);
+    diffuse += max(dot(lightDir2, normal), 0.0f) * color;
+    specular += float3(0.3f, 0.3f, 0.3f) * pow(max(dot(normal, halfwayDir2), 0.0f), 32.0f);
+--- file: main.cpp
+--- find:
+XMFLOAT3 lightPos(0.0f, 0.0f, 0.0f);
+--- replace:
+XMFLOAT3 lightPos(0.0f, 0.0f, 0.0f);
+XMFLOAT3 lightPos2(-1.5f, 0.0f, -1.0f);
+--- file: main.cpp
+--- find:
+        XMFLOAT3 lightPos;
+        float padding1;
+--- replace:
+        XMFLOAT3 lightPos;
+        float padding1;
+        XMFLOAT3 lightPos2;
+        float padding2;
+--- file: main.cpp
+--- find:
+    constantBufferData.lightPos = lightPos;
+--- replace:
+    constantBufferData.lightPos = lightPos;
+    constantBufferData.lightPos2 = lightPos2;

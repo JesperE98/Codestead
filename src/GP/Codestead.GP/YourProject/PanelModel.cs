@@ -16,4 +16,5 @@ public sealed record PanelModel(
     IReadOnlyList<TaskRow> Tasks,
     int SelectedTask,
     string? LockNote = null,
+    int StepCount = int.MaxValue,
     (int Done, int Total) Questions = default);

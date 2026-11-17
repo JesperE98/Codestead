@@ -1,0 +1,21 @@
+=== task: ex-short-indices
+--- file: main.cpp
+--- find:
+    std::vector<UINT>    indices;
+--- replace:
+    std::vector<UINT16>  indices;
+--- file: main.cpp
+--- find:
+    Mesh(std::vector<Vertex> vertices, std::vector<UINT> indices, std::vector<Texture> textures,
+--- replace:
+    Mesh(std::vector<Vertex> vertices, std::vector<UINT16> indices, std::vector<Texture> textures,
+--- file: main.cpp
+--- find:
+        const UINT indexBufferSize = static_cast<UINT>(indices.size() * sizeof(UINT));
+--- replace:
+        const UINT indexBufferSize = static_cast<UINT>(indices.size() * sizeof(UINT16));
+--- file: main.cpp
+--- find:
+        m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+--- replace:
+        m_indexBufferView.Format = DXGI_FORMAT_R16_UINT;

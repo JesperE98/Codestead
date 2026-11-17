@@ -1,0 +1,78 @@
+=== task: ex-one-triangle
+--- file: main.cpp
+--- find:
+    glNamedBufferSubData(EBO, 0, sizeof(indices), indices);
+--- replace:
+    glNamedBufferSubData(EBO, 0, sizeof(indices), indices);
+    // later: overwrite the second triangle by name - three equal indices draw nothing
+    unsigned int noTriangle[] = { 0, 0, 0 };
+    glNamedBufferSubData(EBO, 3 * sizeof(unsigned int), sizeof(noTriangle), noTriangle);
+
+=== task: ex-tile
+--- file: main.cpp
+--- find:
+         0.5f,  0.5f, 0.0f,   1.0f, 1.0f, // top right
+         0.5f, -0.5f, 0.0f,   1.0f, 0.0f, // bottom right
+        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, // bottom left
+        -0.5f,  0.5f, 0.0f,   0.0f, 1.0f  // top left
+--- replace:
+         0.5f,  0.5f, 0.0f,   2.0f, 2.0f, // top right
+         0.5f, -0.5f, 0.0f,   2.0f, 0.0f, // bottom right
+        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, // bottom left
+        -0.5f,  0.5f, 0.0f,   0.0f, 2.0f  // top left
+
+=== task: ex-colour-buffer
+--- file: main.cpp
+--- find:
+    "layout (location = 1) in vec2 aTexCoord;\n"
+    "out vec2 TexCoord;\n"
+--- replace:
+    "layout (location = 1) in vec2 aTexCoord;\n"
+    "layout (location = 2) in vec3 aColor;\n"
+    "out vec2 TexCoord;\n"
+    "out vec3 Color;\n"
+--- file: main.cpp
+--- find:
+    "   TexCoord = aTexCoord;\n"
+--- replace:
+    "   TexCoord = aTexCoord;\n"
+    "   Color = aColor;\n"
+--- file: main.cpp
+--- find:
+    "in vec2 TexCoord;\n"
+    "uniform sampler2D texture1;\n"
+--- replace:
+    "in vec2 TexCoord;\n"
+    "in vec3 Color;\n"
+    "uniform sampler2D texture1;\n"
+--- file: main.cpp
+--- find:
+    "   FragColor = texture(texture1, TexCoord);\n"
+--- replace:
+    "   FragColor = texture(texture1, TexCoord) * vec4(Color, 1.0);\n"
+--- file: main.cpp
+--- find:
+    glVertexArrayElementBuffer(VAO, EBO);
+--- replace:
+    glVertexArrayElementBuffer(VAO, EBO);
+
+    // a second buffer with a colour per vertex, on binding point 1
+    float colors[] = {
+        1.0f, 0.0f, 0.0f, // top right: red
+        0.0f, 1.0f, 0.0f, // bottom right: green
+        0.0f, 0.0f, 1.0f, // bottom left: blue
+        1.0f, 1.0f, 1.0f  // top left: white
+    };
+    GLuint colorVBO = 0;
+    glCreateBuffers(1, &colorVBO);
+    glNamedBufferStorage(colorVBO, sizeof(colors), colors, 0x0);
+    glEnableVertexArrayAttrib(VAO, 2);
+    glVertexArrayAttribFormat(VAO, 2, 3, GL_FLOAT, GL_FALSE, 0);
+    glVertexArrayAttribBinding(VAO, 2, 1);
+    glVertexArrayVertexBuffer(VAO, 1, colorVBO, 0, sizeof(float) * 3);
+--- file: main.cpp
+--- find:
+    glDeleteBuffers(1, &EBO);
+--- replace:
+    glDeleteBuffers(1, &EBO);
+    glDeleteBuffers(1, &colorVBO);

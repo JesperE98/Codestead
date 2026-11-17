@@ -1,0 +1,28 @@
+=== task: ex-show-depth
+--- file: shaders/parallax_mapping.frag
+--- find:
+    outColor = vec4(ambient + diffuse + specular, 1.0);
+--- replace:
+    outColor = vec4(vec3(texture(depthMap, texCoords).r), 1.0);
+
+=== task: ex-height-scale
+--- file: main.cpp
+--- find:
+float heightScale = 0.1f;
+--- replace:
+float heightScale = 0.25f;
+
+=== task: ex-no-discard
+--- file: shaders/parallax_mapping.frag
+--- find:
+    if (texCoords.x > 1.0 || texCoords.y > 1.0 || texCoords.x < 0.0 || texCoords.y < 0.0)
+        discard;
+--- replace:
+    // no discard: shifted coordinates outside 0..1 wrap around (VK_SAMPLER_ADDRESS_MODE_REPEAT)
+
+=== task: ex-steeper
+--- file: main.cpp
+--- find:
+        model = glm::rotate(model, glm::radians(-45.0f), glm::vec3(1.0f, 0.0f, 0.0f)); // tilted back: seen at an angle (learnopengl turns it with time)
+--- replace:
+        model = glm::rotate(model, glm::radians(-70.0f), glm::vec3(1.0f, 0.0f, 0.0f)); // tilted further back: seen at a flatter angle

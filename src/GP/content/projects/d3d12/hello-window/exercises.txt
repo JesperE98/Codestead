@@ -1,0 +1,22 @@
+=== task: ex-clear-colour
+--- file: main.cpp
+--- find:
+    const float clearColor[] = { 0.2f, 0.3f, 0.3f, 1.0f };
+--- replace:
+    const float clearColor[] = { 0.6f, 0.2f, 0.4f, 1.0f };
+
+=== task: ex-window-size
+--- file: main.cpp
+--- find:
+    const UINT width = 800;
+    const UINT height = 600;
+--- replace:
+    const UINT width = 1024;
+    const UINT height = 576;
+
+=== task: ex-quit-key
+--- file: main.cpp
+--- find:
+        if (wParam == VK_ESCAPE)
+--- replace:
+        if (wParam == VK_ESCAPE || wParam == 'Q')

@@ -1,0 +1,48 @@
+=== task: ex-colour
+--- file: shaders.hlsl
+--- find:
+    return float4(1.0f, 0.5f, 0.2f, 1.0f);
+--- replace:
+    return float4(0.2f, 0.8f, 0.4f, 1.0f);
+
+=== task: ex-tall
+--- file: main.cpp
+--- find:
+            { { 0.5f, 0.5f, 0.0f } },     // top right
+            { { 0.5f, -0.5f, 0.0f } },    // bottom right
+            { { -0.5f, -0.5f, 0.0f } },   // bottom left
+            { { -0.5f, 0.5f, 0.0f } }     // top left
+--- replace:
+            { { 0.2f, 0.8f, 0.0f } },     // top right
+            { { 0.2f, -0.8f, 0.0f } },    // bottom right
+            { { -0.2f, -0.8f, 0.0f } },   // bottom left
+            { { -0.2f, 0.8f, 0.0f } }     // top left
+
+=== task: ex-house
+--- file: main.cpp
+--- find:
+            { { -0.5f, 0.5f, 0.0f } }     // top left
+        };
+--- replace:
+            { { -0.5f, 0.5f, 0.0f } },    // top left
+            { { 0.0f, 0.9f, 0.0f } }      // the roof's peak
+        };
+--- file: main.cpp
+--- find:
+            1, 2, 3    // second triangle
+--- replace:
+            1, 2, 3,   // second triangle
+            3, 4, 0    // the roof
+--- file: main.cpp
+--- find:
+    m_commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+--- replace:
+    m_commandList->DrawIndexedInstanced(9, 1, 0, 0, 0);
+
+=== task: ex-wireframe
+--- file: main.cpp
+--- find:
+        psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+--- replace:
+        psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+        psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;

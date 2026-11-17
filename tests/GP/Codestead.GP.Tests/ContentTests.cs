@@ -75,12 +75,12 @@ public class ContentTests
         Assert.True(most <= positions.Count * 0.75, $"{chapter}: {most} of {positions.Count} right answers are in the same place – vary the order");
     }
 
-    [Theory(DisplayName = "varje uppgift har en text på engelska och svenska")]
+    [Theory(DisplayName = "varje uppgift och övning har en text på engelska och svenska")]
     [MemberData(nameof(Lessons))]
     public void TasksHaveTexts(string chapter)
     {
         foreach (var api in Apis.All)
-            foreach (var task in GpCourse.Tasks(chapter, api.Id))
+            foreach (var task in GpCourse.AllTasks(chapter, api.Id))
                 foreach (var lang in ChapterLanguages)
                 {
                     var file = Path.Combine(Repo.Content, "i18n", lang, chapter + ".json");

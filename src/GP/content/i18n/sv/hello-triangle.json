@@ -152,6 +152,38 @@
       "hint": {
         "d3d12": "`DrawInstanced(3, ...)` ritar fortfarande bara de tre första vertexarna – rektangelns nedre högra halva."
       }
+    },
+    "ex-colour": {
+      "text": "Gör rektangeln grön: färgen (0.2, 0.8, 0.4).",
+      "hint": {
+        "opengl": "Färgen sätts på ett enda ställe: fragmentshaderns utdata.",
+        "vulkan": "Färgen sätts på ett enda ställe: fragmentshaderns utdata i `shader.frag` – kompilera om den med `glslc`.",
+        "d3d12": "Färgen sätts på ett enda ställe: pixelshaderns returvärde i `shaders.hlsl`."
+      }
+    },
+    "ex-tall": {
+      "text": "Gör rektangeln hög och smal: 0.4 bred och 1.6 hög, fortfarande mitt i fönstret.",
+      "hint": "Bara vertexpositionerna ändras: x går från −0.2 till 0.2 och y från −0.8 till 0.8. Indexen är desamma."
+    },
+    "ex-house": {
+      "text": {
+        "opengl": "Sätt ett tak på rektangeln: en vertex till i (0, 0.9) och en triangel till från de två övre hörnen upp till den.",
+        "vulkan": "Sätt ett tak på rektangeln: en vertex till i (0, −0.9) – i Vulkan pekar y nedåt – och en triangel till från de två övre hörnen upp till den.",
+        "d3d12": "Sätt ett tak på rektangeln: en vertex till i (0, 0.9) och en triangel till från de två övre hörnen upp till den."
+      },
+      "hint": {
+        "opengl": "En femte vertex, tre index till (övre vänstra, toppen, övre högra) och 9 i stället för 6 i `glDrawElements`.",
+        "vulkan": "En femte vertex och tre index till: övre vänstra, toppen, övre högra – samma medurs ordning som de andra trianglarna, annars kastar back-face culling bort taket. `indices.size()` växer av sig själv.",
+        "d3d12": "En femte vertex, tre index till (övre vänstra, toppen, övre högra – medurs som de andra, annars kastas taket bort) och 9 i stället för 6 i `DrawIndexedInstanced`."
+      }
+    },
+    "ex-wireframe": {
+      "text": "Rita bara trianglarnas kanter (wireframe), så att du ser de två trianglar som rektangeln består av.",
+      "hint": {
+        "opengl": "Ett anrop före renderingsloopen: `glPolygonMode` med `GL_LINE`.",
+        "vulkan": "Rasterizerns `polygonMode`: `VK_POLYGON_MODE_LINE` – och linjer kräver device-funktionen `fillModeNonSolid`.",
+        "d3d12": "Rasterizer-tillståndet i pipeline state-objektet: `FillMode = D3D12_FILL_MODE_WIREFRAME`."
+      }
     }
   }
 }

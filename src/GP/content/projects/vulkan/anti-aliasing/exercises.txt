@@ -1,0 +1,19 @@
+=== task: ex-two-samples
+--- file: main.cpp
+--- find:
+        if (counts & VK_SAMPLE_COUNT_4_BIT) { return VK_SAMPLE_COUNT_4_BIT; }
+        if (counts & VK_SAMPLE_COUNT_2_BIT) { return VK_SAMPLE_COUNT_2_BIT; }
+--- replace:
+        if (counts & VK_SAMPLE_COUNT_2_BIT) { return VK_SAMPLE_COUNT_2_BIT; }
+
+=== task: ex-show-edges
+--- file: shaders/aa_post.frag
+--- find:
+    outColor = vec4(vec3(grayscale), 1.0);
+--- replace:
+    // neither the background (green 0.1) nor the cube (green 1.0): a pixel the resolve has mixed – show it in red
+    if (col.g > 0.12 && col.g < 0.98) {
+        outColor = vec4(1.0, 0.0, 0.0, 1.0);
+    } else {
+        outColor = vec4(vec3(grayscale), 1.0);
+    }

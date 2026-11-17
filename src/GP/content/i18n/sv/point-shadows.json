@@ -36,6 +36,34 @@
         "vulkan": "Global `vec3 gridSamplingDisk[20] = vec3[](…)` (en kubs 8 hörn och 12 kantmittpunkter). `float diskRadius = (1.0 + (viewDistance / ubo.far_plane)) / 25.0;`, loop `i < samples` (20): `texture(depthMap, fragToLight + gridSamplingDisk[i] * diskRadius).r * ubo.far_plane`, `if (currentDepth - bias > closestDepth) shadow += 1.0;`, sedan `shadow /= float(samples);`.",
         "d3d12": "`static const float3 gridSamplingDisk[20] = { … };` (en kubs 8 hörn och 12 kantmittpunkter). `float diskRadius = (1.0f + (viewDistance / far_plane)) / 25.0f;`, loop `i < samples` (20): `depthMap.Sample(shadowSampler, fragToLight + gridSamplingDisk[i] * diskRadius).r * far_plane`, `if (currentDepth - bias > closestDepth) shadow += 1.0f;`, sedan `shadow /= float(samples);`."
       }
+    },
+    "ex-animate-light": {
+      "text": "Låt ljuset röra sig fram och tillbaka genom rummet: dess z går som sin(tid × 0,5) × 3. Se hur kubens skugga glider över väggen.",
+      "hint": {
+        "opengl": "learnopengls rad finns redan i renderloopen, bortkommenterad – före kubkartans matriser, så att djuppasset och belysningen ser samma position.",
+        "vulkan": "Sätt `lightPos.z` överst i `updateUniformBuffer()`, från `glfwGetTime()`, innan de sex skuggmatriserna görs – så att djuppasset och belysningen ser samma position.",
+        "d3d12": "Sätt `lightPos.z` i `OnUpdate()` innan de sex skuggmatriserna görs, från en tid sedan starten: en `static auto startTime = std::chrono::high_resolution_clock::now();` och `duration` fram till `currentFrame`."
+      }
+    },
+    "ex-far-plane": {
+      "text": "Sänk skuggkubkartans bortre plan från 25 till 6. Varför ligger plötsligt allt som är längre än 6 enheter från ljuset i skugga?",
+      "hint": "Bara `far_plane` ändras. Djuppasset ritar inte längre något bortom 6 enheter, så där behåller kubkartan värdet den rensades till: 1.0 – det vill säga 6 enheter när det multiplicerats med `far_plane`. Jämför det med fragmentets verkliga avstånd."
+    },
+    "ex-add-cube": {
+      "text": "Lägg till en sjätte kub i rummet, i (1,5, −1, −2,5) med skalan 0,5, så att du ser både den och skuggan den kastar på bakväggen.",
+      "hint": {
+        "opengl": "`renderScene` ritar scenen åt båda passen – lägg till kuben där (translate, scale, `setMat4(\"model\", …)`, `renderCube()`) så hamnar den både i kubkartan och i bilden.",
+        "vulkan": "`renderScene` spelar in scenen åt båda passen – lägg till kuben där (dess modellmatris i push-konstanterna, sedan `vkCmdDraw`) så hamnar den både i kubkartan och i bilden.",
+        "d3d12": "`RenderScene` spelar in scenen åt båda passen – lägg till kuben där (skalning × translation, dess modell- och normalmatris i rotkonstanterna, sedan `DrawInstanced`) så hamnar den både i kubkartan och i bilden."
+      }
+    },
+    "ex-move-light": {
+      "text": "Flytta upp ljuset nära taket, till (−1,5, 4, −1), rakt ovanför den vridna kuben uppe till vänster. Dess skugga faller nu nedåt över bakväggen.",
+      "hint": {
+        "opengl": "Bara `lightPos` ändras – kubkartans sex vyer görs från den varje bildruta. Ljuset och kameran ligger inte längre på en linje, så kuben döljer inte längre sin egen skugga.",
+        "vulkan": "Bara den globala `lightPos` ändras – kubkartans sex vyer görs från den varje bildruta. Ljuset och kameran ligger inte längre på en linje, så kuben döljer inte längre sin egen skugga.",
+        "d3d12": "Bara den globala `lightPos` ändras – kubkartans sex vyer görs från den varje bildruta. Ljuset och kameran ligger inte längre på en linje, så kuben döljer inte längre sin egen skugga."
+      }
     }
   }
 }

@@ -1,0 +1,40 @@
+=== task: ex-green-light
+--- file: main.cpp
+--- find:
+        lightingShader.setVec3("lightColor",  1.0f, 1.0f, 1.0f);
+--- replace:
+        lightingShader.setVec3("lightColor",  0.0f, 1.0f, 0.0f);
+
+=== task: ex-black-cube
+--- file: main.cpp
+--- find:
+        lightingShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
+        lightingShader.setVec3("lightColor",  1.0f, 1.0f, 1.0f);
+--- replace:
+        lightingShader.setVec3("objectColor", 0.0f, 1.0f, 1.0f);
+        lightingShader.setVec3("lightColor",  1.0f, 0.0f, 0.0f);
+
+=== task: ex-lamp-colour
+--- file: main.cpp
+--- find:
+        lightingShader.setVec3("lightColor",  1.0f, 1.0f, 1.0f);
+--- replace:
+        lightingShader.setVec3("lightColor",  1.0f, 0.8f, 0.6f);
+--- file: main.cpp
+--- find:
+        lightCubeShader.use();
+--- replace:
+        lightCubeShader.use();
+        lightCubeShader.setVec3("lightColor", 1.0f, 0.8f, 0.6f);
+--- file: light_cube.fs
+--- find:
+out vec4 FragColor;
+--- replace:
+out vec4 FragColor;
+
+uniform vec3 lightColor;
+--- file: light_cube.fs
+--- find:
+    FragColor = vec4(1.0); // set all 4 vector values to 1.0
+--- replace:
+    FragColor = vec4(lightColor, 1.0); // the lamp shines in the light's colour

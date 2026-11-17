@@ -36,6 +36,22 @@
         "vulkan": "I båda racket-grenarna: `{ Player.Position.x -= velocity; if (Ball.Stuck) Ball.Position.x -= velocity; }` (`+=` för D). Sedan `if (game.Keys[GLFW_KEY_SPACE]) Ball.Stuck = false;`.",
         "d3d12": "I båda racket-grenarna: `{ Player.Position.x -= velocity; if (Ball.Stuck) Ball.Position.x -= velocity; }` (`+=` för 'D'). Sedan `if (game.Keys[VK_SPACE]) Ball.Stuck = false;`."
       }
+    },
+    "ex-faster": {
+      "text": "Gör bollen dubbelt så snabb, i samma riktning.",
+      "hint": "Hastigheten börjar som `INITIAL_BALL_VELOCITY`; gör båda komponenterna dubbelt så stora. `Move` multiplicerar hastigheten med `dt`, så inget annat behöver ändras."
+    },
+    "ex-big-ball": {
+      "text": "Fördubbla bollens radie till 25 pixlar. Den ska fortfarande ligga ovanpå racketet innan den skjuts iväg.",
+      "hint": "Ändra bara `BALL_RADIUS`: både bollens storlek och startpositionen på racketet räknas ut från den."
+    },
+    "ex-launch-left": {
+      "text": "Skjut iväg bollen snett uppåt vänster i stället för uppåt höger, lika brant som förut.",
+      "hint": "Starthastighetens x-komponent avgör vänster eller höger; y < 0 är uppåt i spelets koordinater."
+    },
+    "ex-bottom-bounce": {
+      "text": "Låt bollen studsa mot fönstrets nederkant också, så att den aldrig försvinner (än så länge).",
+      "hint": "`Move` känner bara till fönstrets bredd. Ge den höjden också (skicka med `game.Height`), och när bollens underkant (`Position.y + Size.y`) når dit vänder du `Velocity.y` och flyttar tillbaka bollen innanför – som vid överkanten."
     }
   }
 }

@@ -20,6 +20,26 @@
     "texture": {
       "text": "Texturera rektangeln med `container.png`, skapad med DSA: lägg till texturkoordinater i vertexarna som attribut 1 (två flyttal, tre flyttal in i varje vertex, samma bindningspunkt, stride 5 flyttal), skapa texturen med `glCreateTextures`, sätt parametrarna med `glTextureParameteri`, allokera oföränderligt minne för alla mip-nivåer med `glTextureStorage2D`, ladda upp bilden med `glTextureSubImage2D`, generera mipmaps med `glGenerateTextureMipmap` och bind den för ritning med `glBindTextureUnit`. Shaderna skickar vidare texturkoordinaterna och samplar texturen.",
       "hint": "`glVertexArrayAttribFormat(VAO, 1, 2, GL_FLOAT, GL_FALSE, 3 * sizeof(float))` – sista argumentet är förskjutningen inuti en vertex; strided flyttar till `glVertexArrayVertexBuffer(VAO, 0, VBO, 0, sizeof(float) * 5)`. `glCreateTextures(GL_TEXTURE_2D, 1, &texture)`, `glTextureStorage2D(texture, levels, GL_RGB8, width, height)` med `levels = 1 + (int)std::floor(std::log2((float)std::max(width, height)))`, `glTextureSubImage2D(texture, 0, 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, data)`; i loopen `glBindTextureUnit(0, texture);`."
+    },
+    "ex-one-triangle": {
+      "text": {
+        "opengl": "Ändra en buffer via dess namn efter att den har fyllts: skriv över den andra triangelns tre index i element buffern med tre lika (0, 0, 0), så att bara rektangelns övre högra halva blir kvar.",
+        "vulkan": "Ändra index buffern efter att den har fyllts – Vulkan namnger alltid objektet det arbetar med: skriv över den andra triangelns tre index med tre lika (0, 0, 0), så att bara rektangelns övre högra halva blir kvar.",
+        "d3d12": "Ändra index buffern efter att den har fyllts – Direct3D 12 namnger alltid resursen det arbetar med: skriv över den andra triangelns tre index med tre lika (0, 0, 0), så att bara rektangelns övre högra halva blir kvar."
+      },
+      "hint": {
+        "opengl": "Element buffern skapades med `GL_DYNAMIC_STORAGE_BIT`, så ett andra `glNamedBufferSubData` får uppdatera en del av den – ingen bindning behövs. Förskjutningen anges i byte: tre `unsigned int`.",
+        "vulkan": "I slutet av `createIndexBuffer`: mappa `indexBufferMemory` en gång till – `vkMapMemory` tar en förskjutning i byte (tre `uint16_t`) – kopiera in de nya indexen och avmappa. En triangel med tre lika hörn har ingen yta.",
+        "d3d12": "Efter den första kopieringen: `Map` index buffer-resursen igen, kopiera de nya indexen till `pIndexDataBegin` plus tre `UINT` (förskjutningen i byte) och `Unmap`. En triangel med tre lika hörn har ingen yta."
+      }
+    },
+    "ex-tile": {
+      "text": "Visa containern fyra gånger på rektangeln, 2 × 2, utan att ändra något i texturobjektet.",
+      "hint": "Texturen upprepas redan (`GL_REPEAT`, satt med `glTextureParameteri`): låt texturkoordinaterna i vertexdatan gå från 0 till 2 i stället för 0 till 1."
+    },
+    "ex-colour-buffer": {
+      "text": "Färga rektangeln med en färg per vertex (övre högra röd, nedre högra grön, nedre vänstra blå, övre vänstra vit) som kommer från en **andra** buffer, kopplad till VAO:n på bindningspunkt 1 – vertex buffern får vara som den är.",
+      "hint": "`glCreateBuffers` + `glNamedBufferStorage` för färgerna; attribut 2 får sitt format (`glVertexArrayAttribFormat`, 3 flyttal, förskjutning 0) och bindningspunkt 1 (`glVertexArrayAttribBinding`), och `glVertexArrayVertexBuffer(VAO, 1, …)` kopplar in buffern med stride 3 flyttal. Shaderna skickar vidare färgen och multiplicerar texturen med den."
     }
   }
 }

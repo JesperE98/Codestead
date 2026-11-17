@@ -1,0 +1,27 @@
+=== task: ex-strength
+--- file: main.cpp
+--- find:
+float bloomStrength = 0.04f;
+--- replace:
+float bloomStrength = 0.15f;
+
+=== task: ex-radius
+--- file: main.cpp
+--- find:
+float bloomFilterRadius = 0.005f;
+--- replace:
+float bloomFilterRadius = 0.05f;
+
+=== task: ex-short-chain
+--- file: main.cpp
+--- find:
+    InitBloomFBO(m_bloomFBO, m_width, m_height, 6);
+--- replace:
+    InitBloomFBO(m_bloomFBO, m_width, m_height, 2);
+
+=== task: ex-warm-glow
+--- file: bloom_final.hlsl
+--- find:
+    hdrColor = lerp(hdrColor, bloomColor, bloomStrength); // linear interpolation (GLSL's mix)
+--- replace:
+    hdrColor = lerp(hdrColor, bloomColor * float3(1.0f, 0.6f, 0.3f), bloomStrength); // a warm glow

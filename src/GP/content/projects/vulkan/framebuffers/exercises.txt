@@ -1,0 +1,32 @@
+=== task: ex-upside-down
+--- file: shaders/framebuffers_screen.vert
+--- find:
+    gl_Position = vec4(inPosition.x, inPosition.y, 0.0, 1.0);
+--- replace:
+    gl_Position = vec4(inPosition.x, -inPosition.y, 0.0, 1.0); // y mirrored: the picture upside down
+
+=== task: ex-emboss
+--- file: shaders/framebuffers_screen.frag
+--- find:
+        1.0,  1.0, 1.0,
+        1.0, -8.0, 1.0,
+        1.0,  1.0, 1.0
+--- replace:
+        -2.0, -1.0, 0.0,
+        -1.0,  1.0, 1.0,
+         0.0,  1.0, 2.0
+
+=== task: ex-sepia
+--- file: shaders/framebuffers_screen.frag
+--- find:
+    outColor = vec4(col, 1.0);
+--- replace:
+    vec3 c = sampleTex[4]; // the pixel itself, without the kernel
+    outColor = vec4(dot(c, vec3(0.393, 0.769, 0.189)), dot(c, vec3(0.349, 0.686, 0.168)), dot(c, vec3(0.272, 0.534, 0.131)), 1.0);
+
+=== task: ex-quarter
+--- file: shaders/framebuffers_screen.vert
+--- find:
+    gl_Position = vec4(inPosition.x, inPosition.y, 0.0, 1.0);
+--- replace:
+    gl_Position = vec4(inPosition.x * 0.5 + 0.5, inPosition.y * 0.5 - 0.5, 0.0, 1.0); // half the size, moved into the top right quarter (Vulkan's y points down)

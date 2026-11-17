@@ -1,0 +1,41 @@
+=== task: ex-opacity
+--- file: main.cpp
+--- find:
+        transparentShader.setVec4("color", glm::vec4(0.0f, 1.0f, 0.0f, 0.5f));
+--- replace:
+        transparentShader.setVec4("color", glm::vec4(0.0f, 1.0f, 0.0f, 0.8f));
+
+=== task: ex-sorted
+--- file: main.cpp
+--- find:
+        // draw green quad
+        transparentShader.setMat4("mvp", vp * greenModelMat);
+        transparentShader.setVec4("color", glm::vec4(0.0f, 1.0f, 0.0f, 0.5f));
+        glBindVertexArray(quadVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        // draw blue quad
+        transparentShader.setMat4("mvp", vp * blueModelMat);
+        transparentShader.setVec4("color", glm::vec4(0.0f, 0.0f, 1.0f, 0.5f));
+        glBindVertexArray(quadVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+--- replace:
+        // draw blue quad (the farthest first)
+        transparentShader.setMat4("mvp", vp * blueModelMat);
+        transparentShader.setVec4("color", glm::vec4(0.0f, 0.0f, 1.0f, 0.5f));
+        glBindVertexArray(quadVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        // draw green quad (the nearest last)
+        transparentShader.setMat4("mvp", vp * greenModelMat);
+        transparentShader.setVec4("color", glm::vec4(0.0f, 1.0f, 0.0f, 0.5f));
+        glBindVertexArray(quadVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
+=== task: ex-depth-mask
+--- file: main.cpp
+--- find:
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+--- replace:
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glDepthMask(GL_FALSE);

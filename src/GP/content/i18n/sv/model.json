@@ -95,6 +95,34 @@
         "vulkan": "C++: `viewPos` + `pad1`, `Material { shininess; pad1; pad2; pad3; }`, `Light` med en utfyllnads-float efter varje `glm::vec3`. Shadern: specular maps på binding 3 och 4; välj `diffuseColor` och `specularColor` efter `fragMaterialIndex`, sedan ambient + diffuse + specular.",
         "d3d12": "`ModelConstants` får `normalMatrix` (`XMMatrixTranspose(XMMatrixInverse(nullptr, model))`, lagrad transponerad); `SceneConstantBuffer` får `viewPos` + utfyllnad, `Material` (`shininess` + 3 floats) och `Light` (varje `XMFLOAT3` utfylld till 16 byte); vertex shadern ger ut `fragPos` och `normal`."
       }
+    },
+    "ex-light-left": {
+      "text": "Flytta ljuset till andra sidan, till (−1.2, 1.0, 2.0): nu är planetens vänstra sida belyst och den högra ligger i mörker.",
+      "hint": "Bara ljusets position ändras – den globala `lightPos`."
+    },
+    "ex-normals": {
+      "text": "Visa modellens normaler som färger i stället för belysningen: normalens x, y och z (flyttade från −1…1 till 0…1) som rött, grönt och blått. Ett vanligt sätt att kontrollera att en modells normaler är rätt.",
+      "hint": {
+        "opengl": "Bara fragmentshaderns sista rad: `normalize(Normal) * 0.5 + 0.5` som färg.",
+        "vulkan": "Bara fragmentshaderns sista rad: `normalize(fragNormal) * 0.5 + 0.5` som färg – kompilera om den med `glslc`.",
+        "d3d12": "Bara pixelshaderns returvärde: `normalize(input.normal) * 0.5f + 0.5f` som färg."
+      }
+    },
+    "ex-spin": {
+      "text": "Låt planeten snurra runt sin egen axel, en radian per sekund – nordpolen stannar överst och kontinenterna glider förbi.",
+      "hint": {
+        "opengl": "En rotation till i modellmatrisen, kring y, med `glfwGetTime()`. Lägg den efter lutningen, så att den snurrar kring planetens egen (lutade) axel och inte världens.",
+        "vulkan": "En rotation till i modellmatrisen i `recordCommandBuffer`, kring y, med `glfwGetTime()`. Lägg den efter lutningen, så att den snurrar kring planetens egen (lutade) axel.",
+        "d3d12": "En rotation till i modellmatrisen, `XMMatrixRotationY` med tiden sedan starten (`std::chrono`, som i *Transformationer*). DirectXMath tillämpar matriserna från vänster till höger: lägg den före lutningen."
+      }
+    },
+    "ex-moon": {
+      "text": "Ge planeten en måne: rita samma modell en gång till, skalad till 0.15 och flyttad till (1.2, 0.6, 0), uppe till höger om planeten.",
+      "hint": {
+        "opengl": "Efter `ourModel.Draw(ourShader)`: en ny modellmatris (translate, sedan scale), `setMat4(\"model\", …)` och `Draw` en gång till. Modellens vertexar laddas bara en gång.",
+        "vulkan": "Efter ritanropet: en ny modellmatris (translate, sedan scale) i push-konstanterna, `vkCmdPushConstants` igen och samma `vkCmdDrawIndexed` en gång till.",
+        "d3d12": "Efter `m_model.Draw(…)`: en ny modellmatris (scale, sedan translate), dess normalmatris, `SetGraphicsRoot32BitConstants` igen och `Draw` en gång till."
+      }
     }
   }
 }

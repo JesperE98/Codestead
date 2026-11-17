@@ -48,6 +48,34 @@
         "vulkan": "Utsänt ljus beror inte på någon ljuskälla: `vec3 result = ambient + diffuse + specular + emission;`. Arrayen med bindings: `{diffuseMapLayoutBinding, specularMapLayoutBinding, uboLayoutBinding, emissionMapLayoutBinding}`.",
         "d3d12": "Utsänt ljus beror inte på någon ljuskälla: `float3 result = ambient + diffuse + specular + emission;`. `LoadTexture(\"matrix.png\", m_emissionMap, emissionMapUploadHeap, 3);`"
       }
+    },
+    "ex-bright-light": {
+      "text": "Ge ljuset full diffus styrka: (1.0, 1.0, 1.0) i stället för (0.5, 0.5, 0.5). Jämför den belysta sidan med sidorna som bara får ambient ljus.",
+      "hint": {
+        "opengl": "Värdet på `light.diffuse` som du sätter i renderingsloopen.",
+        "vulkan": "`ubo.light.diffuse` i `updateUniformBuffer`.",
+        "d3d12": "`constantBufferData.light.diffuse` där constant buffern fylls i."
+      }
+    },
+    "ex-invert-specular": {
+      "text": "Invertera specular-mappen i shadern: låt träet glänsa och stålramen vara matt. Ser lådan fortfarande verklig ut?",
+      "hint": {
+        "opengl": "I `lighting_maps.fs`, använd `1.0 -` den samplade specular-färgen där den spekulära delen räknas ut.",
+        "vulkan": "I `lighting_maps.frag`, använd `1.0 -` den samplade specular-färgen där den spekulära delen räknas ut. Kompilera om med `glslc`.",
+        "d3d12": "I `PSMain`, använd `1.0f -` den samplade specular-färgen där den spekulära delen räknas ut."
+      }
+    },
+    "ex-emission-mask": {
+      "text": "Håll de lysande bokstäverna borta från stålramen: visa emissionen bara på träet – där specular-mappen är (nästan) svart, under 0.1.",
+      "hint": "Specular-mappen skiljer redan trä från stål. Sampla den en gång till för emissionen, gör om dess röda kanal till 1 (trä) eller 0 (stål) – en jämförelse med `?:` räcker – och multiplicera emissionen med det."
+    },
+    "ex-scroll-emission": {
+      "text": "Låt bokstäverna rinna över lådan som i filmen: flytta emissionsmappens texturkoordinater längs y med tiden (en sidhöjd per sekund).",
+      "hint": {
+        "opengl": "En `uniform float time;` i `lighting_maps.fs`, som läggs till y i `TexCoords` bara där emissionen samplas (emissionstexturen upprepas); sätt den varje bildruta med `glfwGetTime()`.",
+        "vulkan": "Tiden måste nå fragmentshadern: structen `Material` har tre utfyllnadsfloats – ge en av dem ett namn i C++ och samma namn efter `shininess` i shaderns `Material`, sätt den från `glfwGetTime()`, och lägg till den till y bara där emissionen samplas.",
+        "d3d12": "Tiden måste nå pixelshadern: `Material` har tre utfyllnadsfloats efter `shininess` – gör den första till `float time` i C++ och lägg till `float time;` efter `shininess` i HLSL-structen `Material`. Ta tiden sedan första bildrutan från `std::chrono` och lägg till den till y bara där emissionen samplas."
+      }
     }
   }
 }

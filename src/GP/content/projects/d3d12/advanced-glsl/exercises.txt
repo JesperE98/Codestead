@@ -1,0 +1,23 @@
+=== task: ex-zoom-out
+--- file: main.cpp
+--- find:
+    XMMATRIX projection = XMMatrixPerspectiveFovRH(XMConvertToRadians(fov), static_cast<float>(m_width) / static_cast<float>(m_height), 0.1f, 100.0f);
+--- replace:
+    XMMATRIX projection = XMMatrixPerspectiveFovRH(XMConvertToRadians(60.0f), static_cast<float>(m_width) / static_cast<float>(m_height), 0.1f, 100.0f);
+
+=== task: ex-gradient
+--- file: yellow.hlsl
+--- find:
+    return float4(1.0f, 1.0f, 0.0f, 1.0f);
+--- replace:
+    // SV_POSITION's y counts pixels from the top of the window: brighter towards the top
+    return float4(float3(1.0f, 1.0f, 0.0f) * (1.0f - position.y / 600.0f), 1.0f);
+
+=== task: ex-checkerboard
+--- file: blue.hlsl
+--- find:
+    return float4(0.0f, 0.0f, 1.0f, 1.0f);
+--- replace:
+    // squares of 20 × 20 pixels: blue and white by turns
+    bool white = ((int)(position.x / 20.0f) + (int)(position.y / 20.0f)) % 2 == 1;
+    return white ? float4(1.0f, 1.0f, 1.0f, 1.0f) : float4(0.0f, 0.0f, 1.0f, 1.0f);

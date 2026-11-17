@@ -1,0 +1,35 @@
+=== task: ex-greyscale
+--- file: post_processing.hlsl
+--- find:
+        color = float4(scene.Sample(wrapSampler, input.texCoord).rgb, 1.0f);
+--- replace:
+        float3 rgb = scene.Sample(wrapSampler, input.texCoord).rgb;
+        float grey = dot(rgb, float3(0.2126f, 0.7152f, 0.0722f));
+        color = float4(grey, grey, grey, 1.0f);
+
+=== task: ex-long-shake
+--- file: main.cpp
+--- find:
+                    ShakeTime = 0.05f;
+--- replace:
+                    ShakeTime = 0.5f;
+
+=== task: ex-flip-only
+--- file: main.cpp
+--- find:
+    bool                         Confuse = false, Chaos = false, Shake = false;
+--- replace:
+    bool                         Confuse = true, Chaos = false, Shake = false;
+--- file: post_processing.hlsl
+--- find:
+        color = float4(1.0f - scene.Sample(wrapSampler, input.texCoord).rgb, 1.0f);
+--- replace:
+        color = float4(scene.Sample(wrapSampler, input.texCoord).rgb, 1.0f);
+
+=== task: ex-vignette
+--- file: post_processing.hlsl
+--- find:
+        color = float4(scene.Sample(wrapSampler, input.texCoord).rgb, 1.0f);
+--- replace:
+        color = float4(scene.Sample(wrapSampler, input.texCoord).rgb, 1.0f);
+        color.rgb *= 1.0f - length(input.texCoord - float2(0.5f, 0.5f));

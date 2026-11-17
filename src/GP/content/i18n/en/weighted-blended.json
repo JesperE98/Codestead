@@ -36,6 +36,34 @@
         "vulkan": "The opaque pass's colour now ends in `COLOR_ATTACHMENT_OPTIMAL`; `createCompositeRenderPass()`: one attachment, `loadOp = VK_ATTACHMENT_LOAD_OP_LOAD`, `initialLayout = COLOR_ATTACHMENT_OPTIMAL`, `finalLayout = SHADER_READ_ONLY_OPTIMAL`. `createCompositeFramebuffer()` with only `opaqueImageView`. `createPipeline(…composite…, compositeRenderPass, 1, VK_FALSE, VK_FALSE, VK_TRUE, VK_BLEND_FACTOR_SRC_ALPHA, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, …)`, `createDescriptorSet(accumImageView, revealImageView, compositeDescriptorSet)`. Record it between the transparent and the final pass (`clearValueCount = 0`). `composite.frag`: learnopengl's shader with `layout(binding = 0) uniform sampler2D accum; layout(binding = 1) uniform sampler2D reveal;`.",
         "d3d12": "`psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS`, `NumRenderTargets = 1`, `RTVFormats[1] = DXGI_FORMAT_UNKNOWN`, a fresh `CD3DX12_BLEND_DESC(D3D12_DEFAULT)` with `RenderTarget[0]` SRC_ALPHA / INV_SRC_ALPHA. In `PopulateCommandList`: `OMSetRenderTargets(1, &opaqueRtvHandle, FALSE, &dsvHandle)`, `SetPipelineState(m_compositePipelineState.Get())`, the table at SRV heap slot 1, `DrawInstanced(6, 1, 0, 0)`. `composite.hlsl`: `int2 coords = int2(input.position.xy)`, `reveal.Load(int3(coords, 0)).r`, `discard` where the revealage is about 1, the `isinf` guard, `average_color = accumulation.rgb / max(accumulation.a, EPSILON)`."
       }
+    },
+    "ex-opacity": {
+      "text": "Make the green quad more opaque: an alpha of 0.8 instead of 0.5. Where green and blue overlap, which colour wins now?",
+      "hint": {
+        "opengl": "Only the fourth component of the green quad's `setVec4(\"color\", …)` changes. The alpha does two things here: it scales the colour added to `accum` and how much `reveal` is darkened.",
+        "vulkan": "Only the fourth component of the green quad's `constants.color` changes. The alpha does two things here: it scales the colour added to `accum` and how much `reveal` is darkened.",
+        "d3d12": "Only the fourth component of the green quad's `objectConstants.color` changes. The alpha does two things here: it scales the colour added to `accum` and how much `reveal` is darkened."
+      }
+    },
+    "ex-order": {
+      "text": "Prove that the drawing order no longer matters: draw the blue quad before the green one. The picture should stay exactly the same.",
+      "hint": "Swap the two transparent draws (each one's matrix, colour and draw call together). Both passes only add (`accum`) and multiply (`reveal`) – operations whose order does not matter."
+    },
+    "ex-red-transparent": {
+      "text": "Make the red quad half transparent too (alpha 0.5), drawn in the transparent pass with the other two. The blue quad should now show through it.",
+      "hint": {
+        "opengl": "Move the red quad's draw from the solid pass to the transparent pass and draw it with `transparentShader` and a `vec4` colour. If it stays in the solid pass it still writes depth and hides the blue quad.",
+        "vulkan": "Move the red quad's push constants and draw from the opaque render pass into the transparent one (after `transparentPipeline` is bound), with alpha 0.5. If it stays in the solid pass it still writes depth and hides the blue quad.",
+        "d3d12": "Move the red quad's root constants and draw from the solid pass to the transparent pass (after `m_transparentPipelineState` is set), with alpha 0.5 – keep the declaration of `objectConstants` where it is. If it stays in the solid pass it still writes depth and hides the blue quad."
+      }
+    },
+    "ex-weight": {
+      "text": "Here both quads get the weight function's maximum (3000), so they count equally where they overlap. Write a weight that grows the nearer a fragment is to the camera, without that cap, so the green quad (nearer) counts more than the blue one.",
+      "hint": {
+        "opengl": "The weight is computed in `transparent.fs`. `gl_FragCoord.z` is about 0.968 for the green quad and 0.981 for the blue one – something like `1.0 - gl_FragCoord.z` is enough. Where only one quad is, the weight cancels out in the composite shader's division.",
+        "vulkan": "The weight is computed in `shaders/transparent.frag` (recompile it). `gl_FragCoord.z` is about 0.968 for the green quad and 0.981 for the blue one – something like `1.0 - gl_FragCoord.z` is enough. Where only one quad is, the weight cancels out in the composite shader's division.",
+        "d3d12": "The weight is computed in `transparent.hlsl`. `input.position.z` is about 0.968 for the green quad and 0.981 for the blue one – something like `1.0f - input.position.z` is enough. Where only one quad is, the weight cancels out in the composite shader's division."
+      }
     }
   }
 }

@@ -202,6 +202,30 @@
       "hint": {
         "d3d12": "Som exemplens `Win32Application`, som sparar appens pekare i fönstrets user data. `WM_KEYDOWN` upprepas medan en tangent hålls nere; kontrollera `pApp != nullptr`."
       }
+    },
+    "ex-tint": {
+      "text": "Ta tillbaka vertexfärgerna ovanpå de två texturerna: tona den blandade bilden med dem, så att den blir röd mot ett hörn, grön mot ett annat och så vidare.",
+      "hint": {
+        "opengl": "Steget `tint` gjorde det med en textur: multiplicera resultatet av `mix(...)` med `vec4(ourColor, 1.0)` – `ourColor` kommer fortfarande in i `shader.fs`.",
+        "vulkan": "Steget `tint` gjorde det med en textur: multiplicera resultatet av `mix(...)` med `vec4(fragColor, 1.0)` – `fragColor` kommer fortfarande in i `shader.frag`. Kompilera om med `glslc`.",
+        "d3d12": "Steget `tint` gjorde det med en textur: multiplicera resultatet av `lerp(...)` med `input.color` – den kommer fortfarande in i `PSMain`."
+      }
+    },
+    "ex-grey": {
+      "text": "Visa rektangeln i svartvitt: gör om den blandade färgen till en grå nyans med samma ljushet.",
+      "hint": {
+        "opengl": "Spara den blandade färgen i en `vec4` först. En färgs ljushet så som ögat ser den: `dot(colour.rgb, vec3(0.299, 0.587, 0.114))` – använd sedan det enda värdet som rött, grönt och blått.",
+        "vulkan": "Spara den blandade färgen i en `vec4` först. En färgs ljushet så som ögat ser den: `dot(colour.rgb, vec3(0.299, 0.587, 0.114))` – använd sedan det enda värdet som rött, grönt och blått.",
+        "d3d12": "Spara den blandade färgen i en `float4` först. En färgs ljushet så som ögat ser den: `dot(colour.rgb, float3(0.299f, 0.587f, 0.114f))` – returnera sedan det enda värdet som rött, grönt och blått."
+      }
+    },
+    "ex-pixels": {
+      "text": "Zooma in på bildernas mitt tills du ser deras enskilda texlar: texturkoordinater bara från 0.45 till 0.55 (den mittersta tiondelen av varje bild), och ett förstoringsfilter som tar närmaste texel i stället för att blanda.",
+      "hint": {
+        "opengl": "Texturkoordinaterna är de två sista talen i varje vertex. Filtret: `GL_TEXTURE_MAG_FILTER` med `GL_NEAREST` – sätt det för båda texturerna.",
+        "vulkan": "Texturkoordinaterna är tredje delen av varje `Vertex`. Filtret: `samplerInfo.magFilter = VK_FILTER_NEAREST` – båda samplers görs av samma `samplerInfo`.",
+        "d3d12": "Texturkoordinaterna är tredje delen av varje vertex. Filtret: ett `Filter` med `MAG_..._POINT` i namnet, till exempel `D3D12_FILTER_MIN_MAG_MIP_POINT`, på `samplers[0]` – `samplers[1]` kopieras från den."
+      }
     }
   }
 }

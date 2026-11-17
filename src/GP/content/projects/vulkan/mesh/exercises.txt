@@ -1,0 +1,32 @@
+=== task: ex-second-square
+--- file: main.cpp
+--- find:
+        {{-1.0f,  1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}, 0}  // top left
+    };
+    std::vector<uint32_t> indices = {
+        0, 1, 2, 2, 3, 0
+    };
+--- replace:
+        {{-1.0f,  1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}, 0}, // top left
+        // a second, smaller square to the right of the first
+        {{ 1.5f, -0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}, 0}, // bottom left
+        {{ 2.5f, -0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}, 0}, // bottom right
+        {{ 2.5f,  0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f}, 0}, // top right
+        {{ 1.5f,  0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}, 0}  // top left
+    };
+    std::vector<uint32_t> indices = {
+        0, 1, 2, 2, 3, 0,
+        4, 5, 6, 6, 7, 4
+    };
+
+=== task: ex-short-indices
+--- file: main.cpp
+--- find:
+    std::vector<uint32_t> indices = {
+--- replace:
+    std::vector<uint16_t> indices = {
+--- file: main.cpp
+--- find:
+        vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+--- replace:
+        vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT16);

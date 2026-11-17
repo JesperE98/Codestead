@@ -1,4 +1,25 @@
 {
   "title": "OIT: Introduction",
-  "tasks": {}
+  "tasks": {
+    "ex-opacity": {
+      "text": "Make the green quad more opaque: an alpha of 0.8 instead of 0.5. How much of the red quad is still visible through it?",
+      "hint": {
+        "opengl": "Only the alpha of the colour the green quad is drawn with changes: the fourth component of its `setVec4(\"color\", …)`.",
+        "vulkan": "Only the alpha of the green quad's colour in the push constants changes: the fourth component of `constants.color`.",
+        "d3d12": "Only the alpha of the green quad's colour in the root constants changes: the fourth component of `objectConstants.color`."
+      }
+    },
+    "ex-sorted": {
+      "text": "Fix the picture the classic way: draw the transparent quads sorted back to front. The blue quad's corner should then show through the green quad.",
+      "hint": "The blue quad is the farthest (z = 0) and the green one the nearest (z = 2): swap the two draws so the blue quad is drawn first. Blending and depth writes stay as they are."
+    },
+    "ex-depth-mask": {
+      "text": "Keep the wrong order, but turn off depth writes for the transparent quads. What happens where green and blue overlap now – does it look right?",
+      "hint": {
+        "opengl": "`glDepthMask(GL_FALSE)` right after the blend function is set, before the transparent quads (the frame starts with `glDepthMask(GL_TRUE)` again). The depth test stays on, so the red quad still hides the blue one.",
+        "vulkan": "Depth writes are part of the transparent pipeline: its `createPipeline(…)` call takes `depthWriteEnable` after `depthTestEnable`. Keep the depth test on, so the red quad still hides the blue one.",
+        "d3d12": "Depth writes are part of the transparent pipeline state: `psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO` before it is created. The depth test stays on, so the red quad still hides the blue one."
+      }
+    }
+  }
 }

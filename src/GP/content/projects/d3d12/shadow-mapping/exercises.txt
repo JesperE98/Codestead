@@ -1,0 +1,27 @@
+=== task: ex-shadow-only
+--- file: shadow_mapping.hlsl
+--- find:
+    return float4(lighting, 1.0f);
+--- replace:
+    return float4(1.0f - shadow, 1.0f - shadow, 1.0f - shadow, 1.0f);
+
+=== task: ex-lighter-shadow
+--- file: shadow_mapping.hlsl
+--- find:
+    float3 lighting = (ambient + (1.0f - shadow) * (diffuse + specular)) * color;
+--- replace:
+    float3 lighting = (ambient + (1.0f - 0.5f * shadow) * (diffuse + specular)) * color;
+
+=== task: ex-move-light
+--- file: main.cpp
+--- find:
+XMFLOAT3 lightPos(-2.0f, 4.0f, -1.0f);
+--- replace:
+XMFLOAT3 lightPos(2.0f, 4.0f, -1.0f);
+
+=== task: ex-perspective-light
+--- file: main.cpp
+--- find:
+    XMMATRIX lightProjection = XMMatrixOrthographicRH(20.0f, 20.0f, near_plane, far_plane);
+--- replace:
+    XMMATRIX lightProjection = XMMatrixPerspectiveFovRH(XMConvertToRadians(90.0f), 1.0f, near_plane, far_plane);    // a light at a point: its rays spread out

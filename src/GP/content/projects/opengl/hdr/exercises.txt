@@ -1,0 +1,23 @@
+=== task: ex-low-exposure
+--- file: main.cpp
+--- find:
+float exposure = 1.0f;
+--- replace:
+float exposure = 0.1f;
+
+=== task: ex-red-light
+--- file: main.cpp
+--- find:
+    lightColors.push_back(glm::vec3(0.1f, 0.0f, 0.0f));
+--- replace:
+    lightColors.push_back(glm::vec3(5.0f, 0.0f, 0.0f));
+
+=== task: ex-aces
+--- file: hdr.fs
+--- find:
+    vec3 result = vec3(1.0) - exp(-hdrColor * exposure);
+--- replace:
+    // vec3 result = vec3(1.0) - exp(-hdrColor * exposure);
+    // ACES filmic (Narkowicz's fit)
+    vec3 x = hdrColor * exposure;
+    vec3 result = clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0);

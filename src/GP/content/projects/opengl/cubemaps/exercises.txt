@@ -1,0 +1,22 @@
+=== task: ex-diamond
+--- file: cubemaps.fs
+--- find:
+    float ratio = 1.00 / 1.52; // from air (1.00) into glass (1.52)
+--- replace:
+    float ratio = 1.00 / 2.42; // from air (1.00) into diamond (2.42)
+
+=== task: ex-tinted-glass
+--- file: cubemaps.fs
+--- find:
+    FragColor = vec4(texture(skybox, R).rgb, 1.0);
+--- replace:
+    FragColor = vec4(texture(skybox, R).rgb * vec3(0.6, 1.0, 0.8), 1.0); // green-tinted glass
+
+=== task: ex-half-mirror
+--- file: cubemaps.fs
+--- find:
+    FragColor = vec4(texture(skybox, R).rgb, 1.0);
+--- replace:
+    vec3 reflected = texture(skybox, reflect(I, normalize(Normal))).rgb;
+    vec3 refracted = texture(skybox, R).rgb;
+    FragColor = vec4(mix(reflected, refracted, 0.5), 1.0); // half mirror, half glass

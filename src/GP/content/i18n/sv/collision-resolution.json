@@ -36,6 +36,18 @@
         "vulkan": "`if (game.Level == 0) LoadLevel(game.Levels[0], \"levels/one.lvl\", game.Width, game.Height / 2); else if …` för de fyra banorna; `Reset(Ball, Player.Position + glm::vec2(PLAYER_SIZE.x / 2.0f - BALL_RADIUS, -(BALL_RADIUS * 2.0f)), INITIAL_BALL_VELOCITY);`. Efter DoCollisions: `if (Ball.Position.y >= game.Height) { ResetLevel(game); ResetPlayer(game); }`.",
         "d3d12": "`if (game.Level == 0) LoadLevel(game.Levels[0], \"levels/one.lvl\", game.Width, game.Height / 2); else if …` för de fyra banorna; `Reset(Ball, XMFLOAT2(Player.Position.x + PLAYER_SIZE.x / 2.0f - BALL_RADIUS, Player.Position.y - BALL_RADIUS * 2.0f), INITIAL_BALL_VELOCITY);`. Efter DoCollisions: `if (Ball.Position.y >= game.Height) { ResetLevel(game); ResetPlayer(game); }`."
       }
+    },
+    "ex-catch": {
+      "text": "Racketet rör sig aldrig, så bollen går alltid förlorad. Gör racketet 500 pixlar brett och se hur det fångar bollen och skickar upp den igen.",
+      "hint": "Bara `PLAYER_SIZE` ändras. Då körs racketets egen kollisionskod i `DoCollisions` för första gången: var bollen landar på racketet avgör dess nya riktning."
+    },
+    "ex-next-level": {
+      "text": "När bollen går förlorad ska spelet gå vidare till nästa nivå i stället för att börja om på samma (efter nivå fyra kommer nivå ett).",
+      "hint": "I `Update`, före `ResetLevel(game)`: öka `game.Level` och låt den slå runt med `% 4` – `ResetLevel` laddar den nivå som `game.Level` pekar på."
+    },
+    "ex-ghost-stones": {
+      "text": "Gör de solida stenarna till spöken: bollen flyger rakt igenom dem, men studsar fortfarande mot och krossar de andra stenarna.",
+      "hint": "I `DoCollisions`: testa bara de stenar som varken är förstörda eller solida."
     }
   }
 }

@@ -60,6 +60,30 @@
     "edge-detection": {
       "text": "Change the kernel to edge detection: `1` around, `-8` in the middle.",
       "hint": "The weights add up to 0: wherever all nine samples are equal the result is black, and only edges stay bright."
+    },
+    "ex-upside-down": {
+      "text": "Show the whole picture upside down – without touching the scene, only the screen quad.",
+      "hint": {
+        "opengl": "In the screen quad's vertex shader, mirror y: `-aPos.y`. (Flipping the texture coordinate v would do the same.)",
+        "vulkan": "In the screen quad's vertex shader, mirror y: `-inPosition.y`. (Flipping the texture coordinate v would do the same.)",
+        "d3d12": "In the screen quad's vertex shader, mirror y: `-position.y`. (Flipping the texture coordinate v would do the same.)"
+      }
+    },
+    "ex-emboss": {
+      "text": "Swap the edge-detection kernel for an emboss kernel: −2, −1, 0 / −1, 1, 1 / 0, 1, 2. The picture looks pressed into metal, lit from one side.",
+      "hint": "Only the nine numbers of `kernel` change. Its weights add up to 1, so flat areas keep their colour – unlike edge detection, whose weights add up to 0."
+    },
+    "ex-sepia": {
+      "text": "Make a new post-processing effect: sepia, like an old photograph. Use the pixel's own colour (not the kernel's result): red = 0.393 r + 0.769 g + 0.189 b, green = 0.349 r + 0.686 g + 0.168 b, blue = 0.272 r + 0.534 g + 0.131 b.",
+      "hint": "The pixel's own colour is already sampled: the middle sample, `sampleTex[4]`. Each output channel is a `dot` product of that colour with one row of numbers."
+    },
+    "ex-quarter": {
+      "text": "Show the off-screen picture only in the top right quarter of the window, half its size – the rest of the window shows the white clear colour. The first step towards a rear-view mirror.",
+      "hint": {
+        "opengl": "In the screen quad's vertex shader: halve x and y and move them by +0.5, so the quad goes from 0 to 1 instead of −1 to 1.",
+        "vulkan": "In the screen quad's vertex shader: halve x and y and move x by +0.5 and y by −0.5 (y points down in Vulkan's clip space).",
+        "d3d12": "In the screen quad's vertex shader: halve x and y and move them by +0.5, so the quad goes from 0 to 1 instead of −1 to 1."
+      }
     }
   }
 }

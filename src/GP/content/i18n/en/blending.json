@@ -48,6 +48,22 @@
         "vulkan": "`#include <map>`. A map keeps its keys sorted (smallest first), so walking it backwards gives the farthest window first. Use `glm::translate(model, it->second)`.",
         "d3d12": "`#include <map>`; `float distance = XMVectorGetX(XMVector3Length(cameraPos - XMLoadFloat3(&windows[i])));` and `XMMatrixTranslation(it->second.x, it->second.y, it->second.z)`."
       }
+    },
+    "ex-opaque-glass": {
+      "text": "Turn blending off and look at the windows: the glass is drawn in its own red, and nothing behind it shows through any more.",
+      "hint": {
+        "opengl": "`glDisable(GL_BLEND)` instead of `glEnable(GL_BLEND)` – the alpha value is then simply ignored.",
+        "vulkan": "`blendEnable = VK_FALSE` in the colour blend attachment – the alpha value is then simply ignored.",
+        "d3d12": "`BlendEnable = FALSE` in the transparent pipeline state's blend state – the alpha value is then simply ignored."
+      }
+    },
+    "ex-threshold": {
+      "text": "Raise the discard threshold from 0.1 to 0.6: now the half-transparent glass (alpha ≈ 0.55) is thrown away too, and only the windows' frames are left.",
+      "hint": "One number in the shader's `if` before `discard`."
+    },
+    "ex-sixth-window": {
+      "text": "Add a sixth window at (−0.8, 0.0, 1.0), close to the camera on the left. Check that it is blended correctly with everything behind it – without changing the sorting.",
+      "hint": "Only the list of window positions grows; the sorting by distance and the drawing loop take care of the new window by themselves."
     }
   }
 }

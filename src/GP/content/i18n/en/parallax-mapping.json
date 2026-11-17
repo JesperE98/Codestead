@@ -40,6 +40,34 @@
         "vulkan": "`vec2 prevTexCoords = currentTexCoords + deltaTexCoords; float afterDepth = currentDepthMapValue - currentLayerDepth; float beforeDepth = texture(depthMap, prevTexCoords).r - currentLayerDepth + layerDepth; float weight = afterDepth / (afterDepth - beforeDepth);`, return `prevTexCoords * weight + currentTexCoords * (1.0 - weight)`.",
         "d3d12": "`float2 prevTexCoords = currentTexCoords + deltaTexCoords; float afterDepth = currentDepthMapValue - currentLayerDepth; float beforeDepth = depthMap.SampleLevel(wrapSampler, prevTexCoords, 0).r - currentLayerDepth + layerDepth; float weight = afterDepth / (afterDepth - beforeDepth);`, return `prevTexCoords * weight + currentTexCoords * (1.0f - weight)`."
       }
+    },
+    "ex-show-depth": {
+      "text": "Show the depth map at the shifted texture coordinates as grey instead of the lit bricks: the deep mortar white, the brick surfaces black.",
+      "hint": {
+        "opengl": "At the end of `main`: sample `depthMap` at `texCoords` – the coordinates `ParallaxMapping` returned – and write its `.r` as a grey colour to `FragColor`.",
+        "vulkan": "At the end of `main`: sample `depthMap` at `texCoords` – the coordinates `ParallaxMapping` returned – and write its `.r` as a grey colour to `outColor`.",
+        "d3d12": "At the end of `PSMain`: sample `depthMap` at `texCoords` – the coordinates `ParallaxMapping` returned – and return its `.r` in r, g and b."
+      }
+    },
+    "ex-height-scale": {
+      "text": "Make the bricks stand out more: raise `heightScale` from 0.1 to 0.25. The mortar gets deeper – and at the edges of the quad more of the bricks are cut away.",
+      "hint": {
+        "opengl": "The global `heightScale` in `main.cpp` (learnopengl changes it with the Q and E keys); it is sent to the fragment shader every frame and scales the offset `P`.",
+        "vulkan": "The global `heightScale` in `main.cpp` (learnopengl changes it with the Q and E keys); it goes to the fragment shader every frame and scales the offset `P`.",
+        "d3d12": "The global `heightScale` in `main.cpp` (learnopengl changes it with the Q and E keys); it goes into the constant buffer every frame and scales the offset `P`."
+      }
+    },
+    "ex-no-discard": {
+      "text": "Remove the `discard` for texture coordinates outside 0…1 and look at the edges of the quad: what do you see there instead of the background, and why?",
+      "hint": "Only the `if` with the `discard` goes. The sampler repeats the texture, so a coordinate shifted past the edge picks up bricks from the opposite side of the texture."
+    },
+    "ex-steeper": {
+      "text": "Tilt the quad further back, −70° about the x axis instead of −45°, so that you look at the bricks at a flatter angle. Does the depth still hold up?",
+      "hint": {
+        "opengl": "The angle in `glm::rotate` for the quad's `model`. The flatter the angle, the longer the offset `viewDir.xy / viewDir.z` and the more layers `ParallaxMapping` uses.",
+        "vulkan": "The angle in `glm::rotate` for the quad's `model`. The flatter the angle, the longer the offset `viewDir.xy / viewDir.z` and the more layers `ParallaxMapping` uses.",
+        "d3d12": "The angle in `XMMatrixRotationX` for the quad's `model`. The flatter the angle, the longer the offset `viewDir.xy / viewDir.z` and the more layers `ParallaxMapping` uses."
+      }
     }
   }
 }

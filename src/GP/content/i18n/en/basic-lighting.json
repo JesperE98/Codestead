@@ -72,6 +72,30 @@
         "vulkan": "`lightPos.x = static_cast<float>(1.0 + std::sin(glfwGetTime()) * 2.0);` – `updateUniformBuffer()` runs before `recordCommandBuffer()`, so the lamp is drawn where the light is.",
         "d3d12": "`float time = std::chrono::duration<float, std::chrono::seconds::period>(currentFrame - startTime).count();` – `OnUpdate` runs before `PopulateCommandList`, so the lamp is drawn where the light is."
       }
+    },
+    "ex-ambient": {
+      "text": "Raise the ambient strength from 0.1 to 0.3. Look at the face that the light doesn't reach – what does a strong ambient part do to the picture?",
+      "hint": {
+        "opengl": "`ambientStrength` in `basic_lighting.fs`.",
+        "vulkan": "`ambientStrength` in `basic_lighting.frag` – recompile it with `glslc`.",
+        "d3d12": "`ambientStrength` in `PSMain` in `basic_lighting.hlsl`."
+      }
+    },
+    "ex-shininess": {
+      "text": "Lower the shininess from 32 to 4. How do the size and the sharpness of the highlight change – and what kind of material does the cube look like now?",
+      "hint": "The shininess is the exponent of `pow` in the specular part: the smaller it is, the slower `spec` falls off away from the perfect reflection."
+    },
+    "ex-white-highlight": {
+      "text": "A highlight is light that is reflected straight off the surface, so it should have the light's colour, not the object's. Let the specular part skip the object colour, so the highlight turns white.",
+      "hint": "Only the last sum changes: multiply ambient + diffuse by the object colour and add the specular part afterwards."
+    },
+    "ex-orbit": {
+      "text": "Let the light circle around the cube instead: at a height of 1, a radius of 2, with x = 2 · sin(time) and z = 2 · cos(time).",
+      "hint": {
+        "opengl": "Replace the two lines that move `lightPos` at the start of the frame: now x and z follow the time, y stays 1. The lamp follows by itself, since it is drawn at `lightPos`.",
+        "vulkan": "Replace the two lines that move `lightPos` every frame: now x and z follow the time, y stays 1. The lamp follows by itself, since it is drawn at `lightPos`.",
+        "d3d12": "Replace the two lines that move `lightPos` every frame: now x and z follow the time, y stays 1. The lamp follows by itself, since it is drawn at `lightPos`."
+      }
     }
   }
 }

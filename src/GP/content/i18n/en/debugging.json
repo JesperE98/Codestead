@@ -62,6 +62,30 @@
     "debug-callback": {
       "text": { "d3d12": "Write `D3D12DebugOutput(category, severity, id, description, context)` and, in `LoadPipeline`, break on errors when a debugger is attached and register the callback with `ID3D12InfoQueue1::RegisterMessageCallback`." },
       "hint": { "d3d12": "Print \"Debug message (id): description\", the category and the severity with `OutputDebugStringA`. Inside `if (m_infoQueue)`: `if (IsDebuggerPresent())` the two `SetBreakOnSeverity` calls (CORRUPTION, ERROR); then `ComPtr<ID3D12InfoQueue1> infoQueue1; if (SUCCEEDED(m_infoQueue.As(&infoQueue1))) infoQueue1->RegisterMessageCallback(D3D12DebugOutput, D3D12_MESSAGE_CALLBACK_FLAG_NONE, nullptr, &callbackCookie);`." }
+    },
+    "ex-v-grey": {
+      "text": "Look at one value at a time: show only the texture coordinate v, as a shade of grey (the same value in red, green and blue). Where on the face is it 0, where 1?",
+      "hint": {
+        "opengl": "In `debugging.fs`: a `vec4` whose red, green and blue are all `TexCoords.y`, alpha 1.",
+        "vulkan": "In `shaders/debugging.frag`: a `vec4` whose red, green and blue are all `fragTexCoord.y`, alpha 1 – recompile it with `glslc`.",
+        "d3d12": "In the pixel shader in `debugging.hlsl`: `input.texCoord.yyy` as red, green and blue, alpha 1. Direct3D's v runs downwards, so the dark end is at the top of the face."
+      }
+    },
+    "ex-tiles": {
+      "text": "Show the texture coordinates three times over in each direction: multiply them by 3 and keep only the fractional part, so the red–green gradient repeats as a 3 × 3 grid on every face.",
+      "hint": {
+        "opengl": "`fract(TexCoords * 3.0)` as red and green. It is what the sampler's `GL_REPEAT` does with coordinates above 1 – the wood would repeat the same way.",
+        "vulkan": "`fract(fragTexCoord * 3.0)` as red and green. It is what the sampler's `VK_SAMPLER_ADDRESS_MODE_REPEAT` does with coordinates above 1 – the wood would repeat the same way.",
+        "d3d12": "HLSL calls it `frac`: `frac(input.texCoord * 3.0f)` as red and green. It is what the sampler's `D3D12_TEXTURE_ADDRESS_MODE_WRAP` does with coordinates above 1 – the wood would repeat the same way."
+      }
+    },
+    "ex-highlight": {
+      "text": "Let the colour answer a question: show the wood texture again, but paint every pixel whose u is greater than 0.5 pure red. Which half of the face turns red?",
+      "hint": {
+        "opengl": "An `if` in `debugging.fs`: red (1, 0, 0) when `TexCoords.x > 0.5`, otherwise the texture as before.",
+        "vulkan": "An `if` in `shaders/debugging.frag`: red (1, 0, 0) when `fragTexCoord.x > 0.5`, otherwise the texture as before.",
+        "d3d12": "An `if` in the pixel shader: return red (1, 0, 0) when `input.texCoord.x > 0.5f`, otherwise the texture sample as before."
+      }
     }
   }
 }

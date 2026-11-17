@@ -1,0 +1,38 @@
+=== task: ex-green-light
+--- file: main.cpp
+--- find:
+    constantBufferData.lightColor = XMFLOAT3(1.0f, 1.0f, 1.0f);
+--- replace:
+    constantBufferData.lightColor = XMFLOAT3(0.0f, 1.0f, 0.0f);
+
+=== task: ex-black-cube
+--- file: main.cpp
+--- find:
+    constantBufferData.objectColor = XMFLOAT3(1.0f, 0.5f, 0.31f);
+    constantBufferData.lightColor = XMFLOAT3(1.0f, 1.0f, 1.0f);
+--- replace:
+    constantBufferData.objectColor = XMFLOAT3(0.0f, 1.0f, 1.0f);
+    constantBufferData.lightColor = XMFLOAT3(1.0f, 0.0f, 0.0f);
+
+=== task: ex-lamp-colour
+--- file: main.cpp
+--- find:
+    constantBufferData.lightColor = XMFLOAT3(1.0f, 1.0f, 1.0f);
+--- replace:
+    constantBufferData.lightColor = XMFLOAT3(1.0f, 0.8f, 0.6f);
+--- file: light_cube.hlsl
+--- find:
+    float4x4 view;
+    float4x4 projection;
+};
+--- replace:
+    float4x4 view;
+    float4x4 projection;
+    float3 objectColor;
+    float3 lightColor;
+};
+--- file: light_cube.hlsl
+--- find:
+    return float4(1.0f, 1.0f, 1.0f, 1.0f); // set all 4 vector values to 1.0
+--- replace:
+    return float4(lightColor, 1.0f); // the lamp shines in the light's colour

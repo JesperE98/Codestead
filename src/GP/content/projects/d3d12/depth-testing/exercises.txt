@@ -1,0 +1,28 @@
+=== task: ex-depth-range
+--- file: depth_testing.hlsl
+--- find:
+    float depth = LinearizeDepth(input.position.z) / far;
+--- replace:
+    float depth = LinearizeDepth(input.position.z) / 10.0f;    // white at 10 units: more contrast in the scene's few metres
+
+=== task: ex-fog
+--- file: depth_testing.hlsl
+--- find:
+    float depth = LinearizeDepth(input.position.z) / far;
+    return float4(depth, depth, depth, 1.0f);
+--- replace:
+    // fog: the texture's colour fades into the background's grey, completely at 10 units
+    float fog = saturate(LinearizeDepth(input.position.z) / 10.0f);
+    return lerp(texture1.Sample(wrapSampler, input.texCoord), float4(0.1f, 0.1f, 0.1f, 1.0f), fog);
+
+=== task: ex-near-clip
+--- file: main.cpp
+--- find:
+    XMMATRIX projection = XMMatrixPerspectiveFovRH(XMConvertToRadians(fov), static_cast<float>(m_width) / static_cast<float>(m_height), 0.1f, 100.0f);
+--- replace:
+    XMMATRIX projection = XMMatrixPerspectiveFovRH(XMConvertToRadians(fov), static_cast<float>(m_width) / static_cast<float>(m_height), 3.7f, 100.0f);
+--- file: depth_testing.hlsl
+--- find:
+static const float near = 0.1f;
+--- replace:
+static const float near = 3.7f;

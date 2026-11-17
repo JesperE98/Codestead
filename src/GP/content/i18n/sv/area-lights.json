@@ -44,6 +44,22 @@
         "vulkan": "Shader: `Light areaLights[32]; int numAreaLights;` i blocket och `for (int i = 0; i < ubo.numAreaLights; i++) { … result += ubo.areaLights[i].color * ubo.areaLights[i].intensity * (specular + mDiffuse * diffuse); }` (`uv`, `t1`, `t2`, `Minv` ligger kvar utanför loopen). C++: `struct AreaLight`, `const int NUM_AREA_LIGHTS = 8;`, `AreaLight areaLights[NUM_AREA_LIGHTS] = { { glm::vec3(0.0f), glm::radians(0.0f), glm::vec3(1.0f, 0.55f, 0.25f) }, … };`; i `updateUniformBuffer()` `ubo.areaLights[i].points[k] = model * glm::vec4(vertices[6 / 7 / 10 / 11].pos, 1.0f);`, färg, intensitet, twoSided och `ubo.numAreaLights = NUM_AREA_LIGHTS;`; i `recordCommandBuffer()` en loop med `constants.model = model; constants.lightColor = areaLights[i].color;` och `vkCmdDraw(commandBuffer, 6, 1, 6, 0)`; kameran i (-0.224556, 10.4038, -18.9259) med `cameraFront = (0.00865, -0.56356, 0.82605)` (yaw 89.3999, pitch -34.3001).",
         "d3d12": "C++: `struct AreaLight { XMFLOAT3 offset; float yRotation; XMFLOAT3 color; float intensity = 2.0f; bool twoSided = true; };`, `const int NUM_AREA_LIGHTS = 8;` och tabellen med `XMConvertToRadians(45.0f * i)`; `XMMATRIX model = XMMatrixRotationY(areaLights[i].yRotation) * XMMatrixTranslation(…offset…);`, `XMStoreFloat4(&constantBufferData.areaLights[i].points[0], XMVector3Transform(XMLoadFloat3(&areaLightVertices[0].position), model));` … (vertex 0, 1, 4, 5); cbuffern får `int numAreaLights;` efter `viewPosition` och `Light areaLights[32];` (C++ och HLSL). HLSL: `for (int i = 0; i < numAreaLights; i++) { … result += areaLights[i].color * areaLights[i].intensity * (specular + mDiffuse * diffuse); }` (`uv`, `t1`, `t2`, `Minv` ligger kvar utanför loopen). Kameran: (-0.224556, 10.4038, -18.9259), front (0.00865, -0.56356, 0.82605), yaw 89.3999, pitch -34.3001."
       }
+    },
+    "ex-intensity": {
+      "text": "Dubbla intensiteten för varje ljus: 4,0 i stället för 2,0. Varför blir inte rektanglarna själva ljusare?",
+      "hint": "Intensiteten är ett standardvärde i structen `AreaLight`, så en enda ändring gäller alla åtta ljusen. Den skalar bara ljuset som golvets shader räknar ut – rektanglarna ritas med sin rena färg."
+    },
+    "ex-roughness": {
+      "text": "Gör golvet mycket slätare: ojämnheten 0,15 i stället för 0,5. Vad händer med reflexerna av ljusen på golvets bortre del?",
+      "hint": "En konstant, `ROUGHNESS`, som skickas till shadern som fjärde komponenten i `material.albedoRoughness`. Den väljer kolumn i LTC-tabellerna: lägre ojämnhet ger en smalare lob, så reflexerna blir skarpare och liknar rektanglarna mer."
+    },
+    "ex-red-light": {
+      "text": "Gör det första ljuset (det som är vridet 0°, till höger) helt rött, (1, 0, 0). Både dess rektangel och dess ljus på golvet ska ändras.",
+      "hint": "Färgen står i tabellen `areaLights`: samma värde skickas till golvets shader och används när rektangeln ritas, så en ändring räcker."
+    },
+    "ex-one-sided": {
+      "text": "Gör ljusen ensidiga: vart och ett ska bara lysa framåt, mot ringens mitt. Vad händer med golvet utanför ringen?",
+      "hint": "`twoSided` är ett standardvärde i structen `AreaLight`. När det är avslaget struntar shadern i ljuset när polygonen, sedd från punkten som belyses, vänder baksidan till – alltså för varje punkt bakom rektangeln."
     }
   }
 }

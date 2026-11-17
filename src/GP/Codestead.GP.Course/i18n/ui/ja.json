@@ -335,5 +335,9 @@
   "yourProject.solutionTitle": "解答 · 課題 {n}",
   "yourProject.solutionHelp": "コース自身のコードによる解き方です。自分のコードと比べて、必要な部分だけ取り入れましょう。",
   "yourProject.copyCode": "コピー",
-  "yourProject.close": "閉じる"
+  "yourProject.close": "閉じる",
+  "yourProject.steps": "手順どおりに",
+  "yourProject.exercises": "演習",
+  "yourProject.solutionExercise": "解答 · 演習 {n}",
+  "expected.exercise": "期待される結果 · 演習 {n}"
 }

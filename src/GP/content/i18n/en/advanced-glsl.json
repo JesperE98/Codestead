@@ -48,6 +48,30 @@
         "vulkan": "`layout(binding = 0) uniform UniformBufferObject { mat4 view; mat4 proj; } ubo;`. `createPipeline` gets an `attributeCount` (1); culling off; bind `cubeDescriptorSet` once, then per cube `vkCmdBindPipeline`, push the model matrix, draw 36.",
         "d3d12": "Compile `uniform_buffer.hlsl`'s `VSMain` once; per colour compile `PSMain`, set `psoDesc.PS`, `CreateGraphicsPipelineState`. Set `CullMode = D3D12_CULL_MODE_NONE` first. Per cube: `SetPipelineState`, the model matrix, `DrawInstanced(36, 1, 0, 0)`."
       }
+    },
+    "ex-zoom-out": {
+      "text": "Zoom out to a 60° field of view. The projection matrix is written into the shared uniform buffer once – change it there, and all four cubes get smaller at the same time.",
+      "hint": {
+        "opengl": "The `glm::perspective` before the render loop, whose result goes into the uniform buffer with `glBufferSubData`: `glm::radians(60.0f)`.",
+        "vulkan": "The projection in `updateUniformBuffer`: `glm::radians(60.0f)` in `glm::perspective`.",
+        "d3d12": "The projection written into the constant buffer: `XMConvertToRadians(60.0f)` in `XMMatrixPerspectiveFovRH`."
+      }
+    },
+    "ex-gradient": {
+      "text": "Let the yellow cube fade with its height in the window: full yellow at the top of the window, black at the bottom – using the pixel's window coordinates.",
+      "hint": {
+        "opengl": "Multiply the colour by `gl_FragCoord.y / 600.0`. In OpenGL `gl_FragCoord` starts at the bottom left of the window.",
+        "vulkan": "Multiply the colour by `1.0 - gl_FragCoord.y / 600.0`. In Vulkan `gl_FragCoord` starts at the top left of the window, so y grows downwards.",
+        "d3d12": "Give the pixel shader's `SV_POSITION` input a use: multiply the colour by `1.0f - position.y / 600.0f`. In Direct3D pixel coordinates start at the top left."
+      }
+    },
+    "ex-checkerboard": {
+      "text": "Paint the blue cube as a checkerboard of 20 × 20-pixel squares, blue and white by turns – squares of the window, not of the cube.",
+      "hint": {
+        "opengl": "Which square a pixel lies in: `int(gl_FragCoord.x / 20.0)` and the same for y. If their sum is odd, white; otherwise blue.",
+        "vulkan": "Which square a pixel lies in: `int(gl_FragCoord.x / 20.0)` and the same for y. If their sum is odd, white; otherwise blue.",
+        "d3d12": "Which square a pixel lies in: `(int)(position.x / 20.0f)` and the same for y, from `SV_POSITION`. If their sum is odd, white; otherwise blue."
+      }
     }
   }
 }

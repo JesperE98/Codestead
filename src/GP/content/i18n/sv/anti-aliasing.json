@@ -52,6 +52,18 @@
         "vulkan": "`float grayscale = 0.2126 * col.r + 0.7152 * col.g + 0.0722 * col.b;` sedan `outColor = vec4(vec3(grayscale), 1.0);`.",
         "d3d12": "`float grayscale = 0.2126f * col.r + 0.7152f * col.g + 0.0722f * col.b;` sedan `return float4(grayscale, grayscale, grayscale, 1.0f);`."
       }
+    },
+    "ex-two-samples": {
+      "text": "Använd 2 sampel per pixel i stället för 4. Kanterna mjukas fortfarande upp, men en kantpixel kan nu bara vara helt, till hälften eller inte alls täckt – titta noga på de grå stegen längs kanterna.",
+      "hint": {
+        "opengl": "Antalet sampel anges två gånger och måste vara lika: i `glTexImage2DMultisample` och i `glRenderbufferStorageMultisample`.",
+        "vulkan": "`getMaxUsableSampleCount()` väljer antalet: låt den välja `VK_SAMPLE_COUNT_2_BIT` först. Alla bilder och pipelines som använder `msaaSamples` följer med.",
+        "d3d12": "`SampleCount` används av render target, djupbufferten och pipeline state: ändra det på ett ställe."
+      }
+    },
+    "ex-show-edges": {
+      "text": "Gör kantutjämningen synlig: färga i efterbehandlingsshadern varje pixel röd som varken är bakgrunden eller kubens gröna – de pixlar som resolve-steget har blandat.",
+      "hint": "Titta på den upplösta färgens gröna kanal innan den görs grå: bakgrunden har 0.1, kuben 1.0 och en blandad kantpixel något däremellan."
     }
   }
 }

@@ -1,0 +1,23 @@
+=== task: ex-low-exposure
+--- file: main.cpp
+--- find:
+float exposure = 1.0f;
+--- replace:
+float exposure = 0.1f;
+
+=== task: ex-red-light
+--- file: main.cpp
+--- find:
+    XMFLOAT3(  0.1f,   0.0f,   0.0f),
+--- replace:
+    XMFLOAT3(  5.0f,   0.0f,   0.0f),
+
+=== task: ex-aces
+--- file: hdr.hlsl
+--- find:
+    float3 result = float3(1.0f, 1.0f, 1.0f) - exp(-hdrColor * exposure);
+--- replace:
+    // float3 result = float3(1.0f, 1.0f, 1.0f) - exp(-hdrColor * exposure);
+    // ACES filmic (Narkowicz's fit)
+    float3 x = hdrColor * exposure;
+    float3 result = saturate((x * (2.51f * x + 0.03f)) / (x * (2.43f * x + 0.59f) + 0.14f));

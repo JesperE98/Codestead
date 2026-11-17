@@ -2,8 +2,12 @@
   "title": "Advanced Data",
   "tasks": {
     "buffer-sub-data": {
-      "text": { "opengl": "Fill the cube's buffer in two steps: reserve the memory with `glBufferData(…, NULL, …)`, then copy `cubeVertices` in from byte 0 with `glBufferSubData`." },
-      "hint": { "opengl": "`glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), NULL, GL_STATIC_DRAW);` then `glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(cubeVertices), &cubeVertices);` – target, offset in bytes, size, data." }
+      "text": {
+        "opengl": "Fill the cube's buffer in two steps: reserve the memory with `glBufferData(…, NULL, …)`, then copy `cubeVertices` in from byte 0 with `glBufferSubData`."
+      },
+      "hint": {
+        "opengl": "`glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), NULL, GL_STATIC_DRAW);` then `glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(cubeVertices), &cubeVertices);` – target, offset in bytes, size, data."
+      }
     },
     "map-buffer": {
       "text": {
@@ -16,12 +20,20 @@
       }
     },
     "map-memory": {
-      "text": { "vulkan": "In `createVertexBuffer()` copy the vertices part by part: map only the cube's range (offset 0, `sizeof(Vertex) * 36`), copy and unmap, then the floor's range (offset `cubeSize`, `sizeof(Vertex) * 6`)." },
-      "hint": { "vulkan": "`vkMapMemory(device, vertexBufferMemory, offset, size, 0, &data)` maps only that range and points at its first byte. Copy `vertices.data() + 36` for the floor. Unmap before mapping the next range." }
+      "text": {
+        "vulkan": "In `createVertexBuffer()` copy the vertices part by part: map only the cube's range (offset 0, `sizeof(Vertex) * 36`), copy and unmap, then the floor's range (offset `cubeSize`, `sizeof(Vertex) * 6`)."
+      },
+      "hint": {
+        "vulkan": "`vkMapMemory(device, vertexBufferMemory, offset, size, 0, &data)` maps only that range and points at its first byte. Copy `vertices.data() + 36` for the floor. Unmap before mapping the next range."
+      }
     },
     "update-buffer": {
-      "text": { "vulkan": "Write the uniform buffer with `vkCmdUpdateBuffer`: create it as a device-local transfer destination (no mapping), record the update and a buffer barrier in `updateUniformBuffer(commandBuffer)`, and call it before the render pass." },
-      "hint": { "vulkan": "`VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT` in `VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT`. Barrier: `TRANSFER_WRITE` → `UNIFORM_READ`, stage `TRANSFER` → `VERTEX_SHADER`. Call it right after `vkBeginCommandBuffer`; remove the call in `drawFrame()`." }
+      "text": {
+        "vulkan": "Write the uniform buffer with `vkCmdUpdateBuffer`: create it as a device-local transfer destination (no mapping), record the update and a buffer barrier in `updateUniformBuffer(commandBuffer)`, and call it before the render pass."
+      },
+      "hint": {
+        "vulkan": "`VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT` in `VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT`. Barrier: `TRANSFER_WRITE` → `UNIFORM_READ`, stage `TRANSFER` → `VERTEX_SHADER`. Call it right after `vkBeginCommandBuffer`; remove the call in `drawFrame()`."
+      }
     },
     "batched-attributes": {
       "text": {
@@ -48,8 +60,32 @@
       }
     },
     "default-heap": {
-      "text": { "d3d12": "Put the cube's vertex buffer in a default heap: fill an upload buffer `vertexBufferUploadHeap` with the two blocks and copy it into `m_vertexBuffer` with `CopyBufferRegion`." },
-      "hint": { "d3d12": "`m_vertexBuffer`: `D3D12_HEAP_TYPE_DEFAULT`, `D3D12_RESOURCE_STATE_COMMON`. Declare `vertexBufferUploadHeap` before the vertex buffer block so it lives until the command list has executed. Then the barrier COPY_DEST → VERTEX_AND_CONSTANT_BUFFER." }
+      "text": {
+        "d3d12": "Put the cube's vertex buffer in a default heap: fill an upload buffer `vertexBufferUploadHeap` with the two blocks and copy it into `m_vertexBuffer` with `CopyBufferRegion`."
+      },
+      "hint": {
+        "d3d12": "`m_vertexBuffer`: `D3D12_HEAP_TYPE_DEFAULT`, `D3D12_RESOURCE_STATE_COMMON`. Declare `vertexBufferUploadHeap` before the vertex buffer block so it lives until the command list has executed. Then the barrier COPY_DEST → VERTEX_AND_CONSTANT_BUFFER."
+      }
+    },
+    "ex-half-floor": {
+      "text": {
+        "opengl": "Copy only the first half of the floor's bytes into the second buffer. What happens to the floor's second triangle?",
+        "vulkan": "Copy only the positions of the first 39 vertices into the staging buffer – the cubes and the floor's first triangle. What happens to the floor's second triangle?",
+        "d3d12": "Copy only the first half of the floor's bytes into the copy buffer. What happens to the floor's second triangle?"
+      },
+      "hint": {
+        "opengl": "The size argument of `glCopyBufferSubData`: `sizeof(planeVertices) / 2`. The rest of the copy was never written – here it is zeros, so the second triangle collapses into one point.",
+        "vulkan": "The size in the `memcpy` of the positions block: `sizeof(glm::vec3) * 39`. The last three positions are never written – here they are zeros, so the floor's second triangle collapses into one point.",
+        "d3d12": "The size argument of `CopyBufferRegion`: `planeVertexBufferSize / 2`. The rest of the copy was never written – here it is zeros, so the second triangle collapses into one point."
+      }
+    },
+    "ex-swap-blocks": {
+      "text": "Store the cube's two blocks the other way round – first all texture coordinates, then all positions – and adjust where each attribute starts. The picture must stay exactly the same.",
+      "hint": {
+        "opengl": "The two `glBufferSubData` calls swap offsets, and so do the last arguments of the two `glVertexAttribPointer` calls: the positions now start at `sizeof(cubeTexCoords)`, the texture coordinates at 0.",
+        "vulkan": "The two mapped ranges swap places (texture coordinates at 0, positions at `texCoordsSize`), and so do the two offsets passed to `vkCmdBindVertexBuffers`.",
+        "d3d12": "The two `memcpy` calls swap places, and so do the `BufferLocation`s of the two vertex buffer views: the positions now start at `sizeof(cubeTexCoords)`."
+      }
     }
   }
 }

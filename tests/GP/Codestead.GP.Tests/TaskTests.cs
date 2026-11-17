@@ -19,12 +19,19 @@ public class TaskTests
             ? parts.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToHashSet(StringComparer.Ordinal)
             : null;
 
+    /// <summary>For a quick run while writing a chapter: CODESTEAD_GP_CHAPTERS ("textures,camera"); unset: every chapter.</summary>
+    public static IReadOnlySet<string>? ChaptersToTest() =>
+        Environment.GetEnvironmentVariable("CODESTEAD_GP_CHAPTERS") is { Length: > 0 } chapters
+            ? chapters.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToHashSet(StringComparer.Ordinal)
+            : null;
+
     public static TheoryData<string, string> ChaptersAndApis()
     {
         var parts = PartsToTest();
+        var only = ChaptersToTest();
         var data = new TheoryData<string, string>();
         foreach (var api in Apis.All)
-            foreach (var chapter in GpCourse.Chapters.Where(c => c.IsLesson && (parts is null || parts.Contains(c.Part))))
+            foreach (var chapter in GpCourse.Chapters.Where(c => c.IsLesson && (parts is null || parts.Contains(c.Part)) && (only is null || only.Contains(c.Id))))
                 if (Directory.Exists(Path.Combine(Repo.Content, "projects", api.Id, chapter.Id))) data.Add(api.Id, chapter.Id);
         return data;
     }
@@ -67,6 +74,38 @@ public class TaskTests
             }
             Assert.True(project.Files.TryGetValue(name, out var text), $"{api}/{chapter}: {name} is missing");
             Assert.Equal(File.ReadAllText(file).Replace("\r\n", "\n"), text);
+        }
+    }
+
+    public static TheoryData<string, string> ChaptersWithExercises()
+    {
+        var parts = PartsToTest();
+        var only = ChaptersToTest();
+        var data = new TheoryData<string, string>();
+        foreach (var api in Apis.All)
+            foreach (var chapter in GpCourse.Chapters.Where(c => c.IsLesson && (parts is null || parts.Contains(c.Part)) && (only is null || only.Contains(c.Id))))
+                if (GpCourse.Exercises(chapter.Id, api.Id).Count > 0) data.Add(api.Id, chapter.Id);
+        return data;
+    }
+
+    [Theory(DisplayName = "varje övning byggs rent; en övning med kontroll löses av sin lösning och inte av kapitlets program")]
+    [MemberData(nameof(ChaptersWithExercises))]
+    public void EachExerciseIsSolvedByItsSolution(string api, string chapter)
+    {
+        var solved = GpCourse.SolutionProject(chapter, api);
+        var before = new CheckContext(api, solved.Clone(), Simulator.Build(solved, api));
+        foreach (var exercise in GpCourse.Exercises(chapter, api))
+        {
+            var check = TaskChecks.For(chapter, exercise.Id);
+            if (check is not null) Assert.False(check(before), $"{api}/{chapter}/{exercise.Id}: the chapter's program already solves it");
+            var project = solved.Clone();
+            foreach (var edit in exercise.Edits)
+                Assert.True(Edits.Apply(project, edit) is not null, $"{api}/{chapter}/{exercise.Id}: the edit's 'find' text is not in {edit.File}:\n{edit.Find}");
+            var after = new CheckContext(api, project.Clone(), Simulator.Build(project, api));
+            Assert.True(after.Built, $"{api}/{chapter}/{exercise.Id}: does not build\n{Report(after)}");
+            var bad = after.Scene!.Notes.Where(n => n.Level != Gpu.Scene.NoteLevel.Info).ToList();
+            Assert.True(bad.Count == 0, $"{api}/{chapter}/{exercise.Id}:\n{Report(after)}");
+            if (check is not null) Assert.True(check(after), $"{api}/{chapter}/{exercise.Id}: not solved by its solution\n{Report(after)}");
         }
     }
 

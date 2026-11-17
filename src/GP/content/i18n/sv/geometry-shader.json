@@ -68,6 +68,26 @@
         "vulkan": "Geometry shadern deklarerar uniform buffer-blocket och använder `ubo.proj`. `createPipeline(…default…, \"\", …, graphicsPipeline)` och `createPipeline(…normal_visualization…, normalPipeline)`; efter den första ritningen: `vkCmdBindPipeline(…, normalPipeline)` och `vkCmdDrawIndexed` igen. Ta bort `time`.",
         "d3d12": "`XMFLOAT4X4 normalMatrix` i `ModelConstants` = `XMMatrixTranspose(XMMatrixInverse(nullptr, model))`, lagrad transponerad. `[maxvertexcount(6)] GSMain(triangle VSOutput input[3], inout LineStream<GSOutput> lineStream)`. Efter första `m_model.Draw`: `SetPipelineState(m_normalPipelineState.Get())` och rita igen."
       }
+    },
+    "ex-long-normals": {
+      "text": "Gör normallinjerna 0.5 enheter långa i stället för 0.2.",
+      "hint": {
+        "opengl": "En konstant i normalernas geometrishader: `MAGNITUDE`.",
+        "vulkan": "En konstant i normalernas geometrishader: `MAGNITUDE` – kompilera om den med `glslc`.",
+        "d3d12": "En konstant i `normal_visualization.hlsl`: `MAGNITUDE`."
+      }
+    },
+    "ex-wireframe": {
+      "text": "Gör om normalernas geometrishader till en trådmodellsshader: i stället för tre normallinjer ska den skicka ut varje triangels tre kanter som en linjeremsa. Planeten får ett gult nät av sina trianglar.",
+      "hint": {
+        "opengl": "En linjeremsa genom hörnen 0, 1, 2 och tillbaka till 0 – fyra vertexar, var och en `projection * gl_in[i].gl_Position` – sedan `EndPrimitive()`. `max_vertices` måste vara minst 4.",
+        "vulkan": "En linjeremsa genom hörnen 0, 1, 2 och tillbaka till 0 – fyra vertexar, var och en `ubo.proj * gl_in[i].gl_Position` – sedan `EndPrimitive()`. `max_vertices` måste vara minst 4.",
+        "d3d12": "En linjeremsa genom hörnen 0, 1, 2 och tillbaka till 0 – fyra anrop till `Append`, vart och ett med `mul(input[i].position, projection)`. `maxvertexcount` måste vara minst 4."
+      }
+    },
+    "ex-face-normals": {
+      "text": "Visa ytornas normaler i stället för vertexarnas: en linje per triangel, som börjar i triangelns mittpunkt och pekar längs normalen till dess plan.",
+      "hint": "Mittpunkten är medelvärdet av de tre hörnen. Planets normal är kryssprodukten av två kanter, som i explode-shaderns `GetNormal` – men tänk på ordningen: för en moturs triangel pekar `cross(p2 − p1, p0 − p1)` utåt; den andra ordningen pekar in i planeten, där djuptestet döljer linjerna."
     }
   }
 }

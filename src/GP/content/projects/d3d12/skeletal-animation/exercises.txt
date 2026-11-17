@@ -1,0 +1,56 @@
+=== task: ex-slow-motion
+--- file: main.cpp
+--- find:
+    UpdateAnimation(m_animator, deltaTime);
+--- replace:
+    UpdateAnimation(m_animator, deltaTime * 0.5f);
+
+=== task: ex-freeze-pose
+--- file: main.cpp
+--- find:
+    InitAnimator(m_animator, &m_swayAnimation);
+--- replace:
+    InitAnimator(m_animator, &m_swayAnimation);
+    UpdateAnimation(m_animator, 1.25f); // the pose at 1.25 s, once
+--- file: main.cpp
+--- find:
+    UpdateAnimation(m_animator, deltaTime);
+--- replace:
+    // (the pose is set once, after InitAnimator)
+
+=== task: ex-still-base
+--- file: main.cpp
+--- find:
+    if (bone)
+    {
+        UpdateBone(*bone, animator.m_CurrentTime);
+--- replace:
+    if (bone && nodeName != "Base")
+    {
+        UpdateBone(*bone, animator.m_CurrentTime);
+
+=== task: ex-bone-weight
+--- file: anim_model.hlsl
+--- find:
+    float2 texCoords : TEXCOORD;
+};
+--- replace:
+    float2 texCoords : TEXCOORD;
+    float upperWeight : WEIGHT;
+};
+--- file: anim_model.hlsl
+--- find:
+    result.texCoords = tex;
+--- replace:
+    result.texCoords = tex;
+
+    // how much the Upper bone (id 2) moves this vertex
+    result.upperWeight = 0.0f;
+    for (int j = 0; j < MAX_BONE_INFLUENCE; j++)
+        if (boneIds[j] == 2)
+            result.upperWeight += weights[j];
+--- file: anim_model.hlsl
+--- find:
+    return texture_diffuse1.Sample(wrapSampler, input.texCoords);
+--- replace:
+    return float4(input.upperWeight, 0.0f, 0.0f, 1.0f);

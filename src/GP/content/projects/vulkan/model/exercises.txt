@@ -1,0 +1,40 @@
+=== task: ex-light-left
+--- file: main.cpp
+--- find:
+glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+--- replace:
+glm::vec3 lightPos(-1.2f, 1.0f, 2.0f);
+
+=== task: ex-normals
+--- file: shaders/model_loading.frag
+--- find:
+    outColor = vec4(result, 1.0);
+--- replace:
+    outColor = vec4(normalize(fragNormal) * 0.5 + 0.5, 1.0); // the normal as a colour: x red, y green, z blue
+
+=== task: ex-spin
+--- file: main.cpp
+--- find:
+        model = glm::rotate(model, glm::radians(25.0f), glm::vec3(1.0f, 0.0f, 0.0f)); // tilt it towards us, so the ring shows
+--- replace:
+        model = glm::rotate(model, glm::radians(25.0f), glm::vec3(1.0f, 0.0f, 0.0f)); // tilt it towards us, so the ring shows
+        model = glm::rotate(model, static_cast<float>(glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f)); // spin about its own axis
+
+=== task: ex-moon
+--- file: main.cpp
+--- find:
+        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+
+        vkCmdEndRenderPass(commandBuffer);
+--- replace:
+        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+
+        // a small moon up to the right: the same vertices with another model matrix
+        glm::mat4 moon = glm::mat4(1.0f);
+        moon = glm::translate(moon, glm::vec3(1.2f, 0.6f, 0.0f));
+        moon = glm::scale(moon, glm::vec3(0.15f));
+        constants.model = moon;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+
+        vkCmdEndRenderPass(commandBuffer);

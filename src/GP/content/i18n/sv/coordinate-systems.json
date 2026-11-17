@@ -112,6 +112,30 @@
         "vulkan": "Kub 0, 3, 6 och 9 vrider sig nu 25° per sekund; de andra behåller sin fasta vinkel.",
         "d3d12": "Kub 0, 3, 6 och 9 vrider sig nu 25° per sekund. Vinkeln är fortfarande i grader – `XMConvertToRadians(angle)` omvandlar den."
       }
+    },
+    "ex-fov": {
+      "text": "Vidga synfältet från 45° till 90°. Vad händer med kubernas storlek, och varför?",
+      "hint": {
+        "opengl": "Synfältet är första argumentet till `glm::perspective` (i radianer, så behåll `glm::radians`).",
+        "vulkan": "Synfältet är första argumentet till `glm::perspective` (i radianer, så behåll `glm::radians`). Låt y-vändningen efter det vara.",
+        "d3d12": "Synfältet är första argumentet till `XMMatrixPerspectiveFovRH` (i radianer, så behåll `XMConvertToRadians`)."
+      }
+    },
+    "ex-camera-up": {
+      "text": "Höj kameran en enhet, så att den ser kuberna från lite högre upp (den tittar fortfarande rakt fram).",
+      "hint": "Det finns ingen kamera: view-matrisen flyttar hela scenen åt andra hållet. Scenen flyttas redan 3 enheter bort längs z – den måste också flyttas 1 enhet längs y, åt motsatt håll mot kamerans."
+    },
+    "ex-ortho": {
+      "text": "Byt den perspektiviska projektionen mot en ortografisk som visar 8 × 6 enheter (x från −4 till 4, y från −3 till 3), med samma när- och fjärrplan. Jämför de nära och de avlägsna kuberna.",
+      "hint": {
+        "opengl": "`glm::ortho(left, right, bottom, top, near, far)` i stället för `glm::perspective`.",
+        "vulkan": "`glm::ortho(left, right, bottom, top, near, far)` i stället för `glm::perspective` – definitionen `GLM_FORCE_DEPTH_ZERO_TO_ONE` gör att den också använder Vulkans djupintervall, och y-vändningen efter den gäller fortfarande.",
+        "d3d12": "`XMMatrixOrthographicOffCenterRH(left, right, bottom, top, near, far)` i stället för `XMMatrixPerspectiveFovRH`."
+      }
+    },
+    "ex-spin-all": {
+      "text": "Låt varje kub snurra med tiden, inte bara var tredje – var och en från sin egen vinkel (20° · i), så att de inte ställer sig likadant.",
+      "hint": "Lägg till den tidsberoende delen (tid · 25°) till varje kubs egen vinkel i stället för att byta ut vinkeln för några av dem; testet `i % 3` behövs inte längre."
     }
   }
 }

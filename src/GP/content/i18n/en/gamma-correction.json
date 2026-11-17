@@ -36,6 +36,34 @@
         "vulkan": "`float attenuation = 1.0 / (distance * distance);` – without gamma correction the monitor made `1/d²` look like `1/d^4.4`, which is why `1/d` was used.",
         "d3d12": "`float attenuation = 1.0f / (lightDistance * lightDistance);` – without gamma correction the monitor made `1/d²` look like `1/d^4.4`, which is why `1/d` was used."
       }
+    },
+    "ex-lighting-only": {
+      "text": "Leave the wood out and show only the light that falls on the floor (still gamma-corrected), as shades of grey: you see how the four lights and the 1/d² falloff add up.",
+      "hint": {
+        "opengl": "In `main()` of the fragment shader the texture colour is multiplied by `lighting`: write `lighting` itself to `color` instead.",
+        "vulkan": "In `main()` of the fragment shader the texture colour is multiplied by `lighting`: write `lighting` itself to `color` instead.",
+        "d3d12": "In `PSMain` the texture colour is multiplied by `lighting`: write `lighting` itself to `color` instead."
+      }
+    },
+    "ex-equal-lights": {
+      "text": "Make all four lights equally bright, white (1.0). Compare the left and the right half of the floor with the solution's grey-to-white lights.",
+      "hint": {
+        "opengl": "Only the `lightColors` array in `main.cpp` changes; it is sent with `glUniform3fv` every frame.",
+        "vulkan": "Only `ubo.lightColors[0]` to `[2]` in `updateUniformBuffer()` change.",
+        "d3d12": "Only the global `lightColors` array in `main.cpp` changes; it is copied into the constant buffer every frame."
+      }
+    },
+    "ex-hardware-srgb": {
+      "text": {
+        "opengl": "Let the hardware do the gamma correction: remove the `pow` from the shader and turn on the sRGB framebuffer instead. The floor looks almost the same – but what happens to the background, and why?",
+        "vulkan": "Let the hardware do the gamma correction: remove the `pow` from the shader and pick an `_SRGB` format for the swap chain instead. The floor looks almost the same – but what happens to the background, and why?",
+        "d3d12": "Let the hardware do the gamma correction: remove the `pow` from the shader and draw into the back buffers through an `_SRGB` render target view instead. The floor looks almost the same – but what happens to the background, and why?"
+      },
+      "hint": {
+        "opengl": "`glEnable(GL_FRAMEBUFFER_SRGB);` once before the render loop. Now every colour written to the window is encoded – the clear colour too, which was chosen as an already encoded value.",
+        "vulkan": "In `chooseSwapSurfaceFormat()` look for `VK_FORMAT_B8G8R8A8_SRGB` instead of `_UNORM`. Now every colour written to the swap chain image is encoded – the clear colour too, which was chosen as an already encoded value.",
+        "d3d12": "A flip-model swap chain cannot itself be `_SRGB`, but a view of it can: give `CreateRenderTargetView` a `D3D12_RENDER_TARGET_VIEW_DESC` with `Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB` and `ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D`, and use the same format in the pipeline state's `RTVFormats[0]`. Now every colour written is encoded – the clear colour too, which was chosen as an already encoded value."
+      }
     }
   }
 }

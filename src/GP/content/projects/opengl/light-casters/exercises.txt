@@ -1,0 +1,37 @@
+=== task: ex-wide-cone
+--- file: main.cpp
+--- find:
+        lightingShader.setFloat("light.cutOff", glm::cos(glm::radians(12.5f)));
+        lightingShader.setFloat("light.outerCutOff", glm::cos(glm::radians(17.5f)));
+--- replace:
+        lightingShader.setFloat("light.cutOff", glm::cos(glm::radians(25.0f)));
+        lightingShader.setFloat("light.outerCutOff", glm::cos(glm::radians(30.0f)));
+
+=== task: ex-red-light
+--- file: main.cpp
+--- find:
+        lightingShader.setVec3("light.diffuse", 0.8f, 0.8f, 0.8f);
+        lightingShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+--- replace:
+        lightingShader.setVec3("light.diffuse", 0.8f, 0.0f, 0.0f); // a red flashlight
+        lightingShader.setVec3("light.specular", 1.0f, 0.0f, 0.0f);
+
+=== task: ex-short-range
+--- file: main.cpp
+--- find:
+        lightingShader.setFloat("light.linear", 0.09f);
+        lightingShader.setFloat("light.quadratic", 0.032f);
+--- replace:
+        lightingShader.setFloat("light.linear", 0.35f); // a range of about 13 units
+        lightingShader.setFloat("light.quadratic", 0.44f);
+
+=== task: ex-fading
+--- file: main.cpp
+--- find:
+        lightingShader.setVec3("light.diffuse", 0.8f, 0.8f, 0.8f);
+        lightingShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+--- replace:
+        // a failing battery: the flashlight fades out and in again
+        float strength = static_cast<float>(0.5 + 0.5 * sin(glfwGetTime() * 2.0));
+        lightingShader.setVec3("light.diffuse", glm::vec3(0.8f) * strength);
+        lightingShader.setVec3("light.specular", glm::vec3(1.0f) * strength);

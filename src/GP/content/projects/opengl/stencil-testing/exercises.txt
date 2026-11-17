@@ -1,0 +1,34 @@
+=== task: ex-orange-outline
+--- file: stencil_single_color.fs
+--- find:
+    FragColor = vec4(0.04, 0.28, 0.26, 1.0);
+--- replace:
+    FragColor = vec4(1.0, 0.6, 0.0, 1.0);
+
+=== task: ex-thick-outline
+--- file: main.cpp
+--- find:
+        float scale = 1.1f;
+--- replace:
+        float scale = 1.2f;
+
+=== task: ex-left-only
+--- file: main.cpp
+--- find:
+        shaderSingleColor.setMat4("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(scale, scale, scale));
+        shaderSingleColor.setMat4("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+--- replace:
+        shaderSingleColor.setMat4("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+
+=== task: ex-silhouette
+--- file: main.cpp
+--- find:
+        glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+--- replace:
+        glStencilFunc(GL_EQUAL, 1, 0xFF);

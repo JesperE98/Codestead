@@ -1,0 +1,31 @@
+=== task: ex-orange-outline
+--- file: stencil_single_color.hlsl
+--- find:
+    return float4(0.04f, 0.28f, 0.26f, 1.0f);
+--- replace:
+    return float4(1.0f, 0.6f, 0.0f, 1.0f);
+
+=== task: ex-thick-outline
+--- file: main.cpp
+--- find:
+    float scale = 1.1f;
+--- replace:
+    float scale = 1.2f;
+
+=== task: ex-left-only
+--- file: main.cpp
+--- find:
+    m_commandList->DrawInstanced(36, 1, 0, 0);
+    model = XMMatrixScaling(scale, scale, scale) * XMMatrixTranslation(2.0f, 0.0f, 0.0f);
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_commandList->DrawInstanced(36, 1, 0, 0);
+--- replace:
+    m_commandList->DrawInstanced(36, 1, 0, 0);
+
+=== task: ex-silhouette
+--- file: main.cpp
+--- find:
+        psoDesc.DepthStencilState.FrontFace.StencilFunc = D3D12_COMPARISON_FUNC_NOT_EQUAL;
+--- replace:
+        psoDesc.DepthStencilState.FrontFace.StencilFunc = D3D12_COMPARISON_FUNC_EQUAL;

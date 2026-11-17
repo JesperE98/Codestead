@@ -1,0 +1,23 @@
+=== task: ex-zoom-out
+--- file: main.cpp
+--- find:
+        ubo.proj = glm::perspective(glm::radians(fov), swapChainExtent.width / (float) swapChainExtent.height, 0.1f, 100.0f);
+--- replace:
+        ubo.proj = glm::perspective(glm::radians(60.0f), swapChainExtent.width / (float) swapChainExtent.height, 0.1f, 100.0f);
+
+=== task: ex-gradient
+--- file: shaders/yellow.frag
+--- find:
+    outColor = vec4(1.0, 1.0, 0.0, 1.0);
+--- replace:
+    // gl_FragCoord.y counts pixels from the top of the window in Vulkan: brighter towards the top
+    outColor = vec4(vec3(1.0, 1.0, 0.0) * (1.0 - gl_FragCoord.y / 600.0), 1.0);
+
+=== task: ex-checkerboard
+--- file: shaders/blue.frag
+--- find:
+    outColor = vec4(0.0, 0.0, 1.0, 1.0);
+--- replace:
+    // squares of 20 × 20 pixels: blue and white by turns
+    bool white = (int(gl_FragCoord.x / 20.0) + int(gl_FragCoord.y / 20.0)) % 2 == 1;
+    outColor = white ? vec4(1.0) : vec4(0.0, 0.0, 1.0, 1.0);

@@ -52,6 +52,14 @@
     "command-queue": {
       "text": { "d3d12": "Describe and create the command queue: a `D3D12_COMMAND_QUEUE_DESC` with `Type = D3D12_COMMAND_LIST_TYPE_DIRECT`, then `m_device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_commandQueue))`." },
       "hint": { "d3d12": "Start with `D3D12_COMMAND_QUEUE_DESC queueDesc = {};` and set `Flags = D3D12_COMMAND_QUEUE_FLAG_NONE`. A direct queue takes every kind of command (drawing, compute, copies)." }
+    },
+    "ex-texture-limit": {
+      "text": "Ask the GPU you picked how large a 2D texture it can handle, and print the answer (in pixels per side) to the console.",
+      "hint": "After `pickPhysicalDevice` has chosen `physicalDevice`: `vkGetPhysicalDeviceProperties` fills a `VkPhysicalDeviceProperties`, whose `limits` hold the GPU's limits – the one you want is `maxImageDimension2D`."
+    },
+    "ex-feature-level": {
+      "text": "Only accept a GPU that supports feature level 12_0 (instead of 11_0) – both when you test the adapters and when you create the device.",
+      "hint": "The feature level appears twice: in `GetHardwareAdapter`'s test call to `D3D12CreateDevice` and in the real call in `LoadPipeline`. Both take `D3D_FEATURE_LEVEL_12_0`."
     }
   }
 }

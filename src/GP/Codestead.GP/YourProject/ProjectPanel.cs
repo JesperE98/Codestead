@@ -104,7 +104,10 @@ public sealed partial class ProjectPanel : Border
         }
         if (m.Tasks.Count > 0)
         {
-            picture.Caption = t("expected.task", ("n", m.SelectedTask + 1));
+            // Steps and exercises are numbered on their own.
+            picture.Caption = m.SelectedTask < m.StepCount
+                ? t("expected.task", ("n", m.SelectedTask + 1))
+                : t("expected.exercise", ("n", m.SelectedTask - m.StepCount + 1));
             content.Children.Add(picture);
         }
     }

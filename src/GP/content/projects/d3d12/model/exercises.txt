@@ -1,0 +1,37 @@
+=== task: ex-light-left
+--- file: main.cpp
+--- find:
+XMFLOAT3 lightPos = XMFLOAT3(1.2f, 1.0f, 2.0f);
+--- replace:
+XMFLOAT3 lightPos = XMFLOAT3(-1.2f, 1.0f, 2.0f);
+
+=== task: ex-normals
+--- file: model_loading.hlsl
+--- find:
+    return float4(result, 1.0f);
+--- replace:
+    return float4(normalize(input.normal) * 0.5f + 0.5f, 1.0f); // the normal as a colour: x red, y green, z blue
+
+=== task: ex-spin
+--- file: main.cpp
+--- find:
+    XMMATRIX model = XMMatrixScaling(0.5f, 0.5f, 0.5f)                                            // planet radius 0.5, ring up to 1.0
+--- replace:
+    static auto startTime = std::chrono::high_resolution_clock::now();
+    float time = std::chrono::duration<float, std::chrono::seconds::period>(std::chrono::high_resolution_clock::now() - startTime).count();
+    XMMATRIX model = XMMatrixScaling(0.5f, 0.5f, 0.5f)                                            // planet radius 0.5, ring up to 1.0
+        * XMMatrixRotationY(time)                                                                 // spin about its own axis
+
+=== task: ex-moon
+--- file: main.cpp
+--- find:
+    m_model.Draw(m_commandList.Get());
+--- replace:
+    m_model.Draw(m_commandList.Get());
+
+    // a small moon up to the right: the same model with another model matrix (and its normal matrix)
+    XMMATRIX moon = XMMatrixScaling(0.15f, 0.15f, 0.15f) * XMMatrixTranslation(1.2f, 0.6f, 0.0f);
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(moon));
+    XMStoreFloat4x4(&modelConstants.normalMatrix, XMMatrixInverse(nullptr, moon));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_model.Draw(m_commandList.Get());

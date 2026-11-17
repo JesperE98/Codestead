@@ -36,6 +36,38 @@
         "vulkan": "`float AmbientOcclusion = texture(ssao, fragTexCoord).r;` och `vec3 ambient = vec3(0.3 * Diffuse * AmbientOcclusion);` – bara omgivningsljuset skyms; det direkta ljuset behåller sitt diffusa och spekulära.",
         "d3d12": "`float AmbientOcclusion = ssao.Sample(clampSampler, input.texCoord).r;` och `float3 ambient = 0.3f * Diffuse * AmbientOcclusion;`, och avsluta `PSMain` med `return float4(lighting, 1.0f);` – bara omgivningsljuset skyms."
       }
+    },
+    "ex-warm-light": {
+      "text": "Byt det blå ljuset mot ett varmt, (0.8, 0.5, 0.2). De delar som bara får omgivande ljus – planetens framsida – förblir grå: där avgör SSAO ensam hur mörkt det är.",
+      "hint": {
+        "opengl": "Bara `lightColor` i `main.cpp` ändras; den går till `light.Color` i belysningspasset.",
+        "vulkan": "Bara den globala `lightColor` i `main.cpp` ändras; den går till belysningspasset i uniformbufferten.",
+        "d3d12": "Bara den globala `lightColor` i `main.cpp` ändras; den går till belysningspasset i konstantbufferten."
+      }
+    },
+    "ex-ambient-only": {
+      "text": "Släck ljuset och rita bara den omgivande termen, multiplicerad med ambient occlusion: en grå bild där du ser exakt var SSAO mörkar scenen – under planeten och längs ringen.",
+      "hint": {
+        "opengl": "Skriv i slutet av `ssao_lighting.fs` `ambient` i stället för `lighting` till `FragColor`.",
+        "vulkan": "Skriv i slutet av `ssao_lighting.frag` `ambient` i stället för `lighting` till `outColor`.",
+        "d3d12": "Returnera i slutet av belysningspassets `PSMain` (`ssao_lighting.hlsl`) `ambient` i stället för `lighting`."
+      }
+    },
+    "ex-radius": {
+      "text": "Tredubbla samplingsradien, från 0,5 till 1,5. Mörkningen under planeten sprider sig längre ut över golvet – vad händer med ringen?",
+      "hint": {
+        "opengl": "`radius` högst upp i `ssao.fs`. En större halvsfär når mer geometri, och avståndskontrollen `smoothstep(0.0, 1.0, radius / abs(…))` låter mer avlägsna skymmande ytor räknas.",
+        "vulkan": "`radius` högst upp i `ssao.frag`. En större halvsfär når mer geometri, och avståndskontrollen `smoothstep(0.0, 1.0, radius / abs(…))` låter mer avlägsna skymmande ytor räknas.",
+        "d3d12": "`radius` högst upp i `ssao.hlsl`. En större halvsfär når mer geometri, och avståndskontrollen `smoothstep(0.0f, 1.0f, radius / abs(…))` låter mer avlägsna skymmande ytor räknas."
+      }
+    },
+    "ex-ao-power": {
+      "text": "Gör skymningen starkare genom att upphöja SSAO-resultatet till 3: ställen som är lite skymda blir nästan som förut, ställen som är mycket skymda blir mycket mörkare.",
+      "hint": {
+        "opengl": "I `ssao.fs`, efter `occlusion = 1.0 - (occlusion / kernelSize);`: `pow(occlusion, 3.0)`. Värdet ligger mellan 0 och 1, så en exponent över 1 gör det bara mindre.",
+        "vulkan": "I `ssao.frag`, efter `occlusion = 1.0 - (occlusion / kernelSize);`: `pow(occlusion, 3.0)`. Värdet ligger mellan 0 och 1, så en exponent över 1 gör det bara mindre.",
+        "d3d12": "I `ssao.hlsl`, efter `occlusion = 1.0f - (occlusion / kernelSize);`: `pow(occlusion, 3.0f)`. Värdet ligger mellan 0 och 1, så en exponent över 1 gör det bara mindre."
+      }
     }
   }
 }

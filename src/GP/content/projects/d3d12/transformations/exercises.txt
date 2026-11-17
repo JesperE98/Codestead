@@ -1,0 +1,37 @@
+=== task: ex-faster
+--- file: main.cpp
+--- find:
+    XMMATRIX transform = XMMatrixTranslation(0.5f, -0.5f, 0.0f) * XMMatrixRotationZ(time);
+--- replace:
+    XMMATRIX transform = XMMatrixTranslation(0.5f, -0.5f, 0.0f) * XMMatrixRotationZ(time * 2.0f);
+
+=== task: ex-third-container
+--- file: main.cpp
+--- find:
+    // Draw the container again, now with the new root constants. Root constants are
+    // recorded with each draw, so the first draw keeps its own matrix.
+    m_commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+--- replace:
+    // Draw the container again, now with the new root constants. Root constants are
+    // recorded with each draw, so the first draw keeps its own matrix.
+    m_commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+
+    // A third container: half the size, standing still at the bottom left.
+    transform = XMMatrixScaling(0.5f, 0.5f, 0.5f) * XMMatrixTranslation(-0.5f, -0.5f, 0.0f);
+    XMStoreFloat4x4(&transformConstants.transform, XMMatrixTranspose(transform));
+    m_commandList->SetGraphicsRoot32BitConstants(1, sizeof(TransformConstants) / 4, &transformConstants, 0);
+    m_commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+
+=== task: ex-no-flip
+--- file: main.cpp
+--- find:
+    float scaleAmount = std::sin(time);
+--- replace:
+    float scaleAmount = 0.75f + 0.25f * std::sin(time);
+
+=== task: ex-tilt
+--- file: main.cpp
+--- find:
+    transform = XMMatrixScaling(scaleAmount, scaleAmount, scaleAmount) * XMMatrixTranslation(-0.5f, 0.5f, 0.0f);
+--- replace:
+    transform = XMMatrixScaling(scaleAmount, scaleAmount, scaleAmount) * XMMatrixRotationZ(XMConvertToRadians(45.0f)) * XMMatrixTranslation(-0.5f, 0.5f, 0.0f);

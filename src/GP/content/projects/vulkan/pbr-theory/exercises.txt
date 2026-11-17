@@ -1,0 +1,30 @@
+=== task: ex-parameters
+--- file: shaders/pbr.frag
+--- find:
+    outColor = vec4(color, 1.0);
+--- replace:
+    outColor = vec4(vec3(metallic, roughness, 0.0), 1.0);
+
+=== task: ex-n-dot-v
+--- file: shaders/pbr.frag
+--- find:
+    outColor = vec4(color, 1.0);
+--- replace:
+    float NdotV = max(dot(N, V), 0.0);
+    outColor = vec4(vec3(NdotV, NdotV, NdotV), 1.0);
+
+=== task: ex-fresnel
+--- file: shaders/pbr.frag
+--- find:
+// TODO: fresnelSchlick(cosTheta, F0): the Fresnel equation
+--- replace:
+// TODO: fresnelSchlick(cosTheta, F0): the Fresnel equation
+vec3 fresnelSchlick(float cosTheta, vec3 F0) {
+    return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+}
+--- file: shaders/pbr.frag
+--- find:
+    outColor = vec4(color, 1.0);
+--- replace:
+    vec3 F0 = mix(vec3(0.04), albedo, metallic);
+    outColor = vec4(fresnelSchlick(max(dot(N, V), 0.0), F0), 1.0);

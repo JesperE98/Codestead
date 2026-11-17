@@ -36,6 +36,26 @@
         "vulkan": "`glm::vec2 playerPos = glm::vec2(game.Width / 2.0f - PLAYER_SIZE.x / 2.0f, game.Height - PLAYER_SIZE.y);`, `Player = MakeGameObject(playerPos, PLAYER_SIZE, GetTexture(\"paddle\").DescriptorSet);`. `float velocity = PLAYER_VELOCITY * dt;` and `if (game.Keys[GLFW_KEY_A]) { if (Player.Position.x >= 0.0f) Player.Position.x -= velocity; }`, the same for D with `game.Width - Player.Size.x`.",
         "d3d12": "`XMFLOAT2 playerPos = XMFLOAT2(game.Width / 2.0f - PLAYER_SIZE.x / 2.0f, game.Height - PLAYER_SIZE.y);`, `Player = MakeGameObject(playerPos, PLAYER_SIZE, GetTexture(\"paddle\").ID);`. `float velocity = PLAYER_VELOCITY * dt;` and `if (game.Keys['A']) { if (Player.Position.x >= 0.0f) Player.Position.x -= velocity; }`, the same for 'D' with `game.Width - Player.Size.x`."
       }
+    },
+    "ex-start-level": {
+      "text": "Start the game in level two instead of level one.",
+      "hint": "The levels are loaded into `game.Levels` in order, and `game.Level` is the index of the one drawn – it counts from 0."
+    },
+    "ex-brick-colour": {
+      "text": "Make the blue bricks (type 2 in the level files) purple: (0.6, 0.2, 0.8).",
+      "hint": "`InitLevel` turns each number of the level file into a colour; the brick texture is the same for all of them – only the colour multiplying it changes."
+    },
+    "ex-stone-row": {
+      "text": "Change level one so that its top row is solid stones from wall to wall.",
+      "hint": "Edit `levels/one.lvl`, not the code: every number is one brick, 1 means solid. The first line is the top row."
+    },
+    "ex-wide-paddle": {
+      "text": "Give the player a wider paddle: 150 pixels instead of 100, still centred at the bottom of the window.",
+      "hint": "One constant sets its size; the start position is computed from it, so the paddle stays centred by itself."
+    },
+    "ex-flatter": {
+      "text": "Squeeze level one into the top third of the window instead of the top half.",
+      "hint": "`LoadLevel` gets the area the bricks share out: `game.Height / 3` instead of `/ 2` for level one. The number of rows stays the same, so each brick gets lower."
     }
   }
 }

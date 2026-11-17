@@ -1,0 +1,31 @@
+=== task: ex-show-normals
+--- file: normal_mapping.hlsl
+--- find:
+    return float4(ambient + diffuse + specular, 1.0f);
+--- replace:
+    return float4(normal * 0.5f + 0.5f, 1.0f);
+
+=== task: ex-flat
+--- file: normal_mapping.hlsl
+--- find:
+    normal.y = -normal.y;
+--- replace:
+    normal.y = -normal.y;
+    normal = float3(0.0f, 0.0f, 1.0f);    // the surface's own normal: no bumps
+
+=== task: ex-stronger-bumps
+--- file: normal_mapping.hlsl
+--- find:
+    normal.y = -normal.y;
+--- replace:
+    normal.y = -normal.y;
+    normal = normalize(float3(normal.xy * 3.0f, normal.z));    // tilt it three times as much
+
+=== task: ex-turn
+--- file: main.cpp
+--- find:
+    XMMATRIX model = XMMatrixRotationAxis(XMVector3Normalize(XMVectorSet(1.0f, 0.0f, 1.0f, 0.0f)), XMConvertToRadians(-30.0f));
+--- replace:
+    static auto startTime = std::chrono::high_resolution_clock::now();
+    float time = std::chrono::duration<float, std::chrono::seconds::period>(std::chrono::high_resolution_clock::now() - startTime).count();
+    XMMATRIX model = XMMatrixRotationAxis(XMVector3Normalize(XMVectorSet(1.0f, 0.0f, 1.0f, 0.0f)), XMConvertToRadians(time * -10.0f));

@@ -54,6 +54,30 @@
       "hint": {
         "vulkan": "`VK_IMAGE_USAGE_STORAGE_BIT` in `createTexture()`'s usage (and check `VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT`), the last transition `TRANSFER_DST_OPTIMAL` → `GENERAL` (a new branch in `transitionImageLayout`: dst access shader read | write, stages fragment | compute), `imageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL` in `createDescriptorSet()`. `createComputeDescriptorSetLayout()`: one binding, `VK_DESCRIPTOR_TYPE_STORAGE_IMAGE`, `VK_SHADER_STAGE_COMPUTE_BIT`; `createComputeDescriptorSet()`: the image view, layout `GENERAL`, no sampler; the pool gets a `VK_DESCRIPTOR_TYPE_STORAGE_IMAGE` and `maxSets = 2`. Destroy the layout in `cleanup()`."
       }
+    },
+    "ex-speed": {
+      "text": "Make the pattern move twice as fast: 200 texels per second. Where is the brightest red at 1 second?",
+      "hint": {
+        "opengl": "One variable in `computeShader.comp`, the one multiplied by the time `t`. Nothing in the C++ code changes.",
+        "vulkan": "One variable in `compute_shader.comp`, the one multiplied by the time `pc.t` – recompile it. Nothing in the C++ code changes.",
+        "d3d12": "One variable in `computeShader.hlsl`, the one multiplied by the time `t`. Nothing in the C++ code changes."
+      }
+    },
+    "ex-disc": {
+      "text": "Draw a white disc with a radius of 100 texels in the middle of the texture (texel (400, 300)), over the moving gradient.",
+      "hint": {
+        "opengl": "Every invocation knows its own texel (`texelCoord`): before `imageStore`, make `value` white when the texel's distance to (400, 300) is less than 100 – GLSL's `distance` takes two `vec2`s.",
+        "vulkan": "Every invocation knows its own texel (`texelCoord`): before `imageStore`, make `value` white when the texel's distance to (400, 300) is less than 100 – GLSL's `distance` takes two `vec2`s.",
+        "d3d12": "Every thread knows its own texel (`texelCoord`): before it is written to `imgOutput`, make `value` white when the texel's distance to (400, 300) is less than 100 – HLSL's `distance` takes two `float2`s."
+      }
+    },
+    "ex-work-groups": {
+      "text": "Make the work groups visible: set blue to 1 in every other work group, so that a checkerboard of 10 × 10 texel squares appears over the gradient.",
+      "hint": {
+        "opengl": "`gl_WorkGroupID` is the group's position in the dispatch (0…79, 0…59). Whether `x + y` is odd or even decides the square's colour.",
+        "vulkan": "`gl_WorkGroupID` is the group's position in the dispatch (0…79, 0…59). Whether `x + y` is odd or even decides the square's colour.",
+        "d3d12": "HLSL calls it a thread group: add a parameter with the semantic `SV_GroupID` to `CSMain` – the group's position in the dispatch (0…79, 0…59). Whether `x + y` is odd or even decides the square's colour."
+      }
     }
   }
 }

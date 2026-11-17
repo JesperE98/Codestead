@@ -56,6 +56,22 @@
         "vulkan": "`getInstancedBindingDescriptions()`: binding 1, `stride = sizeof(glm::mat4)`, `VK_VERTEX_INPUT_RATE_INSTANCE`; `getInstancedAttributeDescriptions()`: `[4]..[7]` at binding 1, locations 4..7, `VK_FORMAT_R32G32B32A32_SFLOAT`, offsets 0, 16, 32, 48. Bind `{rockVertexBuffer, instanceBuffer}`, `rockIndexBuffer`, `rockDescriptorSet`.",
         "d3d12": "Four elements `{ \"INSTANCEMATRIX\", 0..3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 0/16/32/48, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 }`; shader: `float4x4(instanceRow0, …, instanceRow3)`. Store the matrices untransposed. `m_rock.Load(…, 1 + 2 * m_planet.meshes.size())`; per mesh: `srvHandle`, `vertexBufferView`, `indexBufferView`."
       }
+    },
+    "ex-high-belt": {
+      "text": "Make the asteroid belt five times as high: let the rocks' random height be 2.0 times the displacement instead of 0.4 times.",
+      "hint": "One number in the loop that computes the model matrices: the factor in `float y = displacement * …`."
+    },
+    "ex-more-rocks": {
+      "text": "Three times as many rocks: 1500 instead of 500 – still with a single draw call.",
+      "hint": "Only `amount` changes; the matrix buffer and the instance count of the draw call follow it."
+    },
+    "ex-red-rocks": {
+      "text": "Tint every third rock red, (1.0, 0.4, 0.3) times its texture – chosen by the instance's number, not by anything in the matrix buffer.",
+      "hint": {
+        "opengl": "In `asteroids.vs`: `gl_InstanceID % 3 == 0` decides the tint, which goes on to `asteroids.fs` as an `out vec3` and multiplies the texture's colour.",
+        "vulkan": "In `asteroids.vert`: `gl_InstanceIndex % 3 == 0` decides the tint, which goes on to `asteroids.frag` at a new location and multiplies the texture's colour.",
+        "d3d12": "Give `VSMain` the input `uint instanceID : SV_InstanceID`; `instanceID % 3 == 0` decides the tint, which goes to the pixel shader in `PSInput` and multiplies the texture's colour."
+      }
     }
   }
 }

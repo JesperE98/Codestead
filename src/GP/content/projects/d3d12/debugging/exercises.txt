@@ -1,0 +1,23 @@
+=== task: ex-v-grey
+--- file: debugging.hlsl
+--- find:
+    return float4(input.texCoord, 0.0f, 1.0f);
+--- replace:
+    return float4(input.texCoord.yyy, 1.0f);
+
+=== task: ex-tiles
+--- file: debugging.hlsl
+--- find:
+    return float4(input.texCoord, 0.0f, 1.0f);
+--- replace:
+    return float4(frac(input.texCoord * 3.0f), 0.0f, 1.0f);
+
+=== task: ex-highlight
+--- file: debugging.hlsl
+--- find:
+    return float4(input.texCoord, 0.0f, 1.0f);
+    // return tex.Sample(wrapSampler, input.texCoord);
+--- replace:
+    if (input.texCoord.x > 0.5f)
+        return float4(1.0f, 0.0f, 0.0f, 1.0f);
+    return tex.Sample(wrapSampler, input.texCoord);

@@ -1,0 +1,32 @@
+=== task: ex-upside-down
+--- file: framebuffers_screen.hlsl
+--- find:
+    result.position = float4(position.x, position.y, 0.0f, 1.0f);
+--- replace:
+    result.position = float4(position.x, -position.y, 0.0f, 1.0f);    // y mirrored: the picture upside down
+
+=== task: ex-emboss
+--- file: framebuffers_screen.hlsl
+--- find:
+        1.0f,  1.0f, 1.0f,
+        1.0f, -8.0f, 1.0f,
+        1.0f,  1.0f, 1.0f
+--- replace:
+        -2.0f, -1.0f, 0.0f,
+        -1.0f,  1.0f, 1.0f,
+         0.0f,  1.0f, 2.0f
+
+=== task: ex-sepia
+--- file: framebuffers_screen.hlsl
+--- find:
+    return float4(col, 1.0f);
+--- replace:
+    float3 c = sampleTex[4];    // the pixel itself, without the kernel
+    return float4(dot(c, float3(0.393f, 0.769f, 0.189f)), dot(c, float3(0.349f, 0.686f, 0.168f)), dot(c, float3(0.272f, 0.534f, 0.131f)), 1.0f);
+
+=== task: ex-quarter
+--- file: framebuffers_screen.hlsl
+--- find:
+    result.position = float4(position.x, position.y, 0.0f, 1.0f);
+--- replace:
+    result.position = float4(position.x * 0.5f + 0.5f, position.y * 0.5f + 0.5f, 0.0f, 1.0f);    // half the size, moved into the top right quarter

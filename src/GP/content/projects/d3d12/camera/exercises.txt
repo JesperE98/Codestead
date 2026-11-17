@@ -1,0 +1,39 @@
+=== task: ex-side-view
+--- file: main.cpp
+--- find:
+XMVECTOR cameraPos   = XMVectorSet(0.0f, 0.0f,  3.0f, 0.0f);
+XMVECTOR cameraFront = XMVectorSet(0.0f, 0.0f, -1.0f, 0.0f);
+--- replace:
+XMVECTOR cameraPos   = XMVectorSet(-3.0f, 0.0f, 0.0f, 0.0f);
+XMVECTOR cameraFront = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
+--- file: main.cpp
+--- find:
+float yaw   = -90.0f;
+--- replace:
+float yaw   =   0.0f;    // looking along +x from the start
+
+=== task: ex-sprint
+--- file: main.cpp
+--- find:
+    float cameraSpeed = 2.5f * deltaTime;
+--- replace:
+    float cameraSpeed = 2.5f * deltaTime;
+    if (keys[VK_SHIFT])
+        cameraSpeed *= 2.0f;    // run
+
+=== task: ex-invert-mouse
+--- file: main.cpp
+--- find:
+    float yoffset = lastY - ypos;    // reversed since y-coordinates go from top to bottom
+--- replace:
+    float yoffset = ypos - lastY;    // inverted: moving the mouse up looks down
+
+=== task: ex-ground
+--- file: main.cpp
+--- find:
+    if (keys['D'])
+        cameraPos += XMVector3Normalize(XMVector3Cross(cameraFront, cameraUp)) * cameraSpeed;
+--- replace:
+    if (keys['D'])
+        cameraPos += XMVector3Normalize(XMVector3Cross(cameraFront, cameraUp)) * cameraSpeed;
+    cameraPos = XMVectorSetY(cameraPos, 0.0f);    // stay on the ground: looking up or down does not make you fly

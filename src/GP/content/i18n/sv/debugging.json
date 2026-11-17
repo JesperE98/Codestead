@@ -62,6 +62,30 @@
     "debug-callback": {
       "text": { "d3d12": "Skriv `D3D12DebugOutput(category, severity, id, description, context)` och, i `LoadPipeline`, bryt vid fel när en debugger är ansluten och registrera callbacken med `ID3D12InfoQueue1::RegisterMessageCallback`." },
       "hint": { "d3d12": "Skriv ut \"Debug message (id): description\", kategorin och allvarlighetsgraden med `OutputDebugStringA`. Inuti `if (m_infoQueue)`: `if (IsDebuggerPresent())` de två anropen av `SetBreakOnSeverity` (CORRUPTION, ERROR); sedan `ComPtr<ID3D12InfoQueue1> infoQueue1; if (SUCCEEDED(m_infoQueue.As(&infoQueue1))) infoQueue1->RegisterMessageCallback(D3D12DebugOutput, D3D12_MESSAGE_CALLBACK_FLAG_NONE, nullptr, &callbackCookie);`." }
+    },
+    "ex-v-grey": {
+      "text": "Titta på ett värde i taget: visa bara texturkoordinaten v, som en gråton (samma värde i rött, grönt och blått). Var på sidan är den 0, var är den 1?",
+      "hint": {
+        "opengl": "I `debugging.fs`: en `vec4` där rött, grönt och blått alla är `TexCoords.y`, alfa 1.",
+        "vulkan": "I `shaders/debugging.frag`: en `vec4` där rött, grönt och blått alla är `fragTexCoord.y`, alfa 1 – kompilera om den med `glslc`.",
+        "d3d12": "I pixelshadern i `debugging.hlsl`: `input.texCoord.yyy` som rött, grönt och blått, alfa 1. I Direct3D går v nedåt, så den mörka änden hamnar överst på sidan."
+      }
+    },
+    "ex-tiles": {
+      "text": "Visa texturkoordinaterna tre gånger om i varje riktning: multiplicera dem med 3 och behåll bara decimaldelen, så att den röd–gröna övergången upprepas som ett rutnät på 3 × 3 på varje sida.",
+      "hint": {
+        "opengl": "`fract(TexCoords * 3.0)` som rött och grönt. Det är just vad samplerns `GL_REPEAT` gör med koordinater över 1 – träet skulle upprepas på samma sätt.",
+        "vulkan": "`fract(fragTexCoord * 3.0)` som rött och grönt. Det är just vad samplerns `VK_SAMPLER_ADDRESS_MODE_REPEAT` gör med koordinater över 1 – träet skulle upprepas på samma sätt.",
+        "d3d12": "I HLSL heter den `frac`: `frac(input.texCoord * 3.0f)` som rött och grönt. Det är just vad samplerns `D3D12_TEXTURE_ADDRESS_MODE_WRAP` gör med koordinater över 1 – träet skulle upprepas på samma sätt."
+      }
+    },
+    "ex-highlight": {
+      "text": "Låt färgen svara på en fråga: visa trätexturen igen, men måla varje pixel där u är större än 0,5 helt röd. Vilken halva av sidan blir röd?",
+      "hint": {
+        "opengl": "En `if` i `debugging.fs`: rött (1, 0, 0) när `TexCoords.x > 0.5`, annars texturen som förut.",
+        "vulkan": "En `if` i `shaders/debugging.frag`: rött (1, 0, 0) när `fragTexCoord.x > 0.5`, annars texturen som förut.",
+        "d3d12": "En `if` i pixelshadern: returnera rött (1, 0, 0) när `input.texCoord.x > 0.5f`, annars texturens sampel som förut."
+      }
     }
   }
 }

@@ -1,0 +1,22 @@
+=== task: ex-two-samples
+--- file: main.cpp
+--- find:
+    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGB, SCR_WIDTH, SCR_HEIGHT, GL_TRUE);
+--- replace:
+    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 2, GL_RGB, SCR_WIDTH, SCR_HEIGHT, GL_TRUE);
+--- file: main.cpp
+--- find:
+    glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_DEPTH24_STENCIL8, SCR_WIDTH, SCR_HEIGHT);
+--- replace:
+    glRenderbufferStorageMultisample(GL_RENDERBUFFER, 2, GL_DEPTH24_STENCIL8, SCR_WIDTH, SCR_HEIGHT);
+
+=== task: ex-show-edges
+--- file: aa_post.fs
+--- find:
+    FragColor = vec4(vec3(grayscale), 1.0);
+--- replace:
+    // neither the background (green 0.1) nor the cube (green 1.0): a pixel the resolve has mixed – show it in red
+    if (col.g > 0.12 && col.g < 0.98)
+        FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+    else
+        FragColor = vec4(vec3(grayscale), 1.0);

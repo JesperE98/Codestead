@@ -95,6 +95,34 @@
         "vulkan": "C++: `viewPos` + `pad1`, `Material { shininess; pad1; pad2; pad3; }`, `Light` with a padding float after each `glm::vec3`. Shader: specular maps at bindings 3 and 4; choose `diffuseColor` and `specularColor` by `fragMaterialIndex`, then ambient + diffuse + specular.",
         "d3d12": "`ModelConstants` gets `normalMatrix` (`XMMatrixTranspose(XMMatrixInverse(nullptr, model))`, stored transposed); `SceneConstantBuffer` gets `viewPos` + padding, `Material` (`shininess` + 3 floats) and `Light` (each `XMFLOAT3` padded to 16 bytes); the vertex shader outputs `fragPos` and `normal`."
       }
+    },
+    "ex-light-left": {
+      "text": "Move the light to the other side, to (−1.2, 1.0, 2.0): now the planet's left side is lit and its right side lies in the dark.",
+      "hint": "Only the light's position changes – the global `lightPos`."
+    },
+    "ex-normals": {
+      "text": "Show the model's normals as colours instead of the lighting: the normal's x, y and z (moved from −1…1 to 0…1) as red, green and blue. A common way to check that a model's normals are right.",
+      "hint": {
+        "opengl": "Only the fragment shader's last line: `normalize(Normal) * 0.5 + 0.5` as the colour.",
+        "vulkan": "Only the fragment shader's last line: `normalize(fragNormal) * 0.5 + 0.5` as the colour – recompile it with `glslc`.",
+        "d3d12": "Only the pixel shader's return value: `normalize(input.normal) * 0.5f + 0.5f` as the colour."
+      }
+    },
+    "ex-spin": {
+      "text": "Make the planet turn about its own axis, one radian per second – the north pole stays at the top, the continents move past.",
+      "hint": {
+        "opengl": "One more rotation in the model matrix, about y, by `glfwGetTime()`. Put it after the tilt, so it turns about the planet's own (tilted) axis and not the world's.",
+        "vulkan": "One more rotation in the model matrix in `recordCommandBuffer`, about y, by `glfwGetTime()`. Put it after the tilt, so it turns about the planet's own (tilted) axis.",
+        "d3d12": "One more rotation in the model matrix, `XMMatrixRotationY` by the time since the start (`std::chrono`, as in *Transformations*). DirectXMath applies the matrices from left to right: put it before the tilt."
+      }
+    },
+    "ex-moon": {
+      "text": "Give the planet a moon: draw the same model a second time, scaled to 0.15 and moved to (1.2, 0.6, 0), up to the right of the planet.",
+      "hint": {
+        "opengl": "After `ourModel.Draw(ourShader)`: a new model matrix (translate, then scale), `setMat4(\"model\", …)` and `Draw` once more. The model's vertices are only loaded once.",
+        "vulkan": "After the draw call: a new model matrix (translate, then scale) in the push constants, `vkCmdPushConstants` again and the same `vkCmdDrawIndexed` once more.",
+        "d3d12": "After `m_model.Draw(…)`: a new model matrix (scale, then translate), its normal matrix, `SetGraphicsRoot32BitConstants` again and `Draw` once more."
+      }
     }
   }
 }

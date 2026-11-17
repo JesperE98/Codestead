@@ -48,6 +48,30 @@
         "vulkan": "Vulkan's depth is already NDC z (0..1), so there is no `depth * 2.0 - 1.0` as in learnopengl – that would give distances that are too large. Dividing by `far` gives 0..1.",
         "d3d12": "Direct3D's depth is already NDC z (0..1), so there is no `depth * 2.0 - 1.0` as in learnopengl. Without `static`, a global would be a constant-buffer value set from the CPU."
       }
+    },
+    "ex-depth-range": {
+      "text": "The linear depth divided by `far` (100) leaves the whole scene almost black. Show it over a range of 10 units instead, so white means 10 units away – suddenly you can see the depth differences.",
+      "hint": {
+        "opengl": "Only the fragment shader's division changes: `/ 10.0` instead of `/ far`.",
+        "vulkan": "Only the fragment shader's division changes: `/ 10.0` instead of `/ far` – recompile it with `glslc`.",
+        "d3d12": "Only the pixel shader's division changes: `/ 10.0f` instead of `/ far`."
+      }
+    },
+    "ex-fog": {
+      "text": "Use the linear depth for fog: bring the textures back and fade them into the background's grey (0.1, 0.1, 0.1) with the distance – no fog at the camera, all fog at 10 units.",
+      "hint": {
+        "opengl": "A fog factor `clamp(LinearizeDepth(gl_FragCoord.z) / 10.0, 0.0, 1.0)`, then `mix` between the texture's colour and the grey by that factor.",
+        "vulkan": "A fog factor `clamp(LinearizeDepth(gl_FragCoord.z) / 10.0, 0.0, 1.0)`, then `mix` between the texture's colour and the grey by that factor.",
+        "d3d12": "A fog factor `saturate(LinearizeDepth(input.position.z) / 10.0f)`, then `lerp` between the texture's colour and the grey by that factor."
+      }
+    },
+    "ex-near-clip": {
+      "text": "Move the projection's near plane from 0.1 to 3.7 (in the projection matrix and in the shader's `near`). Everything closer than 3.7 units is cut away: the near floor disappears, and you can see into the left cube.",
+      "hint": {
+        "opengl": "Two numbers: the third argument of `glm::perspective` and `float near` in the fragment shader.",
+        "vulkan": "Two numbers: the third argument of `glm::perspective` in `updateUniformBuffer` and `float near` in the fragment shader.",
+        "d3d12": "Two numbers: the third argument of `XMMatrixPerspectiveFovRH` and `near` in the shader file."
+      }
     }
   }
 }

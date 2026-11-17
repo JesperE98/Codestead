@@ -335,5 +335,9 @@
   "yourProject.solutionTitle": "Lösung · Aufgabe {n}",
   "yourProject.solutionHelp": "So löst der Code des Kurses die Aufgabe. Vergleiche ihn mit deinem und nimm nur, was du brauchst.",
   "yourProject.copyCode": "Kopieren",
-  "yourProject.close": "Schließen"
+  "yourProject.close": "Schließen",
+  "yourProject.steps": "Mitmachen",
+  "yourProject.exercises": "Übungen",
+  "yourProject.solutionExercise": "Lösung · Übung {n}",
+  "expected.exercise": "Erwartetes Ergebnis · Übung {n}"
 }

@@ -44,6 +44,30 @@
         "vulkan": "`vkCmdBindPipeline(generator.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, generator.shader);`, then per living particle a `ParticleConstants` pushed with `vkCmdPushConstants(…, sizeof(ParticleConstants), &constants)`, `vkCmdBindDescriptorSets(…, &generator.texture, …)`, `vkCmdBindVertexBuffers` with the quad, `vkCmdDraw(generator.commandBuffer, 6, 1, 0, 0)`. Nothing to restore.",
         "d3d12": "`Use(generator.shader);`, then per living particle `SetGraphicsRoot32BitConstants(0, sizeof(ParticleConstants) / 4, &constants, 0)`, `SetGraphicsRootDescriptorTable(2, …generator.texture…)`, `IASetVertexBuffers(0, 1, &generator.quadVertexBufferView)`, `DrawInstanced(6, 1, 0, 0)`. Nothing to restore."
       }
+    },
+    "ex-embers": {
+      "text": "Turn the white sparks into glowing embers: give each particle the colour (r, r × 0.5, 0.1), where r is the random brightness it gets now.",
+      "hint": "The colour is chosen in `respawnParticle`: keep `rColor` for red, half of it for green, and a fixed 0.1 for blue."
+    },
+    "ex-big-particles": {
+      "text": "Make every particle twice as big: 20 × 20 pixels instead of 10 × 10.",
+      "hint": {
+        "opengl": "The size is not in the C++ code: the vertex shader `particle.vs` scales the unit quad by `scale`.",
+        "vulkan": "The size is not in the C++ code: the vertex shader `shaders/particle.vert` scales the unit quad by `scale` – recompile it with `glslc`.",
+        "d3d12": "The size is not in the C++ code: the vertex shader in `particle.hlsl` scales the unit quad by `scale`."
+      }
+    },
+    "ex-long-trail": {
+      "text": "Make the trail fade more slowly, so that it is visibly longer – the particles' alpha should drop by 1.0 per second instead of 2.5.",
+      "hint": "Each particle fades in the generator's `Update`, where its alpha is reduced by `dt` times a factor. Its life (1 second) stays the same."
+    },
+    "ex-no-glow": {
+      "text": "Draw the particles with normal alpha blending instead of additive blending, and compare: where does the glow go?",
+      "hint": {
+        "opengl": "`DrawParticles` switches to `glBlendFunc(GL_SRC_ALPHA, GL_ONE)` – use `GL_ONE_MINUS_SRC_ALPHA` as the destination factor instead. With additive blending, overlapping particles add up towards white.",
+        "vulkan": "The particle pipeline is created with `VK_BLEND_FACTOR_ONE` as its destination colour factor – use `VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA` instead. With additive blending, overlapping particles add up towards white.",
+        "d3d12": "The particle pipeline state is created with `D3D12_BLEND_ONE` as its destination blend – use `D3D12_BLEND_INV_SRC_ALPHA` instead. With additive blending, overlapping particles add up towards white."
+      }
     }
   }
 }

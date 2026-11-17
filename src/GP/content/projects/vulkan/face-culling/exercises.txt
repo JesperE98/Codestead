@@ -1,0 +1,20 @@
+=== task: ex-clockwise
+--- file: main.cpp
+--- find:
+        rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+--- replace:
+        rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE; // the cubes' outsides now count as back faces
+
+=== task: ex-cull-all
+--- file: main.cpp
+--- find:
+        rasterizer.cullMode = VK_CULL_MODE_FRONT_BIT; // the exercise: skip the front faces instead
+--- replace:
+        rasterizer.cullMode = VK_CULL_MODE_FRONT_AND_BACK; // cull every face: no triangle is drawn at all
+
+=== task: ex-under-floor
+--- file: main.cpp
+--- find:
+glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
+--- replace:
+glm::vec3 cameraPos   = glm::vec3(0.0f, -1.0f,  3.0f);

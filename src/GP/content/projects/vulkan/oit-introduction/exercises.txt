@@ -1,0 +1,40 @@
+=== task: ex-opacity
+--- file: main.cpp
+--- find:
+        constants.color = glm::vec4(0.0f, 1.0f, 0.0f, 0.5f);
+--- replace:
+        constants.color = glm::vec4(0.0f, 1.0f, 0.0f, 0.8f);
+
+=== task: ex-sorted
+--- file: main.cpp
+--- find:
+        // draw green quad
+        constants.mvp = vp * greenModelMat;
+        constants.color = glm::vec4(0.0f, 1.0f, 0.0f, 0.5f);
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdDraw(commandBuffer, 6, 1, 0, 0);
+
+        // draw blue quad
+        constants.mvp = vp * blueModelMat;
+        constants.color = glm::vec4(0.0f, 0.0f, 1.0f, 0.5f);
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdDraw(commandBuffer, 6, 1, 0, 0);
+--- replace:
+        // draw blue quad (the farthest first)
+        constants.mvp = vp * blueModelMat;
+        constants.color = glm::vec4(0.0f, 0.0f, 1.0f, 0.5f);
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdDraw(commandBuffer, 6, 1, 0, 0);
+
+        // draw green quad (the nearest last)
+        constants.mvp = vp * greenModelMat;
+        constants.color = glm::vec4(0.0f, 1.0f, 0.0f, 0.5f);
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdDraw(commandBuffer, 6, 1, 0, 0);
+
+=== task: ex-depth-mask
+--- file: main.cpp
+--- find:
+        createPipeline("shaders/transparent.vert.spv", "shaders/transparent.frag.spv", renderPass, 1, VK_TRUE, VK_TRUE, VK_TRUE,
+--- replace:
+        createPipeline("shaders/transparent.vert.spv", "shaders/transparent.frag.spv", renderPass, 1, VK_TRUE, VK_FALSE, VK_TRUE,

@@ -1,0 +1,25 @@
+=== task: ex-speed
+--- file: computeShader.comp
+--- find:
+    float speed = 100;
+--- replace:
+    float speed = 200;
+
+=== task: ex-disc
+--- file: computeShader.comp
+--- find:
+    imageStore(imgOutput, texelCoord, value);
+--- replace:
+    // a white disc of radius 100 texels in the middle of the texture
+    if (distance(vec2(texelCoord), vec2(400.0, 300.0)) < 100.0)
+        value = vec4(1.0);
+    imageStore(imgOutput, texelCoord, value);
+
+=== task: ex-work-groups
+--- file: computeShader.comp
+--- find:
+    imageStore(imgOutput, texelCoord, value);
+--- replace:
+    // blue in every other work group: a checkerboard of 10 x 10 squares
+    value.z = float((gl_WorkGroupID.x + gl_WorkGroupID.y) % 2u);
+    imageStore(imgOutput, texelCoord, value);

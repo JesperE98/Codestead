@@ -1,0 +1,27 @@
+=== task: ex-embers
+--- file: main.cpp
+--- find:
+    particle.Color = XMFLOAT4(rColor, rColor, rColor, 1.0f);
+--- replace:
+    particle.Color = XMFLOAT4(rColor, rColor * 0.5f, 0.1f, 1.0f);
+
+=== task: ex-big-particles
+--- file: particle.hlsl
+--- find:
+    float scale = 10.0f;
+--- replace:
+    float scale = 20.0f;
+
+=== task: ex-long-trail
+--- file: main.cpp
+--- find:
+            p.Color.w -= dt * 2.5f;
+--- replace:
+            p.Color.w -= dt * 1.0f;
+
+=== task: ex-no-glow
+--- file: main.cpp
+--- find:
+    LoadShader(L"particle.hlsl", "particle", D3D12_BLEND_ONE);
+--- replace:
+    LoadShader(L"particle.hlsl", "particle", D3D12_BLEND_INV_SRC_ALPHA);

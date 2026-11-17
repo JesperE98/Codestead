@@ -1,0 +1,13 @@
+=== task: ex-clockwise
+--- file: main.cpp
+--- find:
+        psoDesc.RasterizerState.FrontCounterClockwise = TRUE;
+--- replace:
+        psoDesc.RasterizerState.FrontCounterClockwise = FALSE;    // front faces are clockwise: the cubes' outsides now count as back faces
+
+=== task: ex-under-floor
+--- file: main.cpp
+--- find:
+XMVECTOR cameraPos   = XMVectorSet(0.0f, 0.0f,  3.0f, 0.0f);
+--- replace:
+XMVECTOR cameraPos   = XMVectorSet(0.0f, -1.0f,  3.0f, 0.0f);

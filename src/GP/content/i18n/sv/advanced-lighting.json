@@ -24,6 +24,38 @@
         "vulkan": "`spec = pow(max(dot(normal, halfwayDir), 0.0), 32.0);` – vinkeln mellan normalen och halvvägsvektorn är mindre än Phongs vinkel, så Blinn-Phong behöver 2–4 gånger exponenten för samma storlek på högdagern.",
         "d3d12": "`spec = pow(max(dot(normal, halfwayDir), 0.0f), 32.0f);` – vinkeln mellan normalen och halvvägsvektorn är mindre än Phongs vinkel, så Blinn-Phong behöver 2–4 gånger exponenten för samma storlek på högdagern."
       }
+    },
+    "ex-specular-only": {
+      "text": "Visa bara den spekulära termen: rita golvet med enbart högdagern, så att du ser vilken form Blinn-Phong ger den.",
+      "hint": {
+        "opengl": "En rad i slutet av `advanced_lighting.fs`: skriv `specular` i stället för `ambient + diffuse + specular` till `FragColor`.",
+        "vulkan": "En rad i slutet av `advanced_lighting.frag`: skriv `specular` i stället för `ambient + diffuse + specular` till `outColor`.",
+        "d3d12": "En rad i slutet av `PSMain`: returnera `specular` i stället för `ambient + diffuse + specular`."
+      }
+    },
+    "ex-blue-light": {
+      "text": "Ge ljuset en kall blå färg, (0.3, 0.6, 1.0), så att både det diffusa ljuset och högdagern blir blåtonade (det omgivande ljuset förblir som det är).",
+      "hint": {
+        "opengl": "I fragmentshadern: en `vec3 lightColor` som `diffuse` och `specular` multipliceras med, komponent för komponent, innan de läggs ihop.",
+        "vulkan": "I fragmentshadern: en `vec3 lightColor` som `diffuse` och `specular` multipliceras med, komponent för komponent, innan de läggs ihop.",
+        "d3d12": "I `PSMain`: en `float3 lightColor` som `diffuse` och `specular` multipliceras med, komponent för komponent, innan de läggs ihop."
+      }
+    },
+    "ex-move-light": {
+      "text": "Flytta ljuset två enheter åt vänster, till (−2, 0, 0), och se hur den upplysta delen av golvet och högdagern följer med.",
+      "hint": {
+        "opengl": "Bara `lightPos` i `main.cpp` ändras; den skickas till shadern varje bildruta.",
+        "vulkan": "Bara den globala `lightPos` i `main.cpp` ändras; `updateUniformBuffer()` kopierar den till uniformbufferten varje bildruta.",
+        "d3d12": "Bara den globala `lightPos` i `main.cpp` ändras; konstantbufferten får den varje bildruta."
+      }
+    },
+    "ex-two-lights": {
+      "text": "Lägg till ett andra vitt ljus i (−1,5, 0, −1), belyst med Blinn-Phong precis som det första: dess diffusa ljus och dess högdager läggs till det första ljusets.",
+      "hint": {
+        "opengl": "En `lightPos2` i `main.cpp`, skickad med `shader.setVec3`, och en `uniform vec3 lightPos2;` i fragmentshadern. Där: en egen ljusriktning och halvvägsvektor, sedan `diffuse +=` och `specular +=` med samma formler som för det första ljuset.",
+        "vulkan": "En `lightPos2` i `main.cpp` och i uniformblocket – både i C++-structen (efter `pad2`, följd av ännu en float som utfyllnad: std140) och i shaderns `UniformBufferObject`. I shadern: en egen ljusriktning och halvvägsvektor, sedan `diffuse +=` och `specular +=` med samma formler som för det första ljuset.",
+        "d3d12": "En `lightPos2` i `main.cpp` och i konstantbufferten – både i `SceneConstantBuffer` (efter `padding1`, följd av ännu en float som utfyllnad) och i HLSL-`cbuffer`:n. I `PSMain`: en egen ljusriktning och halvvägsvektor, sedan `diffuse +=` och `specular +=` med samma formler som för det första ljuset."
+      }
     }
   }
 }

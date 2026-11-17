@@ -60,6 +60,34 @@
         "vulkan": "`float shadow = 0.0; vec2 texelSize = 1.0 / textureSize(shadowMap, 0);`, two loops from -1 to 1 with `float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r; shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;`, then `shadow /= 9.0;`.",
         "d3d12": "`uint width, height; shadowMap.GetDimensions(width, height); float2 texelSize = 1.0f / float2(width, height);`, two loops from -1 to 1 with `shadowMap.Sample(shadowSampler, shadowUV + float2(x, y) * texelSize).r`, then `shadow /= 9.0f;` – `closestDepth` is no longer needed."
       }
+    },
+    "ex-shadow-only": {
+      "text": "Show the result of the shadow test itself: white where a fragment is lit, black where it is in shadow, grey in between (PCF's soft edges).",
+      "hint": {
+        "opengl": "At the end of `shadow_mapping.fs` write `1.0 - shadow` as a grey colour to `FragColor` instead of `lighting`.",
+        "vulkan": "At the end of `shadow_mapping.frag` write `1.0 - shadow` as a grey colour to `outColor` instead of `lighting`.",
+        "d3d12": "At the end of `PSMain` return `1.0f - shadow` in r, g and b instead of `lighting`."
+      }
+    },
+    "ex-lighter-shadow": {
+      "text": "Make the shadow half as dark: a fragment in shadow keeps half of its diffuse and specular light, as if some light came round the cube.",
+      "hint": "Only the line that combines the terms changes: the factor in front of `(diffuse + specular)` should go from 1 down to 0.5 (not 0) as `shadow` goes from 0 to 1."
+    },
+    "ex-move-light": {
+      "text": "Move the light to the other side, to (2, 4, −1). The shadow of the floating cube should move from the right of the floor to the left.",
+      "hint": {
+        "opengl": "Only `lightPos` in `main.cpp` changes: both the light-space matrix (`glm::lookAt(lightPos, …)`) and the lighting use it, so the depth map and the shadow test follow by themselves.",
+        "vulkan": "Only the global `lightPos` in `main.cpp` changes: both the light-space matrix (`glm::lookAt(lightPos, …)`) and the lighting use it, so the depth map and the shadow test follow by themselves.",
+        "d3d12": "Only the global `lightPos` in `main.cpp` changes: both the light-space matrix (`XMMatrixLookAtRH`) and the lighting use it, so the depth map and the shadow test follow by themselves."
+      }
+    },
+    "ex-perspective-light": {
+      "text": "Turn the directional light into a light at a point: render the depth map with a perspective projection (90° field of view, square) instead of the orthographic one. Why does the cube's shadow grow?",
+      "hint": {
+        "opengl": "Only `lightProjection` changes: `glm::perspective(glm::radians(90.0f), aspect, near_plane, far_plane)` with the depth map's aspect ratio. The rays now spread out from `lightPos`, so a shadow gets bigger the further it falls from the cube.",
+        "vulkan": "Only `lightProjection` changes: `glm::perspective(glm::radians(90.0f), 1.0f, near_plane, far_plane)` – the depth map is square. The rays now spread out from `lightPos`, so a shadow gets bigger the further it falls from the cube.",
+        "d3d12": "Only `lightProjection` changes: `XMMatrixPerspectiveFovRH(XMConvertToRadians(90.0f), 1.0f, near_plane, far_plane)` – the depth map is square. The rays now spread out from `lightPos`, so a shadow gets bigger the further it falls from the cube."
+      }
     }
   }
 }

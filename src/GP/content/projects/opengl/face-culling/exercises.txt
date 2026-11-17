@@ -1,0 +1,20 @@
+=== task: ex-clockwise
+--- file: main.cpp
+--- find:
+    glFrontFace(GL_CCW);    // front faces are the counter-clockwise ones (the default)
+--- replace:
+    glFrontFace(GL_CW);     // front faces are the clockwise ones: the cubes' outsides now count as back faces
+
+=== task: ex-cull-all
+--- file: main.cpp
+--- find:
+    glCullFace(GL_FRONT);   // cull the front faces: now only the back faces (the cubes' insides) are drawn
+--- replace:
+    glCullFace(GL_FRONT_AND_BACK); // cull every face: no triangle is drawn at all
+
+=== task: ex-under-floor
+--- file: main.cpp
+--- find:
+glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
+--- replace:
+glm::vec3 cameraPos   = glm::vec3(0.0f, -1.0f,  3.0f);

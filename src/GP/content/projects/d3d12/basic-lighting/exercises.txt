@@ -1,0 +1,30 @@
+=== task: ex-ambient
+--- file: basic_lighting.hlsl
+--- find:
+    float ambientStrength = 0.1f;
+--- replace:
+    float ambientStrength = 0.3f;
+
+=== task: ex-shininess
+--- file: basic_lighting.hlsl
+--- find:
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0f), 32);
+--- replace:
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0f), 4);
+
+=== task: ex-white-highlight
+--- file: basic_lighting.hlsl
+--- find:
+    float3 result = (ambient + diffuse + specular) * objectColor;
+--- replace:
+    float3 result = (ambient + diffuse) * objectColor + specular;    // the highlight keeps the light's colour
+
+=== task: ex-orbit
+--- file: main.cpp
+--- find:
+    lightPos.x = 1.0f + std::sin(time) * 2.0f;
+    lightPos.y = std::sin(time / 2.0f) * 1.0f;
+--- replace:
+    lightPos.x = std::sin(time) * 2.0f;
+    lightPos.y = 1.0f;
+    lightPos.z = std::cos(time) * 2.0f;
