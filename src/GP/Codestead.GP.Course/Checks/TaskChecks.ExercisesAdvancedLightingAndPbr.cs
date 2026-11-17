@@ -79,5 +79,16 @@ public static partial class TaskChecks
             // ACES: more contrast – the glow round the far end brighter, the dim walls darker than with the exposure curve.
             ["ex-aces"] = c => At(c, 350, 300, p => p[0] > 0.8) && At(c, 250, 300, p => p[0] < 0.09) && At(c, 400, 300, p => p[0] > 0.95),
         },
+        ["bloom"] = new()
+        {
+            // Twice the bloom: a brighter halo under the white light cube and beside it (but not the 30-pass spread).
+            ["ex-bloom-strength"] = c => At(c, 400, 280, p => p[0] > 0.6) && At(c, 500, 190, p => p[0] > 0.22 && p[0] < 0.4),
+            // Threshold 3: the lit box edges and floor stop glowing – more black pixels; the white light cube still glows.
+            ["ex-threshold"] = c => At(c, 400, 190, p => p[0] > 0.95) && At(c, 400, 280, p => Grey(p) && p[0] > 0.4) && c.CountPixels(p => p[0] + p[1] + p[2] < 0.03) > 5900,
+            // 30 blur passes: the glow reaches much further from the white light cube.
+            ["ex-wider-blur"] = c => At(c, 500, 190, p => p[0] > 0.45) && At(c, 300, 190, p => p[0] > 0.6),
+            // An orange light: the halo under it and the floor in its light orange instead of white.
+            ["ex-orange-light"] = c => At(c, 400, 280, p => p[0] > p[2] + 0.25) && At(c, 400, 100, p => p[0] > p[2] + 0.3) && At(c, 400, 190, p => p[0] > 0.95),
+        },
     };
 }

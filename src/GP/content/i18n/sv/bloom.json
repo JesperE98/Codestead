@@ -36,6 +36,38 @@
         "vulkan": "Binding 2 i layouten (combined image sampler, fragmentsteget); `createBloomDescriptorSet(hdrColorImageView, pingpongImageViews[0], colorBufferSampler, bloomDescriptorSet)` med tre descriptor writes; poolen 7 uniformbuffrar, **14** samplers, `maxSets = 7`; det sista passet binder `bloomDescriptorSet`. `bloom_final.frag`: `layout(binding = 2) uniform sampler2D bloomBlur;`, `hdrColor += texture(bloomBlur, fragTexCoord).rgb;` före tone mappingen.",
         "d3d12": "`ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1)`, `rootParameters[3].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_PIXEL)`. Sista passet: tabell 2 = plats 3, tabell 3 = plats `5 + !horizontal`. `bloom_final.hlsl`: `Texture2D bloomBlur : register(t1);`, `float3 bloomColor = bloomBlur.Sample(clampSampler, input.texCoord).rgb; hdrColor += bloomColor;` före tone mappingen."
       }
+    },
+    "ex-bloom-strength": {
+      "text": "Gör bloomen dubbelt så stark: lägg till de suddade ljusa delarna två gånger om till scenen före tonmappningen.",
+      "hint": {
+        "opengl": "En rad i `bloom_final.fs`: den additiva blandningen `hdrColor += bloomColor;` får en faktor.",
+        "vulkan": "En rad i `bloom_final.frag`: den additiva blandningen `hdrColor += bloomColor;` får en faktor.",
+        "d3d12": "En rad i slutpassets `PSMain` (`bloom_final.hlsl`): den additiva blandningen `hdrColor += bloomColor;` får en faktor."
+      }
+    },
+    "ex-threshold": {
+      "text": "Höj scenens ljusstyrketröskel från 1.0 till 3.0, så att bara riktigt ljusa ytor glöder. Vilka delar av lådorna och golvet slutar glöda, och varför behåller ljuskuberna sitt sken?",
+      "hint": {
+        "opengl": "Bara `if (brightness > …)` i `bloom.fs` ändras – ljuskuberna har en egen tröskel i `light_box.fs`.",
+        "vulkan": "Bara `if (brightness > …)` i `bloom.frag` ändras – ljuskuberna har en egen tröskel i `light_box.frag`.",
+        "d3d12": "Bara `if (brightness > …)` i `bloom.hlsl` ändras – ljuskuberna har en egen tröskel i `light_box.hlsl`."
+      }
+    },
+    "ex-wider-blur": {
+      "text": "Sudda de ljusa delarna tre gånger så många gånger – 30 pingpong-pass i stället för 10 – och se hur skenet sprider sig mycket längre runt ljusen.",
+      "hint": {
+        "opengl": "`amount` i suddningsloopen i `main.cpp`. Håll det jämnt: slutpasset läser `pingpongColorbuffers[!horizontal]`, bufferten som det sista (vertikala) passet skrev.",
+        "vulkan": "`amount` i suddningsloopen i `recordCommandBuffer()`. Håll det jämnt, så att det sista passet är ett vertikalt pass till bufferten som slutpasset läser.",
+        "d3d12": "`amount` i suddningsloopen i `PopulateCommandList()`. Håll det jämnt, så att det sista passet är ett vertikalt pass till bufferten som slutpasset läser."
+      }
+    },
+    "ex-orange-light": {
+      "text": "Gör det vita ljuset under den översta lådan till ett varmt orange ljus, (8, 3, 0.5): ljuskuben, ljuset den kastar och dess sken blir alla orange.",
+      "hint": {
+        "opengl": "Det första elementet i `lightColors` i `main.cpp` – samma färg belyser scenen i `bloom.fs` och färgar ljuskuben i `light_box.fs`.",
+        "vulkan": "Det första elementet i den globala `lightColors` i `main.cpp` – samma färg belyser scenen och färgar ljuskuben.",
+        "d3d12": "Det första elementet i den globala `lightColors` i `main.cpp` – samma färg belyser scenen och färgar ljuskuben."
+      }
     }
   }
 }

@@ -1,0 +1,27 @@
+=== task: ex-bloom-strength
+--- file: shaders/bloom_final.frag
+--- find:
+    hdrColor += bloomColor; // additive blending
+--- replace:
+    hdrColor += bloomColor * 2.0; // additive blending, the bloom twice as strong
+
+=== task: ex-threshold
+--- file: shaders/bloom.frag
+--- find:
+    if (brightness > 1.0)
+--- replace:
+    if (brightness > 3.0)
+
+=== task: ex-wider-blur
+--- file: main.cpp
+--- find:
+        unsigned int amount = 10;
+--- replace:
+        unsigned int amount = 30;
+
+=== task: ex-orange-light
+--- file: main.cpp
+--- find:
+    glm::vec3(5.0f,   5.0f,  5.0f),
+--- replace:
+    glm::vec3(8.0f,   3.0f,  0.5f),
