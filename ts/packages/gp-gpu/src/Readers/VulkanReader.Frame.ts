@@ -27,7 +27,8 @@ import { TextureBinding } from "./TextureBinding.js";
 import { DrawState, VulkanDevice } from "./VulkanDevice.js";
 import { addDeviceOps, allShaderBlocks, deviceTextures, deviceVertices, registerTarget } from "./VulkanReader.Device.js";
 import { parameters, pipelines, runtimePipeline } from "./VulkanReader.Pipelines.js";
-import { topologyOf, type VulkanReader } from "./VulkanReader.js";
+import { GlReader } from "./GlReader.js";
+import type { VulkanReader } from "./VulkanReader.js";
 
 type VertexMap = Map<string, ShaderValue>;
 type TextureLookup = (name: string, u: number, v: number) => number[];
@@ -165,7 +166,7 @@ function draw(r: VulkanReader, beginOffset: number, _endOffset: number): void {
   const textures = texturesOf(r, vs, fs);
   const cullMode = cullOf(cull);
   const frontCcw = !front.includes("_CLOCKWISE") || front.includes("COUNTER_CLOCKWISE");
-  const topology = topologyOf(src.lastFieldValue("topology") ?? "TRIANGLE_LIST");
+  const topology = GlReader.topologyOf(src.lastFieldValue("topology") ?? "TRIANGLE_LIST");
   const depthTest = /depthTestEnable\s*=\s*VK_TRUE/.test(src.code);
   const pipeState = PipelineState.vulkan((f) => src.lastFieldValue(f), (f) => {
     const v = src.lastFieldValue(f);

@@ -13,7 +13,8 @@ import { CppSource } from "./CppSource.js";
 import { PipelineInfo } from "./PipelineInfo.js";
 import { PipelineState } from "./PipelineState.js";
 import type { VulkanDevice } from "./VulkanDevice.js";
-import { topologyOf, type VulkanReader } from "./VulkanReader.js";
+import { GlReader } from "./GlReader.js";
+import type { VulkanReader } from "./VulkanReader.js";
 
 function cullOf(cull: string): CullMode {
   return cull.includes("FRONT_AND_BACK") ? CullMode.FrontAndBack : cull.includes("BACK") ? CullMode.Back : cull.includes("FRONT") ? CullMode.Front : CullMode.None;
@@ -76,7 +77,7 @@ export function pipelines(r: VulkanReader): Map<string, PipelineInfo> {
         frontCcwOf(front),
         field("polygonMode", "FILL").includes("LINE"),
         /TRUE/.test(field("depthTestEnable", "VK_FALSE")),
-        topologyOf(field("topology", "TRIANGLE_LIST")),
+        GlReader.topologyOf(field("topology", "TRIANGLE_LIST")),
         {
           state: PipelineState.vulkan((f) => fieldOr(f, null), (f) => src.int(field(f, "")), attachments),
           gs,
@@ -119,7 +120,7 @@ export function runtimePipeline(r: VulkanReader, device: VulkanDevice, handle: s
         frontCcwOf(front),
         (field("polygonMode") ?? "FILL").includes("LINE"),
         depth !== null && (depth.includes("TRUE") || depth === "1"),
-        topologyOf(field("topology") ?? "TRIANGLE_LIST"),
+        GlReader.topologyOf(field("topology") ?? "TRIANGLE_LIST"),
         {
           state: PipelineState.vulkan((f) => field(f), (f) => {
             const v = field(f);

@@ -2,7 +2,6 @@ import { Apis } from "../Apis.js";
 import type { GpuProject } from "../GpuProject.js";
 import { Scene } from "../Scene/Scene.js";
 import { SimNote } from "../Scene/SimNote.js";
-import { Topology } from "../Scene/Topology.js";
 import type * as A from "../Shading/ShaderAst.js";
 import type { ShaderProgram } from "../Shading/ShaderProgram.js";
 import type { Image } from "../Textures/Image.js";
@@ -149,20 +148,5 @@ export class VulkanReader {
   }
 }
 
-/**
- * A primitive topology by its name (GL_TRIANGLES, VK_PRIMITIVE_TOPOLOGY_LINE_LIST, …). A copy of C#'s
- * GlReader.TopologyOf, which the Vulkan reader calls: the OpenGL reader is ported separately, and the two must stay alike.
- * @internal
- */
-export function topologyOf(mode: string): Topology {
-  if (mode.includes("PATCHES")) return Topology.Patches;
-  if (mode.includes("TRIANGLE_STRIP")) return Topology.TriangleStrip;
-  if (mode.includes("TRIANGLE_FAN")) return Topology.TriangleFan;
-  if (mode.includes("TRIANGLE")) return Topology.Triangles;
-  if (mode.includes("LINE_STRIP") || mode.includes("LINE_LOOP")) return Topology.LineStrip;
-  if (mode.includes("LINE")) return Topology.Lines;
-  if (mode.includes("POINT")) return Topology.Points;
-  return Topology.Triangles;
-}
 
 registerReader(Apis.Vulkan, (project, time) => VulkanReader.read(project, time));
