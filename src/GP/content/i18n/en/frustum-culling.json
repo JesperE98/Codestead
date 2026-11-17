@@ -55,7 +55,7 @@
     },
     "ex-narrow-fov": {
       "text": "Cull with a narrower frustum than the camera's: a vertical field of view of 30° for the culling (the projection keeps 45°). Which planets disappear, and how does the count in the title change?",
-      "hint": "Only the field of view passed to `createFrustumFromCamera` changes – not the one the projection matrix is built with. The planets at the edges of the window now fall outside the culling frustum although the camera could see them."
+      "hint": "Only the field of view passed to `createFrustumFromCamera` changes – not the one the projection matrix is built with. Planets near the edges of the window – most clearly the far ones at the top – now fall outside the culling frustum although the camera could see them."
     },
     "ex-near-plane": {
       "text": "Move the culling frustum's near plane out to 12 (the projection keeps 0.1). What happens to the planets closest to the camera?",

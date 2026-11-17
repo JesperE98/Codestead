@@ -8,41 +8,41 @@ namespace Codestead.GP.Course.Checks;
 public static partial class TaskChecks
 {
     /// <summary>A colour within ±0.04 per channel.</summary>
-    private static bool Rgb(double[] p, double r, double g, double b, double tolerance = 0.04) =>
+    private static bool GuestRgb(double[] p, double r, double g, double b, double tolerance = 0.04) =>
         Math.Abs(p[0] - r) <= tolerance && Math.Abs(p[1] - g) <= tolerance && Math.Abs(p[2] - b) <= tolerance;
 
     /// <summary>The frustum culling demo's counts in the window title at 2.0 s ("… drawn: 37 / 101"); (-1, -1) when missing.</summary>
-    private static (int Drawn, int Total) DrawnOf(CheckContext c) =>
+    private static (int Drawn, int Total) GuestDrawn(CheckContext c) =>
         System.Text.RegularExpressions.Regex.Match(c.WindowTitleAt(2.0), @"drawn:\s*(\d+)\s*/\s*(\d+)") is { Success: true } m
             ? (int.Parse(m.Groups[1].Value), int.Parse(m.Groups[2].Value)) : (-1, -1);
 
-    /// <summary>Water: clearly blue, more green than red.</summary>
-    private static bool Water(double[] p) => p[2] > p[1] + 0.15 && p[1] > p[0];
+    /// <summary>GuestWater: clearly blue, more green than red.</summary>
+    private static bool GuestWater(double[] p) => p[2] > p[1] + 0.15 && p[1] > p[0];
 
     private static Dictionary<string, Dictionary<string, TaskCheck>> ExercisesGuestArticles => new()
     {
         ["oit-introduction"] = new()
         {
             // The green quad at 0.8: brighter over black, and the red mostly hidden under it.
-            ["ex-opacity"] = c => c.Drew && At(c, 200, 450, p => Rgb(p, 0, 0.8, 0)) && At(c, 450, 400, p => Rgb(p, 0.2, 0.8, 0)) && At(c, 620, 300, OitRed),
+            ["ex-opacity"] = c => c.Drew && At(c, 200, 450, p => GuestRgb(p, 0, 0.8, 0)) && At(c, 450, 400, p => GuestRgb(p, 0.2, 0.8, 0)) && At(c, 620, 300, OitRed),
             // Back to front: the blue corner shows through the green quad (green over blue over black).
-            ["ex-sorted"] = c => c.Drew && At(c, 230, 300, p => Rgb(p, 0, 0.5, 0.25)) && At(c, 200, 450, p => Half(p, 1)) && At(c, 400, 180, OitRed),
+            ["ex-sorted"] = c => c.Drew && At(c, 230, 300, p => GuestRgb(p, 0, 0.5, 0.25)) && At(c, 200, 450, p => Half(p, 1)) && At(c, 400, 180, OitRed),
             // No depth writes, the wrong order kept: the blue quad blended over the green one, as if it were in front.
-            ["ex-depth-mask"] = c => c.Drew && At(c, 230, 300, p => Rgb(p, 0, 0.25, 0.5)) && At(c, 200, 450, p => Half(p, 1)) && At(c, 400, 180, OitRed),
+            ["ex-depth-mask"] = c => c.Drew && At(c, 230, 300, p => GuestRgb(p, 0, 0.25, 0.5)) && At(c, 200, 450, p => Half(p, 1)) && At(c, 400, 180, OitRed),
         },
         ["weighted-blended"] = new()
         {
             // The green quad at 0.8: 0,204,0 over black, and it outweighs the blue one where they overlap (0,141,88).
-            ["ex-opacity"] = c => c.Drew && At(c, 200, 450, p => Rgb(p, 0, 0.8, 0)) && At(c, 230, 300, p => Rgb(p, 0, 0.55, 0.35)) && At(c, 620, 300, OitRed),
+            ["ex-opacity"] = c => c.Drew && At(c, 200, 450, p => GuestRgb(p, 0, 0.8, 0)) && At(c, 230, 300, p => GuestRgb(p, 0, 0.55, 0.35)) && At(c, 620, 300, OitRed),
             // Blue drawn before green: the same picture as the chapter's (overlap 0,96,96) – order independent.
-            ["ex-order"] = c => c.Drew && At(c, 230, 300, p => Rgb(p, 0, 0.376, 0.376)) && At(c, 200, 450, p => Half(p, 1)) && At(c, 250, 120, p => Half(p, 2)) && c.Api switch
+            ["ex-order"] = c => c.Drew && At(c, 230, 300, p => GuestRgb(p, 0, 0.376, 0.376)) && At(c, 200, 450, p => Half(p, 1)) && At(c, 250, 120, p => Half(p, 2)) && c.Api switch
             {
                 Apis.OpenGL => c.Has(@"vp \* blueModelMat \)[\s\S]*vp \* greenModelMat \)"),
                 Apis.Vulkan => c.Has(@"vp \* blueModelMat ;[\s\S]*vp \* greenModelMat ;"),
                 _ => c.Has(@"XMLoadFloat4x4 \( & m_blueModelMat \)[\s\S]*XMLoadFloat4x4 \( & m_greenModelMat \)"),
             },
             // The red quad half transparent with the others: 128,0,0 alone, and the blue quad shows behind it (96,0,96).
-            ["ex-red-transparent"] = c => c.Drew && At(c, 620, 300, p => Half(p, 0)) && At(c, 400, 180, p => Rgb(p, 0.376, 0, 0.376)) && At(c, 450, 400, p => Rgb(p, 0.376, 0.376, 0)),
+            ["ex-red-transparent"] = c => c.Drew && At(c, 620, 300, p => Half(p, 0)) && At(c, 400, 180, p => GuestRgb(p, 0.376, 0, 0.376)) && At(c, 450, 400, p => GuestRgb(p, 0.376, 0.376, 0)),
             // A weight that is larger near the camera: the green quad (nearer) counts more than the blue one where they overlap.
             ["ex-weight"] = c => c.Drew && At(c, 230, 300, p => p[0] < 0.03 && p[1] > p[2] + 0.06 && p[1] + p[2] > 0.6) && At(c, 200, 450, p => Half(p, 1)) && At(c, 250, 120, p => Half(p, 2)),
         },
@@ -76,13 +76,13 @@ public static partial class TaskChecks
         ["frustum-culling"] = new()
         {
             // A 30° culling frustum inside the camera's 45°: the top of the grid (far42) culled, fewer than 38 drawn (26).
-            ["ex-narrow-fov"] = c => c.Shows && DrawnOf(c) is ( > 10 and < 38, 101) && At(c, 2.0, 396, 76, Space)
+            ["ex-narrow-fov"] = c => c.Shows && GuestDrawn(c) is ( > 10 and < 38, 101) && At(c, 2.0, 396, 76, Space)
                 && At(c, 2.0, 238, 320, Planet) && At(c, 2.0, 429, 327, Planet) && At(c, 2.0, 680, 459, Planet),
             // The near plane at 12: the planets close to the camera (near, and the one at the bottom left) culled (35 drawn).
-            ["ex-near-plane"] = c => c.Shows && DrawnOf(c) is ( > 10 and < 38, 101) && At(c, 2.0, 680, 459, Space) && At(c, 2.0, 165, 430, Space)
+            ["ex-near-plane"] = c => c.Shows && GuestDrawn(c) is ( > 10 and < 38, 101) && At(c, 2.0, 680, 459, Space) && At(c, 2.0, 165, 430, Space)
                 && At(c, 2.0, 238, 320, Planet) && At(c, 2.0, 429, 327, Planet) && At(c, 2.0, 396, 76, Planet),
             // 12 × 12 children around the root: 145 entities, more of them drawn (49), the old grid still there.
-            ["ex-bigger-grid"] = c => c.Shows && DrawnOf(c) is ( > 38, 145) && PlanetGrid(c) && At(c, 2.0, 238, 320, Planet),
+            ["ex-bigger-grid"] = c => c.Shows && GuestDrawn(c) is ( > 38, 145) && PlanetGrid(c) && At(c, 2.0, 238, 320, Planet),
         },
         ["csm"] = new()
         {
@@ -101,7 +101,7 @@ public static partial class TaskChecks
             ["ex-flatter"] = c => c.Drew && At(c, 420, 110, Ground) && At(c, 420, 160, p => GreyOf(p, 93, 15)) && At(c, 400, 300, p => GreyOf(p, 37, 10))
                 && At(c, 230, 150, p => GreyOf(p, 99, 15)) && At(c, 400, 560, Ground),
             // Blue below a water level: the lake and the river blue, the hills and the peaks grey as before.
-            ["ex-water"] = c => c.Drew && At(c, 580, 390, Water) && At(c, 420, 410, Water) && At(c, 420, 110, p => GreyOf(p, 212, 12))
+            ["ex-water"] = c => c.Drew && At(c, 580, 390, GuestWater) && At(c, 420, 410, GuestWater) && At(c, 420, 110, p => GreyOf(p, 212, 12))
                 && At(c, 400, 300, p => GreyOf(p, 90)) && At(c, 150, 380, p => GreyOf(p, 102)),
             // Only the first half of the strips (the back half of the terrain): the peaks there, the front gone.
             ["ex-back-half"] = c => c.Drew && At(c, 420, 110, p => GreyOf(p, 212, 12)) && At(c, 230, 150, p => GreyOf(p, 142)) && At(c, 420, 160, p => GreyOf(p, 128))

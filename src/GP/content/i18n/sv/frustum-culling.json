@@ -55,7 +55,7 @@
     },
     "ex-narrow-fov": {
       "text": "Gallra med en smalare frustum än kamerans: ett vertikalt synfält på 30° för gallringen (projektionen behåller 45°). Vilka planeter försvinner, och hur ändras antalet i titeln?",
-      "hint": "Det är bara synfältet som skickas till `createFrustumFromCamera` som ändras – inte det som projektionsmatrisen byggs med. Planeterna vid fönstrets kanter hamnar nu utanför gallringsfrustumen fast kameran skulle kunna se dem."
+      "hint": "Det är bara synfältet som skickas till `createFrustumFromCamera` som ändras – inte det som projektionsmatrisen byggs med. Planeter nära fönstrets kanter – tydligast de avlägsna högst upp – hamnar nu utanför gallringsfrustumen fast kameran skulle kunna se dem."
     },
     "ex-near-plane": {
       "text": "Flytta ut gallringsfrustumens närplan till 12 (projektionen behåller 0,1). Vad händer med planeterna närmast kameran?",
