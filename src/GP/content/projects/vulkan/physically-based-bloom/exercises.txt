@@ -1,0 +1,27 @@
+=== task: ex-strength
+--- file: main.cpp
+--- find:
+float bloomStrength = 0.04f;
+--- replace:
+float bloomStrength = 0.15f;
+
+=== task: ex-radius
+--- file: main.cpp
+--- find:
+float bloomFilterRadius = 0.005f;
+--- replace:
+float bloomFilterRadius = 0.05f;
+
+=== task: ex-short-chain
+--- file: main.cpp
+--- find:
+        if (!InitBloomFBO(bloomFBO, swapChainExtent.width, swapChainExtent.height, 6)) {
+--- replace:
+        if (!InitBloomFBO(bloomFBO, swapChainExtent.width, swapChainExtent.height, 2)) {
+
+=== task: ex-warm-glow
+--- file: shaders/bloom_final.frag
+--- find:
+    hdrColor = mix(hdrColor, bloomColor, ubo.bloomStrength); // linear interpolation
+--- replace:
+    hdrColor = mix(hdrColor, bloomColor * vec3(1.0, 0.6, 0.3), ubo.bloomStrength); // a warm glow

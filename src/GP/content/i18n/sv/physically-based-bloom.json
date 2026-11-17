@@ -60,6 +60,30 @@
         "vulkan": "`int mipLevel;` sist i `PushConstants` och i shaderns block. I `RenderDownsamples`: `constants.mipLevel = 0;` före loopen och `if (i == 0) { constants.mipLevel = 1; }` i slutet av den första iterationen. `downsample.frag`: learnopengls `PowVec3`, `ToSRGB`, `sRGBToLuma` (0.299, 0.587, 0.114) och `KarisAverage`; för `pc.mipLevel == 0` grupperna `(a+b+d+e) * (0.125/4.0)` … `(j+k+l+m) * (0.5/4.0)`, var och en `*= KarisAverage(…)`, summerade, `max(downsample, 0.0001)`; annars de gamla vikterna.",
         "d3d12": "I `RenderDownsamples`: `downsampleConstants.mipLevel = 0;` före loopen och `if (i == 0) { downsampleConstants.mipLevel = 1; }` i slutet av den första iterationen. `downsample.hlsl`: `int mipLevel;` i cbuffern, learnopengls `PowVec3`, `ToSRGB`, `sRGBToLuma` (0.299, 0.587, 0.114) och `KarisAverage`; för `mipLevel == 0` grupperna `(a + b + d + e) * (0.125f / 4.0f)` … `(j + k + l + m) * (0.5f / 4.0f)`, var och en `*= KarisAverage(…)`, summerade, `max(downsample, 0.0001f)`; annars de gamla vikterna."
       }
+    },
+    "ex-strength": {
+      "text": "Gör bloomen starkare: blanda in den med 0,15 i stället för 0,04. Är scenen fortfarande lätt att se?",
+      "hint": "En global variabel, `bloomStrength`, som skickas till slutshadern varje bildruta – själva bloomtexturen ändras inte, bara hur mycket av den `mix` tar."
+    },
+    "ex-radius": {
+      "text": "Gör uppsamplingsfiltret bredare: filterradie 0,05 i stället för 0,005. Hur ändras glödens form, jämfört med en starkare bloom?",
+      "hint": "En global variabel, `bloomFilterRadius`, som skickas till uppsamplingen. Tältfiltret hämtar då sina grannar längre ifrån varandra (i texturkoordinater) på varje nivå, så glöden sprids längre ut från ljuskuberna medan styrkan är densamma."
+    },
+    "ex-short-chain": {
+      "text": "Bygg mipkedjan med bara 2 nivåer i stället för 6. Vad händer med den breda, mjuka delen av glöden?",
+      "hint": {
+        "opengl": "Antalet nivåer är sista argumentet till `InitBloomFBO`. Ned- och uppsamplingens loopar går över `mipChain`, så de följer med av sig själva. Den breda glöden kommer från de minsta nivåerna.",
+        "vulkan": "Antalet nivåer är sista argumentet till `InitBloomFBO`. Ned- och uppsamplingens pass går över `mipChain`, så de följer med av sig själva. Den breda glöden kommer från de minsta nivåerna.",
+        "d3d12": "Antalet nivåer är sista argumentet till `InitBloomFBO`. Ned- och uppsamplingens pass går över `mipChain`, så de följer med av sig själva. Den breda glöden kommer från de minsta nivåerna."
+      }
+    },
+    "ex-warm-glow": {
+      "text": "Ge bloomen en varm ton: multiplicera bloomfärgen med (1.0, 0.6, 0.3) innan den blandas med scenen. Själva ljuskuberna ska förbli vita.",
+      "hint": {
+        "opengl": "I `bloom_final.fs`, där `mix` blandar `hdrColor` med `bloomColor`. Bara bloomen får tonen, så kuberna (från `hdrColor`) behåller sin färg.",
+        "vulkan": "I `bloom_final.frag`, där `mix` blandar `hdrColor` med `bloomColor` – kompilera om den. Bara bloomen får tonen, så kuberna (från `hdrColor`) behåller sin färg.",
+        "d3d12": "I `bloom_final.hlsl`, där `lerp` blandar `hdrColor` med `bloomColor`. Bara bloomen får tonen, så kuberna (från `hdrColor`) behåller sin färg."
+      }
     }
   }
 }

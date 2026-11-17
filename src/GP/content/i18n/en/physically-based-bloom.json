@@ -60,6 +60,30 @@
         "vulkan": "`int mipLevel;` at the end of `PushConstants` and of the shader's block. In `RenderDownsamples`: `constants.mipLevel = 0;` before the loop and `if (i == 0) { constants.mipLevel = 1; }` at the end of the first iteration. `downsample.frag`: learnopengl's `PowVec3`, `ToSRGB`, `sRGBToLuma` (0.299, 0.587, 0.114) and `KarisAverage`; for `pc.mipLevel == 0` the groups `(a+b+d+e) * (0.125/4.0)` … `(j+k+l+m) * (0.5/4.0)`, each `*= KarisAverage(…)`, summed, `max(downsample, 0.0001)`; otherwise the old weights.",
         "d3d12": "In `RenderDownsamples`: `downsampleConstants.mipLevel = 0;` before the loop and `if (i == 0) { downsampleConstants.mipLevel = 1; }` at the end of the first iteration. `downsample.hlsl`: `int mipLevel;` in the cbuffer, learnopengl's `PowVec3`, `ToSRGB`, `sRGBToLuma` (0.299, 0.587, 0.114) and `KarisAverage`; for `mipLevel == 0` the groups `(a + b + d + e) * (0.125f / 4.0f)` … `(j + k + l + m) * (0.5f / 4.0f)`, each `*= KarisAverage(…)`, summed, `max(downsample, 0.0001f)`; otherwise the old weights."
       }
+    },
+    "ex-strength": {
+      "text": "Make the bloom stronger: mix it in at 0.15 instead of 0.04. Is the scene still easy to read?",
+      "hint": "One global, `bloomStrength`, sent to the final shader every frame – the bloom texture itself does not change, only how much of it `mix` takes."
+    },
+    "ex-radius": {
+      "text": "Widen the upsampling filter: a filter radius of 0.05 instead of 0.005. How does the shape of the glow change, compared with a stronger bloom?",
+      "hint": "One global, `bloomFilterRadius`, passed to the upsampling. The tent filter then samples its neighbours farther apart (in texture coordinates) at every level, so the glow spreads farther from the light cubes while its strength stays the same."
+    },
+    "ex-short-chain": {
+      "text": "Build the mip chain with only 2 levels instead of 6. What happens to the wide, soft part of the glow?",
+      "hint": {
+        "opengl": "The number of levels is the last argument of `InitBloomFBO`. The down- and upsampling loops run over `mipChain`, so they follow by themselves. The wide glow comes from the smallest levels.",
+        "vulkan": "The number of levels is the last argument of `InitBloomFBO`. The down- and upsampling passes run over `mipChain`, so they follow by themselves. The wide glow comes from the smallest levels.",
+        "d3d12": "The number of levels is the last argument of `InitBloomFBO`. The down- and upsampling passes run over `mipChain`, so they follow by themselves. The wide glow comes from the smallest levels."
+      }
+    },
+    "ex-warm-glow": {
+      "text": "Give the bloom a warm tint: multiply the bloom colour by (1.0, 0.6, 0.3) before it is mixed with the scene. The light cubes themselves should stay white.",
+      "hint": {
+        "opengl": "In `bloom_final.fs`, where `mix` blends `hdrColor` with `bloomColor`. Only the bloom gets the tint, so the cubes (from `hdrColor`) keep their colour.",
+        "vulkan": "In `bloom_final.frag`, where `mix` blends `hdrColor` with `bloomColor` – recompile it. Only the bloom gets the tint, so the cubes (from `hdrColor`) keep their colour.",
+        "d3d12": "In `bloom_final.hlsl`, where `lerp` blends `hdrColor` with `bloomColor`. Only the bloom gets the tint, so the cubes (from `hdrColor`) keep their colour."
+      }
     }
   }
 }

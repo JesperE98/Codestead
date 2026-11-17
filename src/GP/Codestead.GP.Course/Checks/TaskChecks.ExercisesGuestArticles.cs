@@ -129,5 +129,20 @@ public static partial class TaskChecks
             ["ex-colour-buffer"] = c => c.Drew && At(c, 570, 175, p => p[0] > p[1] + 0.2 && p[0] > p[2] + 0.2) && At(c, 570, 425, p => p[1] > p[0] + 0.1 && p[1] > p[2] + 0.1)
                 && At(c, 230, 425, p => p[2] > p[0] + 0.05 && p[2] > p[1] + 0.03) && At(c, 100, 100, Teal),
         },
+        ["physically-based-bloom"] = new()
+        {
+            // Bloom mixed in at 0.15: the glow beside the light cubes much brighter (186 instead of 113), the background lit.
+            ["ex-strength"] = c => c.Drew && At(c, 400, 200, BloomWhite) && At(c, 465, 200, p => Grey(p) && p[0] > 0.65 && p[0] < 0.85)
+                && At(c, 520, 200, p => p[0] > 0.33) && At(c, 600, 100, p => p[0] > 0.12),
+            // A filter radius of 0.05: the same strength near the cube, but the glow reaches farther out.
+            ["ex-radius"] = c => c.Drew && At(c, 400, 200, BloomWhite) && At(c, 465, 200, p => Grey(p) && p[0] > 0.38 && p[0] < 0.55)
+                && At(c, 490, 200, p => p[0] > 0.35 && p[0] < 0.5) && At(c, 520, 200, p => p[0] > 0.25 && p[0] < 0.33) && At(c, 600, 100, p => p[0] > 0.1 && p[0] < 0.14),
+            // Only two levels: the glow stays close to the cubes, the background black.
+            ["ex-short-chain"] = c => c.Drew && At(c, 400, 200, BloomWhite) && At(c, 465, 200, p => Grey(p) && p[0] > 0.1 && p[0] < 0.3)
+                && At(c, 520, 200, Black) && At(c, 600, 100, Black),
+            // The bloom tinted orange before it is mixed in: a warm glow beside the white light cube.
+            ["ex-warm-glow"] = c => c.Drew && At(c, 400, 200, BloomWhite) && At(c, 465, 200, p => p[0] > p[1] + 0.05 && p[1] > p[2] + 0.05 && p[0] > 0.35)
+                && At(c, 400, 262, p => p[0] > p[2] + 0.12),
+        },
     };
 }
