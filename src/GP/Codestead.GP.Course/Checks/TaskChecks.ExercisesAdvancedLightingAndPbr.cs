@@ -37,5 +37,16 @@ public static partial class TaskChecks
             // A perspective light: the shadow grows, out to the floor's front right corner of the view.
             ["ex-perspective-light"] = c => InShadow(c) && At(c, 700, 480, p => p[0] < 0.08) && At(c, 750, 560, p => p[0] < 0.15) && At(c, 200, 450, p => p[0] > 0.2),
         },
+        ["point-shadows"] = new()
+        {
+            // The light moves: the picture at 2.3 s differs from the one at 1 s.
+            ["ex-animate-light"] = c => c.Drew && c.ChangesOverTime,
+            // Far plane 6: beyond 6 units from the light everything is in shadow (the corners), the middle is lit.
+            ["ex-far-plane"] = c => At(c, 780, 580, p => p[0] < 0.08) && At(c, 750, 50, p => p[0] < 0.08) && At(c, 100, 500, p => p[0] < 0.08) && At(c, 350, 300, p => p[0] > 0.4),
+            // A sixth cube at (1.5, −1, −2.5): its shadow on the wall at the lower right, the rest of the wall still lit.
+            ["ex-add-cube"] = c => At(c, 700, 520, p => p[0] < 0.08) && At(c, 780, 580, p => p[0] < 0.08) && At(c, 100, 500, p => p[0] > 0.18) && At(c, 350, 300, p => p[0] > 0.4),
+            // The light near the ceiling: the rotated cube's shadow falls down the middle of the wall; the right is lit.
+            ["ex-move-light"] = c => At(c, 264, 300, p => p[0] < 0.1) && At(c, 350, 300, p => p[0] < 0.1) && At(c, 600, 300, p => p[0] > 0.12),
+        },
     };
 }

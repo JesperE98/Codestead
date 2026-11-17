@@ -1,0 +1,47 @@
+=== task: ex-animate-light
+--- file: main.cpp
+--- find:
+    lastFrame = currentFrame;
+--- replace:
+    lastFrame = currentFrame;
+
+    // Move the light over time (learnopengl: lightPos.z = sin(glfwGetTime() * 0.5) * 3.0).
+    static auto startTime = std::chrono::high_resolution_clock::now();
+    float time = std::chrono::duration<float, std::chrono::seconds::period>(currentFrame - startTime).count();
+    lightPos.z = std::sin(time * 0.5f) * 3.0f;
+
+=== task: ex-far-plane
+--- file: main.cpp
+--- find:
+    float far_plane = 25.0f;
+--- replace:
+    float far_plane = 6.0f;
+
+=== task: ex-add-cube
+--- file: main.cpp
+--- find:
+        * XMMatrixTranslation(-1.5f, 2.0f, -3.0f);
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    XMStoreFloat4x4(&modelConstants.normalMatrix, XMMatrixInverse(nullptr, model));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_commandList->DrawInstanced(36, 1, 0, 0);
+}
+--- replace:
+        * XMMatrixTranslation(-1.5f, 2.0f, -3.0f);
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    XMStoreFloat4x4(&modelConstants.normalMatrix, XMMatrixInverse(nullptr, model));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_commandList->DrawInstanced(36, 1, 0, 0);
+    model = XMMatrixScaling(0.5f, 0.5f, 0.5f) * XMMatrixTranslation(1.5f, -1.0f, -2.5f);
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    XMStoreFloat4x4(&modelConstants.normalMatrix, XMMatrixInverse(nullptr, model));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_commandList->DrawInstanced(36, 1, 0, 0);
+}
+
+=== task: ex-move-light
+--- file: main.cpp
+--- find:
+XMFLOAT3 lightPos(0.0f, 0.0f, 0.0f);
+--- replace:
+XMFLOAT3 lightPos(-1.5f, 4.0f, -1.0f);
