@@ -4,11 +4,6 @@ import type { CommandDef } from "../../Types/CommandDef.js";
 import * as SystemCmd from "../System/SystemCmd.js";
 import * as TextCmd from "../Text/TextCmd.js";
 
-// SystemCmd.sortedEntries (C# SystemCmd.SortedEntries, in SystemCmd.cs) belongs to the System group, which another
-// agent ports in parallel; until that branch is merged the stub does not have it, hence the optional lookup.
-// TODO(wave 2 merge): call SystemCmd.sortedEntries directly.
-type SortedEntries = (obj: Map<string, string>) => [string, string][];
-const system = SystemCmd as unknown as { sortedEntries?: SortedEntries };
 
 export const set: CommandDef = {
   name: "set",
@@ -29,7 +24,7 @@ BESKRIVNING
   run: (ctx) => {
     const sh = ctx.sh;
     if (ctx.args.length === 0) {
-      for (const [k, v] of system.sortedEntries!(sh.env)) ctx.out(`${k}=${TextCmd.hasJsWhitespace(v) ? `'${v}'` : v}\n`);
+      for (const [k, v] of SystemCmd.sortedEntries(sh.env)) ctx.out(`${k}=${TextCmd.hasJsWhitespace(v) ? `'${v}'` : v}\n`);
       return 0;
     }
     const dd = ctx.args.indexOf("--");

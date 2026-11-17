@@ -6,15 +6,6 @@ import * as ShellsCmd from "../Shells/ShellsCmd.js";
 import * as UtilCmd from "../Util/UtilCmd.js";
 import { simple } from "./SystemCmd.js";
 
-/**
- * ShellsCmd.StartBash in C#. Commands/Shells is ported by another wave-2 agent; until that branch is merged the
- * function is looked up by name, so this file type-checks with and without it (null: no new bash was started).
- */
-function startBash(ctx: CmdCtx): number | null {
-  const f = (ShellsCmd as unknown as { startBash?: (ctx: CmdCtx) => number | null | undefined }).startBash;
-  return f ? (f(ctx) ?? null) : null;
-}
-
 function runBash(ctx: CmdCtx): number {
   const sh = ctx.sh;
   const first = ctx.args.length > 0 ? ctx.args[0]! : null;
@@ -25,7 +16,7 @@ function runBash(ctx: CmdCtx): number {
   }
   if (first === "-c") return sh.runScript(rest.length > 0 ? rest[0]! : "", "bash", rest.slice(1), ctx, false, "bash");
   if (first === null || first === "") {
-    const started = startBash(ctx);
+    const started = ShellsCmd.startBash(ctx);
     if (started !== null) return started;
     ctx.out(`${UtilCmd.Color.dim}${sh.msg("system.alreadyBash")}${UtilCmd.Color.reset}\n`);
     return 0;

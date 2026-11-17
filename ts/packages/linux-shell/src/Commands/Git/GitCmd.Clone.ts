@@ -14,11 +14,6 @@ import { initRepo } from "./GitCmd.Subs.js";
 import { writeWorkFile } from "./GitCmd.WorkTree.js";
 import { fail, fatal, type G } from "./GitCmd.js";
 
-// ReposCmd.aurClone (C# ReposCmd.AurClone, in ReposCmd.Aur.cs) belongs to the Repos group, which another agent ports
-// in parallel; until that branch is merged the stub does not have it, and then no address counts as the AUR's.
-// TODO(wave 2 merge): call ReposCmd.aurClone directly.
-type AurClone = (ctx: CmdCtx, args: string[]) => number | null;
-const repos = ReposCmd as unknown as { aurClone?: AurClone };
 
 const trailingSlashesRe = /\/+$/;
 const slashDotGitRe = /\/\.git$/;
@@ -27,7 +22,7 @@ const slashColonRe = /[/:]/;
 
 export function cmdClone(g: G, args: string[]): number {
   // Packages from AUR (git clone https://aur.archlinux.org/PACKAGE.git) – see ReposCmd.
-  const aur = repos.aurClone?.(g.ctx, args) ?? null;
+  const aur = ReposCmd.aurClone(g.ctx, args);
   if (aur !== null) return aur;
   const o = parseArgs(args, ["q|quiet", "bare", "b|branch=", "o|origin=", "depth="], "clone");
   const url = o.operands.length > 0 ? o.operands[0]! : null;

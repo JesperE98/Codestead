@@ -13,15 +13,6 @@ function jsRound(v: number): number {
   return Math.floor(v + 0.5);
 }
 
-/**
- * ProcsCmd.CurrentProcs in C#. Commands/Procs is ported by another wave-2 agent; until that branch is merged the
- * function is looked up by name, so this file type-checks with and without it (without it: the process table as is).
- */
-function currentProcs(ctx: CmdCtx, self: string): Proc[] {
-  const f = (ProcsCmd as unknown as { currentProcs?: (ctx: CmdCtx, self?: string | null) => Proc[] }).currentProcs;
-  return f ? f(ctx, self) : [...ctx.sh.proc.procs];
-}
-
 export const htop: CommandDef = {
   name: "htop",
   summary: "Visar processer och resursanvändning",
@@ -33,7 +24,7 @@ BESKRIVNING
        sorterar du med F6, söker med F3, avslutar processer med F9 och
        stänger htop med q eller F10. I simulatorn visas en ögonblicksbild.`,
   run: (ctx) => {
-    const procs = [...currentProcs(ctx, "htop")].sort((a, b) => {
+    const procs = [...ProcsCmd.currentProcs(ctx, "htop")].sort((a, b) => {
       const d = b.cpu - a.cpu;
       if (d !== 0) return d < 0 ? -1 : 1;
       return a.pid - b.pid;
