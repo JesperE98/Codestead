@@ -1,0 +1,21 @@
+=== task: ex-catch
+--- file: main.cpp
+--- find:
+const glm::vec2 PLAYER_SIZE(100.0f, 20.0f);
+--- replace:
+const glm::vec2 PLAYER_SIZE(500.0f, 20.0f);
+
+=== task: ex-next-level
+--- file: main.cpp
+--- find:
+        ResetLevel(game);
+--- replace:
+        game.Level = (game.Level + 1) % 4;
+        ResetLevel(game);
+
+=== task: ex-ghost-stones
+--- file: main.cpp
+--- find:
+        if (!box.Destroyed)
+--- replace:
+        if (!box.Destroyed && !box.IsSolid)

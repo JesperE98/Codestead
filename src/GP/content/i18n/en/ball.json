@@ -36,6 +36,22 @@
         "vulkan": "In both paddle branches: `{ Player.Position.x -= velocity; if (Ball.Stuck) Ball.Position.x -= velocity; }` (`+=` for D). Then `if (game.Keys[GLFW_KEY_SPACE]) Ball.Stuck = false;`.",
         "d3d12": "In both paddle branches: `{ Player.Position.x -= velocity; if (Ball.Stuck) Ball.Position.x -= velocity; }` (`+=` for 'D'). Then `if (game.Keys[VK_SPACE]) Ball.Stuck = false;`."
       }
+    },
+    "ex-faster": {
+      "text": "Make the ball twice as fast, in the same direction.",
+      "hint": "Its velocity starts as `INITIAL_BALL_VELOCITY`; both components twice as large. `Move` multiplies the velocity by `dt`, so nothing else changes."
+    },
+    "ex-big-ball": {
+      "text": "Double the ball's radius to 25 pixels. It should still sit on top of the paddle before it is launched.",
+      "hint": "Change only `BALL_RADIUS`: the ball's size and its start position on the paddle are both computed from it."
+    },
+    "ex-launch-left": {
+      "text": "Launch the ball towards the upper left instead of the upper right, as steeply as before.",
+      "hint": "The x component of the start velocity decides left or right; y < 0 is up in the game's coordinates."
+    },
+    "ex-bottom-bounce": {
+      "text": "Let the ball bounce off the bottom edge of the window too, so it is never lost (for now).",
+      "hint": "`Move` only knows the window's width. Give it the height as well (pass `game.Height`), and when the ball's bottom (`Position.y + Size.y`) reaches it, flip `Velocity.y` and put the ball back inside – like the top edge."
     }
   }
 }

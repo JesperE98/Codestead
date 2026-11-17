@@ -1,0 +1,27 @@
+=== task: ex-embers
+--- file: main.cpp
+--- find:
+    particle.Color = glm::vec4(rColor, rColor, rColor, 1.0f);
+--- replace:
+    particle.Color = glm::vec4(rColor, rColor * 0.5f, 0.1f, 1.0f);
+
+=== task: ex-big-particles
+--- file: shaders/particle.vert
+--- find:
+    float scale = 10.0f;
+--- replace:
+    float scale = 20.0f;
+
+=== task: ex-long-trail
+--- file: main.cpp
+--- find:
+            p.Color.a -= dt * 2.5f;
+--- replace:
+            p.Color.a -= dt * 1.0f;
+
+=== task: ex-no-glow
+--- file: main.cpp
+--- find:
+        LoadShader("shaders/particle.vert.spv", "shaders/particle.frag.spv", "particle", VK_BLEND_FACTOR_ONE); // additive blending
+--- replace:
+        LoadShader("shaders/particle.vert.spv", "shaders/particle.frag.spv", "particle", VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA); // normal blending

@@ -16,6 +16,18 @@
         "vulkan": "En överlagring ovanför `DoCollisions`: `bool CheckCollision(BallObject& one, GameObject& two)`. `center = one.Position + one.Radius`, `clamped = glm::clamp(difference, -aabb_half_extents, aabb_half_extents)`, `closest = aabb_center + clamped`, `return glm::length(closest - center) < one.Radius;`.",
         "d3d12": "En överlagring ovanför `DoCollisions`: `bool CheckCollision(BallObject& one, GameObject& two)`. `XMVECTOR center = XMLoadFloat2(&one.Position) + XMVectorReplicate(one.Radius);`, lådans mitt och halva utsträckning med `XMVectorSet`, `XMVectorClamp(difference, -aabb_half_extents, aabb_half_extents)`, `return XMVectorGetX(XMVector2Length(difference)) < one.Radius;`."
       }
+    },
+    "ex-mark-hits": {
+      "text": "I stället för att förstöra en sten som bollen rör vid: måla den röd (1.0, 0.2, 0.2), så att du ser varje sten som kollisionstestet slår till för.",
+      "hint": "I `DoCollisions`, där en sten som inte är solid får `Destroyed = true`: ändra dess `Color` i stället. `DrawObject` ritar varje sten med sin egen färg."
+    },
+    "ex-break-stones": {
+      "text": "Låt bollen krossa de solida stenarna också.",
+      "hint": "`DoCollisions` hoppar över stenarna som har `IsSolid`; ta bort det villkoret."
+    },
+    "ex-freeze": {
+      "text": "Stoppa bollen tvärt vid dess första kollision (stenarna förstörs som förut). Var stannar den – och varför förstörs ingen sten?",
+      "hint": "Sätt `Ball.Velocity` till (0, 0) i `DoCollisions` så fort `CheckCollision` rapporterar en träff. Det första bollen möter är en solid sten."
     }
   }
 }

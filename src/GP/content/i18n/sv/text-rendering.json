@@ -40,6 +40,26 @@
     "second-line": {
       "text": "Rita en andra rad: \"(C) Codestead GP\" på (540, 570), skala 0.5, färg (0.3, 0.7, 0.9).",
       "hint": "Ett anrop till av `RenderText` efter det första; y = 570 ligger nära fönstrets överkant, eftersom y pekar uppåt i de här koordinaterna."
+    },
+    "ex-colour": {
+      "text": "Rita ”This is sample text” i orange, (1.0, 0.5, 0.0), och låt den andra raden vara som den är.",
+      "hint": "Färgen är `RenderText`s sista argument; shadern multiplicerar den med glyfens täckning."
+    },
+    "ex-bigger": {
+      "text": "Gör den första raden en och en halv gång så stor, fortfarande med början i (25, 25).",
+      "hint": "Skalan i `RenderText` multiplicerar varje glyfs storlek, bearing och advance: 1.5 i stället för 1.0. Glyferna är fortfarande bitmapparna på 48 pixlar, bara uttänjda – titta noga på kanterna."
+    },
+    "ex-quads": {
+      "text": "Titta på rektanglarna bakom bokstäverna: låt fragmentshadern strunta i glyfens täckning, så att varje tecken ritas som en fylld rektangel i textens färg.",
+      "hint": {
+        "opengl": "I `text.fs` blir utdata bara `vec4(textColor, 1.0)` – utan `sampled`. Varje rektangel är lika stor som glyfens bitmapp och placeras efter dess bearing.",
+        "vulkan": "I `shaders/text.frag` blir utdata bara `vec4(pc.textColor, 1.0)` – utan `sampled`; kompilera om den med `glslc`. Varje rektangel är lika stor som glyfens ruta och placeras efter dess bearing.",
+        "d3d12": "I `text.hlsl` returnerar pixelshadern bara `float4(textColor, 1.0f)` – utan `sampled`. Varje rektangel är lika stor som glyfens ruta och placeras efter dess bearing."
+      }
+    },
+    "ex-shadow": {
+      "text": "Ge den första raden en skugga: rita först samma text i svart 3 pixlar åt höger och 3 pixlar nedåt, och sedan den gröna texten ovanpå.",
+      "hint": "Två anrop till `RenderText`, det svarta först, i (28, 22) – här räknas y uppåt från fönstrets nederkant, så nedåt är minus. Blandningen behåller de mjuka kanterna på båda."
     }
   }
 }

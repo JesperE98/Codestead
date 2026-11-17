@@ -1,0 +1,50 @@
+=== task: ex-faster
+--- file: main.cpp
+--- find:
+const glm::vec2 INITIAL_BALL_VELOCITY(100.0f, -350.0f);
+--- replace:
+const glm::vec2 INITIAL_BALL_VELOCITY(200.0f, -700.0f);
+
+=== task: ex-big-ball
+--- file: main.cpp
+--- find:
+const float BALL_RADIUS = 12.5f;
+--- replace:
+const float BALL_RADIUS = 25.0f;
+
+=== task: ex-launch-left
+--- file: main.cpp
+--- find:
+const glm::vec2 INITIAL_BALL_VELOCITY(100.0f, -350.0f);
+--- replace:
+const glm::vec2 INITIAL_BALL_VELOCITY(-100.0f, -350.0f);
+
+=== task: ex-bottom-bounce
+--- file: main.cpp
+--- find:
+void Move(BallObject& ball, float dt, unsigned int window_width)
+--- replace:
+void Move(BallObject& ball, float dt, unsigned int window_width, unsigned int window_height)
+--- file: main.cpp
+--- find:
+        if (ball.Position.y <= 0.0f)
+        {
+            ball.Velocity.y = -ball.Velocity.y;
+            ball.Position.y = 0.0f;
+        }
+--- replace:
+        if (ball.Position.y <= 0.0f)
+        {
+            ball.Velocity.y = -ball.Velocity.y;
+            ball.Position.y = 0.0f;
+        }
+        else if (ball.Position.y + ball.Size.y >= window_height)
+        {
+            ball.Velocity.y = -ball.Velocity.y;
+            ball.Position.y = window_height - ball.Size.y;
+        }
+--- file: main.cpp
+--- find:
+    Move(Ball, dt, game.Width);
+--- replace:
+    Move(Ball, dt, game.Width, game.Height);

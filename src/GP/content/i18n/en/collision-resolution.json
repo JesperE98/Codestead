@@ -36,6 +36,18 @@
         "vulkan": "`if (game.Level == 0) LoadLevel(game.Levels[0], \"levels/one.lvl\", game.Width, game.Height / 2); else if …` for the four levels; `Reset(Ball, Player.Position + glm::vec2(PLAYER_SIZE.x / 2.0f - BALL_RADIUS, -(BALL_RADIUS * 2.0f)), INITIAL_BALL_VELOCITY);`. After DoCollisions: `if (Ball.Position.y >= game.Height) { ResetLevel(game); ResetPlayer(game); }`.",
         "d3d12": "`if (game.Level == 0) LoadLevel(game.Levels[0], \"levels/one.lvl\", game.Width, game.Height / 2); else if …` for the four levels; `Reset(Ball, XMFLOAT2(Player.Position.x + PLAYER_SIZE.x / 2.0f - BALL_RADIUS, Player.Position.y - BALL_RADIUS * 2.0f), INITIAL_BALL_VELOCITY);`. After DoCollisions: `if (Ball.Position.y >= game.Height) { ResetLevel(game); ResetPlayer(game); }`."
       }
+    },
+    "ex-catch": {
+      "text": "The paddle never moves, so the ball is always lost. Make the paddle 500 pixels wide and watch it catch the ball and send it back up.",
+      "hint": "Only `PLAYER_SIZE` changes. The paddle's own collision code in `DoCollisions` then runs for the first time: where the ball lands on the paddle decides its new direction."
+    },
+    "ex-next-level": {
+      "text": "When the ball is lost, go on to the next level instead of starting the same one again (after level four comes level one).",
+      "hint": "In `Update`, before `ResetLevel(game)`: increase `game.Level`, and wrap it round with `% 4` – `ResetLevel` loads whichever level `game.Level` names."
+    },
+    "ex-ghost-stones": {
+      "text": "Turn the solid stones into ghosts: the ball flies straight through them, but still bounces off and breaks the other bricks.",
+      "hint": "In `DoCollisions`, test only the bricks that are neither destroyed nor solid."
     }
   }
 }

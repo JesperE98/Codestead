@@ -1,0 +1,45 @@
+=== task: ex-own-colours
+--- file: main.cpp
+--- find:
+    DrawSprite(Renderer, GetTexture("ball").ID, glm::vec2(200.0f, 200.0f), glm::vec2(300.0f, 400.0f), 45.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+--- replace:
+    DrawSprite(Renderer, GetTexture("ball").ID, glm::vec2(200.0f, 200.0f), glm::vec2(300.0f, 400.0f), 45.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+
+=== task: ex-round
+--- file: main.cpp
+--- find:
+    DrawSprite(Renderer, GetTexture("ball").ID, glm::vec2(200.0f, 200.0f), glm::vec2(300.0f, 400.0f), 45.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+--- replace:
+    DrawSprite(Renderer, GetTexture("ball").ID, glm::vec2(300.0f, 200.0f), glm::vec2(200.0f, 200.0f), 45.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+
+=== task: ex-second
+--- file: main.cpp
+--- find:
+    DrawSprite(Renderer, GetTexture("ball").ID, glm::vec2(200.0f, 200.0f), glm::vec2(300.0f, 400.0f), 45.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+--- replace:
+    DrawSprite(Renderer, GetTexture("ball").ID, glm::vec2(200.0f, 200.0f), glm::vec2(300.0f, 400.0f), 45.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+    DrawSprite(Renderer, GetTexture("ball").ID, glm::vec2(650.0f, 50.0f), glm::vec2(100.0f, 100.0f), 0.0f, glm::vec3(1.0f, 0.0f, 0.0f));
+
+=== task: ex-spin
+--- file: main.cpp
+--- find:
+    bool                    Keys[1024] = {};
+--- replace:
+    bool                    Keys[1024] = {};
+    float                   Rotation = 0.0f;
+--- file: main.cpp
+--- find:
+void Update(Game& game, float dt)
+{
+
+}
+--- replace:
+void Update(Game& game, float dt)
+{
+    game.Rotation += 90.0f * dt;
+}
+--- file: main.cpp
+--- find:
+    DrawSprite(Renderer, GetTexture("ball").ID, glm::vec2(200.0f, 200.0f), glm::vec2(300.0f, 400.0f), 45.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+--- replace:
+    DrawSprite(Renderer, GetTexture("ball").ID, glm::vec2(200.0f, 200.0f), glm::vec2(300.0f, 400.0f), game.Rotation, glm::vec3(0.0f, 1.0f, 0.0f));

@@ -48,6 +48,22 @@
         "vulkan": "`glm::translate(model, glm::vec3(0.5f * size.x, 0.5f * size.y, 0.0f))`, `glm::rotate(model, glm::radians(rotate), glm::vec3(0.0f, 0.0f, 1.0f))`, `glm::translate(model, glm::vec3(-0.5f * size.x, -0.5f * size.y, 0.0f))`.",
         "d3d12": "`model = model * XMMatrixTranslation(-0.5f * size.x, -0.5f * size.y, 0.0f);`, `model = model * XMMatrixRotationZ(XMConvertToRadians(rotate));`, `model = model * XMMatrixTranslation(0.5f * size.x, 0.5f * size.y, 0.0f);` – learnopengls tre rader i DirectXMaths ordning."
       }
+    },
+    "ex-own-colours": {
+      "text": "Rita bollen i dess egna färger: ge den den spritefärg som lämnar texturen som den är.",
+      "hint": "Shadern multiplicerar texturen med spritefärgen, så (1, 1, 1) ändrar ingenting."
+    },
+    "ex-round": {
+      "text": "Gör bollen rund och lägg den mitt i fönstret: 200 × 200 pixlar, med mittpunkten i (400, 300).",
+      "hint": "Positionen är spritens övre vänstra hörn, inte dess mitt: 400 − 100 och 300 − 100. Syns rotationen på 45° fortfarande på en rund boll?"
+    },
+    "ex-second": {
+      "text": "Rita en boll till bredvid den gröna: 100 × 100 pixlar, röd (1, 0, 0), inte roterad, med övre vänstra hörnet i (650, 50).",
+      "hint": "Ett anrop till av `DrawSprite` i `Render`, med samma textur – varje anrop ritar samma quad med sin egen modellmatris och färg."
+    },
+    "ex-spin": {
+      "text": "Få bollen att snurra: den börjar på 0° och vrider sig 90 grader varje sekund.",
+      "hint": "Spara vinkeln i spelets tillstånd: ett fält `Rotation` i `Game` som `Update` ökar med `90.0f * dt`, och som `Render` skickar till `DrawSprite`. Använd `dt`, inte antalet bildrutor, så att farten inte beror på bildfrekvensen."
     }
   }
 }
