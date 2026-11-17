@@ -40,6 +40,34 @@
         "vulkan": "`vec2 prevTexCoords = currentTexCoords + deltaTexCoords; float afterDepth = currentDepthMapValue - currentLayerDepth; float beforeDepth = texture(depthMap, prevTexCoords).r - currentLayerDepth + layerDepth; float weight = afterDepth / (afterDepth - beforeDepth);`, returnera `prevTexCoords * weight + currentTexCoords * (1.0 - weight)`.",
         "d3d12": "`float2 prevTexCoords = currentTexCoords + deltaTexCoords; float afterDepth = currentDepthMapValue - currentLayerDepth; float beforeDepth = depthMap.SampleLevel(wrapSampler, prevTexCoords, 0).r - currentLayerDepth + layerDepth; float weight = afterDepth / (afterDepth - beforeDepth);`, returnera `prevTexCoords * weight + currentTexCoords * (1.0f - weight)`."
       }
+    },
+    "ex-show-depth": {
+      "text": "Visa djupkartan vid de förskjutna texturkoordinaterna i gråskala i stället för de belysta tegelstenarna: det djupa murbruket vitt, stenarnas yta svart.",
+      "hint": {
+        "opengl": "I slutet av `main`: sampla `depthMap` vid `texCoords` – koordinaterna som `ParallaxMapping` gav tillbaka – och skriv dess `.r` som en grå färg till `FragColor`.",
+        "vulkan": "I slutet av `main`: sampla `depthMap` vid `texCoords` – koordinaterna som `ParallaxMapping` gav tillbaka – och skriv dess `.r` som en grå färg till `outColor`.",
+        "d3d12": "I slutet av `PSMain`: sampla `depthMap` vid `texCoords` – koordinaterna som `ParallaxMapping` gav tillbaka – och returnera dess `.r` i r, g och b."
+      }
+    },
+    "ex-height-scale": {
+      "text": "Låt tegelstenarna sticka ut mer: höj `heightScale` från 0.1 till 0.25. Murbruket blir djupare – och vid quadens kanter skärs mer av stenarna bort.",
+      "hint": {
+        "opengl": "Den globala `heightScale` i `main.cpp` (learnopengl ändrar den med Q- och E-tangenterna); den skickas till fragmentshadern varje bildruta och skalar förskjutningen `P`.",
+        "vulkan": "Den globala `heightScale` i `main.cpp` (learnopengl ändrar den med Q- och E-tangenterna); den går till fragmentshadern varje bildruta och skalar förskjutningen `P`.",
+        "d3d12": "Den globala `heightScale` i `main.cpp` (learnopengl ändrar den med Q- och E-tangenterna); den hamnar i konstantbufferten varje bildruta och skalar förskjutningen `P`."
+      }
+    },
+    "ex-no-discard": {
+      "text": "Ta bort `discard` för texturkoordinater utanför 0…1 och titta på quadens kanter: vad syns där i stället för bakgrunden, och varför?",
+      "hint": "Bara `if`-satsen med `discard` försvinner. Samplern upprepar texturen, så en koordinat som förskjutits förbi kanten hämtar tegel från texturens motsatta sida."
+    },
+    "ex-steeper": {
+      "text": "Luta quaden längre bakåt, −70° runt x-axeln i stället för −45°, så att du ser tegelstenarna i en flackare vinkel. Håller djupet fortfarande?",
+      "hint": {
+        "opengl": "Vinkeln i `glm::rotate` för quadens `model`. Ju flackare vinkel, desto längre förskjutning `viewDir.xy / viewDir.z` och desto fler lager använder `ParallaxMapping`.",
+        "vulkan": "Vinkeln i `glm::rotate` för quadens `model`. Ju flackare vinkel, desto längre förskjutning `viewDir.xy / viewDir.z` och desto fler lager använder `ParallaxMapping`.",
+        "d3d12": "Vinkeln i `XMMatrixRotationX` för quadens `model`. Ju flackare vinkel, desto längre förskjutning `viewDir.xy / viewDir.z` och desto fler lager använder `ParallaxMapping`."
+      }
     }
   }
 }

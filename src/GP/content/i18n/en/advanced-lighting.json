@@ -24,6 +24,38 @@
         "vulkan": "`spec = pow(max(dot(normal, halfwayDir), 0.0), 32.0);` – the angle between the normal and the halfway vector is smaller than Phong's angle, so Blinn-Phong needs 2–4 times the exponent for the same highlight size.",
         "d3d12": "`spec = pow(max(dot(normal, halfwayDir), 0.0f), 32.0f);` – the angle between the normal and the halfway vector is smaller than Phong's angle, so Blinn-Phong needs 2–4 times the exponent for the same highlight size."
       }
+    },
+    "ex-specular-only": {
+      "text": "Show only the specular term: draw the floor with nothing but the highlight, so you can see the shape Blinn-Phong gives it.",
+      "hint": {
+        "opengl": "One line at the end of `advanced_lighting.fs`: write `specular` instead of `ambient + diffuse + specular` to `FragColor`.",
+        "vulkan": "One line at the end of `advanced_lighting.frag`: write `specular` instead of `ambient + diffuse + specular` to `outColor`.",
+        "d3d12": "One line at the end of `PSMain`: return `specular` instead of `ambient + diffuse + specular`."
+      }
+    },
+    "ex-blue-light": {
+      "text": "Give the light a cool blue colour, (0.3, 0.6, 1.0), so that both its diffuse light and its highlight are tinted blue (the ambient light stays as it is).",
+      "hint": {
+        "opengl": "In the fragment shader: a `vec3 lightColor` that `diffuse` and `specular` are multiplied by, component by component, before they are added up.",
+        "vulkan": "In the fragment shader: a `vec3 lightColor` that `diffuse` and `specular` are multiplied by, component by component, before they are added up.",
+        "d3d12": "In `PSMain`: a `float3 lightColor` that `diffuse` and `specular` are multiplied by, component by component, before they are added up."
+      }
+    },
+    "ex-move-light": {
+      "text": "Move the light two units to the left, to (−2, 0, 0), and watch the lit part of the floor and its highlight follow it.",
+      "hint": {
+        "opengl": "Only `lightPos` in `main.cpp` changes; it is sent to the shader every frame.",
+        "vulkan": "Only the global `lightPos` in `main.cpp` changes; `updateUniformBuffer()` copies it into the uniform buffer every frame.",
+        "d3d12": "Only the global `lightPos` in `main.cpp` changes; the constant buffer gets it every frame."
+      }
+    },
+    "ex-two-lights": {
+      "text": "Add a second white light at (−1.5, 0, −1), lit with Blinn-Phong just like the first: its diffuse light and its highlight are added to the first light's.",
+      "hint": {
+        "opengl": "A `lightPos2` in `main.cpp`, sent with `shader.setVec3`, and a `uniform vec3 lightPos2;` in the fragment shader. There: its own light direction and halfway vector, then `diffuse +=` and `specular +=` with the same formulas as the first light.",
+        "vulkan": "A `lightPos2` in `main.cpp` and in the uniform block – in both the C++ struct (after `pad2`, followed by another float of padding: std140) and the shader's `UniformBufferObject`. In the shader: its own light direction and halfway vector, then `diffuse +=` and `specular +=` with the same formulas as the first light.",
+        "d3d12": "A `lightPos2` in `main.cpp` and in the constant buffer – in both `SceneConstantBuffer` (after `padding1`, followed by another float of padding) and the HLSL `cbuffer`. In `PSMain`: its own light direction and halfway vector, then `diffuse +=` and `specular +=` with the same formulas as the first light."
+      }
     }
   }
 }

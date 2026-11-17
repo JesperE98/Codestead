@@ -36,6 +36,30 @@
         "vulkan": "`layout(binding = 1) uniform samplerCube irradianceMap;`; `createDescriptorSet()` får en andra write (`dstBinding = 1`, `irradianceImageView`, `clampSampler`, `SHADER_READ_ONLY_OPTIMAL`). `fresnelSchlickRoughness`: `F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0)`. Sedan `vec3 kD = 1.0 - kS; kD *= 1.0 - metallic; vec3 diffuse = irradiance * albedo; vec3 ambient = (kD * diffuse) * ao;`. Bakgrunden binder `envDescriptorSet` igen.",
         "d3d12": "`TextureCube irradianceMap : register(t0);`, `SamplerState clampSampler : register(s0);`; `SetGraphicsRootDescriptorTable(2, …)` på heap-plats 3 före `RenderScene()`, bakgrundens tabell 2 = plats 2 igen. `fresnelSchlickRoughness`: `float invRoughness = 1.0f - roughness; return F0 + (max(float3(invRoughness, invRoughness, invRoughness), F0) - F0) * pow(clamp(1.0f - cosTheta, 0.0f, 1.0f), 5.0f);`. Sedan `kD *= 1.0f - metallic; float3 ambient = (kD * irradiance * albedo) * ao;`."
       }
+    },
+    "ex-white-spheres": {
+      "text": "Måla alla sfärer ljusgrå, albedo (0.8, 0.8, 0.8) i stället för röd. Nu ser du vilken färg ljuset från omgivningen har – och att de nedre raderna, som inte är metall, tar emot mest av det.",
+      "hint": {
+        "opengl": "Albedot sätts en gång före renderloopen: `pbrShader.setVec3(\"albedo\", …)`.",
+        "vulkan": "Albedot hamnar i uniformbufferten i `updateUniformBuffer()`: `ubo.albedo`.",
+        "d3d12": "Albedot hamnar i sfärernas rotkonstanter: `modelConstants.albedo`."
+      }
+    },
+    "ex-no-lights": {
+      "text": "Släck de fyra punktljusen (färgen 0) så att sfärerna bara belyses av omgivningen. Högdagrarna försvinner – det som blir kvar är det diffusa bildbaserade ljuset.",
+      "hint": {
+        "opengl": "Alla fyra elementen i `lightColors` i `main.cpp` blir (0, 0, 0); ljusloopen i `pbr.fs` lägger då inte till något.",
+        "vulkan": "Alla fyra elementen i den globala `lightColors` i `main.cpp` blir (0, 0, 0); ljusloopen i `pbr.frag` lägger då inte till något.",
+        "d3d12": "Alla fyra elementen i den globala `lightColors` i `main.cpp` blir (0, 0, 0); ljusloopen i `pbr.hlsl` lägger då inte till något."
+      }
+    },
+    "ex-coarse-convolution": {
+      "text": "Falta med betydligt färre sampel: `sampleDelta` 0.6 i stället för 0.1. Förberedelsen går fortare, men irradiansen blir fläckig – titta noga på sfärerna. Varför?",
+      "hint": {
+        "opengl": "`sampleDelta` i `irradiance_convolution.fs`. Med steg på 0,6 radianer ser summan bara några dussin riktningar av halvsfären, så en ljus fläck i omgivningen (solen) träffas av vissa texlar och missas av deras grannar.",
+        "vulkan": "`sampleDelta` i `irradiance_convolution.frag`. Med steg på 0,6 radianer ser summan bara några dussin riktningar av halvsfären, så en ljus fläck i omgivningen (solen) träffas av vissa texlar och missas av deras grannar.",
+        "d3d12": "`sampleDelta` i `irradiance_convolution.hlsl`. Med steg på 0,6 radianer ser summan bara några dussin riktningar av halvsfären, så en ljus fläck i omgivningen (solen) träffas av vissa texlar och missas av deras grannar."
+      }
     }
   }
 }

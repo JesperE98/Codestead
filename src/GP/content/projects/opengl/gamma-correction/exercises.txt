@@ -1,0 +1,32 @@
+=== task: ex-lighting-only
+--- file: gamma_correction.fs
+--- find:
+    color *= lighting;
+--- replace:
+    color = lighting;
+
+=== task: ex-equal-lights
+--- file: main.cpp
+--- find:
+        glm::vec3(0.25),
+        glm::vec3(0.50),
+        glm::vec3(0.75),
+        glm::vec3(1.00)
+--- replace:
+        glm::vec3(1.00),
+        glm::vec3(1.00),
+        glm::vec3(1.00),
+        glm::vec3(1.00)
+
+=== task: ex-hardware-srgb
+--- file: gamma_correction.fs
+--- find:
+    color = pow(color, vec3(1.0/2.2));
+--- replace:
+    // no pow(): the sRGB framebuffer encodes the colour
+--- file: main.cpp
+--- find:
+    glEnable(GL_DEPTH_TEST);
+--- replace:
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_FRAMEBUFFER_SRGB);

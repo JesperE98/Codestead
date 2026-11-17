@@ -1,0 +1,26 @@
+=== task: ex-white-spheres
+--- file: main.cpp
+--- find:
+        ubo.albedo = glm::vec3(0.5f, 0.0f, 0.0f);
+--- replace:
+        ubo.albedo = glm::vec3(0.8f, 0.8f, 0.8f);
+
+=== task: ex-no-lights
+--- file: main.cpp
+--- find:
+    glm::vec3(300.0f, 300.0f, 300.0f),
+    glm::vec3(300.0f, 300.0f, 300.0f),
+    glm::vec3(300.0f, 300.0f, 300.0f),
+    glm::vec3(300.0f, 300.0f, 300.0f)
+--- replace:
+    glm::vec3(0.0f, 0.0f, 0.0f),
+    glm::vec3(0.0f, 0.0f, 0.0f),
+    glm::vec3(0.0f, 0.0f, 0.0f),
+    glm::vec3(0.0f, 0.0f, 0.0f)
+
+=== task: ex-coarse-convolution
+--- file: shaders/irradiance_convolution.frag
+--- find:
+    float sampleDelta = 0.1;
+--- replace:
+    float sampleDelta = 0.6;

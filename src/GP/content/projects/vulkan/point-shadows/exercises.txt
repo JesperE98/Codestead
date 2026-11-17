@@ -1,0 +1,45 @@
+=== task: ex-animate-light
+--- file: main.cpp
+--- find:
+        ubo.proj[1][1] *= -1;
+        // 0. create depth cubemap transformation matrices
+--- replace:
+        ubo.proj[1][1] *= -1;
+        // move light position over time
+        lightPos.z = static_cast<float>(sin(glfwGetTime() * 0.5) * 3.0);
+        // 0. create depth cubemap transformation matrices
+
+=== task: ex-far-plane
+--- file: main.cpp
+--- find:
+        float far_plane = 25.0f;
+--- replace:
+        float far_plane = 6.0f;
+
+=== task: ex-add-cube
+--- file: main.cpp
+--- find:
+        model = glm::scale(model, glm::vec3(0.75f));
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdDraw(commandBuffer, 36, 1, 0, 0);
+    }
+--- replace:
+        model = glm::scale(model, glm::vec3(0.75f));
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdDraw(commandBuffer, 36, 1, 0, 0);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(1.5f, -1.0f, -2.5));
+        model = glm::scale(model, glm::vec3(0.5f));
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdDraw(commandBuffer, 36, 1, 0, 0);
+    }
+
+=== task: ex-move-light
+--- file: main.cpp
+--- find:
+glm::vec3 lightPos(0.0f, 0.0f, 0.0f);
+--- replace:
+glm::vec3 lightPos(-1.5f, 4.0f, -1.0f);

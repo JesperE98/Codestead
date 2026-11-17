@@ -1,0 +1,29 @@
+=== task: ex-lighting-only
+--- file: shaders/gamma_correction.frag
+--- find:
+    color *= lighting;
+--- replace:
+    color = lighting;
+
+=== task: ex-equal-lights
+--- file: main.cpp
+--- find:
+        ubo.lightColors[0] = glm::vec4(0.25f, 0.25f, 0.25f, 0.0f);
+        ubo.lightColors[1] = glm::vec4(0.50f, 0.50f, 0.50f, 0.0f);
+        ubo.lightColors[2] = glm::vec4(0.75f, 0.75f, 0.75f, 0.0f);
+--- replace:
+        ubo.lightColors[0] = glm::vec4(1.00f, 1.00f, 1.00f, 0.0f);
+        ubo.lightColors[1] = glm::vec4(1.00f, 1.00f, 1.00f, 0.0f);
+        ubo.lightColors[2] = glm::vec4(1.00f, 1.00f, 1.00f, 0.0f);
+
+=== task: ex-hardware-srgb
+--- file: shaders/gamma_correction.frag
+--- find:
+    color = pow(color, vec3(1.0 / 2.2));
+--- replace:
+    // no pow(): the _SRGB swap chain encodes the colour
+--- file: main.cpp
+--- find:
+            if (availableFormat.format == VK_FORMAT_B8G8R8A8_UNORM && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+--- replace:
+            if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {

@@ -36,6 +36,38 @@
         "vulkan": "Binding 2 in the layout (combined image sampler, fragment stage); `createBloomDescriptorSet(hdrColorImageView, pingpongImageViews[0], colorBufferSampler, bloomDescriptorSet)` with three descriptor writes; pool 7 uniform buffers, **14** samplers, `maxSets = 7`; the final pass binds `bloomDescriptorSet`. `bloom_final.frag`: `layout(binding = 2) uniform sampler2D bloomBlur;`, `hdrColor += texture(bloomBlur, fragTexCoord).rgb;` before the tone mapping.",
         "d3d12": "`ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1)`, `rootParameters[3].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_PIXEL)`. Final pass: table 2 = slot 3, table 3 = slot `5 + !horizontal`. `bloom_final.hlsl`: `Texture2D bloomBlur : register(t1);`, `float3 bloomColor = bloomBlur.Sample(clampSampler, input.texCoord).rgb; hdrColor += bloomColor;` before the tone mapping."
       }
+    },
+    "ex-bloom-strength": {
+      "text": "Make the bloom twice as strong: add the blurred bright parts to the scene twice over before the tone mapping.",
+      "hint": {
+        "opengl": "One line in `bloom_final.fs`: the additive blending `hdrColor += bloomColor;` gets a factor.",
+        "vulkan": "One line in `bloom_final.frag`: the additive blending `hdrColor += bloomColor;` gets a factor.",
+        "d3d12": "One line in the final pass's `PSMain` (`bloom_final.hlsl`): the additive blending `hdrColor += bloomColor;` gets a factor."
+      }
+    },
+    "ex-threshold": {
+      "text": "Raise the scene's brightness threshold from 1.0 to 3.0, so that only really bright surfaces glow. Which parts of the boxes and the floor stop glowing, and why do the light cubes keep their glow?",
+      "hint": {
+        "opengl": "Only the `if (brightness > …)` in `bloom.fs` changes – the light cubes have their own threshold in `light_box.fs`.",
+        "vulkan": "Only the `if (brightness > …)` in `bloom.frag` changes – the light cubes have their own threshold in `light_box.frag`.",
+        "d3d12": "Only the `if (brightness > …)` in `bloom.hlsl` changes – the light cubes have their own threshold in `light_box.hlsl`."
+      }
+    },
+    "ex-wider-blur": {
+      "text": "Blur the bright parts three times as often – 30 ping-pong passes instead of 10 – and watch the glow spread much further round the lights.",
+      "hint": {
+        "opengl": "`amount` in the blur loop of `main.cpp`. Keep it even: the final pass reads `pingpongColorbuffers[!horizontal]`, the buffer the last (vertical) pass wrote.",
+        "vulkan": "`amount` in the blur loop of `recordCommandBuffer()`. Keep it even, so that the last pass is a vertical one into the buffer the final pass reads.",
+        "d3d12": "`amount` in the blur loop of `PopulateCommandList()`. Keep it even, so that the last pass is a vertical one into the buffer the final pass reads."
+      }
+    },
+    "ex-orange-light": {
+      "text": "Turn the white light under the top box into a warm orange one, (8, 3, 0.5): the light cube, the light it throws and its glow all turn orange.",
+      "hint": {
+        "opengl": "The first entry of `lightColors` in `main.cpp` – the same colour lights the scene in `bloom.fs` and colours the light cube in `light_box.fs`.",
+        "vulkan": "The first entry of the global `lightColors` in `main.cpp` – the same colour lights the scene and colours the light cube.",
+        "d3d12": "The first entry of the global `lightColors` in `main.cpp` – the same colour lights the scene and colours the light cube."
+      }
     }
   }
 }

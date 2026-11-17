@@ -64,6 +64,34 @@
         "vulkan": "`loadTexture(\"textures/albedo.png\", VK_FORMAT_R8G8B8A8_UNORM, albedoImage, albedoImageMemory, albedoImageView);` … and `createTextureSampler(VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_FALSE, textureSampler);`; bindings 1–5 as `VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER`, a second pool size, five more descriptor writes (`dstBinding = i + 1`); `PushConstants` keeps only `model`, `albedo` / `ao` leave the uniform buffer; `nrRows = 3`, `nrColumns = 3`, `spacing = 6.0`, `glm::rotate` / `glm::scale` after the translation. `pbr.vert`: `fragTangent = mat3(pc.model) * inTangent;`.",
         "d3d12": "`cbvSrvHeapDesc.NumDescriptors = 6`; `ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 5, 0)`, `rootParameters[2].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL)`, `samplers[0]` (`MIN_MAG_MIP_LINEAR`, WRAP, register 0); `LoadTexture(\"albedo.png\", m_albedoTexture, albedoUploadHeap, 1);` … slot 5; `SetGraphicsRootDescriptorTable(2, …)` at slot 1; `ModelConstants` keeps only the two matrices; `XMMatrixScaling(2.4f, 2.4f, 2.4f) * XMMatrixRotationY(XMConvertToRadians(90.0f)) * XMMatrixTranslation(…)`. `pbr.hlsl`: `float3x3 TBN = float3x3(T, B, N); return normalize(mul(tangentNormal, TBN));`."
       }
+    },
+    "ex-light-colours": {
+      "text": "Colour the two upper lights: the top-left one red (300, 60, 30), the top-right one blue (30, 60, 300). The highlights on the metal take the lights' colours – on each sphere the left highlight red, the right one blue.",
+      "hint": {
+        "opengl": "The first two entries of `lightColors` in `main.cpp` (the order is the same as in `lightPositions`). The values are radiant flux, far above 1 – the tone mapping takes care of that.",
+        "vulkan": "The first two entries of the global `lightColors` in `main.cpp` (the order is the same as in `lightPositions`). The values are radiant flux, far above 1 – the tone mapping takes care of that.",
+        "d3d12": "The first two entries of the global `lightColors` in `main.cpp` (the order is the same as in `lightPositions`). The values are radiant flux, far above 1 – the tone mapping takes care of that."
+      }
+    },
+    "ex-specular-only": {
+      "text": "Leave the diffuse part out of the reflectance equation and add only the Cook-Torrance specular term to `Lo`. The rusty parts go dark – which parts of the material are metal and which are not?",
+      "hint": "In the light loop the line `Lo += (kD * albedo / PI + specular) * radiance * NdotL;` – keep only `specular`. A metal has no diffuse light anyway (`kD` is 0 for it), so the metal looks the same as before."
+    },
+    "ex-gold": {
+      "text": "Turn the material into gold: an albedo of (1.0, 0.71, 0.29) and metallic 1.0 instead of the albedo and metallic maps – keep the roughness, ao and normal maps. For a metal F0 is the albedo, so the reflections themselves turn golden.",
+      "hint": {
+        "opengl": "Replace the two lines at the top of `main` that read `albedo` and `metallic` from their maps with constants. Gold's albedo is already linear – no `pow(…, 2.2)`.",
+        "vulkan": "Replace the two lines at the top of `main` that read `albedo` and `metallic` from their maps with constants. Gold's albedo is already linear – no `pow(…, 2.2)`.",
+        "d3d12": "Replace the two lines at the top of `PSMain` that read `albedo` and `metallic` from their maps with constants. Gold's albedo is already linear – no `pow(…, 2.2f)`."
+      }
+    },
+    "ex-polished": {
+      "text": "Polish the material: use 0.4 times the roughness from the roughness map. The highlights get smaller and brighter, and the metal around them darker – it now mirrors the dark surroundings instead of spreading the lights' reflection.",
+      "hint": {
+        "opengl": "Only the line that reads `roughness` from `roughnessMap` changes: multiply it by 0.4. Both `DistributionGGX` and `GeometrySmith` get the smaller value.",
+        "vulkan": "Only the line that reads `roughness` from `roughnessMap` changes: multiply it by 0.4. Both `DistributionGGX` and `GeometrySmith` get the smaller value.",
+        "d3d12": "Only the line that reads `roughness` from `roughnessMap` changes: multiply it by 0.4f. Both `DistributionGGX` and `GeometrySmith` get the smaller value."
+      }
     }
   }
 }

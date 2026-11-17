@@ -1,0 +1,27 @@
+=== task: ex-bloom-strength
+--- file: bloom_final.fs
+--- find:
+    hdrColor += bloomColor; // additive blending
+--- replace:
+    hdrColor += bloomColor * 2.0; // additive blending, the bloom twice as strong
+
+=== task: ex-threshold
+--- file: bloom.fs
+--- find:
+    if(brightness > 1.0)
+--- replace:
+    if(brightness > 3.0)
+
+=== task: ex-wider-blur
+--- file: main.cpp
+--- find:
+        unsigned int amount = 10;
+--- replace:
+        unsigned int amount = 30;
+
+=== task: ex-orange-light
+--- file: main.cpp
+--- find:
+    lightColors.push_back(glm::vec3(5.0f,   5.0f,  5.0f));
+--- replace:
+    lightColors.push_back(glm::vec3(8.0f,   3.0f,  0.5f));

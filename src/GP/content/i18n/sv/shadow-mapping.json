@@ -60,6 +60,34 @@
         "vulkan": "`float shadow = 0.0; vec2 texelSize = 1.0 / textureSize(shadowMap, 0);`, två loopar från -1 till 1 med `float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r; shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;`, sedan `shadow /= 9.0;`.",
         "d3d12": "`uint width, height; shadowMap.GetDimensions(width, height); float2 texelSize = 1.0f / float2(width, height);`, två loopar från -1 till 1 med `shadowMap.Sample(shadowSampler, shadowUV + float2(x, y) * texelSize).r`, sedan `shadow /= 9.0f;` – `closestDepth` behövs inte längre."
       }
+    },
+    "ex-shadow-only": {
+      "text": "Visa själva skuggtestets resultat: vitt där ett fragment är belyst, svart där det ligger i skugga och grått däremellan (PCF:s mjuka kanter).",
+      "hint": {
+        "opengl": "Skriv i slutet av `shadow_mapping.fs` `1.0 - shadow` som en grå färg till `FragColor` i stället för `lighting`.",
+        "vulkan": "Skriv i slutet av `shadow_mapping.frag` `1.0 - shadow` som en grå färg till `outColor` i stället för `lighting`.",
+        "d3d12": "Returnera i slutet av `PSMain` `1.0f - shadow` i r, g och b i stället för `lighting`."
+      }
+    },
+    "ex-lighter-shadow": {
+      "text": "Gör skuggan hälften så mörk: ett fragment i skugga behåller hälften av sitt diffusa och spekulära ljus, som om lite ljus letade sig runt kuben.",
+      "hint": "Bara raden som lägger ihop termerna ändras: faktorn framför `(diffuse + specular)` ska gå från 1 ner till 0,5 (inte 0) när `shadow` går från 0 till 1."
+    },
+    "ex-move-light": {
+      "text": "Flytta ljuset till andra sidan, till (2, 4, −1). Den svävande kubens skugga ska flytta från golvets högra del till den vänstra.",
+      "hint": {
+        "opengl": "Bara `lightPos` i `main.cpp` ändras: både ljusrumsmatrisen (`glm::lookAt(lightPos, …)`) och belysningen använder den, så djupkartan och skuggtestet följer med av sig själva.",
+        "vulkan": "Bara den globala `lightPos` i `main.cpp` ändras: både ljusrumsmatrisen (`glm::lookAt(lightPos, …)`) och belysningen använder den, så djupkartan och skuggtestet följer med av sig själva.",
+        "d3d12": "Bara den globala `lightPos` i `main.cpp` ändras: både ljusrumsmatrisen (`XMMatrixLookAtRH`) och belysningen använder den, så djupkartan och skuggtestet följer med av sig själva."
+      }
+    },
+    "ex-perspective-light": {
+      "text": "Gör om det riktade ljuset till ett ljus i en punkt: rendera djupkartan med en perspektivprojektion (90° synfält, kvadratisk) i stället för den ortografiska. Varför växer kubens skugga?",
+      "hint": {
+        "opengl": "Bara `lightProjection` ändras: `glm::perspective(glm::radians(90.0f), aspect, near_plane, far_plane)` med djupkartans bildförhållande. Strålarna sprids nu ut från `lightPos`, så en skugga blir större ju längre från kuben den faller.",
+        "vulkan": "Bara `lightProjection` ändras: `glm::perspective(glm::radians(90.0f), 1.0f, near_plane, far_plane)` – djupkartan är kvadratisk. Strålarna sprids nu ut från `lightPos`, så en skugga blir större ju längre från kuben den faller.",
+        "d3d12": "Bara `lightProjection` ändras: `XMMatrixPerspectiveFovRH(XMConvertToRadians(90.0f), 1.0f, near_plane, far_plane)` – djupkartan är kvadratisk. Strålarna sprids nu ut från `lightPos`, så en skugga blir större ju längre från kuben den faller."
+      }
     }
   }
 }

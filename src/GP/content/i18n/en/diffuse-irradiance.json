@@ -36,6 +36,30 @@
         "vulkan": "`layout(binding = 1) uniform samplerCube irradianceMap;`; `createDescriptorSet()` gets a second write (`dstBinding = 1`, `irradianceImageView`, `clampSampler`, `SHADER_READ_ONLY_OPTIMAL`). `fresnelSchlickRoughness`: `F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0)`. Then `vec3 kD = 1.0 - kS; kD *= 1.0 - metallic; vec3 diffuse = irradiance * albedo; vec3 ambient = (kD * diffuse) * ao;`. The background binds `envDescriptorSet` again.",
         "d3d12": "`TextureCube irradianceMap : register(t0);`, `SamplerState clampSampler : register(s0);`; `SetGraphicsRootDescriptorTable(2, …)` at heap slot 3 before `RenderScene()`, the background's table 2 = slot 2 again. `fresnelSchlickRoughness`: `float invRoughness = 1.0f - roughness; return F0 + (max(float3(invRoughness, invRoughness, invRoughness), F0) - F0) * pow(clamp(1.0f - cosTheta, 0.0f, 1.0f), 5.0f);`. Then `kD *= 1.0f - metallic; float3 ambient = (kD * irradiance * albedo) * ao;`."
       }
+    },
+    "ex-white-spheres": {
+      "text": "Paint all spheres light grey, albedo (0.8, 0.8, 0.8) instead of red. Now you can see what colour the light from the environment has – and that the lower, non-metal rows take most of it.",
+      "hint": {
+        "opengl": "The albedo is set once before the render loop: `pbrShader.setVec3(\"albedo\", …)`.",
+        "vulkan": "The albedo goes into the uniform buffer in `updateUniformBuffer()`: `ubo.albedo`.",
+        "d3d12": "The albedo goes into the spheres' root constants: `modelConstants.albedo`."
+      }
+    },
+    "ex-no-lights": {
+      "text": "Switch the four point lights off (colour 0) so that the spheres are lit by the environment alone. The highlights disappear – what is left is the diffuse image-based light.",
+      "hint": {
+        "opengl": "All four entries of `lightColors` in `main.cpp` become (0, 0, 0); the light loop in `pbr.fs` then adds nothing.",
+        "vulkan": "All four entries of the global `lightColors` in `main.cpp` become (0, 0, 0); the light loop in `pbr.frag` then adds nothing.",
+        "d3d12": "All four entries of the global `lightColors` in `main.cpp` become (0, 0, 0); the light loop in `pbr.hlsl` then adds nothing."
+      }
+    },
+    "ex-coarse-convolution": {
+      "text": "Convolute with far fewer samples: a `sampleDelta` of 0.6 instead of 0.1. The setup gets faster, but the irradiance gets blotchy – look closely at the spheres. Why?",
+      "hint": {
+        "opengl": "`sampleDelta` in `irradiance_convolution.fs`. With steps of 0.6 radians the sum only sees a few dozen directions of the hemisphere, so a bright spot of the environment (the sun) is hit by some texels and missed by their neighbours.",
+        "vulkan": "`sampleDelta` in `irradiance_convolution.frag`. With steps of 0.6 radians the sum only sees a few dozen directions of the hemisphere, so a bright spot of the environment (the sun) is hit by some texels and missed by their neighbours.",
+        "d3d12": "`sampleDelta` in `irradiance_convolution.hlsl`. With steps of 0.6 radians the sum only sees a few dozen directions of the hemisphere, so a bright spot of the environment (the sun) is hit by some texels and missed by their neighbours."
+      }
     }
   }
 }

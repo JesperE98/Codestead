@@ -1,0 +1,29 @@
+=== task: ex-show-normals
+--- file: deferred_shading.hlsl
+--- find:
+    return float4(lighting, 1.0f);
+--- replace:
+    return float4(Normal * 0.5f + 0.5f, 1.0f);
+
+=== task: ex-show-specular
+--- file: deferred_shading.hlsl
+--- find:
+    return float4(lighting, 1.0f);
+--- replace:
+    return float4(Specular, Specular, Specular, 1.0f);
+
+=== task: ex-reach
+--- file: main.cpp
+--- find:
+        const float linear = 0.7f;
+        const float quadratic = 1.8f;
+--- replace:
+        const float linear = 0.22f;
+        const float quadratic = 0.20f;
+
+=== task: ex-warm-lights
+--- file: main.cpp
+--- find:
+        lightColors.push_back(XMFLOAT3(rColor, gColor, bColor));
+--- replace:
+        lightColors.push_back(XMFLOAT3(rColor, gColor * 0.6f, bColor * 0.2f));    // warm: less green, hardly any blue

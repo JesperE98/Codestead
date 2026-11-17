@@ -48,6 +48,38 @@
         "vulkan": "`float radius;` efter `quadratic` gör structen 36 byte, och std140 avrundar ett arrayelement uppåt till 48: C++ lägger till `float pad1, pad2, pad3;`. I `updateUniformBuffer()`: `constant`, `maxBrightness` med `std::fmaxf`, learnopengls formel för `radius`, `ubo.lights[i].radius = radius;`. Shadern: `float radius;` i `Light`, avståndet först, sedan `if (distance < ubo.lights[i].radius) { … }`.",
         "d3d12": "C++-`Light`: `float Radius; float padding1[2];` efter `Quadratic`. I `OnUpdate`: `const float constant = 1.0f;`, `const float maxBrightness = std::fmax(std::fmax(lightColors[i].x, lightColors[i].y), lightColors[i].z);`, learnopengls formel för `radius`, `constantBufferData.lights[i].Radius = radius;`. HLSL: `float Radius;` i `Light`, avståndet först, sedan `if (distance < lights[i].Radius) { … }`."
       }
+    },
+    "ex-show-normals": {
+      "text": "Visa G-buffertens normaler i stället för den belysta bilden, flyttade från −1…1 till 0…1: lådornas ovansidor blir gröna, framsidorna blå och sidorna röda eller blågröna.",
+      "hint": {
+        "opengl": "I belysningspasset, `deferred_shading.fs`: skriv `Normal * 0.5 + 0.5` till `FragColor` i stället för `lighting`. Ljuskuberna ritas efteråt, så de blir kvar.",
+        "vulkan": "I belysningspasset, `deferred_shading.frag`: skriv `Normal * 0.5 + 0.5` till `outColor` i stället för `lighting`. Ljuskuberna ritas efteråt, så de blir kvar.",
+        "d3d12": "I belysningspasset, `deferred_shading.hlsl`: returnera `Normal * 0.5f + 0.5f` i stället för `lighting`. Ljuskuberna ritas efteråt, så de blir kvar."
+      }
+    },
+    "ex-show-specular": {
+      "text": "Visa den spekulära intensiteten som ligger i G-bufferten i gråskala: stålramarna ljusa, träet nästan svart. Varför är bakgrunden vit?",
+      "hint": {
+        "opengl": "Det spekulära värdet är alfakanalen i `gAlbedoSpec` – `Specular` i `deferred_shading.fs`; skriv det som en grå färg till `FragColor`. Tänk på färgen som G-bufferten rensades till – alfa inräknat.",
+        "vulkan": "Det spekulära värdet är alfakanalen i `gAlbedoSpec` – `Specular` i `deferred_shading.frag`; skriv det som en grå färg till `outColor`. Tänk på värdet som G-bufferten rensades till – alfa inräknat.",
+        "d3d12": "Det spekulära värdet är alfakanalen i `gAlbedoSpec` – `Specular` i `deferred_shading.hlsl`; returnera det i r, g och b. Tänk på värdet som G-bufferten rensades till – alfa inräknat."
+      }
+    },
+    "ex-reach": {
+      "text": "Låt ljusen nå längre: dämpning med linjär 0,22 och kvadratisk 0,20 i stället för 0,7 och 1,8. Scenen blir mycket ljusare – och ljusvolymernas radie växer av sig själv.",
+      "hint": {
+        "opengl": "De två konstanterna `linear` och `quadratic` i loopen som sätter ljusens uniforms; radien räknas ut från dem direkt efteråt, så volymerna följer med.",
+        "vulkan": "De två konstanterna `linear` och `quadratic` i loopen som fyller `ubo.lights`; radien räknas ut från dem direkt efteråt, så volymerna följer med.",
+        "d3d12": "De två konstanterna `linear` och `quadratic` i loopen som fyller `constantBufferData.lights`; radien räknas ut från dem direkt efteråt, så volymerna följer med."
+      }
+    },
+    "ex-warm-lights": {
+      "text": "Gör alla 32 ljusen varma: behåll varje ljus slumpade rött, men multiplicera dess gröna med 0,6 och dess blå med 0,2. Ljuskuberna och ljuset på lådorna blir orange.",
+      "hint": {
+        "opengl": "Där de slumpade färgerna läggs i `lightColors` (efter `srand(13)`). Låt de tre `rand()`-anropen vara som de är, så att ljusens positioner inte ändras.",
+        "vulkan": "Där de slumpade färgerna läggs i `lightColors` (efter `srand(13)`). Låt de tre `rand()`-anropen vara som de är, så att ljusens positioner inte ändras.",
+        "d3d12": "Där de slumpade färgerna läggs i `lightColors` (efter `srand(13)`). Låt de tre `rand()`-anropen vara som de är, så att ljusens positioner inte ändras."
+      }
     }
   }
 }

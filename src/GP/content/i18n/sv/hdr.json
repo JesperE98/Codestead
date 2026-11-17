@@ -32,6 +32,30 @@
         "vulkan": "En global `float exposure = 1.0f;`; `float exposure;` på `pad1`:s plats i `UniformBufferObject`; `ubo.exposure = exposure;`. `hdr.frag`: uniformblocket på binding 0 med samma medlemmar fram till `float exposure;`, och `vec3 result = vec3(1.0) - exp(-hdrColor * ubo.exposure);`.",
         "d3d12": "En global `float exposure = 1.0f;`, `struct HdrConstants { float exposure; };`, root-parameter 0 med `D3D12_SHADER_VISIBILITY_ALL`, och före fyrhörningens draw `SetGraphicsRoot32BitConstants(0, sizeof(HdrConstants) / 4, &hdrConstants, 0)`. `hdr.hlsl`: `cbuffer HdrConstants : register(b0) { float exposure; };` och `float3 result = float3(1.0f, 1.0f, 1.0f) - exp(-hdrColor * exposure);`."
       }
+    },
+    "ex-low-exposure": {
+      "text": "Sänk exponeringen från 1.0 till 0.1, som om ögonen hade vant sig vid det starka ljuset: tunnelns slut är inte längre vitt – där syns träet – medan resten av tunneln blir mörk.",
+      "hint": {
+        "opengl": "Bara den globala `exposure` i `main.cpp` ändras (learnopengl ändrar den med Q och E); `hdr.fs` får den som uniform varje bildruta.",
+        "vulkan": "Bara den globala `exposure` i `main.cpp` ändras (learnopengl ändrar den med Q och E); den går till `hdr.frag` i uniformbufferten varje bildruta.",
+        "d3d12": "Bara den globala `exposure` i `main.cpp` ändras (learnopengl ändrar den med Q och E); den går till tonmappningsshadern i konstantbufferten varje bildruta."
+      }
+    },
+    "ex-red-light": {
+      "text": "Gör det röda ljuset nära kameran 50 gånger så starkt: (5, 0, 0) i stället för (0.1, 0, 0). I HDR får ett ljus vara mycket starkare än 1.0 – det röda skenet på väggarna nära kameran syns nu tydligt.",
+      "hint": {
+        "opengl": "Det andra elementet i `lightColors` i `main.cpp` (ljuset i (−1,4, −1,9, 9)).",
+        "vulkan": "Det andra elementet i den globala `lightColors` i `main.cpp` (ljuset i (−1,4, −1,9, 9)).",
+        "d3d12": "Det andra elementet i den globala `lightColors` i `main.cpp` (ljuset i (−1,4, −1,9, 9))."
+      }
+    },
+    "ex-aces": {
+      "text": "Prova en annan tonmappningskurva: den filmiska ACES-kurvan (Krzysztof Narkowicz anpassning), med x = HDR-färgen × exponeringen: resultat = x(2,51x + 0,03) / (x(2,43x + 0,59) + 0,14), begränsat till 0…1. Jämför kontrasten med exponeringskurvan.",
+      "hint": {
+        "opengl": "Byt i `hdr.fs` ut exponeringsraden (behåll den som kommentar) mot en `vec3 x` och formeln, sedan `clamp(…, 0.0, 1.0)`; gammakorrigeringen efter den blir kvar.",
+        "vulkan": "Byt i `hdr.frag` ut exponeringsraden (behåll den som kommentar) mot en `vec3 x` och formeln, sedan `clamp(…, 0.0, 1.0)`; gammakorrigeringen efter den blir kvar.",
+        "d3d12": "Byt i tonmappningens `PSMain` ut exponeringsraden (behåll den som kommentar) mot en `float3 x` och formeln, sedan `saturate(…)`; gammakorrigeringen efter den blir kvar."
+      }
     }
   }
 }

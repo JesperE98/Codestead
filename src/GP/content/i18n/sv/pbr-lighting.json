@@ -64,6 +64,34 @@
         "vulkan": "`loadTexture(\"textures/albedo.png\", VK_FORMAT_R8G8B8A8_UNORM, albedoImage, albedoImageMemory, albedoImageView);` … och `createTextureSampler(VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_FALSE, textureSampler);`; bindningarna 1–5 som `VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER`, en andra pool size, fem descriptor writes till (`dstBinding = i + 1`); `PushConstants` behåller bara `model`, `albedo` / `ao` lämnar uniform buffern; `nrRows = 3`, `nrColumns = 3`, `spacing = 6.0`, `glm::rotate` / `glm::scale` efter translationen. `pbr.vert`: `fragTangent = mat3(pc.model) * inTangent;`.",
         "d3d12": "`cbvSrvHeapDesc.NumDescriptors = 6`; `ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 5, 0)`, `rootParameters[2].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL)`, `samplers[0]` (`MIN_MAG_MIP_LINEAR`, WRAP, register 0); `LoadTexture(\"albedo.png\", m_albedoTexture, albedoUploadHeap, 1);` … plats 5; `SetGraphicsRootDescriptorTable(2, …)` på plats 1; `ModelConstants` behåller bara de två matriserna; `XMMatrixScaling(2.4f, 2.4f, 2.4f) * XMMatrixRotationY(XMConvertToRadians(90.0f)) * XMMatrixTranslation(…)`. `pbr.hlsl`: `float3x3 TBN = float3x3(T, B, N); return normalize(mul(tangentNormal, TBN));`."
       }
+    },
+    "ex-light-colours": {
+      "text": "Färga de två övre ljusen: det övre vänstra rött (300, 60, 30), det övre högra blått (30, 60, 300). Högdagrarna på metallen får ljusens färger – på varje sfär blir den vänstra högdagern röd och den högra blå.",
+      "hint": {
+        "opengl": "De två första elementen i `lightColors` i `main.cpp` (ordningen är densamma som i `lightPositions`). Värdena är strålningsflöde, långt över 1 – tonmappningen tar hand om det.",
+        "vulkan": "De två första elementen i den globala `lightColors` i `main.cpp` (ordningen är densamma som i `lightPositions`). Värdena är strålningsflöde, långt över 1 – tonmappningen tar hand om det.",
+        "d3d12": "De två första elementen i den globala `lightColors` i `main.cpp` (ordningen är densamma som i `lightPositions`). Värdena är strålningsflöde, långt över 1 – tonmappningen tar hand om det."
+      }
+    },
+    "ex-specular-only": {
+      "text": "Ta bort den diffusa delen ur reflektansekvationen och lägg bara till Cook-Torrances spekulära term till `Lo`. De rostiga delarna blir mörka – vilka delar av materialet är metall och vilka är det inte?",
+      "hint": "I ljusloopen raden `Lo += (kD * albedo / PI + specular) * radiance * NdotL;` – behåll bara `specular`. En metall har inget diffust ljus ändå (`kD` är 0 för den), så metallen ser ut som förut."
+    },
+    "ex-gold": {
+      "text": "Gör om materialet till guld: albedot (1.0, 0.71, 0.29) och metallic 1.0 i stället för albedo- och metallickartorna – behåll roughness-, ao- och normalkartorna. För en metall är F0 albedot, så själva reflexerna blir gyllene.",
+      "hint": {
+        "opengl": "Byt ut de två raderna överst i `main` som läser `albedo` och `metallic` ur sina kartor mot konstanter. Guldets albedo är redan linjärt – ingen `pow(…, 2.2)`.",
+        "vulkan": "Byt ut de två raderna överst i `main` som läser `albedo` och `metallic` ur sina kartor mot konstanter. Guldets albedo är redan linjärt – ingen `pow(…, 2.2)`.",
+        "d3d12": "Byt ut de två raderna överst i `PSMain` som läser `albedo` och `metallic` ur sina kartor mot konstanter. Guldets albedo är redan linjärt – ingen `pow(…, 2.2f)`."
+      }
+    },
+    "ex-polished": {
+      "text": "Polera materialet: använd 0,4 gånger roughness-värdet från roughness-kartan. Högdagrarna blir mindre och ljusare, och metallen runt dem mörkare – den speglar nu den mörka omgivningen i stället för att sprida ljusens reflex.",
+      "hint": {
+        "opengl": "Bara raden som läser `roughness` ur `roughnessMap` ändras: multiplicera med 0.4. Både `DistributionGGX` och `GeometrySmith` får det mindre värdet.",
+        "vulkan": "Bara raden som läser `roughness` ur `roughnessMap` ändras: multiplicera med 0.4. Både `DistributionGGX` och `GeometrySmith` får det mindre värdet.",
+        "d3d12": "Bara raden som läser `roughness` ur `roughnessMap` ändras: multiplicera med 0.4f. Både `DistributionGGX` och `GeometrySmith` får det mindre värdet."
+      }
     }
   }
 }
