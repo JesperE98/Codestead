@@ -20,6 +20,9 @@ public sealed class OverlayHost : Grid
         Spacing = 8,
     };
 
+    /// <summary>What closes the open dialog (its onClose), for Escape and the ✕ button.</summary>
+    private Action? closeOpen;
+
     public OverlayHost(Control content)
     {
         Children.Add(content);
@@ -28,7 +31,34 @@ public sealed class OverlayHost : Grid
         dialogs.IsVisible = false;
     }
 
-    /// <summary>Shows a panel centred on a dimmed background. Escape or a click outside closes it (calls <paramref name="onClose"/>).</summary>
+    private TopLevel? listening;
+
+    /// <summary>Escape closes the open dialog wherever the focus is: the window's key presses are watched.</summary>
+    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+        listening = TopLevel.GetTopLevel(this);
+        listening?.AddHandler(KeyDownEvent, OnKeyDown, Avalonia.Interactivity.RoutingStrategies.Tunnel);
+    }
+
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnDetachedFromVisualTree(e);
+        listening?.RemoveHandler(KeyDownEvent, OnKeyDown);
+        listening = null;
+    }
+
+    private void OnKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Escape || !DialogOpen || closeOpen is not { } close) return;
+        e.Handled = true;
+        close();
+    }
+
+    /// <summary>
+    /// Shows a panel centred on a dimmed background. Escape, the ✕ in the corner or a click outside closes it (calls
+    /// <paramref name="onClose"/>, which must close the dialog: <see cref="CloseDialog"/> or something that calls it).
+    /// </summary>
     /// <param name="scroll">
     /// True: the whole panel scrolls when it is taller than the dialog. False: the panel scrolls by itself
     /// (it gets the dialog's height), so that it can keep e.g. its buttons in view.
@@ -49,6 +79,26 @@ public sealed class OverlayHost : Grid
             BoxShadow = BoxShadows.Parse("0 8 32 0 #40000000"),
             Child = scroll ? new ScrollViewer { Content = panel } : panel,
         };
+        // Every dialog can be closed, whatever its own buttons are.
+        var closeButton = new Button
+        {
+            Content = "✕",
+            FontSize = 14,
+            Padding = new Thickness(8, 2),
+            HorizontalAlignment = HorizontalAlignment.Right,
+            VerticalAlignment = VerticalAlignment.Top,
+            Margin = new Thickness(0, -12, -16, 0),
+        };
+        closeButton.Classes.Add("flat");
+        closeButton.Classes.Add("dialog-close");
+        Avalonia.Automation.AutomationProperties.SetName(closeButton, "Close");
+        closeButton.Click += (_, _) => onClose();
+        var inner = card.Child;
+        card.Child = null;
+        var withClose = new Grid();
+        withClose.Children.Add(inner!);
+        withClose.Children.Add(closeButton);
+        card.Child = withClose;
         card.Bind(Border.BackgroundProperty, card.GetResourceObservable("CsSurface"));
         card.Bind(Border.BorderBrushProperty, card.GetResourceObservable("CsBorder"));
         var backdrop = new Border { Background = new SolidColorBrush(Color.Parse("#66000000")) };
@@ -59,27 +109,21 @@ public sealed class OverlayHost : Grid
         var layer = new Grid();
         layer.Children.Add(backdrop);
         layer.Children.Add(card);
-        layer.KeyDown += (_, e) =>
-        {
-            if (e.Key == Key.Escape)
-            {
-                e.Handled = true;
-                onClose();
-            }
-        };
+        closeOpen = onClose;
         dialogs.Children.Clear();
         dialogs.Children.Add(layer);
         dialogs.IsVisible = true;
         Dispatcher.UIThread.Post(() =>
         {
-            // Focus the first focusable control in the dialog so Escape and Tab work at once.
-            var first = panel.GetLogicalDescendants().OfType<Button>().FirstOrDefault();
-            first?.Focus();
+            // Focus the first button of the dialog (else its ✕) so Tab and Enter work at once.
+            var first = panel.GetLogicalDescendants().OfType<Button>().FirstOrDefault() ?? closeButton;
+            first.Focus();
         }, DispatcherPriority.Input);
     }
 
     public void CloseDialog()
     {
+        closeOpen = null;
         dialogs.Children.Clear();
         dialogs.IsVisible = false;
         if (waiting.Count > 0) Dispatcher.UIThread.Post(ShowNextWaiting, DispatcherPriority.Background);

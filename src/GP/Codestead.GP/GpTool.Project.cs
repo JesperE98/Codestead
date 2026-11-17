@@ -52,7 +52,7 @@ public sealed partial class GpTool
             selectedTask = i;
             RenderPanel();
         };
-        panel.Picture.EnlargeRequested += c => Window.Overlay.ShowDialog(c, () => { }, ExpectedPicture.Large + 48);
+        panel.Picture.EnlargeRequested += c => Window.Overlay.ShowDialog(c, Window.Overlay.CloseDialog, ExpectedPicture.Large + 48);
     }
 
     public override Control Workbench => panel;

@@ -1,5 +1,32 @@
 [
   {
+    "version": "0.2.5",
+    "date": "2026-11-17",
+    "changes": {
+      "en": [
+        "Every window that opens in the app can be closed again – with the ✕ in its corner, Escape or a click outside. The enlarged picture of an expected result used to stay open until the app was restarted."
+      ],
+      "sv": [
+        "Varje fönster som öppnas i appen går att stänga igen – med ✕ i hörnet, Escape eller ett klick utanför. Den förstorade bilden av ett förväntat resultat låg tidigare kvar tills appen startades om."
+      ],
+      "de": [
+        "Jedes Fenster, das sich in der App öffnet, lässt sich wieder schließen – mit dem ✕ in der Ecke, Escape oder einem Klick daneben. Das vergrößerte Bild eines erwarteten Ergebnisses blieb bisher offen, bis die App neu gestartet wurde."
+      ],
+      "fr": [
+        "Chaque fenêtre qui s'ouvre dans l'application peut être refermée – avec le ✕ dans son coin, Échap ou un clic à l'extérieur. L'image agrandie d'un résultat attendu restait auparavant ouverte jusqu'au redémarrage de l'application."
+      ],
+      "es": [
+        "Cada ventana que se abre en la aplicación se puede volver a cerrar: con la ✕ de su esquina, Escape o un clic fuera. La imagen ampliada de un resultado esperado se quedaba abierta hasta reiniciar la aplicación."
+      ],
+      "zh": [
+        "应用中打开的每个窗口都可以关闭——点击角落的 ✕、按 Esc 或点击窗口外部。之前预期结果的放大图片会一直停留，直到重启应用。"
+      ],
+      "ja": [
+        "アプリで開いたウィンドウはすべて閉じられるようになりました。隅の ✕、Esc キー、または外側のクリックで閉じます。これまで期待される結果の拡大画像は、アプリを再起動するまで閉じられませんでした。"
+      ]
+    }
+  },
+  {
     "version": "0.2.4",
     "date": "2026-11-16",
     "changes": {
