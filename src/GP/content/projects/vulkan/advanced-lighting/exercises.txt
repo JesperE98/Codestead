@@ -1,0 +1,64 @@
+=== task: ex-specular-only
+--- file: shaders/advanced_lighting.frag
+--- find:
+    outColor = vec4(ambient + diffuse + specular, 1.0);
+--- replace:
+    outColor = vec4(specular, 1.0);
+
+=== task: ex-blue-light
+--- file: shaders/advanced_lighting.frag
+--- find:
+    vec3 specular = vec3(0.3) * spec; // assuming bright white light color
+--- replace:
+    vec3 specular = vec3(0.3) * spec; // assuming bright white light color
+    vec3 lightColor = vec3(0.3, 0.6, 1.0);
+    diffuse *= lightColor;
+    specular *= lightColor;
+
+=== task: ex-move-light
+--- file: main.cpp
+--- find:
+glm::vec3 lightPos(0.0f, 0.0f, 0.0f);
+--- replace:
+glm::vec3 lightPos(-2.0f, 0.0f, 0.0f);
+
+=== task: ex-two-lights
+--- file: shaders/advanced_lighting.frag
+--- find:
+    vec3 lightPos;
+} ubo;
+--- replace:
+    vec3 lightPos;
+    vec3 lightPos2;
+} ubo;
+--- file: shaders/advanced_lighting.frag
+--- find:
+    vec3 specular = vec3(0.3) * spec; // assuming bright white light color
+--- replace:
+    vec3 specular = vec3(0.3) * spec; // assuming bright white light color
+    // the second light (Blinn-Phong)
+    vec3 lightDir2 = normalize(ubo.lightPos2 - fs_in.fragPos);
+    vec3 halfwayDir2 = normalize(lightDir2 + viewDir);
+    diffuse += max(dot(lightDir2, normal), 0.0) * color;
+    specular += vec3(0.3) * pow(max(dot(normal, halfwayDir2), 0.0), 32.0);
+--- file: main.cpp
+--- find:
+glm::vec3 lightPos(0.0f, 0.0f, 0.0f);
+--- replace:
+glm::vec3 lightPos(0.0f, 0.0f, 0.0f);
+glm::vec3 lightPos2(-1.5f, 0.0f, -1.0f);
+--- file: main.cpp
+--- find:
+    glm::vec3 lightPos;
+    float pad2;
+--- replace:
+    glm::vec3 lightPos;
+    float pad2;
+    glm::vec3 lightPos2;
+    float pad3;
+--- file: main.cpp
+--- find:
+        ubo.lightPos = lightPos;
+--- replace:
+        ubo.lightPos = lightPos;
+        ubo.lightPos2 = lightPos2;
