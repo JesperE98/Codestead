@@ -1,0 +1,22 @@
+=== task: ex-half-shadow
+--- file: shaders/shadow_mapping.frag
+--- find:
+    vec3 lighting = (ambient + (1.0 - shadow) * (diffuse + specular)) * color;
+--- replace:
+    vec3 lighting = (ambient + (1.0 - 0.5 * shadow) * (diffuse + specular)) * color;
+
+=== task: ex-sun-left
+--- file: main.cpp
+--- find:
+const glm::vec3 lightDir = glm::normalize(glm::vec3(20.0f, 50, 20.0f));
+--- replace:
+const glm::vec3 lightDir = glm::normalize(glm::vec3(-20.0f, 50, 20.0f));
+
+=== task: ex-debug-layer
+--- file: main.cpp
+--- find:
+bool showQuad = false;
+int debugLayer = 2; // the third cascade (20 to 50 units from the camera)
+--- replace:
+bool showQuad = true;
+int debugLayer = 0; // the first cascade (0.1 to 10 units from the camera)

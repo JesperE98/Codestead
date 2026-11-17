@@ -1,0 +1,61 @@
+=== task: ex-slow-motion
+--- file: main.cpp
+--- find:
+        UpdateAnimation(animator, deltaTime);
+--- replace:
+        UpdateAnimation(animator, deltaTime * 0.5f);
+
+=== task: ex-freeze-pose
+--- file: main.cpp
+--- find:
+    InitAnimator(animator, &swayAnimation);
+--- replace:
+    InitAnimator(animator, &swayAnimation);
+    UpdateAnimation(animator, 1.25f); // the pose at 1.25 s, once
+--- file: main.cpp
+--- find:
+        processInput(window);
+        UpdateAnimation(animator, deltaTime);
+--- replace:
+        processInput(window);
+
+=== task: ex-still-base
+--- file: main.cpp
+--- find:
+    if (bone)
+    {
+        UpdateBone(*bone, animator.m_CurrentTime);
+--- replace:
+    if (bone && nodeName != "Base")
+    {
+        UpdateBone(*bone, animator.m_CurrentTime);
+
+=== task: ex-bone-weight
+--- file: anim_model.vs
+--- find:
+out vec2 TexCoords;
+--- replace:
+out vec2 TexCoords;
+out float UpperWeight;
+--- file: anim_model.vs
+--- find:
+    TexCoords = tex;
+--- replace:
+    TexCoords = tex;
+
+    // how much the Upper bone (id 2) moves this vertex
+    UpperWeight = 0.0;
+    for (int i = 0; i < MAX_BONE_INFLUENCE; i++)
+        if (boneIds[i] == 2)
+            UpperWeight += weights[i];
+--- file: anim_model.fs
+--- find:
+in vec2 TexCoords;
+--- replace:
+in vec2 TexCoords;
+in float UpperWeight;
+--- file: anim_model.fs
+--- find:
+    FragColor = texture(texture_diffuse1, TexCoords);
+--- replace:
+    FragColor = vec4(UpperWeight, 0.0, 0.0, 1.0);

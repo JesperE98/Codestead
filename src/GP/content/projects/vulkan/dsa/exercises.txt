@@ -1,0 +1,18 @@
+=== task: ex-one-triangle
+--- file: main.cpp
+--- find:
+        void* data;
+        vkMapMemory(device, indexBufferMemory, 0, bufferInfo.size, 0, &data);
+            memcpy(data, indices.data(), (size_t) bufferInfo.size);
+        vkUnmapMemory(device, indexBufferMemory);
+--- replace:
+        void* data;
+        vkMapMemory(device, indexBufferMemory, 0, bufferInfo.size, 0, &data);
+            memcpy(data, indices.data(), (size_t) bufferInfo.size);
+        vkUnmapMemory(device, indexBufferMemory);
+
+        // later: overwrite the second triangle in the buffer's memory - three equal indices draw nothing
+        const uint16_t noTriangle[] = { 0, 0, 0 };
+        vkMapMemory(device, indexBufferMemory, 3 * sizeof(uint16_t), sizeof(noTriangle), 0, &data);
+            memcpy(data, noTriangle, sizeof(noTriangle));
+        vkUnmapMemory(device, indexBufferMemory);

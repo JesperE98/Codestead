@@ -56,6 +56,22 @@
         "vulkan": "`vec2 texelSize = 1.0 / vec2(textureSize(shadowMap, 0));` (the `.xy` of the array's size), two `for` loops from -1 to 1 with `texture(shadowMap, vec3(projCoords.xy + vec2(x, y) * texelSize, layer)).r` and `shadow /= 9.0;`.",
         "d3d12": "`uint width, height, elements; shadowMap.GetDimensions(width, height, elements); float2 texelSize = 1.0f / float2(width, height);`, then two `for` loops from -1 to 1 with `shadowMap.Sample(shadowSampler, float3(shadowUV + float2(x, y) * texelSize, layer)).r` and `shadow /= 9.0f;`."
       }
+    },
+    "ex-half-shadow": {
+      "text": "Make the shadows softer in strength: in shadow, half of the direct light (diffuse and specular) should still get through instead of none.",
+      "hint": {
+        "opengl": "At the end of `shadow_mapping.fs` the shadow factor removes the direct light: `(1.0 - shadow)`. Scale the shadow by 0.5 in that expression – `ShadowCalculation` stays as it is.",
+        "vulkan": "At the end of `shadow_mapping.frag` the shadow factor removes the direct light: `(1.0 - shadow)`. Scale the shadow by 0.5 in that expression – `ShadowCalculation` stays as it is. Recompile the shader.",
+        "d3d12": "At the end of `PSMain` in `shadow_mapping.hlsl` the shadow factor removes the direct light: `(1.0f - shadow)`. Scale the shadow by 0.5 in that expression – `ShadowCalculation` stays as it is."
+      }
+    },
+    "ex-sun-left": {
+      "text": "Move the light to the left: the direction towards it becomes (−20, 50, 20). The shadows should now fall back and to the right of the cubes.",
+      "hint": "Only the constant `lightDir` at the top of `main.cpp` changes. Both the lighting and every cascade's light-space matrix are built from it each frame, so the shadow maps follow by themselves."
+    },
+    "ex-debug-layer": {
+      "text": "Look at the nearest cascade's shadow map: show layer 0 of the array on the screen instead of the scene. Why is it so light compared with layer 2?",
+      "hint": "The debug view is still in the program: two globals at the top of `main.cpp` switch it on and choose the layer. Layer 0 covers only the first 10 units in front of the camera: the floor fills its whole square, and all it sees lies within a few units of depth – a thin slice of its depth range, which is stretched ten times (`zMult`)."
     }
   }
 }

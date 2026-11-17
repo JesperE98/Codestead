@@ -1,0 +1,61 @@
+=== task: ex-slow-motion
+--- file: main.cpp
+--- find:
+            UpdateAnimation(animator, deltaTime);
+--- replace:
+            UpdateAnimation(animator, deltaTime * 0.5f);
+
+=== task: ex-freeze-pose
+--- file: main.cpp
+--- find:
+        InitAnimator(animator, &swayAnimation);
+--- replace:
+        InitAnimator(animator, &swayAnimation);
+        UpdateAnimation(animator, 1.25f); // the pose at 1.25 s, once
+--- file: main.cpp
+--- find:
+            processInput();
+            UpdateAnimation(animator, deltaTime);
+--- replace:
+            processInput();
+
+=== task: ex-still-base
+--- file: main.cpp
+--- find:
+    if (bone)
+    {
+        UpdateBone(*bone, animator.m_CurrentTime);
+--- replace:
+    if (bone && nodeName != "Base")
+    {
+        UpdateBone(*bone, animator.m_CurrentTime);
+
+=== task: ex-bone-weight
+--- file: shaders/anim_model.vert
+--- find:
+layout(location = 0) out vec2 TexCoords;
+--- replace:
+layout(location = 0) out vec2 TexCoords;
+layout(location = 1) out float UpperWeight;
+--- file: shaders/anim_model.vert
+--- find:
+    TexCoords = tex;
+--- replace:
+    TexCoords = tex;
+
+    // how much the Upper bone (id 2) moves this vertex
+    UpperWeight = 0.0;
+    for (int i = 0; i < MAX_BONE_INFLUENCE; i++)
+        if (boneIds[i] == 2)
+            UpperWeight += weights[i];
+--- file: shaders/anim_model.frag
+--- find:
+layout(location = 0) in vec2 TexCoords;
+--- replace:
+layout(location = 0) in vec2 TexCoords;
+layout(location = 1) in float UpperWeight;
+--- file: shaders/anim_model.frag
+--- find:
+    outColor = texture(texture_diffuse1, TexCoords);
+--- replace:
+    outColor = vec4(UpperWeight, 0.0, 0.0, 1.0);

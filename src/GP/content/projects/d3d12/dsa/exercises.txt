@@ -1,0 +1,14 @@
+=== task: ex-one-triangle
+--- file: main.cpp
+--- find:
+        memcpy(pIndexDataBegin, indices, sizeof(indices));
+        m_indexBuffer->Unmap(0, nullptr);
+--- replace:
+        memcpy(pIndexDataBegin, indices, sizeof(indices));
+        m_indexBuffer->Unmap(0, nullptr);
+
+        // later: overwrite the second triangle in the resource - three equal indices draw nothing
+        const UINT noTriangle[] = { 0, 0, 0 };
+        ThrowIfFailed(m_indexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pIndexDataBegin)));
+        memcpy(pIndexDataBegin + 3 * sizeof(UINT), noTriangle, sizeof(noTriangle));
+        m_indexBuffer->Unmap(0, nullptr);

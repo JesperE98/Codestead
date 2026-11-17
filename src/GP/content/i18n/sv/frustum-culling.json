@@ -52,6 +52,18 @@
         "vulkan": "`r = extents.x * std::abs(plane.normal.x) + extents.y * std::abs(plane.normal.y) + extents.z * std::abs(plane.normal.z)`; innanför: `-r <= getSignedDistanceToPlane(plane, center)`. I `isOnFrustum`: `right = glm::vec3(modelMatrix[0]) * extents.x`, `up = glm::vec3(modelMatrix[1]) * extents.y`, `forward = -glm::vec3(modelMatrix[2]) * extents.z`, och de nya halva storlekarna `newIi`, `newIj`, `newIk` som summor av `std::abs(glm::dot(axis, …))`.",
         "d3d12": "`r = extents.x * fabsf(plane.normal.x) + extents.y * fabsf(plane.normal.y) + extents.z * fabsf(plane.normal.z)`; innanför: `-r <= getSignedDistanceToPlane(plane, center)`. I `isOnFrustum`: `right = modelMatrix.r[0] * extents.x`, `up = modelMatrix.r[1] * extents.y`, `forward = -modelMatrix.r[2] * extents.z`, och de nya halva storlekarna `newIi`, `newIj`, `newIk` som summor av `fabsf(XMVectorGetX(XMVector3Dot(axis, …)))`."
       }
+    },
+    "ex-narrow-fov": {
+      "text": "Gallra med en smalare frustum än kamerans: ett vertikalt synfält på 30° för gallringen (projektionen behåller 45°). Vilka planeter försvinner, och hur ändras antalet i titeln?",
+      "hint": "Det är bara synfältet som skickas till `createFrustumFromCamera` som ändras – inte det som projektionsmatrisen byggs med. Planeter nära fönstrets kanter – tydligast de avlägsna högst upp – hamnar nu utanför gallringsfrustumen fast kameran skulle kunna se dem."
+    },
+    "ex-near-plane": {
+      "text": "Flytta ut gallringsfrustumens närplan till 12 (projektionen behåller 0,1). Vad händer med planeterna närmast kameran?",
+      "hint": "Närgränsen är näst sista argumentet till `createFrustumFromCamera`. En planet vars omslutande sfär ligger helt mellan kameran och närplanet gallras bort, hur stor den än är på skärmen."
+    },
+    "ex-bigger-grid": {
+      "text": "Gör rutnätet 12 × 12 planeter i stället för 10 × 10, fortfarande centrerat kring roten och med 5 enheter mellan planeterna. Hur många av de 145 entiteterna ritas nu?",
+      "hint": "Båda looparna går till 12, och förskjutningen som centrerar rutnätet växer från 22,5 till 27,5 (hälften av 11 mellanrum på 5). Totalen i titeln följer med av sig själv: varje besökt entitet räknas."
     }
   }
 }

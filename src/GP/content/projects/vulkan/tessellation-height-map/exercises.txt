@@ -1,0 +1,22 @@
+=== task: ex-flatter
+--- file: main.cpp
+--- find:
+        float yScale = 64.0f / 256.0f, yShift = 16.0f; // apply a scale and a shift to the height data
+--- replace:
+        float yScale = 32.0f / 256.0f, yShift = 16.0f; // apply a scale and a shift to the height data
+
+=== task: ex-water
+--- file: shaders/cpuheight.frag
+--- find:
+    outColor = vec4(h, h, h, 1.0);
+--- replace:
+    outColor = vec4(h, h, h, 1.0);
+    if (Height < -6.0)
+        outColor = vec4(0.1, 0.3, 0.6, 1.0); // water below height -6
+
+=== task: ex-back-half
+--- file: main.cpp
+--- find:
+        for (int strip = 0; strip < numStrips; strip++) {
+--- replace:
+        for (int strip = 0; strip < numStrips / 2; strip++) {

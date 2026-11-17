@@ -44,6 +44,30 @@
         "vulkan": "`float currentFrame = static_cast<float>(glfwGetTime()); setLocalRotation(ourEntity.transform, glm::vec3(0.0f, 20.0f * currentFrame, 0.0f)); updateSelfAndChild(ourEntity, glm::mat4(1.0f));` – bara roten är markerad, så uppdateringen räknar om den och, genom den, alla dess barn.",
         "d3d12": "`static auto startTime = std::chrono::high_resolution_clock::now(); float time = std::chrono::duration<float, std::chrono::seconds::period>(currentFrame - startTime).count();` sedan `setLocalRotation(m_ourEntity.transform, XMFLOAT3(0.0f, 20.0f * time, 0.0f)); updateSelfAndChild(m_ourEntity, XMMatrixIdentity());`."
       }
+    },
+    "ex-reverse": {
+      "text": "Vrid scengrafen åt andra hållet: −20° per sekund. Följer alla barnen med roten utan att de själva ändras?",
+      "hint": {
+        "opengl": "Det är bara rotens rotation som sätts från tiden (`setLocalRotation` i renderloopen) – byt tecken på den. Barnen får sina nya matriser av `updateSelfAndChild`.",
+        "vulkan": "Det är bara rotens rotation som sätts från tiden (`setLocalRotation` innan bildrutan ritas) – byt tecken på den. Barnen får sina nya matriser av `updateSelfAndChild`.",
+        "d3d12": "Det är bara rotens rotation som sätts från tiden (`setLocalRotation` i `OnUpdate`) – byt tecken på den. Barnen får sina nya matriser av `updateSelfAndChild`."
+      }
+    },
+    "ex-child-scale": {
+      "text": "Gör varje barn 0,8 gånger så stort som sin förälder i stället för 0,6. Titta också på avstånden: varför hamnar planeterna längre ifrån varandra?",
+      "hint": "En enda konstant, `scale`, där kedjan byggs. Ett barns lokala position (3.5, 0, 0) multipliceras med förälderns hela modellmatris – förälderns skala också."
+    },
+    "ex-moon": {
+      "text": "Ge rotplaneten en måne: ett andra barn till roten (bredvid kedjan), 2,5 ovanför den och 0,3 gånger så stort.",
+      "hint": {
+        "opengl": "När kedjan är byggd: `addChild(ourEntity, ourModel)`, sätt sedan position och skala för `ourEntity.children.back()` – och uppdatera grafen igen före loopen. `drawSelfAndChild` ritar alla barn, så månen behöver inget mer.",
+        "vulkan": "När kedjan är byggd: `addChild(ourEntity, ourModel)`, sätt sedan position och skala för `ourEntity.children.back()` – och uppdatera grafen igen. `drawSelfAndChild` spelar in alla barn, så månen behöver inget mer.",
+        "d3d12": "När kedjan är byggd: `addChild(m_ourEntity, m_model)`, sätt sedan position och skala för `m_ourEntity.children.back()` – och uppdatera grafen igen. `drawSelfAndChild` spelar in alla barn, så månen behöver inget mer."
+      }
+    },
+    "ex-spiral": {
+      "text": "Luta varje barn i kedjan 30° kring sin z-axel, relativt sin förälder. Kedjan ska böja sig uppåt, allt brantare.",
+      "hint": "Ett `setLocalRotation` till i loopen som bygger kedjan, (0, 0, 30) grader. Eftersom varje rotation läggs ovanpå förälderns summeras lutningarna längs kedjan: det tionde barnet är vridet 300°."
     }
   }
 }

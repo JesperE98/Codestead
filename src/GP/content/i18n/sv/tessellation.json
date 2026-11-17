@@ -92,6 +92,30 @@
       "hint": {
         "d3d12": "Överst i `LoadAssets`: `snprintf(text, sizeof(text), \"Max available tess level: %d\\n\", D3D12_TESSELLATOR_MAX_TESSELLATION_FACTOR); OutputDebugStringA(text);`."
       }
+    },
+    "ex-solid": {
+      "text": "Stäng av trådmodellen och titta på den fyllda terrängen. Kan du fortfarande se var patcharna är finare och var de är grövre tessellerade?",
+      "hint": {
+        "opengl": "Trådmodellen är ett enda anrop före renderloopen: `glPolygonMode` – `GL_FILL` är standard.",
+        "vulkan": "Trådmodellen är rasteriserarens `polygonMode` i pipelinen – `VK_POLYGON_MODE_FILL` är det vanliga.",
+        "d3d12": "Trådmodellen är rasteriseringstillståndets `FillMode` i pipeline state – `D3D12_FILL_MODE_SOLID` är det vanliga."
+      }
+    },
+    "ex-max-level": {
+      "text": "Låt patcharna nära kameran tesselleras dubbelt så fint: högsta nivån 16 i stället för 8. Var blir trådmodellen tätare – och var förblir den likadan?",
+      "hint": {
+        "opengl": "En konstant i tessellation control-shadern (`gpuheight.tcs`). De avlägsna patcharna får fortfarande `MIN_TESS_LEVEL`.",
+        "vulkan": "En konstant i tessellation control-shadern (`gpuheight.tesc`) – kompilera om den. De avlägsna patcharna får fortfarande `MIN_TESS_LEVEL`.",
+        "d3d12": "En konstant i hull-shaderns patchkonstantfunktion (`gpuheight.hlsl`). De avlägsna patcharna får fortfarande `MIN_TESS_LEVEL`."
+      }
+    },
+    "ex-taller": {
+      "text": "Gör bergen dubbelt så höga genom att flytta de genererade vertexarna dubbelt så långt längs normalen – men behåll färgerna som de är.",
+      "hint": {
+        "opengl": "I tessellation evaluation-shadern (`gpuheight.tes`) används höjden två gånger: till färgen (`Height`, som skickas vidare) och till positionen (`normal * Height`). Dubbla bara den andra.",
+        "vulkan": "I tessellation evaluation-shadern (`gpuheight.tese`) används höjden två gånger: till färgen (`Height`, som skickas vidare) och till positionen (`normal * Height`). Dubbla bara den andra, och kompilera om.",
+        "d3d12": "I domain-shadern (`gpuheight.hlsl`) används höjden två gånger: till färgen (`output.height`) och till positionen (`normal * output.height`). Dubbla bara den andra."
+      }
     }
   }
 }

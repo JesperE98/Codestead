@@ -56,6 +56,22 @@
         "vulkan": "`vec2 texelSize = 1.0 / vec2(textureSize(shadowMap, 0));` (`.xy` av arrayens storlek), två `for`-loopar från -1 till 1 med `texture(shadowMap, vec3(projCoords.xy + vec2(x, y) * texelSize, layer)).r` och `shadow /= 9.0;`.",
         "d3d12": "`uint width, height, elements; shadowMap.GetDimensions(width, height, elements); float2 texelSize = 1.0f / float2(width, height);`, sedan två `for`-loopar från -1 till 1 med `shadowMap.Sample(shadowSampler, float3(shadowUV + float2(x, y) * texelSize, layer)).r` och `shadow /= 9.0f;`."
       }
+    },
+    "ex-half-shadow": {
+      "text": "Gör skuggorna mindre kompakta: i skugga ska hälften av det direkta ljuset (diffust och spekulärt) fortfarande komma fram i stället för inget alls.",
+      "hint": {
+        "opengl": "I slutet av `shadow_mapping.fs` tar skuggfaktorn bort det direkta ljuset: `(1.0 - shadow)`. Skala skuggan med 0,5 i det uttrycket – `ShadowCalculation` får vara som den är.",
+        "vulkan": "I slutet av `shadow_mapping.frag` tar skuggfaktorn bort det direkta ljuset: `(1.0 - shadow)`. Skala skuggan med 0,5 i det uttrycket – `ShadowCalculation` får vara som den är. Kompilera om shadern.",
+        "d3d12": "I slutet av `PSMain` i `shadow_mapping.hlsl` tar skuggfaktorn bort det direkta ljuset: `(1.0f - shadow)`. Skala skuggan med 0,5 i det uttrycket – `ShadowCalculation` får vara som den är."
+      }
+    },
+    "ex-sun-left": {
+      "text": "Flytta ljuset åt vänster: riktningen mot det blir (−20, 50, 20). Nu ska skuggorna falla bakåt och åt höger om kuberna.",
+      "hint": "Det är bara konstanten `lightDir` högst upp i `main.cpp` som ändras. Både belysningen och varje kaskads ljusrumsmatris byggs av den varje bildruta, så skuggkartorna följer med av sig själva."
+    },
+    "ex-debug-layer": {
+      "text": "Titta på den närmaste kaskadens skuggkarta: visa lager 0 i arrayen på skärmen i stället för scenen. Varför är det så ljust jämfört med lager 2?",
+      "hint": "Felsökningsvyn finns kvar i programmet: två globala variabler högst upp i `main.cpp` slår på den och väljer lager. Lager 0 täcker bara de första 10 enheterna framför kameran: golvet fyller hela kvadraten, och allt den ser ligger inom några få enheters djup – en tunn skiva av dess djupintervall, som är utsträckt tio gånger (`zMult`)."
     }
   }
 }

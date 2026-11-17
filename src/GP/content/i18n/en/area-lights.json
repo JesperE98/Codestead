@@ -44,6 +44,22 @@
         "vulkan": "Shader: `Light areaLights[32]; int numAreaLights;` in the block and `for (int i = 0; i < ubo.numAreaLights; i++) { … result += ubo.areaLights[i].color * ubo.areaLights[i].intensity * (specular + mDiffuse * diffuse); }` (`uv`, `t1`, `t2`, `Minv` stay outside the loop). C++: `struct AreaLight`, `const int NUM_AREA_LIGHTS = 8;`, `AreaLight areaLights[NUM_AREA_LIGHTS] = { { glm::vec3(0.0f), glm::radians(0.0f), glm::vec3(1.0f, 0.55f, 0.25f) }, … };`; in `updateUniformBuffer()` `ubo.areaLights[i].points[k] = model * glm::vec4(vertices[6 / 7 / 10 / 11].pos, 1.0f);`, colour, intensity, twoSided, and `ubo.numAreaLights = NUM_AREA_LIGHTS;`; in `recordCommandBuffer()` a loop with `constants.model = model; constants.lightColor = areaLights[i].color;` and `vkCmdDraw(commandBuffer, 6, 1, 6, 0)`; the camera at (-0.224556, 10.4038, -18.9259) with `cameraFront = (0.00865, -0.56356, 0.82605)` (yaw 89.3999, pitch -34.3001).",
         "d3d12": "C++: `struct AreaLight { XMFLOAT3 offset; float yRotation; XMFLOAT3 color; float intensity = 2.0f; bool twoSided = true; };`, `const int NUM_AREA_LIGHTS = 8;` and the table with `XMConvertToRadians(45.0f * i)`; `XMMATRIX model = XMMatrixRotationY(areaLights[i].yRotation) * XMMatrixTranslation(…offset…);`, `XMStoreFloat4(&constantBufferData.areaLights[i].points[0], XMVector3Transform(XMLoadFloat3(&areaLightVertices[0].position), model));` … (vertices 0, 1, 4, 5); the cbuffer gets `int numAreaLights;` after `viewPosition` and `Light areaLights[32];` (C++ and HLSL). HLSL: `for (int i = 0; i < numAreaLights; i++) { … result += areaLights[i].color * areaLights[i].intensity * (specular + mDiffuse * diffuse); }` (`uv`, `t1`, `t2`, `Minv` stay outside the loop). The camera: (-0.224556, 10.4038, -18.9259), front (0.00865, -0.56356, 0.82605), yaw 89.3999, pitch -34.3001."
       }
+    },
+    "ex-intensity": {
+      "text": "Double the intensity of every light: 4.0 instead of 2.0. Why do the rectangles themselves not get any brighter?",
+      "hint": "The intensity is a default value in the `AreaLight` struct, so one change covers all eight lights. It only scales the light the floor's shader computes – the rectangles are drawn with their plain colour."
+    },
+    "ex-roughness": {
+      "text": "Make the floor much smoother: a roughness of 0.15 instead of 0.5. What happens to the reflections of the lights on the far side of the floor?",
+      "hint": "One constant, `ROUGHNESS`, sent to the shader as the fourth component of `material.albedoRoughness`. It picks the column of the LTC tables: a smaller roughness gives a narrower lobe, so the reflections get sharper and look more like the rectangles."
+    },
+    "ex-red-light": {
+      "text": "Turn the first light (the one turned 0°, at the right) pure red, (1, 0, 0). Both its rectangle and its light on the floor should change.",
+      "hint": "The colour is in the `areaLights` table: the same value is sent to the floor's shader and used to draw the rectangle, so one change is enough."
+    },
+    "ex-one-sided": {
+      "text": "Make the lights one-sided: each one should only shine to the front, towards the middle of the ring. What happens to the floor outside the ring?",
+      "hint": "`twoSided` is a default value in the `AreaLight` struct. With it off, the shader drops the light when the polygon, seen from the point being lit, faces away – i.e. for every point behind the rectangle."
     }
   }
 }
