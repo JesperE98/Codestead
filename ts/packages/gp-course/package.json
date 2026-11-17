@@ -1,0 +1,9 @@
+{
+  "name": "@codestead/gp-course",
+  "private": true,
+  "type": "module",
+  "description": "Codestead GP's course: tasks, exercises, checks, Check my code (port of Codestead.GP.Course).",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}
