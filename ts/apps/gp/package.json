@@ -1,0 +1,6 @@
+{
+  "name": "@codestead/app-gp",
+  "private": true,
+  "type": "module",
+  "description": "Codestead GP – the Electron app (port of Codestead.GP)."
+}

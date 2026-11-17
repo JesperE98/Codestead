@@ -176,12 +176,12 @@ export const NetRegex = {
   d: String.raw`\p{Nd}`,
 };
 
-/** char.IsWhiteSpace in .NET (Unicode White_Space, which JavaScript's \s nearly matches; ﻿ is not white space in .NET). */
+/** char.IsWhiteSpace in .NET (Unicode White_Space): JavaScript's \s plus U+0085 (NEL), minus U+FEFF (the byte order mark). */
 export function isWhiteSpace(c: string): boolean {
-  return c !== "﻿" && /^\s$/.test(c);
+  return c === "\u0085" || (c !== "\uFEFF" && /^\s$/.test(c));
 }
 
-/** s.Trim() in .NET: like trim(), but the byte order mark is kept. */
+/** s.Trim() in .NET: like trim(), but the byte order mark is kept and U+0085 (NEL) is trimmed. */
 export function netTrim(s: string): string {
-  return s.replace(/^[^\S﻿]+|[^\S﻿]+$/g, "");
+  return s.replace(/^(?:[^\S\uFEFF]|\u0085)+|(?:[^\S\uFEFF]|\u0085)+$/g, "");
 }
