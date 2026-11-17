@@ -36,6 +36,26 @@
         "vulkan": "`glm::vec2 playerPos = glm::vec2(game.Width / 2.0f - PLAYER_SIZE.x / 2.0f, game.Height - PLAYER_SIZE.y);`, `Player = MakeGameObject(playerPos, PLAYER_SIZE, GetTexture(\"paddle\").DescriptorSet);`. `float velocity = PLAYER_VELOCITY * dt;` och `if (game.Keys[GLFW_KEY_A]) { if (Player.Position.x >= 0.0f) Player.Position.x -= velocity; }`, likadant för D med `game.Width - Player.Size.x`.",
         "d3d12": "`XMFLOAT2 playerPos = XMFLOAT2(game.Width / 2.0f - PLAYER_SIZE.x / 2.0f, game.Height - PLAYER_SIZE.y);`, `Player = MakeGameObject(playerPos, PLAYER_SIZE, GetTexture(\"paddle\").ID);`. `float velocity = PLAYER_VELOCITY * dt;` och `if (game.Keys['A']) { if (Player.Position.x >= 0.0f) Player.Position.x -= velocity; }`, likadant för 'D' med `game.Width - Player.Size.x`."
       }
+    },
+    "ex-start-level": {
+      "text": "Starta spelet på nivå två i stället för nivå ett.",
+      "hint": "Nivåerna läggs in i `game.Levels` i tur och ordning, och `game.Level` är indexet för den som ritas – det räknas från 0."
+    },
+    "ex-brick-colour": {
+      "text": "Gör de blå tegelstenarna (typ 2 i nivåfilerna) lila: (0.6, 0.2, 0.8).",
+      "hint": "`InitLevel` gör om varje siffra i nivåfilen till en färg; tegeltexturen är densamma för alla – bara färgen den multipliceras med skiljer sig."
+    },
+    "ex-stone-row": {
+      "text": "Ändra nivå ett så att den översta raden är solida stenar från vägg till vägg.",
+      "hint": "Ändra i `levels/one.lvl`, inte i koden: varje siffra är en sten, 1 betyder solid. Första raden i filen är den översta."
+    },
+    "ex-wide-paddle": {
+      "text": "Ge spelaren ett bredare racket: 150 pixlar i stället för 100, fortfarande mitt i fönstrets nederkant.",
+      "hint": "En enda konstant bestämmer storleken; startpositionen räknas ut från den, så racketet hamnar i mitten av sig självt."
+    },
+    "ex-flatter": {
+      "text": "Tryck ihop nivå ett så att den fyller den översta tredjedelen av fönstret i stället för den övre halvan.",
+      "hint": "`LoadLevel` får ytan som stenarna delar på: `game.Height / 3` i stället för `/ 2` för nivå ett. Antalet rader är detsamma, så varje sten blir lägre."
     }
   }
 }

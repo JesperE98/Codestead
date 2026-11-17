@@ -38,6 +38,15 @@ public static partial class TaskChecks
     /// <summary>Orange (1, 0.5, 0).</summary>
     private static bool IpExOrange(double[] p) => p[0] > 0.9 && p[1] > 0.4 && p[1] < 0.6 && p[2] < 0.1;
 
+    /// <summary>A purple brick (0.6, 0.2, 0.8 × the brick texture).</summary>
+    private static bool IpExPurple(double[] p) => p[0] > 0.35 && p[2] > 0.5 && p[1] < 0.25 && p[2] > p[0];
+
+    /// <summary>A green brick (0, 0.7, 0 × the brick texture).</summary>
+    private static bool IpExGreenBrick(double[] p) => p[1] > 0.4 && p[0] < 0.1 && p[2] < 0.1;
+
+    /// <summary>The paddle's brass ends (214, 170, 72).</summary>
+    private static bool IpExBrass(double[] p) => p[0] > 0.7 && p[1] > 0.55 && p[1] < 0.78 && p[2] < 0.4;
+
     private static Dictionary<string, Dictionary<string, TaskCheck>> ExercisesInPractice => new()
     {
         ["debugging"] = new()
@@ -62,6 +71,45 @@ public static partial class TaskChecks
             ["ex-quads"] = c => c.Drew && IpExShareIn(c, 1.0, 20, 520, 470, 580, TextGreen) > 0.28 && At(c, 706, 16, TextBlue),
             // A black copy behind line 1, a little to the lower right: black pixels next to the green letters.
             ["ex-shadow"] = c => c.Drew && c.AnyDrawnPixel(Black) && At(c, 40, 541, TextGreen) && At(c, 92, 561, TextGreen) && At(c, 706, 16, TextBlue),
+        },
+        ["rendering-sprites"] = new()
+        {
+            // White instead of green: the ball's own pale glass colours.
+            ["ex-own-colours"] = c => c.Drew && At(c, 350, 400, GlassBall) && At(c, 400, 300, GlassBall) && At(c, 100, 100, Black),
+            // 200 × 200 in the middle of the window: a round ball around (400, 300), nothing where the ellipse was.
+            ["ex-round"] = c => c.Drew && At(c, 400, 300, BallGreen) && At(c, 330, 300, BallGreen) && At(c, 400, 215, BallGreen) && At(c, 400, 190, Black)
+                && At(c, 350, 400, Black) && At(c, 200, 400, Black),
+            // A second, small red ball in the top right corner; the green one still there.
+            ["ex-second"] = c => c.Drew && At(c, 700, 100, p => p[0] > 0.6 && p[1] < 0.1 && p[2] < 0.1) && At(c, 350, 400, BallGreen) && At(c, 100, 100, Black),
+            // 90° per second: lying down at 1 s (90°), upright again at 2 s (180°).
+            ["ex-spin"] = c => c.Drew && At(c, 1.0, 180, 400, BallGreen) && At(c, 1.0, 520, 400, BallGreen) && At(c, 1.0, 350, 215, Black)
+                && At(c, 2.0, 350, 225, BallGreen) && At(c, 2.0, 350, 575, BallGreen) && At(c, 2.0, 180, 400, Black),
+        },
+        ["levels"] = new()
+        {
+            // Level two: stone pillars at the sides, its blue top row, the hollow middle.
+            ["ex-start-level"] = c => c.Drew && At(c, 13, 29, Stone) && At(c, 396, 29, BlueBrick) && At(c, 396, 104, NightSky),
+            // The blue bricks purple; the other rows unchanged.
+            ["ex-brick-colour"] = c => c.Drew && At(c, 396, 141, IpExPurple) && At(c, 13, 141, IpExPurple) && At(c, 396, 29, OrangeBrick) && At(c, 396, 104, IpExGreenBrick),
+            // The top row of level one solid stones; the rows below unchanged.
+            ["ex-stone-row"] = c => c.Drew && At(c, 396, 29, Stone) && At(c, 13, 29, Stone) && At(c, 396, 104, IpExGreenBrick) && At(c, 396, 141, BlueBrick),
+            // A 150-pixel paddle, still centred: its brass ends at x ≈ 333 and 467 (the 100-pixel one ends at 350 and 450).
+            ["ex-wide-paddle"] = c => c.Drew && At(c, 333, 588, IpExBrass) && At(c, 470, 588, p => !DarkGround(p)) && At(c, 396, 29, OrangeBrick),
+            // Level one in the top 200 pixels: rows of 25 pixels – the second row (yellow) at y = 29, the blue row at 90,
+            // the stones at 140, the sky below 150.
+            ["ex-flatter"] = c => c.Drew && At(c, 396, 29, p => p[0] > 0.55 && Math.Abs(p[0] - p[1]) < 0.05 && p[2] < 0.45) && At(c, 396, 90, BlueBrick)
+                && At(c, 13, 140, Stone) && At(c, 396, 104, p => p[2] > p[0] + 0.05 && p[0] < 0.2) && At(c, 13, 209, p => !Stone(p)),
+        },
+        ["ball"] = new()
+        {
+            // Twice the speed: at 1.0 s (30 frames after the launch) the ball is at (500, 205) instead of (450, 385).
+            ["ex-faster"] = c => c.Drew && At(c, 1.0, 500, 205, GlassBall) && At(c, 1.0, 450, 385, p => !GlassBall(p)),
+            // Radius 25, still sitting on the paddle (reaching up to y = 530) and launched from there.
+            ["ex-big-ball"] = c => c.Drew && At(c, 0.4, 400, 537, GlassBall) && At(c, 0.4, 400, 550, GlassBall) && At(c, 1.0, 450, 360, GlassBall) && At(c, 1.0, 450, 370, GlassBall),
+            // Launched to the upper left: at 1.0 s at (350, 385), the mirror image of the usual (450, 385).
+            ["ex-launch-left"] = c => c.Drew && At(c, 1.0, 348, 385, GlassBall) && At(c, 1.0, 450, 385, p => !GlassBall(p)),
+            // The bottom edge bounces too: at 4.5 s the ball is on its way up again at the right edge, not gone.
+            ["ex-bottom-bounce"] = c => c.Drew && At(c, 4.5, 772, 317, GlassBall),
         },
     };
 }

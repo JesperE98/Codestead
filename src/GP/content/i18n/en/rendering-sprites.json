@@ -48,6 +48,22 @@
         "vulkan": "`glm::translate(model, glm::vec3(0.5f * size.x, 0.5f * size.y, 0.0f))`, `glm::rotate(model, glm::radians(rotate), glm::vec3(0.0f, 0.0f, 1.0f))`, `glm::translate(model, glm::vec3(-0.5f * size.x, -0.5f * size.y, 0.0f))`.",
         "d3d12": "`model = model * XMMatrixTranslation(-0.5f * size.x, -0.5f * size.y, 0.0f);`, `model = model * XMMatrixRotationZ(XMConvertToRadians(rotate));`, `model = model * XMMatrixTranslation(0.5f * size.x, 0.5f * size.y, 0.0f);` – learnopengl's three lines in DirectXMath's order."
       }
+    },
+    "ex-own-colours": {
+      "text": "Draw the ball in its own colours: give it the sprite colour that leaves the texture as it is.",
+      "hint": "The shader multiplies the texture by the sprite colour, so (1, 1, 1) changes nothing."
+    },
+    "ex-round": {
+      "text": "Make the ball round and put it in the middle of the window: 200 × 200 pixels, its centre at (400, 300).",
+      "hint": "The position is the sprite's top-left corner, not its centre: 400 − 100 and 300 − 100. Can you still see the 45° rotation on a round ball?"
+    },
+    "ex-second": {
+      "text": "Draw a second ball next to the green one: 100 × 100 pixels, red (1, 0, 0), not rotated, its top-left corner at (650, 50).",
+      "hint": "One more `DrawSprite` call in `Render`, with the same texture – every call draws the same quad with its own model matrix and colour."
+    },
+    "ex-spin": {
+      "text": "Make the ball spin: starting at 0°, it turns 90 degrees every second.",
+      "hint": "Keep the angle in the game's state: a field `Rotation` in `Game` that `Update` increases by `90.0f * dt`, and `Render` passes it to `DrawSprite`. Use `dt`, not a count of frames, so the speed does not depend on the frame rate."
     }
   }
 }
