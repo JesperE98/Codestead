@@ -1,4 +1,29 @@
 {
   "title": "PBR-teori",
-  "tasks": {}
+  "tasks": {
+    "ex-parameters": {
+      "text": "Ta reda på hur de 7 × 7 sfärerna är ordnade: färga varje sfär efter dess materialparametrar – metallic som rött, roughness som grönt. Åt vilket håll växer varje parameter?",
+      "hint": {
+        "opengl": "Skriv `vec3(metallic, roughness, 0.0)` till `FragColor` i slutet av `pbr.fs`. `main.cpp` sätter `metallic` per rad och `roughness` per kolumn.",
+        "vulkan": "Skriv `vec3(metallic, roughness, 0.0)` till `outColor` i slutet av `pbr.frag`. `main.cpp` pushar `metallic` per rad och `roughness` per kolumn.",
+        "d3d12": "Returnera `float3(metallic, roughness, 0.0f)` i slutet av `PSMain`. `main.cpp` sätter `metallic` per rad och `roughness` per kolumn."
+      }
+    },
+    "ex-n-dot-v": {
+      "text": "Visa cosinus för vinkeln mellan normalen och blickriktningen, max(N · V, 0), i gråskala: vitt där en sfär vänder sig mot kameran, svart vid kanten. Det är den vinkeln som Fresnelekvationen tittar på.",
+      "hint": {
+        "opengl": "`N` och `V` räknas redan ut överst i `main`; skriv skalärprodukten som en grå färg i stället för `color`.",
+        "vulkan": "`N` och `V` räknas redan ut överst i `main`; skriv skalärprodukten som en grå färg i stället för `color`.",
+        "d3d12": "`N` och `V` räknas redan ut överst i `PSMain`; returnera skalärprodukten som en grå färg i stället för `color`."
+      }
+    },
+    "ex-fresnel": {
+      "text": "Skriv Schlicks approximation av Fresnel, F = F0 + (1 − F0)(1 − cos θ)⁵, och visa F för blickriktningen (cos θ = N · V) på varje sfär. F0 är 0,04 för en dielektrisk yta och albedot för en metall (blanda med `metallic`). Vad händer vid kanterna – för båda sorternas material?",
+      "hint": {
+        "opengl": "En funktion `vec3 fresnelSchlick(float cosTheta, vec3 F0)` vid dess TODO (begränsa `1.0 - cosTheta` till 0…1 före `pow`); i `main` `vec3 F0 = mix(vec3(0.04), albedo, metallic);` och skriv ut `fresnelSchlick(max(dot(N, V), 0.0), F0)`.",
+        "vulkan": "En funktion `vec3 fresnelSchlick(float cosTheta, vec3 F0)` vid dess TODO (begränsa `1.0 - cosTheta` till 0…1 före `pow`); i `main` `vec3 F0 = mix(vec3(0.04), albedo, metallic);` och skriv ut `fresnelSchlick(max(dot(N, V), 0.0), F0)`.",
+        "d3d12": "En funktion `float3 fresnelSchlick(float cosTheta, float3 F0)` vid dess TODO (begränsa `1.0f - cosTheta` till 0…1 före `pow`); i `PSMain` `float3 F0 = lerp(float3(0.04f, 0.04f, 0.04f), albedo, metallic);` och returnera `fresnelSchlick(max(dot(N, V), 0.0f), F0)`."
+      }
+    }
+  }
 }

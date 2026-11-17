@@ -1,0 +1,31 @@
+=== task: ex-parameters
+--- file: pbr.hlsl
+--- find:
+    return float4(color, 1.0f);
+--- replace:
+    return float4(float3(metallic, roughness, 0.0f), 1.0f);
+
+=== task: ex-n-dot-v
+--- file: pbr.hlsl
+--- find:
+    return float4(color, 1.0f);
+--- replace:
+    float NdotV = max(dot(N, V), 0.0f);
+    return float4(float3(NdotV, NdotV, NdotV), 1.0f);
+
+=== task: ex-fresnel
+--- file: pbr.hlsl
+--- find:
+// TODO: fresnelSchlick(cosTheta, F0): the Fresnel equation
+--- replace:
+// TODO: fresnelSchlick(cosTheta, F0): the Fresnel equation
+float3 fresnelSchlick(float cosTheta, float3 F0)
+{
+    return F0 + (1.0f - F0) * pow(clamp(1.0f - cosTheta, 0.0f, 1.0f), 5.0f);
+}
+--- file: pbr.hlsl
+--- find:
+    return float4(color, 1.0f);
+--- replace:
+    float3 F0 = lerp(float3(0.04f, 0.04f, 0.04f), albedo, metallic);
+    return float4(fresnelSchlick(max(dot(N, V), 0.0f), F0), 1.0f);

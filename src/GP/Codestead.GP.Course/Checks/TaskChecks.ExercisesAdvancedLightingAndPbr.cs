@@ -112,5 +112,14 @@ public static partial class TaskChecks
             // AO to the power 3: the ring in front of the planet and the floor under it much darker.
             ["ex-ao-power"] = c => At(c, 400, 190, p => p[0] < 0.18) && At(c, 400, 376, p => p[0] < 0.25) && At(c, 520, 40, p => p[2] > 0.7),
         },
+        ["pbr-theory"] = new()
+        {
+            // metallic as red (rows, growing upwards), roughness as green (columns, growing to the right).
+            ["ex-parameters"] = c => At(c, 153, 53, p => p[0] > 0.8 && p[1] < 0.1 && p[2] < 0.02) && At(c, 647, 547, p => p[0] < 0.02 && p[1] > 0.8) && At(c, 400, 300, p => Math.Abs(p[0] - 0.43) < 0.03 && Math.Abs(p[1] - 0.43) < 0.03),
+            // N · V as grey: white in a sphere's middle, black at its rim.
+            ["ex-n-dot-v"] = c => At(c, 400, 300, p => Grey(p) && p[0] > 0.95) && At(c, 425, 300, p => Grey(p) && p[0] > 0.4 && p[0] < 0.65) && At(c, 430, 300, p => Grey(p) && p[0] < 0.1),
+            // Fresnel: a dielectric 0.04 where it faces the camera, a metal its red albedo; every rim near white.
+            ["ex-fresnel"] = c => c.PixelIs(153 / 800.0, 547 / 600.0, 0.04, 0.04, 0.04) && At(c, 153, 53, p => p[0] > 0.4 && p[1] < 0.02) && At(c, 430, 300, p => p[0] > 0.7 && p[1] > 0.7),
+        },
     };
 }
