@@ -1,0 +1,35 @@
+=== task: ex-greyscale
+--- file: shaders/post_processing.frag
+--- find:
+        color = vec4(texture(scene, TexCoords).rgb, 1.0);
+--- replace:
+        vec3 rgb = texture(scene, TexCoords).rgb;
+        float grey = dot(rgb, vec3(0.2126, 0.7152, 0.0722));
+        color = vec4(vec3(grey), 1.0);
+
+=== task: ex-long-shake
+--- file: main.cpp
+--- find:
+                    ShakeTime = 0.05f;
+--- replace:
+                    ShakeTime = 0.5f;
+
+=== task: ex-flip-only
+--- file: main.cpp
+--- find:
+    bool             Confuse = false, Chaos = false, Shake = false;
+--- replace:
+    bool             Confuse = true, Chaos = false, Shake = false;
+--- file: shaders/post_processing.frag
+--- find:
+        color = vec4(1.0 - texture(scene, TexCoords).rgb, 1.0);
+--- replace:
+        color = vec4(texture(scene, TexCoords).rgb, 1.0);
+
+=== task: ex-vignette
+--- file: shaders/post_processing.frag
+--- find:
+        color = vec4(texture(scene, TexCoords).rgb, 1.0);
+--- replace:
+        color = vec4(texture(scene, TexCoords).rgb, 1.0);
+        color.rgb *= 1.0 - length(TexCoords - vec2(0.5));

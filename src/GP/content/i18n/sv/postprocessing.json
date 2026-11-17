@@ -48,6 +48,34 @@
     "shake": {
       "text": "Ta bort provraden igen; skaka i stället skärmen när bollen träffar ett solitt block: sätt `ShakeTime` till 0,05 sekunder och `Effects.Shake`, och räkna i `Update` ned ShakeTime och stoppa skakningen när den är slut.",
       "hint": "I DoCollisions: `if (!box.IsSolid) box.Destroyed = true; else { ShakeTime = 0.05f; Effects.Shake = true; }`. I Update efter partiklarna: `if (ShakeTime > 0.0f) { ShakeTime -= dt; if (ShakeTime <= 0.0f) Effects.Shake = false; }`. `float ShakeTime = 0.0f;` bland de globala variablerna."
+    },
+    "ex-greyscale": {
+      "text": "Lägg till ett gråskaleläge: när ingen effekt är på visas spelet i gråtoner, med luminansen 0,2126 r + 0,7152 g + 0,0722 b.",
+      "hint": {
+        "opengl": "I `post_processing.fs`, den sista `else`-grenen (ingen effekt): sampla scenen, ta `dot` av dess färg och (0.2126, 0.7152, 0.0722) och skriv ut värdet som rött, grönt och blått.",
+        "vulkan": "I `shaders/post_processing.frag`, den sista `else`-grenen (ingen effekt): sampla scenen, ta `dot` av dess färg och (0.2126, 0.7152, 0.0722) och skriv ut värdet som rött, grönt och blått. Kompilera om med `glslc`.",
+        "d3d12": "I pixelshadern i `post_processing.hlsl`, den sista `else`-grenen (ingen effekt): sampla scenen, ta `dot` av dess färg och (0.2126, 0.7152, 0.0722) och returnera värdet som rött, grönt och blått."
+      }
+    },
+    "ex-long-shake": {
+      "text": "Låt skärmskakningen när bollen träffar en solid sten pågå en halv sekund i stället för 0,05 sekunder.",
+      "hint": "`DoCollisions` startar skakningen genom att sätta `ShakeTime`; `Update` räknar ner den med `dt` och stänger av effekten vid 0."
+    },
+    "ex-flip-only": {
+      "text": "Slå på confuse-effekten från början, men ändra den så att den bara vänder bilden upp och ner och spegelvänder den – utan att invertera färgerna.",
+      "hint": {
+        "opengl": "Sätt `Confuse` till true där PostProcessorns flaggor får sina värden. Vändningen görs i vertexshadern `post_processing.vs`; inverteringen är `1.0 - …` i confuse-grenen i `post_processing.fs`.",
+        "vulkan": "Sätt `Confuse` till true där PostProcessorns flaggor får sina värden. Vändningen görs i vertexshadern `shaders/post_processing.vert`; inverteringen är `1.0 - …` i confuse-grenen i `shaders/post_processing.frag` (kompilera om med `glslc`).",
+        "d3d12": "Sätt `Confuse` till true där PostProcessorns flaggor får sina värden. Vändningen görs i `VSMain` i `post_processing.hlsl`; inverteringen är `1.0f - …` i confuse-grenen i `PSMain`."
+      }
+    },
+    "ex-vignette": {
+      "text": "Lägg till en vinjett: när ingen effekt är på mörknar bilden mot kanterna – multiplicera färgen med 1 − (texturkoordinatens avstånd från mitten (0,5, 0,5)).",
+      "hint": {
+        "opengl": "I den sista `else`-grenen i `post_processing.fs`: `length(TexCoords - vec2(0.5))` är 0 i mitten och ungefär 0,7 i hörnen.",
+        "vulkan": "I den sista `else`-grenen i `shaders/post_processing.frag`: `length(TexCoords - vec2(0.5))` är 0 i mitten och ungefär 0,7 i hörnen. Kompilera om med `glslc`.",
+        "d3d12": "I den sista `else`-grenen i pixelshadern: `length(input.texCoord - float2(0.5f, 0.5f))` är 0 i mitten och ungefär 0,7 i hörnen."
+      }
     }
   }
 }

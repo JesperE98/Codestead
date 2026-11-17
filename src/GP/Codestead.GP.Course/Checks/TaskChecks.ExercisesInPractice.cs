@@ -50,6 +50,9 @@ public static partial class TaskChecks
     /// <summary>A brick tinted (1, 0.2, 0.2): red.</summary>
     private static bool IpExHitRed(double[] p) => p[0] > 0.6 && p[1] < 0.3 && p[2] < 0.3;
 
+    /// <summary>An orange brick darkened to about a third (81, 40, 0).</summary>
+    private static bool IpExDimOrange(double[] p) => p[0] > 0.18 && p[0] < 0.45 && p[1] < p[0] * 0.65 && p[1] > p[0] * 0.3 && p[2] < 0.05;
+
     private static Dictionary<string, Dictionary<string, TaskCheck>> ExercisesInPractice => new()
     {
         ["debugging"] = new()
@@ -145,6 +148,21 @@ public static partial class TaskChecks
             // Normal blending instead of additive: the trail no longer glows white next to the ball.
             ["ex-no-glow"] = c => c.Drew && At(c, 2.0, 542, 410, p => p[0] > 0.45 && p[0] < 0.8 && p[2] > 0.45 && p[2] < 0.8) && At(c, 2.0, 530, 366, p => p[0] > 0.4 && p[0] < 0.7)
                 && At(c, 2.0, 551, 435, GlassBall),
+        },
+        ["postprocessing"] = new()
+        {
+            // The normal picture in grey (luminance): bricks, sky and paddle red = green = blue at 1.0 s.
+            ["ex-greyscale"] = c => c.Drew && At(c, 1.0, 396, 29, p => IpExGrey(p, 0.33, 0.57)) && At(c, 1.0, 13, 29, p => IpExGrey(p, 0.42, 0.67))
+                && At(c, 1.0, 358, 588, p => IpExGrey(p, 0.55, 0.8)) && At(c, 1.0, 200, 250, p => IpExGrey(p, 0.1, 0.3)),
+            // A shake of half a second from frame 86: still blurred and moving at 1.8 s (frame 108); before the hit as normal.
+            ["ex-long-shake"] = c => c.Drew && At(c, 1.8, 358, 588, p => p[0] > 0.3 && p[0] < 0.79 && p[2] < 0.35) && At(c, 1.8, 200, 250, DuskSky)
+                && At(c, 1.0, 358, 588, IpExBrass),
+            // Confuse turned on without the inversion: upside down and mirrored – the paddle in its own colours at the top,
+            // the bricks at the bottom, the sky not inverted.
+            ["ex-flip-only"] = c => c.Drew && At(c, 1.0, 442, 12, IpExBrass) && At(c, 1.0, 358, 588, OrangeBrick)
+                && At(c, 1.0, 200, 250, p => p[2] > p[0] && p[0] > p[1] && p[0] < 0.35),
+            // Darker towards the corners: the corner bricks dim orange, the middle of the window as before.
+            ["ex-vignette"] = c => c.Drew && At(c, 1.0, 13, 29, IpExDimOrange) && At(c, 1.0, 787, 29, IpExDimOrange) && At(c, 1.0, 400, 300, DuskSky),
         },
     };
 }
