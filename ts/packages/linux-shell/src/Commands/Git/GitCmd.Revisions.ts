@@ -6,6 +6,7 @@ import { gpath, readText, type Repo } from "./GitCmd.Files.js";
 import type { JsMap } from "./GitCmd.Json.js";
 import { allObjects, peel, readCommit, readObj, readTree } from "./GitCmd.Objects.js";
 import { hash40Re, previousBranch, readHead, readRef } from "./GitCmd.Refs.js";
+import { NetS } from "./GitCmd.Json.js";
 import { fatal } from "./GitCmd.js";
 
 // .NET's . is [^\n] (JavaScript's also excludes \r, \u2028 and \u2029).
@@ -13,7 +14,7 @@ const revRe = /^([^\n]*?)((?:[~^][0-9]*)*)$/;
 const specialHeadRe = /^(HEAD|ORIG_HEAD|MERGE_HEAD|FETCH_HEAD)$/;
 const shortHexRe = /^[0-9a-f]{4,40}$/;
 const revOpRe = /[~^][0-9]*/g;
-const wsRe = /\s/;
+const wsRe = new RegExp(`[${NetS}]`);
 
 /** Resolves e.g. HEAD, main, origin/main, v1.0, a1b2c3d, HEAD~2 and main^2. Returns an object id. */
 export function resolveRev(r: Repo, rev: string): string | null {

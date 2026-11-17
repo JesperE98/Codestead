@@ -7,7 +7,7 @@ import { configBool, fmtDate, getConfig, identity, setConfig } from "./GitCmd.Co
 import { merge3, statText, treeChanges } from "./GitCmd.Diff.js";
 import { existsAt, gpath, join, looksLikeGitDir, mkdirp, writeText, type Repo } from "./GitCmd.Files.js";
 import { readIndex, writeIndex, type Unmerged } from "./GitCmd.Index.js";
-import { JsMap, sortedOrdinal, union } from "./GitCmd.Json.js";
+import { JsMap, NetS, sortedOrdinal, union } from "./GitCmd.Json.js";
 import { commitTree, newCommit, peel, readBlob, readCommit, subject, writeCommit, writeObj, writeTree, type Commit } from "./GitCmd.Objects.js";
 import { listRefs, moveHead, readHead, readRef, reflog, setHeadBranch, setHeadDetached, writeRef } from "./GitCmd.Refs.js";
 import { isAncestor, mergeBase, needCommit, resolveRev, revTree } from "./GitCmd.Revisions.js";
@@ -43,7 +43,7 @@ export function initRepo(g: G, dir: string, bare: boolean, branch: string): { gi
 
 // commit
 
-export const trailingWsAnyRe = /\s+$/;
+export const trailingWsAnyRe = new RegExp(`[${NetS}]+$`);
 
 export function cleanMessage(msg: string): string {
   const lines = msg

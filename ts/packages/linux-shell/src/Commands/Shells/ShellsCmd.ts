@@ -82,7 +82,8 @@ export function fishBuiltin(name: string, run: (ctx: CmdCtx) => number): Command
 
 export class MathError extends Error {}
 
-const mathTokRe = /[0-9]+(?:\.[0-9]+)?|\.[0-9]+|[-+*/%^()x]|pi|e|\S/g;
+// \S as in .NET: anything but [\f\n\r\t\v\x85\p{Z}] (JavaScript's \S also matches \x85 and not \ufeff).
+const mathTokRe = /[0-9]+(?:\.[0-9]+)?|\.[0-9]+|[-+*/%^()x]|pi|e|[^\t\n\v\f\r \x85\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]/g;
 const numStartRe = /^[0-9.]/;
 
 /** fish's math: + - * x / % ^ and parentheses, with decimals. */

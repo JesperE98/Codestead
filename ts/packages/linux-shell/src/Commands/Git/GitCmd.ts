@@ -29,6 +29,7 @@ import { cmdConfig, getConfig } from "./GitCmd.Config.js";
 import { cmdDiff } from "./GitCmd.Diff.js";
 import { cmdFetch } from "./GitCmd.Fetch.js";
 import { discover, isDirAt } from "./GitCmd.Files.js";
+import { NetS } from "./GitCmd.Json.js";
 import { cmdHashObject } from "./GitCmd.HashObject.js";
 import { cmdInit } from "./GitCmd.Init.js";
 import { cmdLog } from "./GitCmd.Log.js";
@@ -324,7 +325,7 @@ function subs(): Map<string, Sub> {
   return subsCache;
 }
 
-const whitespaceRunRe = /\s+/;
+const whitespaceRunRe = new RegExp(`[${NetS}]+`);
 
 export function runGit(g: G, args: string[], depth = 0): number {
   // Global flags before the subcommand.

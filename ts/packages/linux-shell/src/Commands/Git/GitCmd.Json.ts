@@ -56,6 +56,12 @@ export class JsMap<T> {
   }
 }
 
+/**
+ * .NET's \s (and \S) as regex class contents: [\f\n\r\t\v\x85\p{Z}]. JavaScript's \s lacks \x85 (NEL) and has
+ * \ufeff, which .NET does not count as white space. Use as `[${NetS}]` and `[^${NetS}]` where the C# regex had \s or \S.
+ */
+export const NetS = "\\t\\n\\v\\f\\r \\x85\\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000";
+
 /** The order Object.keys gives for keys inserted in this order. */
 export function jsKeyOrder(keys: Iterable<string>): string[] {
   const o = Object.create(null) as Record<string, true>;

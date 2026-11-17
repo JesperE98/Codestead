@@ -7,7 +7,7 @@ import type { FsNode } from "../../Vfs/FsNode.js";
 import * as VfsLib from "../../Vfs/VfsLib.js";
 import { gpath, join, needWork, pruneDirs, readText, relPath, removeFile, writeText, type Repo } from "./GitCmd.Files.js";
 import { readIndex, writeIndex, type Index, type Unmerged } from "./GitCmd.Index.js";
-import { JsMap, sortedOrdinal, union } from "./GitCmd.Json.js";
+import { JsMap, NetS, sortedOrdinal, union } from "./GitCmd.Json.js";
 import { readBlob } from "./GitCmd.Objects.js";
 import { blobHash, fail, fatal } from "./GitCmd.js";
 
@@ -75,7 +75,7 @@ function regexOrNever(source: string): RegExp {
   }
 }
 
-const trailingWsRe = /(?<!\\)\s+$/;
+const trailingWsRe = new RegExp(`(?<!\\\\)[${NetS}]+$`);
 
 function parseIgnore(text: string, base: string): IgnoreRule[] {
   const rules: IgnoreRule[] = [];

@@ -5,14 +5,14 @@ import * as VfsLib from "../../Vfs/VfsLib.js";
 import { parseArgs } from "./GitCmd.Args.js";
 import { configAll, getConfig, setConfig, setConfigText } from "./GitCmd.Config.js";
 import { existsAt, gpath, join, looksLikeGitDir, needRepo, openRepo, readText, writeText, type Repo } from "./GitCmd.Files.js";
-import { union } from "./GitCmd.Json.js";
+import { NetS, union } from "./GitCmd.Json.js";
 import { allObjects, objPath } from "./GitCmd.Objects.js";
 import { deleteRef, listRefs, readHead, readRef, writeRef } from "./GitCmd.Refs.js";
 import { isAncestor } from "./GitCmd.Revisions.js";
 import { fail, short, type G } from "./GitCmd.js";
 
 const schemeRe = /^[a-z+]+:\/\//i;
-const scpRe = /^[^/\s]+@[^/\s]+:/;
+const scpRe = new RegExp(`^[^/${NetS}]+@[^/${NetS}]+:`);
 const urlHostRe = /^[a-z+]+:\/\/(?:[^@/]+@)?([^/:]+)/i;
 const scpHostRe = /@([^:]+):/;
 const tildeRe = /^~(?=\/|$)/;

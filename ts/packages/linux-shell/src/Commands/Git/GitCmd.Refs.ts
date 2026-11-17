@@ -5,7 +5,7 @@ import type { FsNode } from "../../Vfs/FsNode.js";
 import * as VfsLib from "../../Vfs/VfsLib.js";
 import { identity, now, tzNow } from "./GitCmd.Config.js";
 import { gpath, pruneDirs, readText, removeFile, writeText, type Repo } from "./GitCmd.Files.js";
-import { jsKeyOrder, sortedOrdinal } from "./GitCmd.Json.js";
+import { jsKeyOrder, NetS, sortedOrdinal } from "./GitCmd.Json.js";
 import { fmtIdent } from "./GitCmd.Objects.js";
 import { GitExit, Zero, type G } from "./GitCmd.js";
 
@@ -99,7 +99,7 @@ export function readReflog(r: Repo): ReflogEntry[] {
     });
 }
 
-const checkoutMoveRe = /^checkout: moving from (\S+) to /;
+const checkoutMoveRe = new RegExp(`^checkout: moving from ([^${NetS}]+) to `);
 
 /** The branch you were on before the latest switch (for `git switch -`). */
 export function previousBranch(r: Repo): string | null {
@@ -112,7 +112,7 @@ export function previousBranch(r: Repo): string | null {
 }
 
 // eslint-disable-next-line no-control-regex
-const badRefRe = /\.\.|@\{|\/\/|\/\.|^\.|[\s~^:?*[\\\x00-\x1f\x7f]/;
+const badRefRe = new RegExp(`\\.\\.|@\\{|//|/\\.|^\\.|[${NetS}~^:?*[\\\\\\x00-\\x1f\\x7f]`);
 
 export function validBranchName(name: string | null | undefined): boolean {
   return (

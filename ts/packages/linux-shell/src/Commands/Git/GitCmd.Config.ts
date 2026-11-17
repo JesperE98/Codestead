@@ -6,6 +6,7 @@ import * as UtilCmd from "../Util/UtilCmd.js";
 import { parseArgs } from "./GitCmd.Args.js";
 import { discover, gpath, readText, writeText, type Repo } from "./GitCmd.Files.js";
 import type { Ident } from "./GitCmd.Objects.js";
+import { NetS } from "./GitCmd.Json.js";
 import { fail, fatal, raise, type G } from "./GitCmd.js";
 
 export interface ConfigEntry {
@@ -16,9 +17,9 @@ export interface ConfigEntry {
 }
 
 // .NET's . is [^\n] (JavaScript's also excludes \r, \u2028 and \u2029).
-const sectionRe = /^\[\s*([A-Za-z0-9.-]+)(?:\s+"((?:[^"\\]|\\[^\n])*)")?\s*\]/;
-const kvRe = /^([A-Za-z][A-Za-z0-9-]*)\s*(?:=\s*([^\n]*))?$/;
-const kvNameRe = /^([A-Za-z][A-Za-z0-9-]*)\s*(=|$)/;
+const sectionRe = new RegExp(`^\\[[${NetS}]*([A-Za-z0-9.-]+)(?:[${NetS}]+"((?:[^"\\\\]|\\\\[^\\n])*)")?[${NetS}]*\\]`);
+const kvRe = new RegExp(`^([A-Za-z][A-Za-z0-9-]*)[${NetS}]*(?:=[${NetS}]*([^\\n]*))?$`);
+const kvNameRe = new RegExp(`^([A-Za-z][A-Za-z0-9-]*)[${NetS}]*(=|$)`);
 const unescapeRe = /\\([^\n])/g;
 
 export function parseConfig(text: string): ConfigEntry[] {
@@ -54,7 +55,7 @@ function unquote(v: string): string {
   return q ? sb : netTrim(sb);
 }
 
-const needsQuoteRe = /^\s|\s$|[#;"\\\n\t]/;
+const needsQuoteRe = new RegExp(`^[${NetS}]|[${NetS}]$|[#;"\\\\\\n\\t]`);
 
 function quoteValue(v: string): string {
   const esc = v.replaceAll("\\", "\\\\").replaceAll('"', '\\"').replaceAll("\n", "\\n").replaceAll("\t", "\\t");
