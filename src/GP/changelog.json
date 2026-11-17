@@ -4,36 +4,43 @@
     "date": "2026-11-16",
     "changes": {
       "en": [
+        "Every window that opens in the app can be closed again – with the ✕ in its corner, Escape or a click outside. The enlarged picture of an expected result used to stay open until the app was restarted.",
         "**You write all the code yourself**, from the first line, in your own program – as on learnopengl.com. The app no longer hands out start files with code: every chapter says which of your programs it continues from, and **Save resources…** saves only the course's textures, models, fonts and levels that a chapter needs.",
         "A task's **solution** opens in a window of its own, file by file, that you close again.",
         "**Pictures and animations in the chapters**: the pipeline's steps from the Render Pipeline Visualizer – buffers, vertex attributes, coordinate spaces, clipping, rasterization, the depth test, blending and more – as pictures and slideshows, and at the top of every lesson what you will have built, drawn by the course's own simulator (moving where the scene moves). A click pauses an animation."
       ],
       "sv": [
+        "Varje fönster som öppnas i appen går att stänga igen – med ✕ i hörnet, Escape eller ett klick utanför. Den förstorade bilden av ett förväntat resultat låg tidigare kvar tills appen startades om.",
         "**Du skriver all kod själv**, från första raden, i ditt eget program – som på learnopengl.com. Appen delar inte längre ut startfiler med kod: varje kapitel säger vilket av dina program det fortsätter från, och **Spara resursfilerna…** sparar bara kursens texturer, modeller, typsnitt och banor som ett kapitel behöver.",
         "En uppgifts **lösning** öppnas i ett eget fönster, fil för fil, som du stänger igen.",
         "**Bilder och animationer i kapitlen**: pipelinens steg från Render Pipeline Visualizer – buffertar, vertexattribut, koordinatrum, clipping, rasterisering, djuptestet, blending med mera – som bilder och bildspel, och överst i varje lektion det du kommer att ha byggt, ritat av kursens egen simulator (i rörelse där scenen rör sig). Ett klick pausar en animation."
       ],
       "de": [
+        "Jedes Fenster, das sich in der App öffnet, lässt sich wieder schließen – mit dem ✕ in der Ecke, Escape oder einem Klick daneben. Das vergrößerte Bild eines erwarteten Ergebnisses blieb bisher offen, bis die App neu gestartet wurde.",
         "**Du schreibst den ganzen Code selbst**, von der ersten Zeile an, in deinem eigenen Programm – wie auf learnopengl.com. Die App gibt keine Startdateien mit Code mehr aus: Jedes Kapitel sagt, mit welchem deiner Programme es weitergeht, und **Ressourcen speichern…** speichert nur die Texturen, Modelle, Schriften und Level des Kurses, die ein Kapitel braucht.",
         "Die **Lösung** einer Aufgabe öffnet sich in einem eigenen Fenster, Datei für Datei, das du wieder schließt.",
         "**Bilder und Animationen in den Kapiteln**: die Schritte der Pipeline aus dem Render Pipeline Visualizer – Puffer, Vertex-Attribute, Koordinatenräume, Clipping, Rasterisierung, Tiefentest, Blending und mehr – als Bilder und Diashows, und oben in jeder Lektion, was du am Ende gebaut haben wirst, gezeichnet vom Simulator des Kurses (in Bewegung, wo sich die Szene bewegt). Ein Klick hält eine Animation an."
       ],
       "fr": [
+        "Chaque fenêtre qui s'ouvre dans l'application peut être refermée – avec le ✕ dans son coin, Échap ou un clic à l'extérieur. L'image agrandie d'un résultat attendu restait auparavant ouverte jusqu'au redémarrage de l'application.",
         "**Vous écrivez tout le code vous-même**, dès la première ligne, dans votre propre programme – comme sur learnopengl.com. L'application ne fournit plus de fichiers de départ avec du code : chaque chapitre indique de quel programme il repart, et **Enregistrer les ressources…** n'enregistre que les textures, modèles, polices et niveaux du cours dont un chapitre a besoin.",
         "La **solution** d'une tâche s'ouvre dans une fenêtre à part, fichier par fichier, que vous refermez ensuite.",
         "**Images et animations dans les chapitres** : les étapes du pipeline tirées du Render Pipeline Visualizer – buffers, attributs de sommets, espaces de coordonnées, clipping, rastérisation, test de profondeur, blending et plus – en images et en diaporamas, et en tête de chaque leçon ce que vous aurez construit, dessiné par le simulateur du cours (animé quand la scène bouge). Un clic met une animation en pause."
       ],
       "es": [
+        "Cada ventana que se abre en la aplicación se puede volver a cerrar: con la ✕ de su esquina, Escape o un clic fuera. La imagen ampliada de un resultado esperado se quedaba abierta hasta reiniciar la aplicación.",
         "**Escribes todo el código tú mismo**, desde la primera línea, en tu propio programa, como en learnopengl.com. La aplicación ya no entrega archivos iniciales con código: cada capítulo indica de cuál de tus programas parte, y **Guardar recursos…** guarda solo las texturas, modelos, fuentes y niveles del curso que necesita un capítulo.",
         "La **solución** de una tarea se abre en una ventana propia, archivo por archivo, que luego cierras.",
         "**Imágenes y animaciones en los capítulos**: los pasos del pipeline del Render Pipeline Visualizer (buffers, atributos de vértices, espacios de coordenadas, clipping, rasterización, prueba de profundidad, blending y más) como imágenes y presentaciones, y al principio de cada lección lo que habrás construido, dibujado por el simulador del curso (en movimiento cuando la escena se mueve). Un clic pausa una animación."
       ],
       "zh": [
+        "应用中打开的每个窗口都可以关闭——点击角落的 ✕、按 Esc 或点击窗口外部。之前预期结果的放大图片会一直停留，直到重启应用。",
         "**所有代码都由你自己编写**，从第一行开始，写在你自己的程序里——就像在 learnopengl.com 上一样。应用不再提供带代码的起始文件：每章都会说明它从你的哪个程序继续，**保存资源文件…** 只保存本章需要的课程纹理、模型、字体和关卡。",
         "任务的**答案**会在单独的窗口中按文件显示，看完可以关闭。",
         "**章节中的图片和动画**：来自 Render Pipeline Visualizer 的管线各步骤——缓冲区、顶点属性、坐标空间、裁剪、光栅化、深度测试、混合等——以图片和幻灯片呈现；每课开头还展示你最终会完成的效果，由课程自带的模拟器绘制（场景会动的地方就是动画）。点击可暂停动画。"
       ],
       "ja": [
+        "アプリで開いたウィンドウはすべて閉じられるようになりました。隅の ✕、Esc キー、または外側のクリックで閉じます。これまで期待される結果の拡大画像は、アプリを再起動するまで閉じられませんでした。",
         "**コードはすべて自分で書きます**。最初の 1 行から、自分のプログラムの中で――learnopengl.com と同じです。アプリはコード入りの開始ファイルを配らなくなりました。各章はどのプログラムから続けるかを示し、**リソースを保存…** は章に必要なコースのテクスチャ、モデル、フォント、レベルだけを保存します。",
         "課題の**解答**はファイルごとに専用のウィンドウで開き、閉じることができます。",
         "**章の中の画像とアニメーション**：Render Pipeline Visualizer によるパイプラインの各段階（バッファー、頂点属性、座標空間、クリッピング、ラスタライズ、深度テスト、ブレンディングなど）を画像とスライドショーで表示し、各レッスンの冒頭には完成形をコースのシミュレーターで描いて表示します（シーンが動く場合はアニメーション）。クリックでアニメーションを一時停止できます。"
