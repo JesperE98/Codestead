@@ -40,6 +40,26 @@
     "second-line": {
       "text": "Draw a second line: \"(C) Codestead GP\" at (540, 570), scale 0.5, colour (0.3, 0.7, 0.9).",
       "hint": "One more `RenderText` call after the first; y = 570 is near the top of the window, because y points up in these coordinates."
+    },
+    "ex-colour": {
+      "text": "Draw “This is sample text” in orange, (1.0, 0.5, 0.0), and leave the second line as it is.",
+      "hint": "The colour is the last argument of `RenderText`; the shader multiplies it with the glyph's coverage."
+    },
+    "ex-bigger": {
+      "text": "Make the first line one and a half times as big, still starting at (25, 25).",
+      "hint": "`RenderText`'s scale multiplies each glyph's size, bearing and advance: 1.5 instead of 1.0. The glyphs are still the 48-pixel bitmaps, only stretched – look closely at their edges."
+    },
+    "ex-quads": {
+      "text": "Look at the quads behind the letters: let the fragment shader ignore the glyph's coverage, so every character is drawn as a solid rectangle in the text colour.",
+      "hint": {
+        "opengl": "In `text.fs` the output becomes just `vec4(textColor, 1.0)` – without `sampled`. Each rectangle is the size of the glyph's bitmap, placed by its bearing.",
+        "vulkan": "In `shaders/text.frag` the output becomes just `vec4(pc.textColor, 1.0)` – without `sampled`; recompile it with `glslc`. Each rectangle is the size of the glyph's cell, placed by its bearing.",
+        "d3d12": "In `text.hlsl` the pixel shader returns just `float4(textColor, 1.0f)` – without `sampled`. Each rectangle is the size of the glyph's cell, placed by its bearing."
+      }
+    },
+    "ex-shadow": {
+      "text": "Give the first line a drop shadow: draw the same text in black 3 pixels to the right and 3 pixels down first, then the green text on top of it.",
+      "hint": "Two `RenderText` calls, the black one first at (28, 22) – y counts upwards from the bottom of the window here, so down is minus. Blending keeps the soft edges of both."
     }
   }
 }

@@ -1,0 +1,28 @@
+=== task: ex-colour
+--- file: main.cpp
+--- find:
+        RenderText(commandBuffer, "This is sample text", 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
+--- replace:
+        RenderText(commandBuffer, "This is sample text", 25.0f, 25.0f, 1.0f, glm::vec3(1.0f, 0.5f, 0.0f));
+
+=== task: ex-bigger
+--- file: main.cpp
+--- find:
+        RenderText(commandBuffer, "This is sample text", 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
+--- replace:
+        RenderText(commandBuffer, "This is sample text", 25.0f, 25.0f, 1.5f, glm::vec3(0.5, 0.8f, 0.2f));
+
+=== task: ex-quads
+--- file: shaders/text.frag
+--- find:
+    color = vec4(pc.textColor, 1.0) * sampled;
+--- replace:
+    color = vec4(pc.textColor, 1.0);
+
+=== task: ex-shadow
+--- file: main.cpp
+--- find:
+        RenderText(commandBuffer, "This is sample text", 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
+--- replace:
+        RenderText(commandBuffer, "This is sample text", 28.0f, 22.0f, 1.0f, glm::vec3(0.0f, 0.0f, 0.0f));
+        RenderText(commandBuffer, "This is sample text", 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
