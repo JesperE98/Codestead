@@ -81,5 +81,16 @@ public static partial class TaskChecks
             // 12 × 12 children around the root: 145 entities, more of them drawn (49), the old grid still there.
             ["ex-bigger-grid"] = c => c.Shows && DrawnOf(c) is ( > 38, 145) && PlanetGrid(c) && At(c, 2.0, 238, 320, Planet),
         },
+        ["csm"] = new()
+        {
+            // Half the direct light in shadow: the shadows (17,11,7 before) about 41,28,17, the lit floor as before.
+            ["ex-half-shadow"] = c => c.Drew && new[] { (490, 475), (290, 273), (155, 335) }.All(q => At(c, q.Item1, q.Item2, p => p[0] > 0.11 && p[0] < 0.2 && p[0] > p[1] && p[1] > p[2]))
+                && At(c, 650, 470, CsmWood) && At(c, 480, 230, CsmWood),
+            // The light from the left: the shadows fall to the right – the old shadow spots lit, the floor at (650,470) in shadow.
+            ["ex-sun-left"] = c => c.Drew && At(c, 650, 470, CsmShadow) && At(c, 640, 460, CsmShadow) && At(c, 490, 475, CsmWood) && At(c, 155, 335, CsmWood) && At(c, 480, 230, CsmWood),
+            // Layer 0 of the shadow maps: light grey everywhere (nothing white as in layer 2), the cubes a little darker.
+            ["ex-debug-layer"] = c => c.Drew && At(c, 400, 40, p => Grey(p) && p[0] > 0.88 && p[0] < 0.95) && At(c, 650, 470, p => Grey(p) && p[0] > 0.84 && p[0] < 0.9)
+                && At(c, 520, 400, p => Grey(p) && p[0] < 0.86),
+        },
     };
 }
