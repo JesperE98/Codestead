@@ -238,15 +238,59 @@ export class FormatError extends Error {}
 
 // ---------- formatting (invariant culture) ----------
 
-/** The custom format "0.###": up to three decimals, trailing zeros dropped, ties away from zero. */
+/** The custom format "0.###": up to three decimals, trailing zeros dropped. */
 export function format3(d: number): string {
+  return formatCustom(d, 3, true);
+}
+
+/**
+ * A custom numeric format "0.###" (trim) or "0.000" (no trim) with `decimals` places, as .NET formats it: the number
+ * first rounded to 15 significant digits, those digits then rounded (half away from zero) to the decimals; a negative
+ * number keeps its sign even when it rounds to zero ("-0").
+ */
+export function formatCustom(d: number, decimals: number, trim: boolean): string {
   if (Number.isNaN(d)) return "NaN";
   if (!Number.isFinite(d)) return d > 0 ? "Infinity" : "-Infinity";
-  if (Math.abs(d) >= 1e21) return BigInt(Math.round(d)).toString();
-  let s = d.toFixed(3);
-  if (s.includes(".")) s = s.replace(/0+$/, "").replace(/\.$/, "");
-  if (Object.is(d, -0)) return "-0";
-  return s;
+  const negative = d < 0 || Object.is(d, -0);
+  const a = Math.abs(d);
+  let digits: number[];
+  let exp: number;
+  if (a === 0) {
+    digits = [0];
+    exp = 0;
+  } else {
+    const [mantissa, e] = a.toExponential(14).split("e") as [string, string];
+    digits = [...mantissa.replace(".", "")].map(Number);
+    exp = Number(e);
+  }
+  // Digit i weighs 10^(exp - i); the digits down to 10^-decimals stay.
+  const keep = exp + decimals + 1;
+  if (keep < digits.length) {
+    if (keep < 0) digits = [];
+    else {
+      const up = digits[keep]! >= 5;
+      digits = digits.slice(0, keep);
+      if (up) {
+        let i = digits.length - 1;
+        while (i >= 0 && digits[i] === 9) digits[i--] = 0;
+        if (i >= 0) digits[i]!++;
+        else {
+          digits.unshift(1);
+          exp++;
+        }
+      }
+    }
+  }
+  let whole = "";
+  for (let i = 0; i <= exp; i++) whole += i < digits.length ? digits[i] : 0;
+  whole = whole.replace(/^0+/, "") || "0";
+  let fraction = "";
+  for (let k = 1; k <= decimals; k++) {
+    const i = exp + k;
+    fraction += i >= 0 && i < digits.length ? digits[i] : 0;
+  }
+  if (trim) fraction = fraction.replace(/0+$/, "");
+  return (negative ? "-" : "") + whole + (fraction.length > 0 ? "." + fraction : "");
 }
 
 /** The standard format "F&lt;n&gt;". */
@@ -283,10 +327,10 @@ export function formatG(d: number, precision: number): string {
   const [mantissa, expText] = s.split("e") as [string, string];
   const exp = Number(expText);
   const digits = mantissa.replace(".", "").replace(/0+$/, "") || "0";
-  return (d < 0 ? "-" : "") + placeDigits(digits, exp, exp >= precision || exp < -5, 2);
+  return (d < 0 ? "-" : "") + placeDigits(digits, exp, exp >= precision || exp < -4, 2);
 }
 
-/** double.ToString() (.NET Core 3.0+): the shortest text that reads back as the number; E+dd from 1E+15 and below 1E-05. */
+/** double.ToString() (.NET Core 3.0+): the shortest text that reads back as the number; E+dd from 1E+17 and from 1E-05 down. */
 export function formatDouble(d: number): string {
   if (Number.isNaN(d)) return "NaN";
   if (!Number.isFinite(d)) return d > 0 ? "Infinity" : "-Infinity";
@@ -295,7 +339,7 @@ export function formatDouble(d: number): string {
   const [mantissa, expText] = s.split("e") as [string, string];
   const exp = Number(expText);
   const digits = mantissa.replace(".", "");
-  return (d < 0 ? "-" : "") + placeDigits(digits, exp, exp >= 15 || exp < -5, 2);
+  return (d < 0 ? "-" : "") + placeDigits(digits, exp, exp >= 17 || exp < -4, 2);
 }
 
 function placeDigits(digits: string, exp: number, scientific: boolean, expDigits: number): string {

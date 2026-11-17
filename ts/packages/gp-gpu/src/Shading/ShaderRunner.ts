@@ -1,7 +1,7 @@
 // ShaderRunner.cs, ShaderRunner.Expressions.cs, ShaderRunner.Builtins.cs, ShaderRunner.Matrices.cs and
 // ShaderRunner.CppLibrary.cs: one class, its parts in the order of the C# files.
 import {
-  and64, clamp, formatE, formatFixed, formatG, hex64, isUpper, isWhiteSpace, notU32, or64, roundEven, sar64, shl32, sign, toChar,
+  and64, clamp, formatCustom, formatE, formatFixed, formatG, hex64, isUpper, isWhiteSpace, notU32, or64, roundEven, sar64, shl32, sign, toChar,
   toInt, toLong, toLongBig, toUint, trimChars, tryParseDouble, tryParseInt, xor64,
 } from "../internal/dotnet.js";
 import { FreeTypeGlyphs, type Glyph } from "../Fonts/FreeTypeGlyphs.js";
@@ -1096,7 +1096,7 @@ export class ShaderRunner {
     if (this.lenient && name === "rand" && c.args.length === 0) return ShaderValue.scalar((this.random ??= new GlibcRandom(1)).next());
     if (this.lenient && (name === "to_string" || name === "to_wstring") && c.args.length === 1) {
       const x = this.eval(c.args[0]!);
-      return ShaderValue.str(x.text ?? (x.x === Math.floor(x.x) && Math.abs(x.x) < 1e15 ? toLongBig(x.x).toString() : formatFixed(x.x, 6)));
+      return ShaderValue.str(x.text ?? (x.x === Math.floor(x.x) && Math.abs(x.x) < 1e15 ? toLongBig(x.x).toString() : formatCustom(x.x, 6, false)));
     }
     if (this.lenient) {
       const library = this.cppLibrary(c, name);
