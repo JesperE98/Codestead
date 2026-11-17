@@ -54,6 +54,30 @@
       "hint": {
         "vulkan": "`VK_IMAGE_USAGE_STORAGE_BIT` i `createTexture()`:s usage (och kontrollera `VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT`), den sista övergången `TRANSFER_DST_OPTIMAL` → `GENERAL` (en ny gren i `transitionImageLayout`: dst-åtkomst shaderläsning | skrivning, stegen fragment | compute), `imageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL` i `createDescriptorSet()`. `createComputeDescriptorSetLayout()`: en bindning, `VK_DESCRIPTOR_TYPE_STORAGE_IMAGE`, `VK_SHADER_STAGE_COMPUTE_BIT`; `createComputeDescriptorSet()`: image viewn, layout `GENERAL`, ingen sampler; poolen får en `VK_DESCRIPTOR_TYPE_STORAGE_IMAGE` och `maxSets = 2`. Förstör layouten i `cleanup()`."
       }
+    },
+    "ex-speed": {
+      "text": "Låt mönstret röra sig dubbelt så fort: 200 texlar per sekund. Var ligger det klaraste röda efter 1 sekund?",
+      "hint": {
+        "opengl": "En variabel i `computeShader.comp`, den som multipliceras med tiden `t`. Inget i C++-koden ändras.",
+        "vulkan": "En variabel i `compute_shader.comp`, den som multipliceras med tiden `pc.t` – kompilera om den. Inget i C++-koden ändras.",
+        "d3d12": "En variabel i `computeShader.hlsl`, den som multipliceras med tiden `t`. Inget i C++-koden ändras."
+      }
+    },
+    "ex-disc": {
+      "text": "Rita en vit skiva med radien 100 texlar mitt i texturen (texel (400, 300)), ovanpå den rörliga gradienten.",
+      "hint": {
+        "opengl": "Varje anrop känner till sin egen texel (`texelCoord`): före `imageStore`, gör `value` vit när texelns avstånd till (400, 300) är mindre än 100 – GLSL:s `distance` tar två `vec2`.",
+        "vulkan": "Varje anrop känner till sin egen texel (`texelCoord`): före `imageStore`, gör `value` vit när texelns avstånd till (400, 300) är mindre än 100 – GLSL:s `distance` tar två `vec2`.",
+        "d3d12": "Varje tråd känner till sin egen texel (`texelCoord`): innan den skrivs till `imgOutput`, gör `value` vit när texelns avstånd till (400, 300) är mindre än 100 – HLSL:s `distance` tar två `float2`."
+      }
+    },
+    "ex-work-groups": {
+      "text": "Gör arbetsgrupperna synliga: sätt blått till 1 i varannan arbetsgrupp, så att ett schackmönster av rutor på 10 × 10 texlar syns över gradienten.",
+      "hint": {
+        "opengl": "`gl_WorkGroupID` är gruppens plats i dispatchen (0…79, 0…59). Om `x + y` är udda eller jämnt avgör rutans färg.",
+        "vulkan": "`gl_WorkGroupID` är gruppens plats i dispatchen (0…79, 0…59). Om `x + y` är udda eller jämnt avgör rutans färg.",
+        "d3d12": "HLSL kallar det trådgrupp: ge `CSMain` en parameter med semantiken `SV_GroupID` – gruppens plats i dispatchen (0…79, 0…59). Om `x + y` är udda eller jämnt avgör rutans färg."
+      }
     }
   }
 }

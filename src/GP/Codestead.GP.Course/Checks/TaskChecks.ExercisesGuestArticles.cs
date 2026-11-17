@@ -144,5 +144,16 @@ public static partial class TaskChecks
             ["ex-warm-glow"] = c => c.Drew && At(c, 400, 200, BloomWhite) && At(c, 465, 200, p => p[0] > p[1] + 0.05 && p[1] > p[2] + 0.05 && p[0] > 0.35)
                 && At(c, 400, 262, p => p[0] > p[2] + 0.12),
         },
+        ["compute-shaders"] = new()
+        {
+            // 200 texels per second: at 1.0 s moved by 200 – the brightest red at x = 599, from 0 again at x = 600.
+            ["ex-speed"] = c => c.Drew && At(c, 599, 300, p => Rg(p, 1, 0.5)) && At(c, 600, 300, p => Rg(p, 0, 0.5)) && At(c, 0, 0, p => Rg(p, 0.25, 1)),
+            // A white disc of radius 100 around the texture's centre, the gradient around it.
+            ["ex-disc"] = c => c.Drew && new[] { (400, 299), (330, 299), (405, 305), (400, 220) }.All(q => At(c, q.Item1, q.Item2, p => p[0] > 0.97 && p[1] > 0.97 && p[2] > 0.97))
+                && At(c, 400, 150, p => p[2] < 0.03) && At(c, 600, 300, p => p[2] < 0.03),
+            // Blue in every other work group: a checkerboard of 10 × 10 squares over the gradient.
+            ["ex-work-groups"] = c => c.Drew && At(c, 5, 594, p => p[2] < 0.03) && At(c, 15, 594, p => p[2] > 0.97) && At(c, 5, 584, p => p[2] > 0.97) && At(c, 15, 584, p => p[2] < 0.03)
+                && At(c, 400, 299, p => Rg(p, 0.625, 0.5)) && At(c, 0, 0, p => p[1] > 0.97),
+        },
     };
 }
