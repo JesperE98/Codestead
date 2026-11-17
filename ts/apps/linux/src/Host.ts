@@ -5,13 +5,6 @@ import { MemoryStorage, type Storage } from "@codestead/ui";
 import type { CodesteadApi } from "../electron/api.js";
 import { ProductInfo } from "./ProductInfo.js";
 
-declare global {
-  interface Window {
-    /** Given by the preload script (electron/preload.ts). */
-    codestead?: CodesteadApi;
-  }
-}
-
 /** A stand-in for the browser: memory storage, links in a new tab, no pickers. */
 function browserApi(): CodesteadApi {
   const memory = new MemoryStorage();
@@ -28,7 +21,10 @@ function browserApi(): CodesteadApi {
 
 /** window.codestead, or the browser stand-in. */
 export function hostApi(): CodesteadApi {
-  return globalThis.window?.codestead ?? browserApi();
+  // Given by the preload script (electron/preload.ts). Not declared on Window globally: every app has its own
+  // window.codestead, and the workspace is type-checked as one program.
+  const given = (globalThis.window as { codestead?: CodesteadApi } | undefined)?.codestead;
+  return given ?? browserApi();
 }
 
 /** The tool's files through the preload (the C# app's data folder) – {@link Storage}. */
