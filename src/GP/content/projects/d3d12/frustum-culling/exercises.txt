@@ -1,0 +1,29 @@
+=== task: ex-narrow-fov
+--- file: main.cpp
+--- find:
+    const Frustum camFrustum = createFrustumFromCamera(cameraPos, cameraFront, cameraUp, static_cast<float>(m_width) / static_cast<float>(m_height), XMConvertToRadians(fov), 0.1f, 100.0f);
+--- replace:
+    const Frustum camFrustum = createFrustumFromCamera(cameraPos, cameraFront, cameraUp, static_cast<float>(m_width) / static_cast<float>(m_height), XMConvertToRadians(30.0f), 0.1f, 100.0f);
+
+=== task: ex-near-plane
+--- file: main.cpp
+--- find:
+    const Frustum camFrustum = createFrustumFromCamera(cameraPos, cameraFront, cameraUp, static_cast<float>(m_width) / static_cast<float>(m_height), XMConvertToRadians(fov), 0.1f, 100.0f);
+--- replace:
+    const Frustum camFrustum = createFrustumFromCamera(cameraPos, cameraFront, cameraUp, static_cast<float>(m_width) / static_cast<float>(m_height), XMConvertToRadians(fov), 12.0f, 100.0f);
+
+=== task: ex-bigger-grid
+--- file: main.cpp
+--- find:
+        for (unsigned int x = 0; x < 10; ++x)
+        {
+            for (unsigned int z = 0; z < 10; ++z)
+--- replace:
+        for (unsigned int x = 0; x < 12; ++x)
+        {
+            for (unsigned int z = 0; z < 12; ++z)
+--- file: main.cpp
+--- find:
+                setLocalPosition(lastEntity->transform, XMFLOAT3(x * 5.0f - 22.5f, 0.0f, z * 5.0f - 22.5f));
+--- replace:
+                setLocalPosition(lastEntity->transform, XMFLOAT3(x * 5.0f - 27.5f, 0.0f, z * 5.0f - 27.5f));

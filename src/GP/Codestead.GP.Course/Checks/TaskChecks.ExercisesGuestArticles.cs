@@ -11,6 +11,11 @@ public static partial class TaskChecks
     private static bool Rgb(double[] p, double r, double g, double b, double tolerance = 0.04) =>
         Math.Abs(p[0] - r) <= tolerance && Math.Abs(p[1] - g) <= tolerance && Math.Abs(p[2] - b) <= tolerance;
 
+    /// <summary>The frustum culling demo's counts in the window title at 2.0 s ("… drawn: 37 / 101"); (-1, -1) when missing.</summary>
+    private static (int Drawn, int Total) DrawnOf(CheckContext c) =>
+        System.Text.RegularExpressions.Regex.Match(c.WindowTitleAt(2.0), @"drawn:\s*(\d+)\s*/\s*(\d+)") is { Success: true } m
+            ? (int.Parse(m.Groups[1].Value), int.Parse(m.Groups[2].Value)) : (-1, -1);
+
     private static Dictionary<string, Dictionary<string, TaskCheck>> ExercisesGuestArticles => new()
     {
         ["oit-introduction"] = new()
@@ -64,6 +69,17 @@ public static partial class TaskChecks
             // Every child tilted 30° about z on top of its parent: the chain curls upwards.
             ["ex-spiral"] = c => c.Shows && At(c, 2.0, 238, 320, Planet) && At(c, 2.0, 450, 207, Planet) && At(c, 2.0, 468, 152, Planet)
                 && At(c, 2.0, 456, 250, Space) && At(c, 2.0, 494, 238, Space),
+        },
+        ["frustum-culling"] = new()
+        {
+            // A 30° culling frustum inside the camera's 45°: the top of the grid (far42) culled, fewer than 38 drawn (26).
+            ["ex-narrow-fov"] = c => c.Shows && DrawnOf(c) is ( > 10 and < 38, 101) && At(c, 2.0, 396, 76, Space)
+                && At(c, 2.0, 238, 320, Planet) && At(c, 2.0, 429, 327, Planet) && At(c, 2.0, 680, 459, Planet),
+            // The near plane at 12: the planets close to the camera (near, and the one at the bottom left) culled (35 drawn).
+            ["ex-near-plane"] = c => c.Shows && DrawnOf(c) is ( > 10 and < 38, 101) && At(c, 2.0, 680, 459, Space) && At(c, 2.0, 165, 430, Space)
+                && At(c, 2.0, 238, 320, Planet) && At(c, 2.0, 429, 327, Planet) && At(c, 2.0, 396, 76, Planet),
+            // 12 × 12 children around the root: 145 entities, more of them drawn (49), the old grid still there.
+            ["ex-bigger-grid"] = c => c.Shows && DrawnOf(c) is ( > 38, 145) && PlanetGrid(c) && At(c, 2.0, 238, 320, Planet),
         },
     };
 }

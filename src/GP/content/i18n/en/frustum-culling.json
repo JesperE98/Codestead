@@ -52,6 +52,18 @@
         "vulkan": "`r = extents.x * std::abs(plane.normal.x) + extents.y * std::abs(plane.normal.y) + extents.z * std::abs(plane.normal.z)`; inside: `-r <= getSignedDistanceToPlane(plane, center)`. In `isOnFrustum`: `right = glm::vec3(modelMatrix[0]) * extents.x`, `up = glm::vec3(modelMatrix[1]) * extents.y`, `forward = -glm::vec3(modelMatrix[2]) * extents.z`, and the new half sizes `newIi`, `newIj`, `newIk` as sums of `std::abs(glm::dot(axis, …))`.",
         "d3d12": "`r = extents.x * fabsf(plane.normal.x) + extents.y * fabsf(plane.normal.y) + extents.z * fabsf(plane.normal.z)`; inside: `-r <= getSignedDistanceToPlane(plane, center)`. In `isOnFrustum`: `right = modelMatrix.r[0] * extents.x`, `up = modelMatrix.r[1] * extents.y`, `forward = -modelMatrix.r[2] * extents.z`, and the new half sizes `newIi`, `newIj`, `newIk` as sums of `fabsf(XMVectorGetX(XMVector3Dot(axis, …)))`."
       }
+    },
+    "ex-narrow-fov": {
+      "text": "Cull with a narrower frustum than the camera's: a vertical field of view of 30° for the culling (the projection keeps 45°). Which planets disappear, and how does the count in the title change?",
+      "hint": "Only the field of view passed to `createFrustumFromCamera` changes – not the one the projection matrix is built with. The planets at the edges of the window now fall outside the culling frustum although the camera could see them."
+    },
+    "ex-near-plane": {
+      "text": "Move the culling frustum's near plane out to 12 (the projection keeps 0.1). What happens to the planets closest to the camera?",
+      "hint": "The near distance is the second to last argument of `createFrustumFromCamera`. A planet whose bounding sphere lies entirely between the camera and the near plane is culled, however large it is on the screen."
+    },
+    "ex-bigger-grid": {
+      "text": "Make the grid 12 × 12 planets instead of 10 × 10, still centred on the root and 5 units apart. How many of the 145 entities are drawn now?",
+      "hint": "Both loops run to 12, and the offset that centres the grid grows from 22.5 to 27.5 (half of 11 gaps of 5). The total in the title follows by itself: every visited entity is counted."
     }
   }
 }
