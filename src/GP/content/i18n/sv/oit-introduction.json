@@ -1,4 +1,25 @@
 {
   "title": "OIT: introduktion",
-  "tasks": {}
+  "tasks": {
+    "ex-opacity": {
+      "text": "Gör den gröna kvadraten mindre genomskinlig: alfa 0,8 i stället för 0,5. Hur mycket av den röda kvadraten syns fortfarande igenom?",
+      "hint": {
+        "opengl": "Det är bara alfa i färgen som den gröna kvadraten ritas med som ändras: fjärde komponenten i dess `setVec4(\"color\", …)`.",
+        "vulkan": "Det är bara alfa i den gröna kvadratens färg i push-konstanterna som ändras: fjärde komponenten i `constants.color`.",
+        "d3d12": "Det är bara alfa i den gröna kvadratens färg i rotkonstanterna som ändras: fjärde komponenten i `objectConstants.color`."
+      }
+    },
+    "ex-sorted": {
+      "text": "Rätta bilden på det klassiska sättet: rita de genomskinliga kvadraterna sorterade bakifrån och fram. Då ska den blå kvadratens hörn synas genom den gröna.",
+      "hint": "Den blå kvadraten ligger längst bort (z = 0) och den gröna närmast (z = 2): byt plats på de två ritanropen så att den blå ritas först. Blandningen och djupskrivningen får vara som de är."
+    },
+    "ex-depth-mask": {
+      "text": "Behåll den felaktiga ordningen, men stäng av djupskrivningen för de genomskinliga kvadraterna. Vad händer nu där grönt och blått överlappar – ser det rätt ut?",
+      "hint": {
+        "opengl": "`glDepthMask(GL_FALSE)` direkt efter att blandningsfunktionen sätts, före de genomskinliga kvadraterna (bildrutan börjar ju med `glDepthMask(GL_TRUE)` igen). Djuptestet är kvar, så den röda kvadraten döljer fortfarande den blå.",
+        "vulkan": "Djupskrivningen hör till den genomskinliga pipelinen: dess anrop till `createPipeline(…)` tar `depthWriteEnable` efter `depthTestEnable`. Låt djuptestet vara på, så att den röda kvadraten fortfarande döljer den blå.",
+        "d3d12": "Djupskrivningen hör till de genomskinligas pipeline state: `psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO` innan det skapas. Djuptestet är kvar, så den röda kvadraten döljer fortfarande den blå."
+      }
+    }
+  }
 }

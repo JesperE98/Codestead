@@ -1,0 +1,66 @@
+=== task: ex-opacity
+--- file: main.cpp
+--- find:
+    objectConstants.color = XMFLOAT4(0.0f, 1.0f, 0.0f, 0.5f);
+--- replace:
+    objectConstants.color = XMFLOAT4(0.0f, 1.0f, 0.0f, 0.8f);
+
+=== task: ex-order
+--- file: main.cpp
+--- find:
+    // draw green quad
+    XMStoreFloat4x4(&objectConstants.mvp, XMMatrixTranspose(XMLoadFloat4x4(&m_greenModelMat) * vp));
+    objectConstants.color = XMFLOAT4(0.0f, 1.0f, 0.0f, 0.5f);
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ObjectConstants) / 4, &objectConstants, 0);
+    m_commandList->DrawInstanced(6, 1, 0, 0);
+
+    // draw blue quad
+    XMStoreFloat4x4(&objectConstants.mvp, XMMatrixTranspose(XMLoadFloat4x4(&m_blueModelMat) * vp));
+    objectConstants.color = XMFLOAT4(0.0f, 0.0f, 1.0f, 0.5f);
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ObjectConstants) / 4, &objectConstants, 0);
+    m_commandList->DrawInstanced(6, 1, 0, 0);
+--- replace:
+    // draw blue quad
+    XMStoreFloat4x4(&objectConstants.mvp, XMMatrixTranspose(XMLoadFloat4x4(&m_blueModelMat) * vp));
+    objectConstants.color = XMFLOAT4(0.0f, 0.0f, 1.0f, 0.5f);
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ObjectConstants) / 4, &objectConstants, 0);
+    m_commandList->DrawInstanced(6, 1, 0, 0);
+
+    // draw green quad
+    XMStoreFloat4x4(&objectConstants.mvp, XMMatrixTranspose(XMLoadFloat4x4(&m_greenModelMat) * vp));
+    objectConstants.color = XMFLOAT4(0.0f, 1.0f, 0.0f, 0.5f);
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ObjectConstants) / 4, &objectConstants, 0);
+    m_commandList->DrawInstanced(6, 1, 0, 0);
+
+=== task: ex-red-transparent
+--- file: main.cpp
+--- find:
+    // draw red quad
+    ObjectConstants objectConstants = {};
+    XMStoreFloat4x4(&objectConstants.mvp, XMMatrixTranspose(XMLoadFloat4x4(&m_redModelMat) * vp));
+    objectConstants.color = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ObjectConstants) / 4, &objectConstants, 0);
+    m_commandList->DrawInstanced(6, 1, 0, 0);
+--- replace:
+    // (the red quad is drawn with the transparent ones now)
+    ObjectConstants objectConstants = {};
+--- file: main.cpp
+--- find:
+    // draw green quad
+    XMStoreFloat4x4(&objectConstants.mvp, XMMatrixTranspose(XMLoadFloat4x4(&m_greenModelMat) * vp));
+--- replace:
+    // draw red quad, half transparent
+    XMStoreFloat4x4(&objectConstants.mvp, XMMatrixTranspose(XMLoadFloat4x4(&m_redModelMat) * vp));
+    objectConstants.color = XMFLOAT4(1.0f, 0.0f, 0.0f, 0.5f);
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ObjectConstants) / 4, &objectConstants, 0);
+    m_commandList->DrawInstanced(6, 1, 0, 0);
+
+    // draw green quad
+    XMStoreFloat4x4(&objectConstants.mvp, XMMatrixTranspose(XMLoadFloat4x4(&m_greenModelMat) * vp));
+
+=== task: ex-weight
+--- file: transparent.hlsl
+--- find:
+    float weight = clamp(pow(min(1.0f, color.a * 10.0f) + 0.01f, 3.0f) * 1e8 * pow(1.0f - input.position.z * 0.9f, 3.0f), 1e-2, 3e3);
+--- replace:
+    float weight = 1.0f - input.position.z;

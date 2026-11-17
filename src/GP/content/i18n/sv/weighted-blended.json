@@ -36,6 +36,34 @@
         "vulkan": "Det ogenomskinliga passets färg slutar nu i `COLOR_ATTACHMENT_OPTIMAL`; `createCompositeRenderPass()`: ett attachment, `loadOp = VK_ATTACHMENT_LOAD_OP_LOAD`, `initialLayout = COLOR_ATTACHMENT_OPTIMAL`, `finalLayout = SHADER_READ_ONLY_OPTIMAL`. `createCompositeFramebuffer()` med bara `opaqueImageView`. `createPipeline(…composite…, compositeRenderPass, 1, VK_FALSE, VK_FALSE, VK_TRUE, VK_BLEND_FACTOR_SRC_ALPHA, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, …)`, `createDescriptorSet(accumImageView, revealImageView, compositeDescriptorSet)`. Spela in det mellan det genomskinliga och det sista passet (`clearValueCount = 0`). `composite.frag`: learnopengls shader med `layout(binding = 0) uniform sampler2D accum; layout(binding = 1) uniform sampler2D reveal;`.",
         "d3d12": "`psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS`, `NumRenderTargets = 1`, `RTVFormats[1] = DXGI_FORMAT_UNKNOWN`, en ny `CD3DX12_BLEND_DESC(D3D12_DEFAULT)` med `RenderTarget[0]` SRC_ALPHA / INV_SRC_ALPHA. I `PopulateCommandList`: `OMSetRenderTargets(1, &opaqueRtvHandle, FALSE, &dsvHandle)`, `SetPipelineState(m_compositePipelineState.Get())`, tabellen på plats 1 i SRV-heapen, `DrawInstanced(6, 1, 0, 0)`. `composite.hlsl`: `int2 coords = int2(input.position.xy)`, `reveal.Load(int3(coords, 0)).r`, `discard` där revealage är ungefär 1, `isinf`-skyddet, `average_color = accumulation.rgb / max(accumulation.a, EPSILON)`."
       }
+    },
+    "ex-opacity": {
+      "text": "Gör den gröna kvadraten mindre genomskinlig: alfa 0,8 i stället för 0,5. Vilken färg vinner nu där grönt och blått överlappar?",
+      "hint": {
+        "opengl": "Bara fjärde komponenten i den gröna kvadratens `setVec4(\"color\", …)` ändras. Alfa gör två saker här: den skalar färgen som läggs till i `accum` och avgör hur mycket `reveal` mörkas.",
+        "vulkan": "Bara fjärde komponenten i den gröna kvadratens `constants.color` ändras. Alfa gör två saker här: den skalar färgen som läggs till i `accum` och avgör hur mycket `reveal` mörkas.",
+        "d3d12": "Bara fjärde komponenten i den gröna kvadratens `objectConstants.color` ändras. Alfa gör två saker här: den skalar färgen som läggs till i `accum` och avgör hur mycket `reveal` mörkas."
+      }
+    },
+    "ex-order": {
+      "text": "Visa att ritordningen inte längre spelar någon roll: rita den blå kvadraten före den gröna. Bilden ska bli exakt likadan.",
+      "hint": "Byt plats på de två genomskinliga ritningarna (matris, färg och ritanrop följer med). Båda passen bara adderar (`accum`) och multiplicerar (`reveal`) – och där spelar ordningen ingen roll."
+    },
+    "ex-red-transparent": {
+      "text": "Gör även den röda kvadraten halvgenomskinlig (alfa 0,5) och rita den i det genomskinliga passet tillsammans med de andra två. Nu ska den blå kvadraten synas igenom den.",
+      "hint": {
+        "opengl": "Flytta den röda kvadratens ritning från det solida passet till det genomskinliga och rita den med `transparentShader` och en `vec4`-färg. Ligger den kvar i det solida passet skriver den fortfarande djup och döljer den blå kvadraten.",
+        "vulkan": "Flytta den röda kvadratens push-konstanter och ritanrop från det opaka renderpasset till det genomskinliga (efter att `transparentPipeline` har bundits), med alfa 0,5. Ligger den kvar i det solida passet skriver den fortfarande djup och döljer den blå kvadraten.",
+        "d3d12": "Flytta den röda kvadratens rotkonstanter och ritanrop från det solida passet till det genomskinliga (efter att `m_transparentPipelineState` har satts), med alfa 0,5 – låt deklarationen av `objectConstants` stå kvar där den är. Ligger den kvar i det solida passet skriver den fortfarande djup och döljer den blå kvadraten."
+      }
+    },
+    "ex-weight": {
+      "text": "Här får båda kvadraterna viktfunktionens största värde (3000), så de väger lika mycket där de överlappar. Skriv en vikt som växer ju närmare kameran ett fragment ligger, utan det taket, så att den gröna kvadraten (som är närmast) väger mer än den blå.",
+      "hint": {
+        "opengl": "Vikten räknas ut i `transparent.fs`. `gl_FragCoord.z` är ungefär 0,968 för den gröna kvadraten och 0,981 för den blå – något i stil med `1.0 - gl_FragCoord.z` räcker. Där bara en kvadrat finns tar vikten ut sig själv i kompositshaderns division.",
+        "vulkan": "Vikten räknas ut i `shaders/transparent.frag` (kompilera om den). `gl_FragCoord.z` är ungefär 0,968 för den gröna kvadraten och 0,981 för den blå – något i stil med `1.0 - gl_FragCoord.z` räcker. Där bara en kvadrat finns tar vikten ut sig själv i kompositshaderns division.",
+        "d3d12": "Vikten räknas ut i `transparent.hlsl`. `input.position.z` är ungefär 0,968 för den gröna kvadraten och 0,981 för den blå – något i stil med `1.0f - input.position.z` räcker. Där bara en kvadrat finns tar vikten ut sig själv i kompositshaderns division."
+      }
     }
   }
 }

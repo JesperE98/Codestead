@@ -1,0 +1,43 @@
+=== task: ex-opacity
+--- file: main.cpp
+--- find:
+    objectConstants.color = XMFLOAT4(0.0f, 1.0f, 0.0f, 0.5f);
+--- replace:
+    objectConstants.color = XMFLOAT4(0.0f, 1.0f, 0.0f, 0.8f);
+
+=== task: ex-sorted
+--- file: main.cpp
+--- find:
+    // draw green quad
+    XMStoreFloat4x4(&objectConstants.mvp, XMMatrixTranspose(XMLoadFloat4x4(&m_greenModelMat) * vp));
+    objectConstants.color = XMFLOAT4(0.0f, 1.0f, 0.0f, 0.5f);
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ObjectConstants) / 4, &objectConstants, 0);
+    m_commandList->DrawInstanced(6, 1, 0, 0);
+
+    // draw blue quad
+    XMStoreFloat4x4(&objectConstants.mvp, XMMatrixTranspose(XMLoadFloat4x4(&m_blueModelMat) * vp));
+    objectConstants.color = XMFLOAT4(0.0f, 0.0f, 1.0f, 0.5f);
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ObjectConstants) / 4, &objectConstants, 0);
+    m_commandList->DrawInstanced(6, 1, 0, 0);
+--- replace:
+    // draw blue quad (the farthest first)
+    XMStoreFloat4x4(&objectConstants.mvp, XMMatrixTranspose(XMLoadFloat4x4(&m_blueModelMat) * vp));
+    objectConstants.color = XMFLOAT4(0.0f, 0.0f, 1.0f, 0.5f);
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ObjectConstants) / 4, &objectConstants, 0);
+    m_commandList->DrawInstanced(6, 1, 0, 0);
+
+    // draw green quad (the nearest last)
+    XMStoreFloat4x4(&objectConstants.mvp, XMMatrixTranspose(XMLoadFloat4x4(&m_greenModelMat) * vp));
+    objectConstants.color = XMFLOAT4(0.0f, 1.0f, 0.0f, 0.5f);
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ObjectConstants) / 4, &objectConstants, 0);
+    m_commandList->DrawInstanced(6, 1, 0, 0);
+
+=== task: ex-depth-mask
+--- file: main.cpp
+--- find:
+        psoDesc.BlendState.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_transparentPipelineState)));
+--- replace:
+        psoDesc.BlendState.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+        psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_transparentPipelineState)));
