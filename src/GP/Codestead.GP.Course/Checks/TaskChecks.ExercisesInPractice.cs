@@ -47,6 +47,9 @@ public static partial class TaskChecks
     /// <summary>The paddle's brass ends (214, 170, 72).</summary>
     private static bool IpExBrass(double[] p) => p[0] > 0.7 && p[1] > 0.55 && p[1] < 0.78 && p[2] < 0.4;
 
+    /// <summary>A brick tinted (1, 0.2, 0.2): red.</summary>
+    private static bool IpExHitRed(double[] p) => p[0] > 0.6 && p[1] < 0.3 && p[2] < 0.3;
+
     private static Dictionary<string, Dictionary<string, TaskCheck>> ExercisesInPractice => new()
     {
         ["debugging"] = new()
@@ -110,6 +113,25 @@ public static partial class TaskChecks
             ["ex-launch-left"] = c => c.Drew && At(c, 1.0, 348, 385, GlassBall) && At(c, 1.0, 450, 385, p => !GlassBall(p)),
             // The bottom edge bounces too: at 4.5 s the ball is on its way up again at the right edge, not gone.
             ["ex-bottom-bounce"] = c => c.Drew && At(c, 4.5, 772, 317, GlassBall),
+        },
+        ["collision-detection"] = new()
+        {
+            // The bricks the ball touches turn red instead of disappearing: at 3.0 s the channel is red, the stone grey.
+            ["ex-mark-hits"] = c => c.Drew && At(c, 3.0, 506, 141, IpExHitRed) && At(c, 3.0, 560, 18, IpExHitRed) && At(c, 3.0, 506, 206, Stone),
+            // Solid stones break too: at 3.0 s the stone (5, 9) the ball flew through is gone as well.
+            ["ex-break-stones"] = c => c.Drew && At(c, 3.0, 506, 206, DuskSky) && At(c, 3.0, 506, 141, NightSky) && At(c, 3.0, 13, 209, Stone),
+            // The ball stops at its first collision – the underside of the stone (5, 9) – and no brick is destroyed.
+            ["ex-freeze"] = c => c.Drew && At(c, 3.0, 493, 235, GlassBall) && At(c, 3.0, 506, 141, BlueBrick) && At(c, 3.0, 560, 18, OrangeBrick),
+        },
+        ["collision-resolution"] = new()
+        {
+            // A 500-pixel paddle catches the ball coming down from the stone: at 3.0 s it flies up again at (678, 361)
+            // instead of lying on the paddle after a reset.
+            ["ex-catch"] = c => c.Drew && At(c, 3.0, 678, 361, GlassBall) && At(c, 3.0, 400, 567, p => !GlassBall(p)),
+            // Losing the ball (frame 151) moves on to level two: at 3.0 s its stone pillars and blue top row.
+            ["ex-next-level"] = c => c.Drew && At(c, 3.0, 13, 29, Stone) && At(c, 3.0, 396, 29, BlueBrick) && At(c, 3.0, 400, 567, GlassBall),
+            // The stones let the ball through: at 2.0 s it has broken the blue brick above the stone and is on its way down.
+            ["ex-ghost-stones"] = c => c.Drew && At(c, 2.0, 506, 141, NightSky) && At(c, 2.0, 549, 282, GlassBall) && At(c, 2.0, 506, 206, Stone),
         },
     };
 }

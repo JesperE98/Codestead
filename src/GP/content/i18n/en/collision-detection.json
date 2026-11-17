@@ -16,6 +16,18 @@
         "vulkan": "An overload above `DoCollisions`: `bool CheckCollision(BallObject& one, GameObject& two)`. `center = one.Position + one.Radius`, `clamped = glm::clamp(difference, -aabb_half_extents, aabb_half_extents)`, `closest = aabb_center + clamped`, `return glm::length(closest - center) < one.Radius;`.",
         "d3d12": "An overload above `DoCollisions`: `bool CheckCollision(BallObject& one, GameObject& two)`. `XMVECTOR center = XMLoadFloat2(&one.Position) + XMVectorReplicate(one.Radius);`, the box's centre and half extents with `XMVectorSet`, `XMVectorClamp(difference, -aabb_half_extents, aabb_half_extents)`, `return XMVectorGetX(XMVector2Length(difference)) < one.Radius;`."
       }
+    },
+    "ex-mark-hits": {
+      "text": "Instead of destroying a brick the ball touches, paint it red (1.0, 0.2, 0.2), so you can see every brick the collision test fires for.",
+      "hint": "In `DoCollisions`, where a non-solid brick gets `Destroyed = true`: change its `Color` instead. `DrawObject` draws each brick with its own colour."
+    },
+    "ex-break-stones": {
+      "text": "Let the ball break the solid stones too.",
+      "hint": "`DoCollisions` skips the bricks marked `IsSolid`; drop that condition."
+    },
+    "ex-freeze": {
+      "text": "Stop the ball dead at its first collision (keep destroying the bricks as before). Where does it stop – and why is no brick destroyed?",
+      "hint": "Set `Ball.Velocity` to (0, 0) in `DoCollisions` whenever `CheckCollision` reports a hit. The first thing the ball meets is a solid stone."
     }
   }
 }

@@ -1,0 +1,26 @@
+=== task: ex-mark-hits
+--- file: main.cpp
+--- find:
+                if (!box.IsSolid)
+                    box.Destroyed = true;
+--- replace:
+                if (!box.IsSolid)
+                    box.Color = glm::vec3(1.0f, 0.2f, 0.2f);
+
+=== task: ex-break-stones
+--- file: main.cpp
+--- find:
+                if (!box.IsSolid)
+                    box.Destroyed = true;
+--- replace:
+                box.Destroyed = true;
+
+=== task: ex-freeze
+--- file: main.cpp
+--- find:
+                if (!box.IsSolid)
+                    box.Destroyed = true;
+--- replace:
+                if (!box.IsSolid)
+                    box.Destroyed = true;
+                Ball.Velocity = glm::vec2(0.0f, 0.0f);
