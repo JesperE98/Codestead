@@ -48,6 +48,30 @@
         "vulkan": "`vec3 T = normalize(normalMatrix * inTangent); vec3 N = normalize(normalMatrix * inNormal); T = normalize(T - dot(T, N) * N); vec3 B = cross(N, T);`. Ingenting syns ändras på den platta fyrhörningen.",
         "d3d12": "`T = normalize(T - dot(T, N) * N); float3 B = cross(T, N);` – inte learnopengls `cross(N, T)`, som pekar uppåt i bilden. Ingenting syns ändras på den platta fyrhörningen."
       }
+    },
+    "ex-show-normals": {
+      "text": "Visa normalerna som belysningen använder som färger: flytta tillbaka normalen i tangentrummet från −1…1 till 0…1 och skriv ut den. Varför är väggen mest ljusblå?",
+      "hint": {
+        "opengl": "`normal * 0.5 + 0.5` som `FragColor`, efter att `normal` lästs ur normalkartan och flyttats till −1…1. En normal rakt ut ur ytan är (0, 0, 1) i tangentrummet.",
+        "vulkan": "`normal * 0.5 + 0.5` som `outColor`, efter att `normal` lästs ur normalkartan och flyttats till −1…1. En normal rakt ut ur ytan är (0, 0, 1) i tangentrummet.",
+        "d3d12": "Returnera `normal * 0.5f + 0.5f`, efter att `normal` lästs ur normalkartan, flyttats till −1…1 och fått sitt y vänt. En normal rakt ut ur ytan är (0, 0, 1) i tangentrummet."
+      }
+    },
+    "ex-flat": {
+      "text": "Belys väggen med ytans egen normal i stället för normalkartans och jämför: tegelstenarna behåller sina färger, men väggen ser platt ut igen.",
+      "hint": "I tangentrummet är ytans egen normal alltid (0, 0, 1) – skriv över `normal` med den direkt efter att den lästs ur normalkartan."
+    },
+    "ex-stronger-bumps": {
+      "text": "Gör ojämnheterna tre gånger så starka: luta varje normal från normalkartan tre gånger så långt bort från (0, 0, 1). Tegelstenarnas kanter får djupare skuggor.",
+      "hint": "När normalen lästs och flyttats till −1…1: multiplicera dess x och y (lutningen) med 3.0, behåll z och normalisera den igen."
+    },
+    "ex-turn": {
+      "text": "Låt väggen vrida sig långsamt, som learnopengl gör: −10° per sekund runt samma axel i stället för de fasta −30°. Se hur tegelkanterna fångar ljuset olika när väggen vrids.",
+      "hint": {
+        "opengl": "Vinkeln i `glm::rotate` för quadens `model`: `glfwGetTime() * -10.0` grader. Vertexshadern bygger TBN-matrisen från modellmatrisen varje bildruta, så belysningen följer med.",
+        "vulkan": "Vinkeln i `glm::rotate` för quadens `model` i `recordCommandBuffer()`: `glfwGetTime() * -10.0` grader. Vertexshadern bygger TBN-matrisen från modellmatrisen, så belysningen följer med.",
+        "d3d12": "Vinkeln i quadens `XMMatrixRotationAxis`: en tid sedan starten (en `static auto startTime = std::chrono::high_resolution_clock::now();` och `duration` fram till nu) × −10 grader. Normalmatrisen görs från samma modellmatris, så belysningen följer med."
+      }
     }
   }
 }

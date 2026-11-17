@@ -48,6 +48,30 @@
         "vulkan": "`vec3 T = normalize(normalMatrix * inTangent); vec3 N = normalize(normalMatrix * inNormal); T = normalize(T - dot(T, N) * N); vec3 B = cross(N, T);`. Nothing visible changes on the flat quad.",
         "d3d12": "`T = normalize(T - dot(T, N) * N); float3 B = cross(T, N);` – not learnopengl's `cross(N, T)`, which points up the image. Nothing visible changes on the flat quad."
       }
+    },
+    "ex-show-normals": {
+      "text": "Show the normals the lighting uses as colours: map the tangent-space normal from −1…1 back to 0…1 and write it out. Why is the wall mostly light blue?",
+      "hint": {
+        "opengl": "`normal * 0.5 + 0.5` as `FragColor`, after `normal` has been read from the normal map and moved to −1…1. A normal straight out of the surface is (0, 0, 1) in tangent space.",
+        "vulkan": "`normal * 0.5 + 0.5` as `outColor`, after `normal` has been read from the normal map and moved to −1…1. A normal straight out of the surface is (0, 0, 1) in tangent space.",
+        "d3d12": "Return `normal * 0.5f + 0.5f`, after `normal` has been read from the normal map, moved to −1…1 and had its y flipped. A normal straight out of the surface is (0, 0, 1) in tangent space."
+      }
+    },
+    "ex-flat": {
+      "text": "Light the wall with the surface's own normal instead of the normal map's, and compare: the bricks keep their colours, but the wall looks flat again.",
+      "hint": "In tangent space the surface's own normal is always (0, 0, 1) – overwrite `normal` with it right after it has been read from the normal map."
+    },
+    "ex-stronger-bumps": {
+      "text": "Make the bumps three times as strong: tilt every normal from the normal map three times as far away from (0, 0, 1). The edges of the bricks get deeper shadows.",
+      "hint": "After the normal has been read and moved to −1…1, multiply its x and y (the tilt) by 3.0, keep z, and normalise it again."
+    },
+    "ex-turn": {
+      "text": "Let the wall turn slowly, as learnopengl does: −10° per second about the same axis instead of the fixed −30°. Watch how the brick edges catch the light differently as the wall turns.",
+      "hint": {
+        "opengl": "The angle in `glm::rotate` for the quad's `model`: `glfwGetTime() * -10.0` degrees. The vertex shader builds the TBN matrix from the model matrix every frame, so the lighting follows.",
+        "vulkan": "The angle in `glm::rotate` for the quad's `model` in `recordCommandBuffer()`: `glfwGetTime() * -10.0` degrees. The vertex shader builds the TBN matrix from the model matrix, so the lighting follows.",
+        "d3d12": "The angle of the quad's `XMMatrixRotationAxis`: a time since the start (a `static auto startTime = std::chrono::high_resolution_clock::now();` and the `duration` up to now) × −10 degrees. The normal matrix is made from the same model matrix, so the lighting follows."
+      }
     }
   }
 }

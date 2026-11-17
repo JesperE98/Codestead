@@ -48,5 +48,16 @@ public static partial class TaskChecks
             // The light near the ceiling: the rotated cube's shadow falls down the middle of the wall; the right is lit.
             ["ex-move-light"] = c => At(c, 264, 300, p => p[0] < 0.1) && At(c, 350, 300, p => p[0] < 0.1) && At(c, 600, 300, p => p[0] > 0.12),
         },
+        ["normal-mapping"] = new()
+        {
+            // The normals as colours: the flat brick faces (0, 0, 1) light blue (0.5, 0.5, 1.0).
+            ["ex-show-normals"] = c => c.PixelIs(300 / 800.0, 250 / 600.0, 0.5, 0.5, 1.0) && c.PixelIs(480 / 800.0, 180 / 600.0, 0.5, 0.5, 1.0),
+            // The surface's own normal: no brick edge turned away from the light, so (almost) no dark pixels; the highlight stays.
+            ["ex-flat"] = c => At(c, 480, 180, p => p[0] > 0.85) && c.CountPixels(p => p[0] < 0.08) < 60,
+            // Three times the tilt: about twice as many dark brick edges as the solution's ≈ 490; the brick faces unchanged.
+            ["ex-stronger-bumps"] = c => At(c, 480, 180, p => p[0] > 0.85) && c.CountPixels(p => p[0] < 0.08) > 750,
+            // The wall turns: the picture changes over time.
+            ["ex-turn"] = c => c.Drew && c.ChangesOverTime,
+        },
     };
 }
