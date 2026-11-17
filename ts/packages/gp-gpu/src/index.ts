@@ -82,4 +82,5 @@ export { Wrap } from "./Textures/Wrap.js";
 // The per-API readers register themselves when imported (wave 2 adds one line each):
 // import "./Readers/GlReader.js";
 // import "./Readers/VulkanReader.js";
-// import "./Readers/D3D12Reader.js";
+import "./Readers/D3D12Reader.js";
+export { D3D12Reader } from "./Readers/D3D12Reader.js";
