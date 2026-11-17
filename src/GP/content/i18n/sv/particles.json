@@ -44,6 +44,30 @@
         "vulkan": "`vkCmdBindPipeline(generator.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, generator.shader);`, sedan per levande partikel en `ParticleConstants` pushad med `vkCmdPushConstants(…, sizeof(ParticleConstants), &constants)`, `vkCmdBindDescriptorSets(…, &generator.texture, …)`, `vkCmdBindVertexBuffers` med rektangeln, `vkCmdDraw(generator.commandBuffer, 6, 1, 0, 0)`. Ingenting att återställa.",
         "d3d12": "`Use(generator.shader);`, sedan per levande partikel `SetGraphicsRoot32BitConstants(0, sizeof(ParticleConstants) / 4, &constants, 0)`, `SetGraphicsRootDescriptorTable(2, …generator.texture…)`, `IASetVertexBuffers(0, 1, &generator.quadVertexBufferView)`, `DrawInstanced(6, 1, 0, 0)`. Ingenting att återställa."
       }
+    },
+    "ex-embers": {
+      "text": "Gör de vita gnistorna till glödande glöd: ge varje partikel färgen (r, r × 0,5, 0,1), där r är den slumpade ljusstyrka den får nu.",
+      "hint": "Färgen väljs i `respawnParticle`: behåll `rColor` som rött, hälften av den som grönt och ett fast 0.1 som blått."
+    },
+    "ex-big-particles": {
+      "text": "Gör varje partikel dubbelt så stor: 20 × 20 pixlar i stället för 10 × 10.",
+      "hint": {
+        "opengl": "Storleken finns inte i C++-koden: vertexshadern `particle.vs` skalar enhetsrektangeln med `scale`.",
+        "vulkan": "Storleken finns inte i C++-koden: vertexshadern `shaders/particle.vert` skalar enhetsrektangeln med `scale` – kompilera om den med `glslc`.",
+        "d3d12": "Storleken finns inte i C++-koden: vertexshadern i `particle.hlsl` skalar enhetsrektangeln med `scale`."
+      }
+    },
+    "ex-long-trail": {
+      "text": "Låt svansen tona bort långsammare, så att den blir märkbart längre – partiklarnas alfa ska minska med 1,0 per sekund i stället för 2,5.",
+      "hint": "Varje partikel tonas ut i generatorns `Update`, där dess alfa minskas med `dt` gånger en faktor. Livslängden (1 sekund) är densamma."
+    },
+    "ex-no-glow": {
+      "text": "Rita partiklarna med vanlig alfablandning i stället för additiv blandning, och jämför: vart tar glöden vägen?",
+      "hint": {
+        "opengl": "`DrawParticles` byter till `glBlendFunc(GL_SRC_ALPHA, GL_ONE)` – använd `GL_ONE_MINUS_SRC_ALPHA` som destinationsfaktor i stället. Med additiv blandning summeras överlappande partiklar mot vitt.",
+        "vulkan": "Partikelpipelinen skapas med `VK_BLEND_FACTOR_ONE` som destinationens färgfaktor – använd `VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA` i stället. Med additiv blandning summeras överlappande partiklar mot vitt.",
+        "d3d12": "Partiklarnas pipeline state skapas med `D3D12_BLEND_ONE` som destinationsblandning – använd `D3D12_BLEND_INV_SRC_ALPHA` i stället. Med additiv blandning summeras överlappande partiklar mot vitt."
+      }
     }
   }
 }

@@ -133,5 +133,18 @@ public static partial class TaskChecks
             // The stones let the ball through: at 2.0 s it has broken the blue brick above the stone and is on its way down.
             ["ex-ghost-stones"] = c => c.Drew && At(c, 2.0, 506, 141, NightSky) && At(c, 2.0, 549, 282, GlassBall) && At(c, 2.0, 506, 206, Stone),
         },
+        ["particles"] = new()
+        {
+            // Orange embers: the trail behind the ball at 2.0 s red over green over blue instead of white.
+            ["ex-embers"] = c => c.Drew && At(c, 2.0, 542, 410, p => p[0] > 0.9 && p[1] > 0.5 && p[1] < 0.85 && p[2] < 0.55) && At(c, 2.0, 530, 366, p => p[0] > p[1] + 0.15 && p[1] > p[2])
+                && At(c, 2.0, 551, 435, GlassBall),
+            // 20-pixel particles: a broad bright trail – many more nearly white pixels around it.
+            ["ex-big-particles"] = c => c.Drew && IpExCountIn(c, 2.0, 500, 300, 580, 425, p => p[0] > 0.85 && p[1] > 0.8 && p[2] > 0.85) >= 9 && At(c, 2.0, 551, 435, GlassBall),
+            // A slower fade: at 2.0 s the trail still reaches back up to the stone the ball bounced off (frame 86).
+            ["ex-long-trail"] = c => c.Drew && IpExAnyIn(c, 2.0, 480, 230, 515, 265, p => p[0] > 0.5 && p[2] > 0.55) && At(c, 2.0, 522, 332, p => p[0] > 0.85 && p[2] > 0.85),
+            // Normal blending instead of additive: the trail no longer glows white next to the ball.
+            ["ex-no-glow"] = c => c.Drew && At(c, 2.0, 542, 410, p => p[0] > 0.45 && p[0] < 0.8 && p[2] > 0.45 && p[2] < 0.8) && At(c, 2.0, 530, 366, p => p[0] > 0.4 && p[0] < 0.7)
+                && At(c, 2.0, 551, 435, GlassBall),
+        },
     };
 }
