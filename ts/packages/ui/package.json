@@ -4,6 +4,7 @@
   "type": "module",
   "description": "React: theme, markdown view, dialogs, the learning window. (port of Codestead.UI, Codestead.Learning.UI).",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./codestead.css": "./src/Themes/codestead.css"
   }
 }

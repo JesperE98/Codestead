@@ -1,0 +1,1300 @@
+/*
+  The Codestead look, shared by every tool (port of Codestead.UI/Themes/Codestead.axaml).
+
+  Colours have fixed meanings (see "Färgsystemet" in docs/DEVELOPMENT.md):
+    accent    the tool's own brand colour: primary buttons, the current chapter, focus.
+              Each app sets its own with Brand.applyTo (this sheet has a neutral default).
+    success   done, correct, passed            (green)
+    warning   hints, warnings, things to check (amber)
+    danger    wrong, failed, destructive       (red)
+    info      information and links            (blue)
+    reward    XP, levels, achievements, streak (gold)
+  Each has a "soft" background, and on-accent is the text colour on accent.
+
+  The theme follows the system unless the root element has data-theme="light" or "dark" (ThemeSwitcher).
+  Each --cs-x variable is the C# resource CsX (CsSurface2 → --cs-surface-2).
+*/
+
+/* ---------- Colours: light ---------- */
+:root,
+:root[data-theme="light"] {
+  --cs-bg: #f6f7f9;
+  --cs-surface: #ffffff;
+  --cs-surface-2: #eef0f3;
+  --cs-border: #dcdfe4;
+  --cs-text: #1c2026;
+  --cs-text-muted: #5b6370;
+  --cs-accent: #1f7a4d;
+  --cs-accent-soft: #e3f3ea;
+  --cs-on-accent: #ffffff;
+  --cs-success: #177233;
+  --cs-success-soft: #dcf5e2;
+  --cs-warning: #8a5a00;
+  --cs-warning-soft: #fff4d1;
+  --cs-info: #0b62c4;
+  --cs-info-soft: #e2efff;
+  --cs-reward: #875e00;
+  --cs-reward-soft: #fff1cc;
+  --cs-reward-strong: #e0a812;
+  --cs-link: #0b62c4;
+  --cs-code-bg: #eef0f3;
+  --cs-inline-code-bg: #dfe3e9;
+  --cs-code-text: #1c2026;
+  /* Older names for the warning colours (hint boxes). */
+  --cs-warn-bg: #fff4d1;
+  --cs-warn-border: #e0b84a;
+  --cs-danger: #c62828;
+  --cs-danger-soft: #fdecea;
+  /* Not colours of the C# themes: Fluent's control colours that the Avalonia app gets from FluentTheme. */
+  --cs-control: rgba(0, 0, 0, 0.2);
+  --cs-control-hover: rgba(0, 0, 0, 0.32);
+  --cs-shadow: rgba(0, 0, 0, 0.25);
+  color-scheme: light;
+}
+
+/* ---------- Colours: dark (the system's choice, unless the app says light) ---------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --cs-bg: #13161b;
+    --cs-surface: #1a1e24;
+    --cs-surface-2: #232830;
+    --cs-border: #2f3541;
+    --cs-text: #e3e7ed;
+    --cs-text-muted: #9aa3b0;
+    --cs-accent: #4fc283;
+    --cs-accent-soft: #1c3528;
+    --cs-on-accent: #0d1a13;
+    --cs-success: #4ac26b;
+    --cs-success-soft: #15301e;
+    --cs-warning: #e3b341;
+    --cs-warning-soft: #2e2513;
+    --cs-info: #6cb0ff;
+    --cs-info-soft: #13253b;
+    --cs-reward: #f0c050;
+    --cs-reward-soft: #302610;
+    --cs-reward-strong: #e0a812;
+    --cs-link: #6cb0ff;
+    --cs-code-bg: #232830;
+    --cs-inline-code-bg: #343b47;
+    --cs-code-text: #e3e7ed;
+    --cs-warn-bg: #2e2513;
+    --cs-warn-border: #8a6d1f;
+    --cs-danger: #f26966;
+    --cs-danger-soft: #3a1d1d;
+    --cs-control: rgba(255, 255, 255, 0.12);
+    --cs-control-hover: rgba(255, 255, 255, 0.22);
+    --cs-shadow: rgba(0, 0, 0, 0.5);
+    color-scheme: dark;
+  }
+}
+
+/* ---------- Colours: dark (chosen in the settings) ---------- */
+:root[data-theme="dark"] {
+  --cs-bg: #13161b;
+  --cs-surface: #1a1e24;
+  --cs-surface-2: #232830;
+  --cs-border: #2f3541;
+  --cs-text: #e3e7ed;
+  --cs-text-muted: #9aa3b0;
+  --cs-accent: #4fc283;
+  --cs-accent-soft: #1c3528;
+  --cs-on-accent: #0d1a13;
+  --cs-success: #4ac26b;
+  --cs-success-soft: #15301e;
+  --cs-warning: #e3b341;
+  --cs-warning-soft: #2e2513;
+  --cs-info: #6cb0ff;
+  --cs-info-soft: #13253b;
+  --cs-reward: #f0c050;
+  --cs-reward-soft: #302610;
+  --cs-reward-strong: #e0a812;
+  --cs-link: #6cb0ff;
+  --cs-code-bg: #232830;
+  --cs-inline-code-bg: #343b47;
+  --cs-code-text: #e3e7ed;
+  --cs-warn-bg: #2e2513;
+  --cs-warn-border: #8a6d1f;
+  --cs-danger: #f26966;
+  --cs-danger-soft: #3a1d1d;
+  --cs-control: rgba(255, 255, 255, 0.12);
+  --cs-control-hover: rgba(255, 255, 255, 0.22);
+  --cs-shadow: rgba(0, 0, 0, 0.5);
+  color-scheme: dark;
+}
+
+/* ---------- The terminal colours and the fonts (the same in both themes) ---------- */
+:root {
+  --cs-term-bg: #0f1318;
+  --cs-term-bar: #1b2129;
+  --cs-term-text: #e6edf3;
+  --cs-term-muted: #7d8590;
+  --cs-term-green: #7ee787;
+  /* The text font, then colour emoji fonts so that emoji (💡 🏆 🔥) are drawn in colour everywhere. */
+  --cs-ui-font: Inter, "Segoe UI", system-ui, -apple-system, "Noto Sans", sans-serif, "Segoe UI Emoji", "Noto Color Emoji", "Apple Color Emoji";
+  --cs-mono-font: "Cascadia Mono", "JetBrains Mono", "DejaVu Sans Mono", "Liberation Mono", "Noto Sans Mono", Menlo, Consolas, monospace;
+  --cs-emoji-font: "Segoe UI Emoji", "Noto Color Emoji", "Apple Color Emoji", "Twemoji Mozilla", sans-serif;
+}
+
+/* ---------- Window background and text ---------- */
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+body,
+.cs-root {
+  background: var(--cs-bg);
+  color: var(--cs-text);
+  font-family: var(--cs-ui-font);
+  font-size: 14px;
+  line-height: normal;
+}
+
+.cs-root *,
+.cs-root *::before,
+.cs-root *::after {
+  box-sizing: border-box;
+}
+
+/* ---------- Text styles ---------- */
+.muted {
+  color: var(--cs-text-muted);
+}
+
+.h1 {
+  font-size: 30px;
+  font-weight: 700;
+  margin: 4px 0 18px;
+  line-height: 36px;
+}
+
+.h2 {
+  font-size: 21px;
+  font-weight: 700;
+  margin: 30px 0 8px;
+}
+
+.h3 {
+  font-size: 17px;
+  font-weight: 600;
+  margin: 20px 0 6px;
+}
+
+.eyebrow {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--cs-accent);
+  letter-spacing: 0.8px;
+}
+
+.cs-text {
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+/* ---------- Buttons (Fluent's button, then the Codestead classes) ---------- */
+.cs-root button {
+  font: inherit;
+  color: inherit;
+  background: var(--cs-control);
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 5px 8px 6px;
+  cursor: default;
+  text-align: center;
+}
+
+.cs-root button:hover:not(:disabled) {
+  background: var(--cs-control-hover);
+}
+
+.cs-root button:disabled {
+  opacity: 0.55;
+}
+
+.cs-root button:focus-visible {
+  outline: 2px solid var(--cs-accent);
+  outline-offset: 1px;
+}
+
+.cs-root button.primary {
+  background: var(--cs-accent);
+  color: var(--cs-on-accent);
+  font-weight: 600;
+  padding: 7px 14px;
+}
+
+.cs-root button.primary:hover:not(:disabled) {
+  background: var(--cs-accent);
+  opacity: 0.9;
+}
+
+.cs-root button.secondary {
+  background: var(--cs-surface);
+  border-color: var(--cs-border);
+  padding: 6px 12px;
+}
+
+.cs-root button.secondary:hover:not(:disabled) {
+  background: var(--cs-surface-2);
+}
+
+.cs-root button.danger {
+  background: var(--cs-danger);
+  color: white;
+  font-weight: 600;
+  padding: 7px 14px;
+}
+
+.cs-root button.danger:hover:not(:disabled) {
+  background: var(--cs-danger);
+  opacity: 0.9;
+}
+
+.cs-root button.danger-outline {
+  background: transparent;
+  color: var(--cs-danger);
+  border-color: var(--cs-danger);
+  padding: 6px 12px;
+}
+
+.cs-root button.danger-outline:hover:not(:disabled) {
+  background: var(--cs-danger-soft);
+}
+
+.cs-root button.chip {
+  background: var(--cs-surface);
+  border-color: var(--cs-border);
+  border-radius: 14px;
+  padding: 3px 10px;
+  font-size: 12.5px;
+}
+
+.cs-root button.chip:hover:not(:disabled) {
+  background: var(--cs-surface-2);
+}
+
+.cs-root button.chip.active {
+  background: var(--cs-accent-soft);
+  border-color: var(--cs-accent);
+  color: var(--cs-accent);
+}
+
+.cs-root button.flat {
+  background: transparent;
+  border-width: 0;
+}
+
+.cs-root button.flat:hover:not(:disabled) {
+  background: var(--cs-control);
+}
+
+.cs-root button.nav-item {
+  display: block;
+  width: 100%;
+  background: transparent;
+  padding: 6px 10px;
+  border-radius: 6px;
+  text-align: start;
+}
+
+.cs-root button.nav-item:hover:not(:disabled) {
+  background: var(--cs-surface-2);
+}
+
+.cs-root button.nav-item.current {
+  background: var(--cs-accent-soft);
+  color: var(--cs-accent);
+}
+
+.cs-root button.cmd {
+  display: block;
+  width: 100%;
+  background: transparent;
+  border-width: 0;
+  padding: 1px 6px;
+  border-radius: 4px;
+  text-align: left;
+  font-family: var(--cs-mono-font);
+  font-size: 14px;
+  color: var(--cs-term-text);
+  cursor: pointer;
+  white-space: pre-wrap;
+}
+
+.cs-root button.cmd:hover {
+  background: rgba(126, 231, 135, 0.12);
+  color: var(--cs-term-text);
+}
+
+.cs-root button.solution {
+  background: var(--cs-term-bg);
+  color: var(--cs-term-text);
+  font-family: var(--cs-mono-font);
+  font-size: 13px;
+  padding: 4px 8px;
+  cursor: pointer;
+  direction: ltr;
+  text-align: left;
+}
+
+.cs-root button.solution:hover {
+  background: var(--cs-term-bar);
+  color: var(--cs-term-green);
+}
+
+/* ---------- Cards ---------- */
+.card {
+  background: var(--cs-surface);
+  border: 1px solid var(--cs-border);
+  border-radius: 10px;
+}
+
+/* ---------- Inputs ---------- */
+.cs-root select,
+.cs-root input[type="text"],
+.cs-root textarea {
+  font: inherit;
+  color: var(--cs-text);
+  background: var(--cs-surface);
+  border: 1px solid var(--cs-border);
+  border-radius: 6px;
+  padding: 5px 10px 6px;
+}
+
+.cs-root select:focus-visible,
+.cs-root input[type="text"]:focus-visible,
+.cs-root textarea:focus-visible {
+  outline: 2px solid var(--cs-accent);
+  outline-offset: 0;
+}
+
+.cs-root input[type="radio"],
+.cs-root input[type="checkbox"] {
+  accent-color: var(--cs-accent);
+}
+
+/* A thin progress bar (Avalonia's ProgressBar with Minimum 0, Maximum 1). */
+.cs-bar {
+  position: relative;
+  overflow: hidden;
+  background: var(--cs-surface-2);
+  border-radius: 999px;
+  min-width: 0;
+}
+
+.cs-bar > span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: var(--fill, var(--cs-reward));
+  transition: width 700ms cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+[dir="rtl"] .cs-bar > span {
+  inset: 0 0 0 auto;
+}
+
+/* ---------- Markdown (MarkdownView) ---------- */
+/* Blocks are stacked like an Avalonia StackPanel: their margins add up instead of collapsing. */
+.cs-markdown,
+.cs-markdown .cs-md-stack {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.cs-markdown {
+  --md-base: 16px;
+  font-size: var(--md-base);
+}
+
+.cs-md-text {
+  font-size: var(--md-base);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  margin: 0;
+}
+
+.cs-md-p {
+  margin: 6px 0 8px;
+}
+
+.cs-md-h {
+  margin: 0;
+  line-height: 1.25;
+}
+
+.cs-md-h1 {
+  font-size: calc(var(--md-base) * 1.9);
+  font-weight: 700;
+  margin: 4px 0 18px;
+}
+
+.cs-md-h2 {
+  font-size: calc(var(--md-base) * 1.32);
+  font-weight: 700;
+  margin: 30px 0 8px;
+}
+
+.cs-md-h3 {
+  font-size: calc(var(--md-base) * 1.08);
+  font-weight: 600;
+  margin: 20px 0 6px;
+}
+
+.cs-md-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 4px 0 8px;
+}
+
+.cs-md-item {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+}
+
+.cs-md-marker {
+  color: var(--cs-text-muted);
+  font-size: var(--md-base);
+  line-height: 1.6;
+  text-align: end;
+  margin-inline-end: 8px;
+}
+
+.cs-md-code {
+  background: var(--cs-term-bg);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 8px 0 12px;
+  direction: ltr;
+  overflow-x: auto;
+}
+
+.cs-md-code pre {
+  margin: 0;
+  font-family: var(--cs-mono-font);
+  font-size: 14px;
+  line-height: 21px;
+  color: var(--cs-term-text);
+}
+
+.cs-md-commands {
+  background: var(--cs-term-bg);
+  border-left: 3px solid var(--cs-term-green);
+  border-radius: 8px;
+  padding: 10px;
+  margin: 8px 0 12px;
+  direction: ltr;
+}
+
+.cs-md-commands .prompt {
+  color: var(--cs-term-muted);
+}
+
+.cs-md-quote {
+  border-inline-start: 4px solid var(--cs-warn-border);
+  background: var(--cs-warn-bg);
+  border-radius: 4px;
+  padding: 6px 14px;
+  margin: 12px 0;
+}
+
+.cs-md-table-scroll {
+  overflow-x: auto;
+  margin: 10px 0 12px;
+}
+
+.cs-md-table {
+  border-collapse: collapse;
+}
+
+.cs-md-table td,
+.cs-md-table th {
+  border: 1px solid var(--cs-border);
+  padding: 5px 10px;
+  max-width: 380px;
+  font-size: calc(var(--md-base) - 1.5px);
+  line-height: 1.5;
+  text-align: start;
+  vertical-align: top;
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+
+.cs-md-table th {
+  background: var(--cs-surface-2);
+  font-weight: 600;
+}
+
+.cs-md-hr {
+  border: none;
+  border-top: 1px solid var(--cs-border);
+  margin: 16px 0;
+  width: 100%;
+}
+
+.cs-md-inline-code {
+  font-family: var(--cs-mono-font);
+  font-size: 0.88em;
+  /* A clearly visible background, so it is plain where the code ends (e.g. `cd ..` before a full stop). */
+  background: var(--cs-inline-code-bg);
+  border-radius: 3px;
+  padding: 0 0.15em;
+}
+
+.cs-md-link {
+  color: var(--cs-link);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.cs-md-picture {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 10px 0 12px;
+  align-items: flex-start;
+}
+
+.cs-md-caption {
+  font-size: calc(var(--md-base) * 0.82);
+  font-style: italic;
+  color: var(--cs-text-muted);
+}
+
+.cs-md-details {
+  margin: 8px 0;
+}
+
+.cs-root button.cs-md-details-toggle {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  color: var(--cs-link);
+  padding: 4px 8px;
+  text-align: start;
+}
+
+.cs-md-details-arrow {
+  width: 16px;
+  font-size: calc(var(--md-base) * 0.9);
+  flex: none;
+}
+
+.cs-md-details-summary {
+  font-size: calc(var(--md-base) * 0.95);
+  font-weight: 600;
+}
+
+.cs-md-distro {
+  border: 1px solid var(--cs-border);
+  background: var(--cs-surface);
+  border-radius: 8px;
+  padding: 8px 18px;
+  margin: 14px 0 6px;
+}
+
+.cs-md-distro-badge {
+  align-self: flex-start;
+  color: white;
+  font-size: 11.5px;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 1px 8px;
+  margin-bottom: 2px;
+}
+
+/* A picture or an animation (AnimatedImage): never wider than its natural size. */
+.cs-picture {
+  position: relative;
+  max-width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  line-height: 0;
+}
+
+.cs-picture img,
+.cs-picture canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+.cs-picture.animated {
+  cursor: pointer;
+}
+
+.cs-picture canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* ---------- Dialogs and toasts (OverlayHost) ---------- */
+.cs-overlay {
+  position: relative;
+  height: 100%;
+  min-height: 0;
+}
+
+.cs-overlay-content {
+  height: 100%;
+}
+
+.cs-dialog-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cs-dialog-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.cs-dialog {
+  position: relative;
+  max-width: calc(100% - 32px);
+  max-height: min(640px, calc(100% - 32px));
+  margin: 16px;
+  border-radius: 12px;
+  padding: 20px 24px;
+  border: 1px solid var(--cs-border);
+  background: var(--cs-surface);
+  box-shadow: 0 8px 32px var(--cs-shadow);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.cs-dialog-body {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.cs-dialog-body.scroll {
+  overflow-y: auto;
+}
+
+/* A panel that scrolls by itself fills the dialog: header and buttons stay, the middle scrolls. */
+.cs-dialog-body:not(.scroll) > * {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.cs-root button.dialog-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 14px;
+  padding: 2px 8px;
+  z-index: 1;
+}
+
+[dir="rtl"] .cs-root button.dialog-close,
+.cs-root[dir="rtl"] button.dialog-close {
+  right: auto;
+  left: 8px;
+}
+
+.cs-toasts {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 24px;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.cs-toast {
+  border-radius: 8px;
+  padding: 10px 16px;
+  border: 1px solid var(--cs-border);
+  background: var(--cs-surface);
+  color: var(--cs-text);
+  box-shadow: 0 6px 24px var(--cs-shadow);
+  font-weight: 600;
+  max-width: 554px;
+  overflow-wrap: anywhere;
+}
+
+/* A dialog's own layout: a header, a part that scrolls, buttons at the bottom (DockPanel in C#). */
+.cs-dock {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.cs-dock > .cs-dock-fill {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.cs-dock > .cs-dock-end {
+  align-self: flex-end;
+  flex: none;
+}
+
+.cs-stack {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.cs-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  min-width: 0;
+}
+
+.cs-wrap {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+/* ---------- Checkpoints (CheckpointView) ---------- */
+.cs-checkpoint {
+  border-radius: 10px;
+  border: 1px solid var(--cs-border);
+  background: var(--cs-surface);
+  padding: 12px 16px;
+  margin: 10px 0 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cs-checkpoint.solved {
+  border-color: var(--cs-accent);
+  background: var(--cs-accent-soft);
+}
+
+.cs-checkpoint.right {
+  border-color: var(--cs-accent);
+}
+
+.cs-checkpoint.wrong {
+  border-color: var(--cs-danger);
+}
+
+.cs-checkpoint-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  color: var(--cs-accent);
+}
+
+.cs-checkpoint-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.cs-checkpoint-option input {
+  margin-top: 6px;
+  flex: none;
+}
+
+.cs-checkpoint-code {
+  background: var(--cs-term-bg);
+  border-radius: 6px;
+  padding: 8px 12px;
+  direction: ltr;
+  font-family: var(--cs-mono-font);
+  font-size: 14px;
+  color: var(--cs-term-text);
+  white-space: pre-wrap;
+  margin: 0;
+}
+
+.cs-checkpoint-code .prompt {
+  color: var(--cs-term-muted);
+}
+
+.cs-checkpoint-answer {
+  font-family: var(--cs-mono-font) !important;
+  direction: ltr;
+  width: 100%;
+  resize: vertical;
+}
+
+.cs-checkpoint-try {
+  font-family: var(--cs-mono-font);
+  font-size: 14px;
+  color: var(--cs-accent);
+  direction: ltr;
+}
+
+.cs-checkpoint-feedback {
+  font-weight: 600;
+}
+
+.cs-checkpoint-feedback.right {
+  color: var(--cs-accent);
+}
+
+.cs-checkpoint-feedback.wrong {
+  color: var(--cs-danger);
+}
+
+/* ---------- The gamification (Controls/Game) ---------- */
+.cs-emoji {
+  font-family: var(--cs-emoji-font);
+  direction: ltr;
+  line-height: 1;
+}
+
+.cs-medal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border-style: solid;
+  flex: none;
+  background: var(--cs-reward-soft);
+  border-color: var(--cs-reward-strong);
+}
+
+.cs-medal.success {
+  background: var(--cs-success-soft);
+  border-color: var(--cs-success);
+}
+
+.cs-medal.locked {
+  background: var(--cs-surface-2);
+  border-color: var(--cs-border);
+  opacity: 0.6;
+}
+
+.cs-level-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--cs-reward-strong);
+  color: #2b1d00;
+  font-weight: 700;
+  flex: none;
+}
+
+.cs-game-bar {
+  position: relative;
+}
+
+.cs-root button.cs-game-bar-button {
+  padding: 3px 8px;
+  cursor: pointer;
+}
+
+.cs-game-chip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border-radius: 14px;
+  padding: 3px 10px 3px 4px;
+  background: var(--cs-reward-soft);
+}
+
+.cs-game-gain {
+  position: absolute;
+  right: 6px;
+  top: -2px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--cs-reward);
+  pointer-events: none;
+}
+
+.cs-notices {
+  position: absolute;
+  top: 64px;
+  right: 18px;
+  width: 340px;
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cs-notice {
+  border-radius: 10px;
+  border: 1px solid var(--cs-border);
+  background: var(--cs-surface);
+  box-shadow: 0 6px 24px var(--cs-shadow);
+  transition: opacity 220ms;
+}
+
+.cs-notice.clickable {
+  cursor: pointer;
+}
+
+.cs-notice.leaving {
+  opacity: 0;
+}
+
+.cs-tile {
+  width: 228px;
+  margin: 0 10px 10px 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--cs-border);
+  background: var(--cs-surface-2);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+.cs-tile.unlocked {
+  background: var(--cs-surface);
+  border-color: var(--cs-reward-strong);
+}
+
+.cs-command-chip {
+  border-radius: 6px;
+  padding: 3px 8px;
+  margin: 0 6px 6px 0;
+  background: var(--cs-inline-code-bg);
+  color: var(--cs-code-text);
+  font-family: var(--cs-mono-font);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Motion: short, calm animations (180–350 ms), only up and down. Off when the system asks for less motion. */
+@keyframes cs-fade-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--dy, 12px));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cs-pop {
+  from {
+    transform: scale(0.5);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+.cs-motion-fade-slide-in {
+  animation: cs-fade-slide-in var(--duration, 260ms) cubic-bezier(0.33, 1, 0.68, 1) var(--delay, 0ms) both;
+}
+
+.cs-motion-pop {
+  animation: cs-pop 350ms cubic-bezier(0.34, 1.56, 0.64, 1) var(--delay, 0ms) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cs-motion-fade-slide-in,
+  .cs-motion-pop {
+    animation: none;
+  }
+
+  .cs-bar > span {
+    transition: none;
+  }
+}
+
+/* ---------- The learning window (LearningWindow) ---------- */
+.cs-window {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.cs-topbar {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--cs-border);
+  background: var(--cs-surface);
+  flex: none;
+}
+
+.cs-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.cs-brand img {
+  width: 30px;
+  height: 30px;
+}
+
+.cs-topbar-right {
+  grid-column: 3;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cs-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+}
+
+.cs-sidebar {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--cs-surface);
+  border-inline-end: 1px solid var(--cs-border);
+}
+
+.cs-sidebar-list {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 12px 10px;
+}
+
+.cs-sidebar-part {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  color: var(--cs-text-muted);
+  margin: 16px 10px 6px;
+}
+
+.cs-sidebar-part:first-child {
+  margin-top: 0;
+}
+
+.cs-sidebar-row {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr) auto;
+  align-items: baseline;
+}
+
+.cs-sidebar-count {
+  font-size: 12.5px;
+  margin-inline-start: 8px;
+}
+
+.cs-sidebar-count.complete {
+  color: var(--cs-success);
+  font-weight: 700;
+}
+
+.cs-sidebar-menu {
+  padding: 8px 10px;
+  border-top: 1px solid var(--cs-border);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cs-icon-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.cs-lesson-scroll {
+  overflow-y: auto;
+  min-width: 0;
+}
+
+.cs-lesson {
+  max-width: 760px;
+  box-sizing: content-box !important;
+  margin: 28px auto 48px;
+  padding: 0 40px;
+  display: flex;
+  flex-direction: column;
+}
+
+.cs-fallback-note {
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-top: 10px;
+  background: var(--cs-warning-soft);
+  font-size: 13.5px;
+}
+
+.cs-references {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 30px;
+}
+
+.cs-root button.cs-reference {
+  display: flex;
+  flex-direction: column;
+  text-align: start;
+  padding: 6px 8px;
+}
+
+.cs-lesson-nav {
+  display: grid;
+  grid-template-columns: 1fr 16px 1fr;
+  margin-top: 36px;
+}
+
+.cs-root button.cs-lesson-nav-button {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 14px;
+  text-align: start;
+}
+
+.cs-root button.cs-lesson-nav-button.next {
+  grid-column: 3;
+  text-align: end;
+  align-items: flex-end;
+}
+
+.cs-splitter {
+  cursor: col-resize;
+  background: transparent;
+}
+
+.cs-workbench {
+  display: grid;
+  grid-template-rows: 2fr 12px 3fr;
+  margin: 14px 14px 14px 0;
+  min-height: 0;
+  min-width: 0;
+}
+
+[dir="rtl"] .cs-workbench {
+  margin: 14px 0 14px 14px;
+}
+
+.cs-workbench > * {
+  min-height: 0;
+  min-width: 0;
+}
+
+.cs-tasks-card {
+  overflow-y: auto;
+}
+
+.cs-gate {
+  padding: 24px;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cs-tasks {
+  margin: 14px 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.cs-task {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  padding: 12px 6px;
+  border-top: 1px solid var(--cs-surface-2);
+  border-radius: 6px;
+}
+
+.cs-task.fresh {
+  background: var(--cs-success-soft);
+}
+
+.cs-task-check {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--cs-border);
+  margin: 2px 12px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+[dir="rtl"] .cs-task-check {
+  margin: 2px 0 0 12px;
+}
+
+.cs-task-check.done {
+  border-color: var(--cs-success);
+  background: var(--cs-success);
+}
+
+.cs-task-chip {
+  border-radius: 10px;
+  padding: 1px 8px;
+  border: 1px solid var(--cs-border);
+  font-size: 11.5px;
+}
+
+.cs-task-chip.done {
+  border-color: var(--cs-success);
+  background: var(--cs-success-soft);
+}
+
+.cs-task-chip.current {
+  font-weight: 700;
+}
+
+.cs-tasks-done {
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 8px;
+  background: var(--cs-success-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.cs-danger-zone {
+  padding: 14px;
+  border-radius: 8px;
+  border: 1px solid var(--cs-danger);
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cs-reset-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+/* The tool's workbench fills its place in the column. */
+.cs-workbench-frame {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.cs-workbench-frame > * {
+  flex: 1 1 auto;
+  min-height: 0;
+}
