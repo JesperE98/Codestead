@@ -48,6 +48,34 @@
         "vulkan": "Ett `vkCmdBindPipeline` före loopen; i loopen ändras bara modellmatrisen: `constants.model = model; vkCmdPushConstants(…);` sedan `vkCmdDraw`.",
         "d3d12": "`XMMATRIX model = XMMatrixScaling(0.2f, 0.2f, 0.2f) * XMMatrixTranslation(pointLightPositions[i].x, pointLightPositions[i].y, pointLightPositions[i].z);` – lagra den transponerad i `modelConstants.model`, sedan `SetGraphicsRoot32BitConstants(0, …)` och `DrawInstanced(36, 1, 0, 0)`."
       }
+    },
+    "ex-flashlight-off": {
+      "text": "Stäng av ficklampan, så att bara solen och de fyra lamporna lyser upp scenen. Hur mycket av ljuset på mittlådan kom från ficklampan?",
+      "hint": "Ge spotlighten diffus och spekulär färg 0 – eller hoppa över fas 3 i shadern. De andra ljusen rörs inte."
+    },
+    "ex-night": {
+      "text": "Gör scenen till natt: en mörkblå himmel (0.02, 0.02, 0.05) och svagt, blåaktigt månljus i stället för solen – till exempel ambient (0, 0, 0.02), diffuse (0.05, 0.05, 0.2), specular (0.1, 0.1, 0.3).",
+      "hint": {
+        "opengl": "Två ställen: rensningsfärgen i `glClearColor`, och de tre färgerna i `dirLight` (riktningen är kvar).",
+        "vulkan": "Två ställen: rensningsfärgen i `clearValues[0]` där render passet börjar, och de tre färgerna i `ubo.dirLight` (riktningen är kvar).",
+        "d3d12": "Två ställen: arrayen `clearColor` där render targeten rensas, och de tre färgerna i `dirLight` (riktningen är kvar)."
+      }
+    },
+    "ex-coloured-lights": {
+      "text": "Ge de fyra punktljusen egna färger: rött (1, 0.1, 0.1), grönt (0.1, 1, 0.1), blått (0.1, 0.1, 1) och gult (1, 1, 0.1) – färgen som specular, och 0.8 gånger den som diffuse. Lampkuberna får vara vita.",
+      "hint": {
+        "opengl": "Varje punktljus har egna `setVec3`-rader: ändra `diffuse` och `specular` för `pointLights[0]` till `pointLights[3]`. `setVec3` tar också en `glm::vec3`, så `glm::vec3(…) * 0.8f` fungerar.",
+        "vulkan": "Punktljusen sätts i en loop: lägg de fyra färgerna i en array bredvid den och använd `pointLightColors[i]` (gånger 0.8 för diffuse) inuti.",
+        "d3d12": "Varje punktljus har egna rader: ändra `diffuse` och `specular` för `pointLights[0]` till `pointLights[3]`."
+      }
+    },
+    "ex-moving-lamp": {
+      "text": "Låt den första lampan svänga från sida till sida framför lådorna: dess x blir 0.7 + 1.5 · sin(time). Både dess ljus och dess lampkub måste röra sig.",
+      "hint": {
+        "opengl": "`pointLightPositions` är en vanlig array i `main`: ändra element 0:s `x` i början av varje bildruta, innan det skickas till shadern – lampkuben ritas från samma array.",
+        "vulkan": "`pointLightPositions` är en `const`-vektor – gör den ändringsbar, och sätt sedan element 0:s `x` från `glfwGetTime()` i `updateUniformBuffer`. Lampkuben ritas från samma vektor när command buffern spelas in.",
+        "d3d12": "`pointLightPositions` är en global array: innan punktljus 1 sätts, räkna ut tiden sedan första bildrutan med `std::chrono` och ändra element 0:s `x` – lampkuben ritas från samma array."
+      }
     }
   }
 }

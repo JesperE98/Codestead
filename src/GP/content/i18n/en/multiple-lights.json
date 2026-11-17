@@ -48,6 +48,34 @@
         "vulkan": "One `vkCmdBindPipeline` before the loop; in the loop only the model matrix changes: `constants.model = model; vkCmdPushConstants(…);` then `vkCmdDraw`.",
         "d3d12": "`XMMATRIX model = XMMatrixScaling(0.2f, 0.2f, 0.2f) * XMMatrixTranslation(pointLightPositions[i].x, pointLightPositions[i].y, pointLightPositions[i].z);` – store it transposed in `modelConstants.model`, then `SetGraphicsRoot32BitConstants(0, …)` and `DrawInstanced(36, 1, 0, 0)`."
       }
+    },
+    "ex-flashlight-off": {
+      "text": "Switch the flashlight off, so that only the sun and the four lamps light the scene. How much of the light on the middle container came from the flashlight?",
+      "hint": "Give the spot light a diffuse and specular colour of 0 – or leave phase 3 out of the shader. The other lights are not touched."
+    },
+    "ex-night": {
+      "text": "Turn the scene into a night: a dark blue sky (0.02, 0.02, 0.05) and weak, bluish moonlight instead of the sun – for example ambient (0, 0, 0.02), diffuse (0.05, 0.05, 0.2), specular (0.1, 0.1, 0.3).",
+      "hint": {
+        "opengl": "Two places: the clear colour in `glClearColor`, and the three colours of `dirLight` (its direction stays).",
+        "vulkan": "Two places: the clear colour in `clearValues[0]` where the render pass begins, and the three colours of `ubo.dirLight` (its direction stays).",
+        "d3d12": "Two places: the `clearColor` array where the render target is cleared, and the three colours of `dirLight` (its direction stays)."
+      }
+    },
+    "ex-coloured-lights": {
+      "text": "Give the four point lights their own colours: red (1, 0.1, 0.1), green (0.1, 1, 0.1), blue (0.1, 0.1, 1) and yellow (1, 1, 0.1) – the colour as specular, and 0.8 times it as diffuse. The lamp cubes may stay white.",
+      "hint": {
+        "opengl": "Each point light has its own `setVec3` lines: change `diffuse` and `specular` of `pointLights[0]` to `pointLights[3]`. `setVec3` also takes a `glm::vec3`, so `glm::vec3(…) * 0.8f` works.",
+        "vulkan": "The point lights are set in a loop: put the four colours in an array next to it and use `pointLightColors[i]` (times 0.8 for diffuse) inside.",
+        "d3d12": "Each point light has its own lines: change `diffuse` and `specular` of `pointLights[0]` to `pointLights[3]`."
+      }
+    },
+    "ex-moving-lamp": {
+      "text": "Let the first lamp swing from side to side in front of the containers: its x goes 0.7 + 1.5 · sin(time). Both its light and its lamp cube have to move.",
+      "hint": {
+        "opengl": "`pointLightPositions` is an ordinary array in `main`: change element 0's `x` at the start of every frame, before it is sent to the shader – the lamp cube is drawn from the same array.",
+        "vulkan": "`pointLightPositions` is a `const` vector – make it changeable, then set element 0's `x` from `glfwGetTime()` in `updateUniformBuffer`. The lamp cube is drawn from the same vector when the command buffer is recorded.",
+        "d3d12": "`pointLightPositions` is a global array: before point light 1 is set, compute the time since the first frame with `std::chrono` and change element 0's `x` – the lamp cube is drawn from the same array."
+      }
     }
   }
 }

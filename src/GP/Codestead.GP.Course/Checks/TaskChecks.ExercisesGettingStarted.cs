@@ -206,5 +206,16 @@ public static partial class TaskChecks
             // The strength follows 0.5 + 0.5 · sin(2t): nearly full at 1 s, (almost) out at 2.36 s (3π/4).
             ["ex-fading"] = c => BrightnessAt(c, 1.0, 0.5, 0.5) > 0.6 && BrightnessAt(c, 2.356, 0.5, 0.5) < 0.2,
         },
+        ["multiple-lights"] = new()
+        {
+            // Without the flashlight the middle container gets about half the light (r + g + b 1.78 → 0.89).
+            ["ex-flashlight-off"] = c => BrightnessAt(c, 1.0, 0.5, 0.5) is > 0.5 and < 1.2,
+            // A dark blue night sky, and blue moonlight on the containers' upper faces.
+            ["ex-night"] = c => c.ClearedTo(0.02, 0.02, 0.05) && c.AnyDrawnPixel(p => p[2] > p[0] + 0.1 && p[2] > 0.2),
+            // The first point light (red) is the one next to the middle container: it keeps its red, loses green.
+            ["ex-coloured-lights"] = c => c.Pixel(0.5, 0.5) is { } p && p[0] > 0.75 && p[1] < 0.48,
+            // The first lamp moves: the picture changes over time (the chapter's scene stands still).
+            ["ex-moving-lamp"] = c => c.ChangesOverTime,
+        },
     };
 }
