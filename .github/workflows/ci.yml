@@ -15,6 +15,24 @@ env:
   AVALONIA_TELEMETRY_OPTOUT: '1'
 
 jobs:
+  # The TypeScript version of the apps (ts/, docs/TYPESCRIPT-MIGRATION.md): type check and Vitest.
+  typescript:
+    name: TypeScript
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ts
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ts/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+
   # Every test on both systems, except Codestead GP's TaskTests (the simulated GPU gives the same pictures on both).
   dotnet:
     name: .NET (${{ matrix.os }})

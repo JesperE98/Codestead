@@ -1,0 +1,7 @@
+{
+  "name": "@codestead/common",
+  "private": true,
+  "type": "module",
+  "description": "Languages, product information and text lookup shared by every Codestead app (Codestead.Common).",
+  "exports": { ".": "./src/index.ts" }
+}
