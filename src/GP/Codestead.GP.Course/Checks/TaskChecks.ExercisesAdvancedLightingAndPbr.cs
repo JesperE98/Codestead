@@ -141,5 +141,16 @@ public static partial class TaskChecks
             // sampleDelta 0.6: blotchy irradiance – some sphere points darker, others brighter than with 0.1.
             ["ex-coarse-convolution"] = c => At(c, 153, 530, p => p[0] < 0.71) && At(c, 400, 300, p => p[0] < 0.53 && p[1] > 0.05) && At(c, 312, 187, p => p[0] > 0.6),
         },
+        ["specular-ibl"] = new()
+        {
+            // Chrome: no rust left, the spheres mirror the blue-grey sky (more sky-coloured pixels), nothing dark.
+            ["ex-chrome"] = c => c.Drew && c.CountPixels(p => p[0] > p[1] + 0.08) < 400 && c.CountPixels(p => p[2] > p[0] + 0.12 && p[2] > 0.55) > 2100 && c.CountPixels(p => p[0] + p[1] + p[2] < 0.6) < 50,
+            // Only the IBL reflection: the rust's diffuse colour gone, many dark parts – but not as dark as the bare environment BRDF.
+            ["ex-reflections-only"] = c => c.Drew && c.CountPixels(p => p[0] > p[1] + 0.08) < 800 && c.CountPixels(p => p[0] + p[1] + p[2] < 0.6) is > 1000 and < 2500 && c.CountPixels(p => p[2] > p[0] + 0.12 && p[2] > 0.55) > 1200,
+            // The environment BRDF without tone mapping: dark spheres, brighter only towards the rims, nothing near white.
+            ["ex-env-brdf"] = c => c.Drew && c.CountPixels(p => p[0] + p[1] + p[2] < 0.6) > 2600 && c.CountPixels(p => p[0] > 0.8) < 5,
+            // Mip level 0 everywhere: sharp bright and dark reflections where the solution has soft rust.
+            ["ex-sharp-lod"] = c => At(c, 132, 342, p => p[0] > 0.85) && At(c, 162, 167, p => p[0] > 0.85) && At(c, 322, 292, p => p[0] < 0.3) && c.CountPixels(p => p[0] > p[1] + 0.08) > 1500,
+        },
     };
 }

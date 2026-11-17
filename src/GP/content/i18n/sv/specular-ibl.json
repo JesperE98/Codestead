@@ -48,6 +48,34 @@
         "vulkan": "Som i `pbr-lighting`: bildmedlemmarna, `loadTexture(\"textures/<name>.png\", VK_FORMAT_R8G8B8A8_UNORM, …)`, `createTextureSampler(VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_FALSE, textureSampler)`, `PushConstants` med bara `model`, inga `albedo` / `ao` i uniform buffern. Nytt: 9 bindningar, poolen `5 * 8` image samplers, `createDescriptorSet()` med åtta vyer och `samplers = {clampSampler, clampSampler, clampSampler, textureSampler, …}`; `layout(binding = 4) uniform sampler2D albedoMap;` … `binding = 8` för `aoMap`.",
         "d3d12": "`ranges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 5, 3)`, `rootParameters[4].InitAsDescriptorTable(1, &ranges[3], D3D12_SHADER_VISIBILITY_PIXEL)`, `samplers[1] = samplers[0];` med WRAP och `ShaderRegister = 1`, 18 descriptorer, `LoadTexture(\"albedo.png\", m_albedoTexture, albedoUploadHeap, 13)` … plats 17, `SetGraphicsRootDescriptorTable(4, …)` på plats 13. `ModelConstants` behåller bara matriserna (32 värden), så root-parameter 0 blir `InitAsConstants(sizeof(CaptureConstants) / 4, …)`. `pbr.hlsl`: `Texture2D albedoMap : register(t3);` … `aoMap : register(t7)`, `SamplerState wrapSampler : register(s1);`."
       }
+    },
+    "ex-chrome": {
+      "text": "Gör om sfärerna till kromkulor: albedo 0.95, metallic 1.0 och roughness 0.05 i stället för albedo-, metallic- och roughness-kartorna (behåll normal- och ao-kartorna). Varje sfär speglar nu himlen ovanför och marken nedanför.",
+      "hint": {
+        "opengl": "Byt ut de tre raderna överst i `main` i `pbr.fs` som läser albedo, metallic och roughness ur sina kartor mot konstanter. Med roughness 0.05 kommer reflexen från pre-filter-kartans skarpaste mipnivå.",
+        "vulkan": "Byt ut de tre raderna överst i `main` i `pbr.frag` som läser albedo, metallic och roughness ur sina kartor mot konstanter. Med roughness 0.05 kommer reflexen från pre-filter-kartans skarpaste mipnivå.",
+        "d3d12": "Byt ut de tre raderna överst i `PSMain` i `pbr.hlsl` som läser albedo, metallic och roughness ur sina kartor mot konstanter. Med roughness 0.05 kommer reflexen från pre-filter-kartans skarpaste mipnivå."
+      }
+    },
+    "ex-reflections-only": {
+      "text": "Visa bara den spekulära delen av den bildbaserade belysningen – split sum-reflexen – utan det diffusa omgivningsljuset och utan de fyra ljusen: du ser vad omgivningen ensam bidrar med som reflexer.",
+      "hint": "Där färgen sätts ihop, `ambient + Lo`, använder du i stället `specular` (den räknas ut några rader ovanför, före `ambient`). Tonmappning och gammakorrigering blir kvar."
+    },
+    "ex-env-brdf": {
+      "text": "Visa split sum-formelns andra faktor på sfärerna: `F * brdf.x + brdf.y`, den andel av det förfiltrerade ljuset som reflekteras, utskriven direkt (utan tonmappning). Var på en sfär är den störst, och varför?",
+      "hint": {
+        "opengl": "`F` och `brdf` finns redan i `main`; skriv `F * brdf.x + brdf.y` till `FragColor` på sista raden i stället för `color`. Tänk på Fresnel: vad händer när N · V går mot 0?",
+        "vulkan": "`F` och `brdf` finns redan i `main`; skriv `F * brdf.x + brdf.y` till `outColor` på sista raden i stället för `color`. Tänk på Fresnel: vad händer när N · V går mot 0?",
+        "d3d12": "`F` och `brdf` finns redan i `PSMain`; returnera `F * brdf.x + brdf.y` på sista raden i stället för `color`. Tänk på Fresnel: vad händer när N · V går mot 0?"
+      }
+    },
+    "ex-sharp-lod": {
+      "text": "Läs alltid pre-filter-kartan på mipnivå 0, oavsett roughness. Materialets sträva delar speglar plötsligt omgivningen skarpt – reflexen stämmer inte längre med den roughness som resten av belysningen använder.",
+      "hint": {
+        "opengl": "Raden `textureLod(prefilterMap, R, roughness * MAX_REFLECTION_LOD)`: en fast nivå på 0.0 i stället.",
+        "vulkan": "Raden `textureLod(prefilterMap, R, roughness * MAX_REFLECTION_LOD)`: en fast nivå på 0.0 i stället.",
+        "d3d12": "Raden `prefilterMap.SampleLevel(clampSampler, R, roughness * MAX_REFLECTION_LOD)`: en fast nivå på 0.0f i stället."
+      }
     }
   }
 }

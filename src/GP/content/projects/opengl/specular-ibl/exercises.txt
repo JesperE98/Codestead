@@ -1,0 +1,31 @@
+=== task: ex-chrome
+--- file: pbr.fs
+--- find:
+    vec3 albedo     = pow(texture(albedoMap, TexCoords).rgb, vec3(2.2));
+    float metallic  = texture(metallicMap, TexCoords).r;
+    float roughness = texture(roughnessMap, TexCoords).r;
+--- replace:
+    vec3 albedo     = vec3(0.95); // chrome
+    float metallic  = 1.0;
+    float roughness = 0.05;
+
+=== task: ex-reflections-only
+--- file: pbr.fs
+--- find:
+    vec3 color = ambient + Lo;
+--- replace:
+    vec3 color = specular; // only the reflection of the environment
+
+=== task: ex-env-brdf
+--- file: pbr.fs
+--- find:
+    FragColor = vec4(color, 1.0);
+--- replace:
+    FragColor = vec4(F * brdf.x + brdf.y, 1.0); // the environment BRDF: what the split sum multiplies the reflection by
+
+=== task: ex-sharp-lod
+--- file: pbr.fs
+--- find:
+    vec3 prefilteredColor = textureLod(prefilterMap, R,  roughness * MAX_REFLECTION_LOD).rgb;
+--- replace:
+    vec3 prefilteredColor = textureLod(prefilterMap, R, 0.0).rgb; // always the sharpest level

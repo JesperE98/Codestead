@@ -1,0 +1,31 @@
+=== task: ex-chrome
+--- file: pbr.hlsl
+--- find:
+    float3 albedo   = pow(albedoMap.Sample(wrapSampler, input.texCoords).rgb, 2.2f);
+    float metallic  = metallicMap.Sample(wrapSampler, input.texCoords).r;
+    float roughness = roughnessMap.Sample(wrapSampler, input.texCoords).r;
+--- replace:
+    float3 albedo   = float3(0.95f, 0.95f, 0.95f);    // chrome
+    float metallic  = 1.0f;
+    float roughness = 0.05f;
+
+=== task: ex-reflections-only
+--- file: pbr.hlsl
+--- find:
+    float3 color = ambient + Lo;
+--- replace:
+    float3 color = specular; // only the reflection of the environment
+
+=== task: ex-env-brdf
+--- file: pbr.hlsl
+--- find:
+    return float4(color, 1.0f);
+--- replace:
+    return float4(F * brdf.x + brdf.y, 1.0f);    // the environment BRDF: what the split sum multiplies the reflection by
+
+=== task: ex-sharp-lod
+--- file: pbr.hlsl
+--- find:
+    float3 prefilteredColor = prefilterMap.SampleLevel(clampSampler, R, roughness * MAX_REFLECTION_LOD).rgb;
+--- replace:
+    float3 prefilteredColor = prefilterMap.SampleLevel(clampSampler, R, 0.0f).rgb;    // always the sharpest level
