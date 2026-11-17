@@ -1,0 +1,9 @@
+{
+  "name": "@codestead/linux-content",
+  "private": true,
+  "type": "module",
+  "description": "Codestead Linux's course: chapters, checks, progress, game (port of Codestead.Content).",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

@@ -5,6 +5,29 @@
 import type { Shell } from "../../Shell/Shell.js";
 import type { CommandDef } from "../../Types/CommandDef.js";
 import * as UtilCmd from "../Util/UtilCmd.js";
+import { cat } from "./TextCmd.Cat.js";
+import { cut } from "./TextCmd.Cut.js";
+import { echo } from "./TextCmd.Echo.js";
+import { grep } from "./TextCmd.Grep.js";
+import { headTail } from "./TextCmd.HeadTail.js";
+import { less } from "./TextCmd.Less.js";
+import { more } from "./TextCmd.More.js";
+import { sort } from "./TextCmd.Sort.js";
+import { tee } from "./TextCmd.Tee.js";
+import { uniq } from "./TextCmd.Uniq.js";
+import { wc } from "./TextCmd.Wc.js";
+
+export * from "./TextCmd.Cat.js";
+export * from "./TextCmd.Cut.js";
+export * from "./TextCmd.Echo.js";
+export * from "./TextCmd.Grep.js";
+export * from "./TextCmd.HeadTail.js";
+export * from "./TextCmd.Less.js";
+export * from "./TextCmd.More.js";
+export * from "./TextCmd.Sort.js";
+export * from "./TextCmd.Tee.js";
+export * from "./TextCmd.Uniq.js";
+export * from "./TextCmd.Wc.js";
 
 // ---------- JavaScript helpers shared by the basic commands ----------
 
@@ -103,10 +126,7 @@ export function sortLines(sh: Shell, lines: Iterable<string>): string[] {
   });
 }
 
-/**
- * The group's commands, in the C# order: echo, cat, less, more, head, tail, wc, grep, sort, uniq, cut, tee.
- * Wave 2 fills this in as the commands are ported (see PORTING.md).
- */
+/** The group's commands, in the C# order. */
 export function all(): CommandDef[] {
-  return [];
+  return [echo, cat, less, more, headTail("head"), headTail("tail"), wc, grep, sort, uniq, cut, tee];
 }

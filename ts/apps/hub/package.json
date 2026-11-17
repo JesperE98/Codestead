@@ -1,0 +1,6 @@
+{
+  "name": "@codestead/app-hub",
+  "private": true,
+  "type": "module",
+  "description": "Codestead – the hub, Electron app (port of Codestead.Hub and Codestead.Hub.Core)."
+}

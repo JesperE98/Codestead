@@ -1,0 +1,6 @@
+{
+  "name": "@codestead/app-linux",
+  "private": true,
+  "type": "module",
+  "description": "Codestead Linux – the Electron app (port of Codestead.Linux)."
+}
