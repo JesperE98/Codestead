@@ -101,5 +101,16 @@ public static partial class TaskChecks
             // Warm lights: the steel frame and the wood lit orange, not white.
             ["ex-warm-lights"] = c => At(c, 400, 300, p => p[0] > p[2] + 0.1 && p[0] > 0.18) && At(c, 400, 160, p => p[0] > p[2] + 0.2),
         },
+        ["ssao"] = new()
+        {
+            // A warm light: the wall near the light orange instead of blue.
+            ["ex-warm-light"] = c => At(c, 520, 40, p => p[0] > p[2] + 0.3) && At(c, 400, 500, p => p[0] > p[2] + 0.1),
+            // Only ambient × AO: grey everywhere, darker under the planet than on the open floor.
+            ["ex-ambient-only"] = c => At(c, 520, 40, p => Grey(p) && p[0] < 0.32) && At(c, 470, 110, p => Grey(p)) && At(c, 400, 376, p => Grey(p) && p[0] < 0.23) && At(c, 400, 500, p => Grey(p) && p[0] > 0.26),
+            // Radius 1.5: darker floor under the planet, the ring in front of it lighter than in the solution.
+            ["ex-radius"] = c => At(c, 400, 376, p => p[0] < 0.25) && At(c, 400, 190, p => p[0] > 0.25 && p[2] > p[0]),
+            // AO to the power 3: the ring in front of the planet and the floor under it much darker.
+            ["ex-ao-power"] = c => At(c, 400, 190, p => p[0] < 0.18) && At(c, 400, 376, p => p[0] < 0.25) && At(c, 520, 40, p => p[2] > 0.7),
+        },
     };
 }

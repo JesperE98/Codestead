@@ -1,0 +1,28 @@
+=== task: ex-warm-light
+--- file: main.cpp
+--- find:
+XMFLOAT3 lightColor = XMFLOAT3(0.2f, 0.2f, 0.7f);
+--- replace:
+XMFLOAT3 lightColor = XMFLOAT3(0.8f, 0.5f, 0.2f);
+
+=== task: ex-ambient-only
+--- file: ssao_lighting.hlsl
+--- find:
+    return float4(lighting, 1.0f);
+--- replace:
+    return float4(ambient, 1.0f);
+
+=== task: ex-radius
+--- file: ssao.hlsl
+--- find:
+static const float radius = 0.5f;
+--- replace:
+static const float radius = 1.5f;
+
+=== task: ex-ao-power
+--- file: ssao.hlsl
+--- find:
+    occlusion = 1.0f - (occlusion / kernelSize);
+--- replace:
+    occlusion = 1.0f - (occlusion / kernelSize);
+    occlusion = pow(occlusion, 3.0f);    // a stronger effect: dark corners get darker

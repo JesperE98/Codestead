@@ -36,6 +36,38 @@
         "vulkan": "`float AmbientOcclusion = texture(ssao, fragTexCoord).r;` and `vec3 ambient = vec3(0.3 * Diffuse * AmbientOcclusion);` – only the ambient light is occluded; the direct light keeps its diffuse and specular.",
         "d3d12": "`float AmbientOcclusion = ssao.Sample(clampSampler, input.texCoord).r;` and `float3 ambient = 0.3f * Diffuse * AmbientOcclusion;`, and end `PSMain` with `return float4(lighting, 1.0f);` – only the ambient light is occluded."
       }
+    },
+    "ex-warm-light": {
+      "text": "Swap the blue light for a warm one, (0.8, 0.5, 0.2). The parts that only get ambient light – the planet's front – stay grey: there the SSAO alone decides how dark it is.",
+      "hint": {
+        "opengl": "Only `lightColor` in `main.cpp` changes; it goes to `light.Color` in the lighting pass.",
+        "vulkan": "Only the global `lightColor` in `main.cpp` changes; it goes to the lighting pass in the uniform buffer.",
+        "d3d12": "Only the global `lightColor` in `main.cpp` changes; it goes to the lighting pass in the constant buffer."
+      }
+    },
+    "ex-ambient-only": {
+      "text": "Turn the light off and draw only the ambient term, multiplied by the ambient occlusion: a grey picture in which you see exactly where SSAO darkens the scene – under the planet and along the ring.",
+      "hint": {
+        "opengl": "At the end of `ssao_lighting.fs` write `ambient` instead of `lighting` to `FragColor`.",
+        "vulkan": "At the end of `ssao_lighting.frag` write `ambient` instead of `lighting` to `outColor`.",
+        "d3d12": "At the end of the lighting pass's `PSMain` (`ssao_lighting.hlsl`) return `ambient` instead of `lighting`."
+      }
+    },
+    "ex-radius": {
+      "text": "Triple the sample radius, from 0.5 to 1.5. The darkening under the planet spreads further over the floor – what happens to the ring?",
+      "hint": {
+        "opengl": "`radius` near the top of `ssao.fs`. A larger hemisphere reaches more geometry, and the range check `smoothstep(0.0, 1.0, radius / abs(…))` lets more distant occluders count.",
+        "vulkan": "`radius` near the top of `ssao.frag`. A larger hemisphere reaches more geometry, and the range check `smoothstep(0.0, 1.0, radius / abs(…))` lets more distant occluders count.",
+        "d3d12": "`radius` near the top of `ssao.hlsl`. A larger hemisphere reaches more geometry, and the range check `smoothstep(0.0f, 1.0f, radius / abs(…))` lets more distant occluders count."
+      }
+    },
+    "ex-ao-power": {
+      "text": "Make the occlusion stronger by raising the SSAO result to the power 3: places that are a little occluded stay almost as they were, places that are much occluded get much darker.",
+      "hint": {
+        "opengl": "In `ssao.fs`, after `occlusion = 1.0 - (occlusion / kernelSize);`: `pow(occlusion, 3.0)`. The value is between 0 and 1, so a power above 1 only makes it smaller.",
+        "vulkan": "In `ssao.frag`, after `occlusion = 1.0 - (occlusion / kernelSize);`: `pow(occlusion, 3.0)`. The value is between 0 and 1, so a power above 1 only makes it smaller.",
+        "d3d12": "In `ssao.hlsl`, after `occlusion = 1.0f - (occlusion / kernelSize);`: `pow(occlusion, 3.0f)`. The value is between 0 and 1, so a power above 1 only makes it smaller."
+      }
     }
   }
 }
