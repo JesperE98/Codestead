@@ -1,0 +1,26 @@
+=== task: ex-white-spheres
+--- file: main.cpp
+--- find:
+    modelConstants.albedo = XMFLOAT3(0.5f, 0.0f, 0.0f);
+--- replace:
+    modelConstants.albedo = XMFLOAT3(0.8f, 0.8f, 0.8f);
+
+=== task: ex-no-lights
+--- file: main.cpp
+--- find:
+    XMFLOAT4(300.0f, 300.0f, 300.0f, 1.0f),
+    XMFLOAT4(300.0f, 300.0f, 300.0f, 1.0f),
+    XMFLOAT4(300.0f, 300.0f, 300.0f, 1.0f),
+    XMFLOAT4(300.0f, 300.0f, 300.0f, 1.0f)
+--- replace:
+    XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f),
+    XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f),
+    XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f),
+    XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f)
+
+=== task: ex-coarse-convolution
+--- file: irradiance_convolution.hlsl
+--- find:
+    float sampleDelta = 0.1f;
+--- replace:
+    float sampleDelta = 0.6f;

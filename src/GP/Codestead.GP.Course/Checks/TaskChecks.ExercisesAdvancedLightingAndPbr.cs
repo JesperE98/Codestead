@@ -132,5 +132,14 @@ public static partial class TaskChecks
             // Roughness × 0.4: the highlight brighter, the metal away from it darker.
             ["ex-polished"] = c => At(c, 370, 270, p => p[0] > 0.9) && At(c, 150, 100, p => p[0] < 0.3) && At(c, 400, 500, p => p[0] < 0.3),
         },
+        ["diffuse-irradiance"] = new()
+        {
+            // Light grey spheres: no longer red, bright where the non-metals catch the environment's light.
+            ["ex-white-spheres"] = c => At(c, 153, 547, p => p[0] > 0.75 && Math.Abs(p[0] - p[1]) < 0.03) && At(c, 400, 300, p => p[0] > 0.55 && Math.Abs(p[0] - p[2]) < 0.04),
+            // No point lights: the white highlights gone (no green or blue left), the environment still lights the spheres.
+            ["ex-no-lights"] = c => At(c, 411, 288, p => p[1] < 0.02 && p[0] > 0.4) && At(c, 153, 547, p => p[0] > 0.55) && At(c, 400, 300, p => p[1] < 0.02),
+            // sampleDelta 0.6: blotchy irradiance – some sphere points darker, others brighter than with 0.1.
+            ["ex-coarse-convolution"] = c => At(c, 153, 530, p => p[0] < 0.71) && At(c, 400, 300, p => p[0] < 0.53 && p[1] > 0.05) && At(c, 312, 187, p => p[0] > 0.6),
+        },
     };
 }
