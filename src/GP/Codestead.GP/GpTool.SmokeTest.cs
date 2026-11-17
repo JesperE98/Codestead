@@ -22,7 +22,7 @@ public sealed partial class GpTool
         smokeDir ??= Directory.CreateTempSubdirectory("codestead-gp-smoke-").FullName;
         var dir = Path.Combine(smokeDir, shownApi, chapter);
         Directory.CreateDirectory(dir);
-        var tasks = GpCourse.Tasks(chapter, shownApi);
+        var tasks = GpCourse.AllTasks(chapter, shownApi);
         int index = tasks.ToList().FindIndex(t => GpCourse.TaskKey(chapter, t.Id, shownApi) == task.Key);
         var solution = ExpectedResult.Project(chapter, shownApi, Math.Max(0, index));
         StartFiles.Copy(dir, GpCourse.StartProject(chapter, shownApi));
@@ -76,7 +76,7 @@ public sealed partial class GpTool
         }
         // The first task with a picture (Creating a window's first tasks open a window that closes again at once).
         var pictured = GpCourse.Chapters.Where(c => c.IsLesson).Take(8)
-            .SelectMany(c => Enumerable.Range(0, GpCourse.Tasks(c.Id, shownApi).Count).Select(i => (c.Id, Index: i)))
+            .SelectMany(c => Enumerable.Range(0, GpCourse.AllTasks(c.Id, shownApi).Count).Select(i => (c.Id, Index: i)))
             .FirstOrDefault(x => ExpectedResult.Scene(x.Id, shownApi, x.Index) is { ShowsFrames: true });
         if (pictured.Id is null) throw new InvalidOperationException("No expected result for the first tasks of the course.");
         try

@@ -90,12 +90,14 @@ public sealed class IdeTests : IDisposable
         StartFiles.Copy(dir, GpCourse.StartProject(chapter, api));
         var main = Path.Combine(dir, GpCourse.StartProject(chapter, api).MainFile);
         var start = ProjectChecker.Check(main, chapter, api);
-        Assert.Equal(count, start.Tasks.Count);
+        Assert.Equal(count + GpCourse.Exercises(chapter, api).Count, start.Tasks.Count);
         Assert.Contains(start.Tasks, t => !t.Passed);
         Assert.NotNull(start.Facts);
         StartFiles.Copy(dir, ExpectedResult.Project(chapter, api, count - 1));
         var solved = ProjectChecker.Check(main, chapter, api);
-        Assert.All(solved.Tasks, t => Assert.True(t.Passed, t.TaskId));
+        // Every step is solved; the exercises are changes of their own to the finished program.
+        Assert.All(solved.Tasks.Where(t => !GpCourse.IsExercise(t.TaskId)), t => Assert.True(t.Passed, t.TaskId));
+        Assert.Contains(solved.Tasks, t => GpCourse.IsExercise(t.TaskId));
         Assert.Empty(solved.Messages);
     }
 

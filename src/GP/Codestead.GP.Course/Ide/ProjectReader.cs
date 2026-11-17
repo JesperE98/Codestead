@@ -45,7 +45,7 @@ public static partial class ProjectReader
     private static ProjectRead Read(IReadOnlyList<(string Root, List<string> Files)> roots, string chapterId, string api, string? mainFile, bool mainGiven)
     {
         var start = GpCourse.StartProject(chapterId, api);
-        var expected = start.Files.Keys.Concat(GpCourse.Tasks(chapterId, api).SelectMany(t => t.Edits).Select(e => e.File)).Distinct().ToList();
+        var expected = start.Files.Keys.Concat(GpCourse.AllTasks(chapterId, api).SelectMany(t => t.Edits).Select(e => e.File)).Distinct().ToList();
         var project = new GpuProject();
         var missing = new List<string>();
         foreach (var path in expected)

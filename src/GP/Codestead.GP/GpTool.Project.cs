@@ -172,7 +172,7 @@ public sealed partial class GpTool
     /// <summary>"Mark as done": the learner says the task is solved; the window ticks it like a solved one.</summary>
     private void MarkDone(int index)
     {
-        var tasks = GpCourse.Tasks(chapter, shownApi);
+        var tasks = GpCourse.AllTasks(chapter, shownApi);
         if (index < 0 || index >= tasks.Count || !Window.IsChapterUnlocked(chapter)) return;
         markedDone = GpCourse.TaskKey(chapter, tasks[index].Id, shownApi);
         try
@@ -243,7 +243,8 @@ public sealed partial class GpTool
             allPassed = r.Tasks.Count > 0 && r.Tasks.All(x => x.Passed);
         }
         var model = new PanelModel(chapter, shownApi, Apis.Get(shownApi).FullName, mainFile, mainFile is not null && !File.Exists(mainFile),
-            hasResources, HasOldCode(), checking, summary, messages, allPassed, rows, selected, lockNote, questions);
+            hasResources, HasOldCode(), checking, summary, messages, allPassed, rows, selected, lockNote,
+            GpCourse.Tasks(chapter, shownApi).Count, questions);
         // The window's task list (text, hints, solutions) sits in the panel once the tasks are unlocked; each task's
         // state comes from TaskStatus, so the list is refreshed with the panel.
         if (unlocked && rows.Count > 0)
@@ -264,7 +265,7 @@ public sealed partial class GpTool
     /// <summary>Every task's state: done, locked, being checked, not passed by the last check, or open.</summary>
     private List<TaskRow> Rows()
     {
-        var tasks = GpCourse.Tasks(chapter, shownApi);
+        var tasks = GpCourse.AllTasks(chapter, shownApi);
         bool unlocked = Window.IsChapterUnlocked(chapter);
         var current = report is { } r0 && r0.ChapterId == chapter && r0.Api == shownApi ? r0 : null;
         var rows = new List<TaskRow>();
@@ -277,7 +278,7 @@ public sealed partial class GpTool
             if (Window.IsTaskDone(key)) state = TaskState.Done;
             else if (!unlocked) state = TaskState.Locked;
             else if (checking) state = TaskState.Checking;
-            else if (result is { Passed: false })
+            else if (result is { Passed: false, Checkable: true })
             {
                 state = TaskState.NotYet;
                 messages.Add(Window.T("yourProject.notYetHelp"));

@@ -1,0 +1,48 @@
+=== task: ex-colour
+--- file: shaders/shader.frag
+--- find:
+    outColor = vec4(1.0, 0.5, 0.2, 1.0);
+--- replace:
+    outColor = vec4(0.2, 0.8, 0.4, 1.0);
+
+=== task: ex-tall
+--- file: main.cpp
+--- find:
+    {{-0.5f, -0.5f, 0.0f}},
+    {{0.5f, -0.5f, 0.0f}},
+    {{0.5f, 0.5f, 0.0f}},
+    {{-0.5f, 0.5f, 0.0f}}
+--- replace:
+    {{-0.2f, -0.8f, 0.0f}},
+    {{0.2f, -0.8f, 0.0f}},
+    {{0.2f, 0.8f, 0.0f}},
+    {{-0.2f, 0.8f, 0.0f}}
+
+=== task: ex-house
+--- file: main.cpp
+--- find:
+    {{-0.5f, 0.5f, 0.0f}}
+};
+--- replace:
+    {{-0.5f, 0.5f, 0.0f}},
+    {{0.0f, -0.9f, 0.0f}}
+};
+--- file: main.cpp
+--- find:
+    0, 1, 2, 2, 3, 0
+--- replace:
+    0, 1, 2, 2, 3, 0,
+    0, 4, 1
+
+=== task: ex-wireframe
+--- file: main.cpp
+--- find:
+        VkPhysicalDeviceFeatures deviceFeatures{};
+--- replace:
+        VkPhysicalDeviceFeatures deviceFeatures{};
+        deviceFeatures.fillModeNonSolid = VK_TRUE;
+--- file: main.cpp
+--- find:
+        rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
+--- replace:
+        rasterizer.polygonMode = VK_POLYGON_MODE_LINE;

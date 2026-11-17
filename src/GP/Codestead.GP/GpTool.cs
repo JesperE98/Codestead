@@ -54,15 +54,17 @@ public sealed partial class GpTool : LearningTool
     public override IReadOnlyList<Reference> References(string chapterId) => CourseText.References(chapterId, Api);
 
     public override IReadOnlyList<string> TaskKeys(string chapterId) =>
-        GpCourse.Tasks(chapterId, Api).Select(t => GpCourse.TaskKey(chapterId, t.Id, Api)).ToList();
+        GpCourse.AllTasks(chapterId, Api).Select(t => GpCourse.TaskKey(chapterId, t.Id, Api)).ToList();
 
+    /// <summary>The chapter's steps (following the text) and then its exercises, under headings when there are exercises.</summary>
     public override IReadOnlyList<TaskInfo> Tasks(string chapterId, string lang)
     {
         var api = Api;
-        return GpCourse.Tasks(chapterId, api).Select(task =>
+        bool sections = GpCourse.Exercises(chapterId, api).Count > 0;
+        return GpCourse.AllTasks(chapterId, api).Select(task =>
         {
             // The same task in the other APIs, as chips (done in OpenGL ✓, Vulkan, DirectX 12).
-            var chips = Apis.All.Where(a => GpCourse.Tasks(chapterId, a.Id).Any(t => t.Id == task.Id))
+            var chips = Apis.All.Where(a => GpCourse.AllTasks(chapterId, a.Id).Any(t => t.Id == task.Id))
                 .Select(a => new TaskChip(a.Name, GpCourse.TaskKey(chapterId, task.Id, a.Id), a.Id == api)).ToList();
             // The solution's code is copied to the clipboard when clicked; a task without code is solved in the IDE.
             var solution = task.Edits.Count > 0 ? task.Edits.Select(e => e.Replace).ToList() : new List<string> { BuildRunSolution };
@@ -71,7 +73,8 @@ public sealed partial class GpTool : LearningTool
                 CourseText.TaskText(chapterId, task.Id, lang, api),
                 CourseText.TaskHint(chapterId, task.Id, lang, api),
                 solution,
-                chips.Count > 1 ? chips : []);
+                chips.Count > 1 ? chips : [],
+                !sections ? null : Window.T(GpCourse.IsExercise(task.Id) ? "yourProject.exercises" : "yourProject.steps"));
         }).ToList();
     }
 

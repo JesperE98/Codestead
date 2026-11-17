@@ -45,5 +45,13 @@ public static partial class TaskChecks
         // Every API
         ["draw"] = TriangleDrawn,
         ["rectangle"] = RectangleDrawn,
+        // Exercises, each on the finished rectangle (relative window points; the same place on screen in every API).
+        ["ex-colour"] = c => c.PixelIs(0.5, 0.6, 0.2, 0.8, 0.4) && c.PixelIs(0.3, 0.3, 0.2, 0.8, 0.4) && c.IsClear(0.1, 0.1),
+        // 0.4 wide and 1.6 high: orange near the top and bottom edges, the clear colour where the rectangle used to reach.
+        ["ex-tall"] = c => Orange(c, 0.5, 0.15) && Orange(c, 0.5, 0.85) && c.IsClear(0.35, 0.5) && c.IsClear(0.65, 0.5),
+        // A roof above the rectangle: orange under the peak, clear beside it, and the body still there.
+        ["ex-house"] = c => Orange(c, 0.5, 0.13) && c.IsClear(0.3, 0.15) && c.IsClear(0.7, 0.15) && RectangleDrawn(c),
+        // Only the edges: the inside of both triangles is the clear colour, but orange lines are drawn.
+        ["ex-wireframe"] = c => c.IsClear(0.35, 0.62) && c.IsClear(0.62, 0.35) && c.AnyDrawnPixel(p => p[0] > 0.8 && p[1] > 0.35 && p[1] < 0.65 && p[2] < 0.35),
     };
 }

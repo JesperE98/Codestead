@@ -335,5 +335,9 @@
   "yourProject.solutionTitle": "答案 · 任务 {n}",
   "yourProject.solutionHelp": "这是课程自己的代码解决该任务的方式。和你的代码对比，只取你需要的部分。",
   "yourProject.copyCode": "复制",
-  "yourProject.close": "关闭"
+  "yourProject.close": "关闭",
+  "yourProject.steps": "跟着做",
+  "yourProject.exercises": "练习",
+  "yourProject.solutionExercise": "答案 · 练习 {n}",
+  "expected.exercise": "预期结果 · 练习 {n}"
 }

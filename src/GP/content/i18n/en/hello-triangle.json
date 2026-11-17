@@ -152,6 +152,38 @@
       "hint": {
         "d3d12": "`DrawInstanced(3, ...)` still draws only the first three vertices – the lower-right half of the rectangle."
       }
+    },
+    "ex-colour": {
+      "text": "Make the rectangle green: the colour (0.2, 0.8, 0.4).",
+      "hint": {
+        "opengl": "The colour is set in one place only: the fragment shader's output.",
+        "vulkan": "The colour is set in one place only: the fragment shader's output in `shader.frag` – recompile it with `glslc`.",
+        "d3d12": "The colour is set in one place only: the pixel shader's return value in `shaders.hlsl`."
+      }
+    },
+    "ex-tall": {
+      "text": "Make the rectangle tall and narrow: 0.4 wide and 1.6 high, still centred in the window.",
+      "hint": "Only the vertex positions change: x goes from −0.2 to 0.2 and y from −0.8 to 0.8. The indices stay the same."
+    },
+    "ex-house": {
+      "text": {
+        "opengl": "Put a roof on the rectangle: one more vertex at (0, 0.9) and one more triangle from the two top corners up to it.",
+        "vulkan": "Put a roof on the rectangle: one more vertex at (0, −0.9) – in Vulkan y points down – and one more triangle from the two top corners up to it.",
+        "d3d12": "Put a roof on the rectangle: one more vertex at (0, 0.9) and one more triangle from the two top corners up to it."
+      },
+      "hint": {
+        "opengl": "A fifth vertex, three more indices (top left, peak, top right) and 9 instead of 6 in `glDrawElements`.",
+        "vulkan": "A fifth vertex and three more indices: top left, peak, top right – the same clockwise order as the other triangles, or back-face culling throws the roof away. `indices.size()` grows by itself.",
+        "d3d12": "A fifth vertex, three more indices (top left, peak, top right – clockwise like the others, or the roof is culled) and 9 instead of 6 in `DrawIndexedInstanced`."
+      }
+    },
+    "ex-wireframe": {
+      "text": "Draw only the edges of the triangles (wireframe), so you can see the two triangles the rectangle is made of.",
+      "hint": {
+        "opengl": "One call before the render loop: `glPolygonMode` with `GL_LINE`.",
+        "vulkan": "The rasterizer's `polygonMode`: `VK_POLYGON_MODE_LINE` – and lines need the device feature `fillModeNonSolid`.",
+        "d3d12": "The rasterizer state in the pipeline state object: `FillMode = D3D12_FILL_MODE_WIREFRAME`."
+      }
     }
   }
 }

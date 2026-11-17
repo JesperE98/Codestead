@@ -36,7 +36,19 @@ public partial class LearningWindow
         bar.Bind(ProgressBar.ForegroundProperty, this.GetResourceObservable("CsSuccess"));
         taskPanel.Children.Add(bar);
 
-        for (int i = 0; i < tasks.Count; i++) taskPanel.Children.Add(TaskItem(tasks[i], i));
+        // A tool can group the tasks (Codestead GP: the chapter's steps, then its exercises): a heading where a group starts.
+        string? section = null;
+        for (int i = 0; i < tasks.Count; i++)
+        {
+            if (tasks[i].Section is { } s && s != section)
+            {
+                var heading = Text(s, 14.5, FontWeight.SemiBold);
+                heading.Margin = new Thickness(0, i == 0 ? 4 : 18, 0, 2);
+                taskPanel.Children.Add(heading);
+            }
+            section = tasks[i].Section;
+            taskPanel.Children.Add(TaskItem(tasks[i], i));
+        }
 
         if (done == tasks.Count)
         {

@@ -335,5 +335,9 @@
   "yourProject.solutionTitle": "Lösning · uppgift {n}",
   "yourProject.solutionHelp": "Så löser kursens egen kod uppgiften. Jämför med din, och ta bara det du behöver.",
   "yourProject.copyCode": "Kopiera",
-  "yourProject.close": "Stäng"
+  "yourProject.close": "Stäng",
+  "yourProject.steps": "Följ med",
+  "yourProject.exercises": "Övningar",
+  "yourProject.solutionExercise": "Lösning · övning {n}",
+  "expected.exercise": "Förväntat resultat · övning {n}"
 }

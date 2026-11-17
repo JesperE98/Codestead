@@ -6,4 +6,5 @@ namespace Codestead.Learning.UI;
 /// <param name="Hint">The hint (markdown), or null.</param>
 /// <param name="Solution">Commands that solve it (shown after a few attempts or the hint).</param>
 /// <param name="Chips">For a task counted per variant group: one chip per group (e.g. Debian, Arch, Red Hat).</param>
-public sealed record TaskInfo(string Key, string Text, string? Hint, IReadOnlyList<string> Solution, IReadOnlyList<TaskChip> Chips);
+/// <param name="Section">The group the task belongs to (a heading where the group starts), or null.</param>
+public sealed record TaskInfo(string Key, string Text, string? Hint, IReadOnlyList<string> Solution, IReadOnlyList<TaskChip> Chips, string? Section = null);

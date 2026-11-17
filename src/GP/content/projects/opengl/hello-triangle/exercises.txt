@@ -1,0 +1,47 @@
+=== task: ex-colour
+--- file: main.cpp
+--- find:
+    "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+--- replace:
+    "   FragColor = vec4(0.2f, 0.8f, 0.4f, 1.0f);\n"
+
+=== task: ex-tall
+--- file: main.cpp
+--- find:
+         0.5f,  0.5f, 0.0f,  // top right
+         0.5f, -0.5f, 0.0f,  // bottom right
+        -0.5f, -0.5f, 0.0f,  // bottom left
+        -0.5f,  0.5f, 0.0f   // top left
+--- replace:
+         0.2f,  0.8f, 0.0f,  // top right
+         0.2f, -0.8f, 0.0f,  // bottom right
+        -0.2f, -0.8f, 0.0f,  // bottom left
+        -0.2f,  0.8f, 0.0f   // top left
+
+=== task: ex-house
+--- file: main.cpp
+--- find:
+        -0.5f,  0.5f, 0.0f   // top left
+    };
+--- replace:
+        -0.5f,  0.5f, 0.0f,  // top left
+         0.0f,  0.9f, 0.0f   // the roof's peak
+    };
+--- file: main.cpp
+--- find:
+        1, 2, 3   // second Triangle
+--- replace:
+        1, 2, 3,  // second Triangle
+        3, 4, 0   // the roof
+--- file: main.cpp
+--- find:
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+--- replace:
+        glDrawElements(GL_TRIANGLES, 9, GL_UNSIGNED_INT, 0);
+
+=== task: ex-wireframe
+--- file: main.cpp
+--- find:
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+--- replace:
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);

@@ -16,10 +16,13 @@ public sealed partial class GpTool
 
     public override Control? SolutionWindow(TaskInfo task, int index, Action close)
     {
-        var tasks = GpCourse.Tasks(chapter, shownApi);
+        var tasks = GpCourse.AllTasks(chapter, shownApi);
         if (index < 0 || index >= tasks.Count) return null;
         var panel = new StackPanel { Spacing = 10 };
-        var title = Text(Window.T("yourProject.solutionTitle", ("n", index + 1)), 18, FontWeight.Bold);
+        int steps = GpCourse.Tasks(chapter, shownApi).Count;
+        var title = Text(index < steps
+            ? Window.T("yourProject.solutionTitle", ("n", index + 1))
+            : Window.T("yourProject.solutionExercise", ("n", index - steps + 1)), 18, FontWeight.Bold);
         panel.Children.Add(title);
         var help = Text(Window.T(tasks[index].Edits.Count > 0 ? "yourProject.solutionHelp" : "yourProject.buildRunSolution"), 13, null, "muted");
         help.TextWrapping = TextWrapping.Wrap;
