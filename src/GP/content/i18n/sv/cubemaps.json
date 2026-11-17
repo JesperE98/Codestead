@@ -56,6 +56,22 @@
         "vulkan": "`float ratio = 1.00 / 1.52; vec3 R = refract(I, normalize(fragNormal), ratio);` i stället för `reflect`.",
         "d3d12": "`float ratio = 1.00f / 1.52f; float3 R = refract(I, normalize(input.normal), ratio);` i stället för `reflect`."
       }
+    },
+    "ex-diamond": {
+      "text": "Gör glaskuberna till diamant: brytningsindex 2.42 i stället för 1.52. Ljuset bryts mer, och andra delar av himlen syns i kuberna.",
+      "hint": "Bara kvoten ändras: 1.00 / 2.42 (från luft in i diamant)."
+    },
+    "ex-tinted-glass": {
+      "text": "Färga glaset grönt: multiplicera den brutna färgen med (0.6, 1.0, 0.8). Himlen runt kuberna förblir som den är.",
+      "hint": "Bara i kubernas fragmentshader – skyboxen har en egen shader."
+    },
+    "ex-half-mirror": {
+      "text": "Kombinera kapitlets två effekter: låt kuberna vara till hälften spegel och till hälften glas – medelvärdet av den speglade och den brutna färgen.",
+      "hint": {
+        "opengl": "Sampla skyboxen två gånger: en gång i riktningen `reflect(I, normal)` och en gång i den brutna riktningen, sedan `mix(…, …, 0.5)`.",
+        "vulkan": "Sampla skyboxen två gånger: en gång i riktningen `reflect(I, normal)` och en gång i den brutna riktningen, sedan `mix(…, …, 0.5)`.",
+        "d3d12": "Sampla skyboxen två gånger: en gång i riktningen `reflect(I, normal)` och en gång i den brutna riktningen, sedan `lerp(…, …, 0.5f)`."
+      }
     }
   }
 }

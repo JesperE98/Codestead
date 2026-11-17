@@ -1,0 +1,23 @@
+=== task: ex-opaque-glass
+--- file: main.cpp
+--- find:
+        colorBlendAttachment.blendEnable = VK_TRUE;
+--- replace:
+        colorBlendAttachment.blendEnable = VK_FALSE; // no blending: the glass is drawn with its own colour only
+
+=== task: ex-threshold
+--- file: shaders/blending.frag
+--- find:
+    if (texColor.a < 0.1) {
+--- replace:
+    if (texColor.a < 0.6) {
+
+=== task: ex-sixth-window
+--- file: main.cpp
+--- find:
+    glm::vec3( 0.5f, 0.0f, -0.6f)
+};
+--- replace:
+    glm::vec3( 0.5f, 0.0f, -0.6f),
+    glm::vec3(-0.8f, 0.0f, 1.0f)
+};

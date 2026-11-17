@@ -48,6 +48,30 @@
         "vulkan": "`layout(binding = 0) uniform UniformBufferObject { mat4 view; mat4 proj; } ubo;`. `createPipeline` får en `attributeCount` (1); culling av; bind `cubeDescriptorSet` en gång, sedan per kub `vkCmdBindPipeline`, skicka modellmatrisen, rita 36.",
         "d3d12": "Kompilera `VSMain` i `uniform_buffer.hlsl` en gång; per färg kompilerar du `PSMain`, sätter `psoDesc.PS` och anropar `CreateGraphicsPipelineState`. Sätt `CullMode = D3D12_CULL_MODE_NONE` först. Per kub: `SetPipelineState`, modellmatrisen, `DrawInstanced(36, 1, 0, 0)`."
       }
+    },
+    "ex-zoom-out": {
+      "text": "Zooma ut till 60° synfält. Projektionsmatrisen skrivs en gång in i den delade uniformbufferten – ändra den där, så blir alla fyra kuberna mindre på en gång.",
+      "hint": {
+        "opengl": "`glm::perspective` före renderingsloopen, vars resultat hamnar i uniformbufferten med `glBufferSubData`: `glm::radians(60.0f)`.",
+        "vulkan": "Projektionen i `updateUniformBuffer`: `glm::radians(60.0f)` i `glm::perspective`.",
+        "d3d12": "Projektionen som skrivs in i konstantbufferten: `XMConvertToRadians(60.0f)` i `XMMatrixPerspectiveFovRH`."
+      }
+    },
+    "ex-gradient": {
+      "text": "Låt den gula kuben tona med sin höjd i fönstret: helt gul överst i fönstret, svart längst ner – med pixelns fönsterkoordinater.",
+      "hint": {
+        "opengl": "Multiplicera färgen med `gl_FragCoord.y / 600.0`. I OpenGL börjar `gl_FragCoord` i fönstrets nedre vänstra hörn.",
+        "vulkan": "Multiplicera färgen med `1.0 - gl_FragCoord.y / 600.0`. I Vulkan börjar `gl_FragCoord` i fönstrets övre vänstra hörn, så y växer nedåt.",
+        "d3d12": "Använd pixelshaderns indata `SV_POSITION`: multiplicera färgen med `1.0f - position.y / 600.0f`. I Direct3D börjar pixelkoordinaterna uppe till vänster."
+      }
+    },
+    "ex-checkerboard": {
+      "text": "Måla den blå kuben som ett schackbräde av rutor på 20 × 20 pixlar, omväxlande blå och vita – rutor i fönstret, inte på kuben.",
+      "hint": {
+        "opengl": "Vilken ruta en pixel ligger i: `int(gl_FragCoord.x / 20.0)` och samma för y. Är summan udda blir den vit, annars blå.",
+        "vulkan": "Vilken ruta en pixel ligger i: `int(gl_FragCoord.x / 20.0)` och samma för y. Är summan udda blir den vit, annars blå.",
+        "d3d12": "Vilken ruta en pixel ligger i: `(int)(position.x / 20.0f)` och samma för y, från `SV_POSITION`. Är summan udda blir den vit, annars blå."
+      }
     }
   }
 }

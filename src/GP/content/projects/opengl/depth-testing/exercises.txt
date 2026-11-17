@@ -1,0 +1,28 @@
+=== task: ex-depth-range
+--- file: depth_testing.fs
+--- find:
+    float depth = LinearizeDepth(gl_FragCoord.z) / far; // divide by far to get depth in range [0,1] for visualization purposes
+--- replace:
+    float depth = LinearizeDepth(gl_FragCoord.z) / 10.0; // white at 10 units: more contrast in the scene's few metres
+
+=== task: ex-fog
+--- file: depth_testing.fs
+--- find:
+    float depth = LinearizeDepth(gl_FragCoord.z) / far; // divide by far to get depth in range [0,1] for visualization purposes
+    FragColor = vec4(vec3(depth), 1.0);
+--- replace:
+    // fog: the texture's colour fades into the background's grey, completely at 10 units
+    float fog = clamp(LinearizeDepth(gl_FragCoord.z) / 10.0, 0.0, 1.0);
+    FragColor = mix(texture(texture1, TexCoords), vec4(0.1, 0.1, 0.1, 1.0), fog);
+
+=== task: ex-near-clip
+--- file: main.cpp
+--- find:
+        glm::mat4 projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+--- replace:
+        glm::mat4 projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 3.7f, 100.0f);
+--- file: depth_testing.fs
+--- find:
+float near = 0.1;
+--- replace:
+float near = 3.7;

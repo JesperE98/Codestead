@@ -60,6 +60,30 @@
     "edge-detection": {
       "text": "Byt kerneln mot kantdetektering: `1` runtom, `-8` i mitten.",
       "hint": "Vikterna summerar till 0: överallt där alla nio samples är lika blir resultatet svart, och bara kanterna förblir ljusa."
+    },
+    "ex-upside-down": {
+      "text": "Visa hela bilden upp och ner – utan att röra scenen, bara skärmrektangeln.",
+      "hint": {
+        "opengl": "Spegla y i skärmrektangelns vertexshader: `-aPos.y`. (Att vända texturkoordinaten v gör samma sak.)",
+        "vulkan": "Spegla y i skärmrektangelns vertexshader: `-inPosition.y`. (Att vända texturkoordinaten v gör samma sak.)",
+        "d3d12": "Spegla y i skärmrektangelns vertexshader: `-position.y`. (Att vända texturkoordinaten v gör samma sak.)"
+      }
+    },
+    "ex-emboss": {
+      "text": "Byt kanthittningens kärna mot en präglingskärna (emboss): −2, −1, 0 / −1, 1, 1 / 0, 1, 2. Bilden ser ut att vara pressad i metall, belyst från ena sidan.",
+      "hint": "Bara de nio talen i `kernel` ändras. Vikterna har summan 1, så jämna ytor behåller sin färg – till skillnad från kanthittningen, vars vikter har summan 0."
+    },
+    "ex-sepia": {
+      "text": "Gör en ny efterbehandlingseffekt: sepia, som ett gammalt fotografi. Använd pixelns egen färg (inte kärnans resultat): rött = 0.393 r + 0.769 g + 0.189 b, grönt = 0.349 r + 0.686 g + 0.168 b, blått = 0.272 r + 0.534 g + 0.131 b.",
+      "hint": "Pixelns egen färg är redan samplad: mittensamplet, `sampleTex[4]`. Varje utkanal är en `dot`-produkt av den färgen med en rad tal."
+    },
+    "ex-quarter": {
+      "text": "Visa bilden från den osynliga renderingen bara i fönstrets övre högra fjärdedel, i halva storleken – resten av fönstret visar den vita rensningsfärgen. Första steget mot en backspegel.",
+      "hint": {
+        "opengl": "I skärmrektangelns vertexshader: halvera x och y och flytta dem +0.5, så att rektangeln går från 0 till 1 i stället för −1 till 1.",
+        "vulkan": "I skärmrektangelns vertexshader: halvera x och y, flytta x +0.5 och y −0.5 (y pekar nedåt i Vulkans clip space).",
+        "d3d12": "I skärmrektangelns vertexshader: halvera x och y och flytta dem +0.5, så att rektangeln går från 0 till 1 i stället för −1 till 1."
+      }
     }
   }
 }

@@ -48,6 +48,30 @@
         "vulkan": "De andra två pipelinerna får `VK_TRUE`; förstör `outlinePipeline` i `cleanup()`. `model = glm::scale(model, glm::vec3(scale, scale, scale))` efter translate. Inget att återställa efteråt: varje pipeline bär sitt eget tillstånd.",
         "d3d12": "Före `m_singleColorPipelineState`: `FrontFace.StencilFunc = D3D12_COMPARISON_FUNC_NOT_EQUAL`, `BackFace = FrontFace`, `StencilWriteMask = 0x00`, `DepthEnable = FALSE`. Sedan `SetPipelineState(m_singleColorPipelineState.Get())` och `model = XMMatrixScaling(scale, scale, scale) * XMMatrixTranslation(…)` per kub."
       }
+    },
+    "ex-orange-outline": {
+      "text": "Gör konturen orange: (1.0, 0.6, 0.0).",
+      "hint": {
+        "opengl": "Konturens färg kommer från ett enda ställe: `stencil_single_color.fs`.",
+        "vulkan": "Konturens färg kommer från ett enda ställe: `shaders/stencil_single_color.frag` – kompilera om den med `glslc`.",
+        "d3d12": "Konturens färg kommer från ett enda ställe: pixelshadern i `stencil_single_color.hlsl`."
+      }
+    },
+    "ex-thick-outline": {
+      "text": "Gör konturen dubbelt så tjock.",
+      "hint": "Konturen är skillnaden mellan en kub och dess förstorade kopia: förstora kopian mer – `scale` 1.2 i stället för 1.1."
+    },
+    "ex-left-only": {
+      "text": "Rita kontur bara runt den vänstra kuben – som om det var den spelaren har markerat.",
+      "hint": "Båda kuberna ritas fortfarande som vanligt (och skriver 1 i stencilbufferten); bara den andra, förstorade ritningen av den högra kuben försvinner."
+    },
+    "ex-silhouette": {
+      "text": "Gör om konturen till en siluett: låt den enfärgade ytan täcka själva kuberna i stället för ringen runt dem – genom att bara ändra stenciltestets jämförelse.",
+      "hint": {
+        "opengl": "De förstorade kuberna ritas nu där stencilvärdet *inte* är 1. Rita dem bara där det *är* 1: `GL_EQUAL` i det andra `glStencilFunc`.",
+        "vulkan": "Konturens pipeline släpper igenom där stencilvärdet *inte* är 1. Låt den släppa igenom bara där det *är* 1: `VK_COMPARE_OP_EQUAL` för `outlinePipeline`.",
+        "d3d12": "Enfärgs-pipelinen släpper igenom där stencilvärdet *inte* är 1. Låt den släppa igenom bara där det *är* 1: `D3D12_COMPARISON_FUNC_EQUAL`."
+      }
     }
   }
 }

@@ -1,0 +1,30 @@
+=== task: ex-half-floor
+--- file: main.cpp
+--- find:
+            memcpy(data, positions.data(), (size_t) positionsSize);
+--- replace:
+            memcpy(data, positions.data(), sizeof(glm::vec3) * 39); // the cubes and the floor's first triangle only
+
+=== task: ex-swap-blocks
+--- file: main.cpp
+--- find:
+        vkMapMemory(device, stagingBufferMemory, 0, positionsSize, 0, &data);
+            memcpy(data, positions.data(), (size_t) positionsSize);
+        vkUnmapMemory(device, stagingBufferMemory);
+
+        vkMapMemory(device, stagingBufferMemory, positionsSize, texCoordsSize, 0, &data);
+            memcpy(data, texCoords.data(), (size_t) texCoordsSize);
+        vkUnmapMemory(device, stagingBufferMemory);
+--- replace:
+        vkMapMemory(device, stagingBufferMemory, 0, texCoordsSize, 0, &data);
+            memcpy(data, texCoords.data(), (size_t) texCoordsSize);
+        vkUnmapMemory(device, stagingBufferMemory);
+
+        vkMapMemory(device, stagingBufferMemory, texCoordsSize, positionsSize, 0, &data);
+            memcpy(data, positions.data(), (size_t) positionsSize);
+        vkUnmapMemory(device, stagingBufferMemory);
+--- file: main.cpp
+--- find:
+        VkDeviceSize offsets[] = {0, sizeof(glm::vec3) * vertices.size()};
+--- replace:
+        VkDeviceSize offsets[] = {sizeof(glm::vec2) * vertices.size(), 0};

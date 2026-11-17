@@ -1,0 +1,33 @@
+=== task: ex-orange-outline
+--- file: shaders/stencil_single_color.frag
+--- find:
+    outColor = vec4(0.04, 0.28, 0.26, 1.0);
+--- replace:
+    outColor = vec4(1.0, 0.6, 0.0, 1.0);
+
+=== task: ex-thick-outline
+--- file: main.cpp
+--- find:
+        float scale = 1.1f;
+--- replace:
+        float scale = 1.2f;
+
+=== task: ex-left-only
+--- file: main.cpp
+--- find:
+        vkCmdDraw(commandBuffer, 36, 1, 0, 0);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(scale, scale, scale));
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdDraw(commandBuffer, 36, 1, 0, 0);
+--- replace:
+        vkCmdDraw(commandBuffer, 36, 1, 0, 0);
+
+=== task: ex-silhouette
+--- file: main.cpp
+--- find:
+        createPipeline("shaders/stencil_testing.vert.spv", "shaders/stencil_single_color.frag.spv", VK_FALSE, VK_COMPARE_OP_NOT_EQUAL, 0x00, outlinePipeline);
+--- replace:
+        createPipeline("shaders/stencil_testing.vert.spv", "shaders/stencil_single_color.frag.spv", VK_FALSE, VK_COMPARE_OP_EQUAL, 0x00, outlinePipeline);

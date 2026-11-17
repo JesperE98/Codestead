@@ -1,0 +1,23 @@
+=== task: ex-zoom-out
+--- file: main.cpp
+--- find:
+    glm::mat4 projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+--- replace:
+    glm::mat4 projection = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+
+=== task: ex-gradient
+--- file: yellow.fs
+--- find:
+    FragColor = vec4(1.0, 1.0, 0.0, 1.0);
+--- replace:
+    // gl_FragCoord.y counts pixels from the bottom of the window: brighter towards the top
+    FragColor = vec4(vec3(1.0, 1.0, 0.0) * (gl_FragCoord.y / 600.0), 1.0);
+
+=== task: ex-checkerboard
+--- file: blue.fs
+--- find:
+    FragColor = vec4(0.0, 0.0, 1.0, 1.0);
+--- replace:
+    // squares of 20 × 20 pixels: blue and white by turns
+    bool white = (int(gl_FragCoord.x / 20.0) + int(gl_FragCoord.y / 20.0)) % 2 == 1;
+    FragColor = white ? vec4(1.0) : vec4(0.0, 0.0, 1.0, 1.0);

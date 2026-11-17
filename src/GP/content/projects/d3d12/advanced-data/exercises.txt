@@ -1,0 +1,25 @@
+=== task: ex-half-floor
+--- file: main.cpp
+--- find:
+        m_commandList->CopyBufferRegion(m_floorCopyBuffer.Get(), 0, m_floorVertexBuffer.Get(), 0, planeVertexBufferSize);
+--- replace:
+        m_commandList->CopyBufferRegion(m_floorCopyBuffer.Get(), 0, m_floorVertexBuffer.Get(), 0, planeVertexBufferSize / 2);    // only the first triangle's bytes
+
+=== task: ex-swap-blocks
+--- file: main.cpp
+--- find:
+        memcpy(pVertexDataBegin, cubePositions, sizeof(cubePositions));
+        memcpy(pVertexDataBegin + sizeof(cubePositions), cubeTexCoords, sizeof(cubeTexCoords));
+--- replace:
+        memcpy(pVertexDataBegin, cubeTexCoords, sizeof(cubeTexCoords));
+        memcpy(pVertexDataBegin + sizeof(cubeTexCoords), cubePositions, sizeof(cubePositions));
+--- file: main.cpp
+--- find:
+        m_vertexBufferViews[0].BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
+--- replace:
+        m_vertexBufferViews[0].BufferLocation = m_vertexBuffer->GetGPUVirtualAddress() + sizeof(cubeTexCoords);
+--- file: main.cpp
+--- find:
+        m_vertexBufferViews[1].BufferLocation = m_vertexBuffer->GetGPUVirtualAddress() + sizeof(cubePositions);
+--- replace:
+        m_vertexBufferViews[1].BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();

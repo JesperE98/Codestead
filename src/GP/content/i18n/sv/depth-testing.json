@@ -48,6 +48,30 @@
         "vulkan": "Vulkans djup är redan NDC-z (0..1), så det blir inget `depth * 2.0 - 1.0` som i learnopengl – det skulle ge för stora avstånd. Division med `far` ger 0..1.",
         "d3d12": "Direct3D:s djup är redan NDC-z (0..1), så det blir inget `depth * 2.0 - 1.0` som i learnopengl. Utan `static` vore en global ett constant buffer-värde som sätts från CPU:n."
       }
+    },
+    "ex-depth-range": {
+      "text": "Det linjära djupet delat med `far` (100) gör hela scenen nästan svart. Visa det över 10 enheter i stället, så att vitt betyder 10 enheter bort – plötsligt syns djupskillnaderna.",
+      "hint": {
+        "opengl": "Bara divisionen i fragmentshadern ändras: `/ 10.0` i stället för `/ far`.",
+        "vulkan": "Bara divisionen i fragmentshadern ändras: `/ 10.0` i stället för `/ far` – kompilera om den med `glslc`.",
+        "d3d12": "Bara divisionen i pixelshadern ändras: `/ 10.0f` i stället för `/ far`."
+      }
+    },
+    "ex-fog": {
+      "text": "Använd det linjära djupet till dimma: ta tillbaka texturerna och låt dem tona bort mot bakgrundens grå (0.1, 0.1, 0.1) med avståndet – ingen dimma vid kameran, bara dimma vid 10 enheter.",
+      "hint": {
+        "opengl": "En dimfaktor `clamp(LinearizeDepth(gl_FragCoord.z) / 10.0, 0.0, 1.0)`, sedan `mix` mellan texturens färg och det grå med den faktorn.",
+        "vulkan": "En dimfaktor `clamp(LinearizeDepth(gl_FragCoord.z) / 10.0, 0.0, 1.0)`, sedan `mix` mellan texturens färg och det grå med den faktorn.",
+        "d3d12": "En dimfaktor `saturate(LinearizeDepth(input.position.z) / 10.0f)`, sedan `lerp` mellan texturens färg och det grå med den faktorn."
+      }
+    },
+    "ex-near-clip": {
+      "text": "Flytta projektionens närplan från 0.1 till 3.7 (i projektionsmatrisen och i shaderns `near`). Allt som är närmare än 3.7 enheter skärs bort: det närmaste golvet försvinner och du kan se in i den vänstra kuben.",
+      "hint": {
+        "opengl": "Två tal: det tredje argumentet till `glm::perspective` och `float near` i fragmentshadern.",
+        "vulkan": "Två tal: det tredje argumentet till `glm::perspective` i `updateUniformBuffer` och `float near` i fragmentshadern.",
+        "d3d12": "Två tal: det tredje argumentet till `XMMatrixPerspectiveFovRH` och `near` i shaderfilen."
+      }
     }
   }
 }

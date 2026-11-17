@@ -1,0 +1,22 @@
+=== task: ex-diamond
+--- file: cubemaps.hlsl
+--- find:
+    float ratio = 1.00f / 1.52f;    // from air (1.00) into glass (1.52)
+--- replace:
+    float ratio = 1.00f / 2.42f;    // from air (1.00) into diamond (2.42)
+
+=== task: ex-tinted-glass
+--- file: cubemaps.hlsl
+--- find:
+    return float4(skybox.Sample(clampSampler, R).rgb, 1.0f);
+--- replace:
+    return float4(skybox.Sample(clampSampler, R).rgb * float3(0.6f, 1.0f, 0.8f), 1.0f);    // green-tinted glass
+
+=== task: ex-half-mirror
+--- file: cubemaps.hlsl
+--- find:
+    return float4(skybox.Sample(clampSampler, R).rgb, 1.0f);
+--- replace:
+    float3 reflected = skybox.Sample(clampSampler, reflect(I, normalize(input.normal))).rgb;
+    float3 refracted = skybox.Sample(clampSampler, R).rgb;
+    return float4(lerp(reflected, refracted, 0.5f), 1.0f);    // half mirror, half glass

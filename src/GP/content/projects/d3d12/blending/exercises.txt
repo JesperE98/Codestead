@@ -1,0 +1,23 @@
+=== task: ex-opaque-glass
+--- file: main.cpp
+--- find:
+        psoDesc.BlendState.RenderTarget[0].BlendEnable = TRUE;
+--- replace:
+        psoDesc.BlendState.RenderTarget[0].BlendEnable = FALSE;    // no blending: the glass is drawn with its own colour only
+
+=== task: ex-threshold
+--- file: blending.hlsl
+--- find:
+    if (texColor.a < 0.1f)
+--- replace:
+    if (texColor.a < 0.6f)
+
+=== task: ex-sixth-window
+--- file: main.cpp
+--- find:
+        XMFLOAT3( 0.5f, 0.0f, -0.6f)
+    };
+--- replace:
+        XMFLOAT3( 0.5f, 0.0f, -0.6f),
+        XMFLOAT3(-0.8f, 0.0f, 1.0f)
+    };
