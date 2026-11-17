@@ -1,5 +1,7 @@
 // Port of tests/Linux/Codestead.Terminal.Tests/TerminalTests.cs – the pure logic of the terminal (ANSI segments,
-// the lesson sandbox). The tests of the Avalonia TerminalView belong to the app's React terminal (ts/apps/linux).
+// the lesson sandbox). The cases of the Avalonia TerminalView ("terminalen kör kommandon och visar prompten" and "en
+// try-fråga löses av ett kommando i den riktiga simulerade terminalen") are in the app's React terminal's tests:
+// ts/apps/linux/test/TerminalTests.test.tsx.
 
 import { describe, expect, it } from "vitest";
 import * as Ansi from "../src/Terminal/Ansi.js";
@@ -16,8 +18,6 @@ describe("TerminalTests", () => {
     expect(segs[2]!.fg).toBe(0);
   });
 
-  it.todo("terminalen kör kommandon och visar prompten – the TerminalView (Avalonia UI) is ported with the app's React terminal");
-
   itNeeds(["echo", "touch", "ls"], "sandlådan för kontrollfrågor är en ny dator varje gång", () => {
     const sandbox = new ShellSandbox("ubuntu", "en");
     expect(sandbox.outputOf("echo $((2 + 3))").trim()).toBe("5");
@@ -25,6 +25,4 @@ describe("TerminalTests", () => {
     // The next command runs on a new computer that does not have the file.
     expect(sandbox.outputOf("ls spår.txt")).toContain("No such file");
   });
-
-  it.todo("en try-fråga löses av ett kommando i den riktiga simulerade terminalen – needs the CheckpointView (ui package) and the React terminal");
 });
