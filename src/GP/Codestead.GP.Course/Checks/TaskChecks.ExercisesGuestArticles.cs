@@ -16,6 +16,9 @@ public static partial class TaskChecks
         System.Text.RegularExpressions.Regex.Match(c.WindowTitleAt(2.0), @"drawn:\s*(\d+)\s*/\s*(\d+)") is { Success: true } m
             ? (int.Parse(m.Groups[1].Value), int.Parse(m.Groups[2].Value)) : (-1, -1);
 
+    /// <summary>Water: clearly blue, more green than red.</summary>
+    private static bool Water(double[] p) => p[2] > p[1] + 0.15 && p[1] > p[0];
+
     private static Dictionary<string, Dictionary<string, TaskCheck>> ExercisesGuestArticles => new()
     {
         ["oit-introduction"] = new()
@@ -91,6 +94,18 @@ public static partial class TaskChecks
             // Layer 0 of the shadow maps: light grey everywhere (nothing white as in layer 2), the cubes a little darker.
             ["ex-debug-layer"] = c => c.Drew && At(c, 400, 40, p => Grey(p) && p[0] > 0.88 && p[0] < 0.95) && At(c, 650, 470, p => Grey(p) && p[0] > 0.84 && p[0] < 0.9)
                 && At(c, 520, 400, p => Grey(p) && p[0] < 0.86),
+        },
+        ["tessellation-height-map"] = new()
+        {
+            // Half the height: the peaks no longer reach y = 110, and the greys (from the height) darker – the centre 37 instead of 90.
+            ["ex-flatter"] = c => c.Drew && At(c, 420, 110, Ground) && At(c, 420, 160, p => GreyOf(p, 93, 15)) && At(c, 400, 300, p => GreyOf(p, 37, 10))
+                && At(c, 230, 150, p => GreyOf(p, 99, 15)) && At(c, 400, 560, Ground),
+            // Blue below a water level: the lake and the river blue, the hills and the peaks grey as before.
+            ["ex-water"] = c => c.Drew && At(c, 580, 390, Water) && At(c, 420, 410, Water) && At(c, 420, 110, p => GreyOf(p, 212, 12))
+                && At(c, 400, 300, p => GreyOf(p, 90)) && At(c, 150, 380, p => GreyOf(p, 102)),
+            // Only the first half of the strips (the back half of the terrain): the peaks there, the front gone.
+            ["ex-back-half"] = c => c.Drew && At(c, 420, 110, p => GreyOf(p, 212, 12)) && At(c, 230, 150, p => GreyOf(p, 142)) && At(c, 420, 160, p => GreyOf(p, 128))
+                && At(c, 400, 300, Ground) && At(c, 580, 390, Ground) && At(c, 150, 380, Ground),
         },
     };
 }

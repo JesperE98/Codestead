@@ -60,6 +60,22 @@
         "vulkan": "`float h = (Height + 16.0) / 64.0; outColor = vec4(h, h, h, 1.0);` – the vertex shader already passes `Height = inPosition.y`.",
         "d3d12": "`float h = (input.height + 16.0f) / 64.0f; return float4(h, h, h, 1.0f);` – the vertex shader already passes `result.height = position.y`."
       }
+    },
+    "ex-flatter": {
+      "text": "Make the terrain half as high: heights from the map scaled by 32/256 instead of 64/256. Why does the terrain also get darker?",
+      "hint": "Only `yScale` changes, where the vertices are made (`yShift` stays 16). The fragment shader turns the height into the grey, so lower heights are darker greys too."
+    },
+    "ex-water": {
+      "text": "Add water: colour every point of the terrain lower than −6 blue (0.1, 0.3, 0.6) – the lake and the river should fill up, the hills stay grey.",
+      "hint": {
+        "opengl": "The fragment shader (`cpuheight.fs`) already gets the height: after the grey is computed, write the blue instead when `Height` is below −6.",
+        "vulkan": "The fragment shader (`cpuheight.frag`) already gets the height: after the grey is computed, write the blue instead when `Height` is below −6. Recompile it.",
+        "d3d12": "The pixel shader (`PSMain` in `cpuheight.hlsl`) already gets the height: return the blue instead of the grey when `input.height` is below −6."
+      }
+    },
+    "ex-back-half": {
+      "text": "Draw only the first half of the strips. Which half of the terrain is left, and why that one?",
+      "hint": "The render loop draws one strip per pass: let it stop at half the number of strips. Strip 0 is made of the image's first two rows – and rows run along +z, from the back (z = −128) to the front."
     }
   }
 }

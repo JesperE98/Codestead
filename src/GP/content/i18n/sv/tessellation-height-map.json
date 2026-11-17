@@ -60,6 +60,22 @@
         "vulkan": "`float h = (Height + 16.0) / 64.0; outColor = vec4(h, h, h, 1.0);` – vertex shadern skickar redan vidare `Height = inPosition.y`.",
         "d3d12": "`float h = (input.height + 16.0f) / 64.0f; return float4(h, h, h, 1.0f);` – vertex shadern skickar redan vidare `result.height = position.y`."
       }
+    },
+    "ex-flatter": {
+      "text": "Gör terrängen hälften så hög: höjderna från kartan skalade med 32/256 i stället för 64/256. Varför blir terrängen också mörkare?",
+      "hint": "Det är bara `yScale` som ändras, där vertexarna skapas (`yShift` är kvar på 16). Fragmentshadern gör om höjden till gråtonen, så lägre höjder blir också mörkare grått."
+    },
+    "ex-water": {
+      "text": "Lägg till vatten: färga varje punkt i terrängen som ligger lägre än −6 blå (0.1, 0.3, 0.6) – sjön och floden ska fyllas, kullarna förblir grå.",
+      "hint": {
+        "opengl": "Fragmentshadern (`cpuheight.fs`) får redan höjden: när gråtonen är uträknad, skriv det blå i stället när `Height` är under −6.",
+        "vulkan": "Fragmentshadern (`cpuheight.frag`) får redan höjden: när gråtonen är uträknad, skriv det blå i stället när `Height` är under −6. Kompilera om den.",
+        "d3d12": "Pixelshadern (`PSMain` i `cpuheight.hlsl`) får redan höjden: returnera det blå i stället för det grå när `input.height` är under −6."
+      }
+    },
+    "ex-back-half": {
+      "text": "Rita bara den första hälften av remsorna. Vilken halva av terrängen blir kvar, och varför just den?",
+      "hint": "Renderloopen ritar en remsa per varv: låt den sluta vid halva antalet remsor. Remsa 0 består av bildens två första rader – och raderna går längs +z, från baksidan (z = −128) och framåt."
     }
   }
 }
