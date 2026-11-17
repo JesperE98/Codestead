@@ -13,7 +13,7 @@ public class CodeLayoutTests
     /// <summary>Files allowed to be larger for now, with the reason. Remove an entry when the file is split.</summary>
     private static readonly Dictionary<string, string> LargeForNow = new();
 
-    private static string RepoRoot()
+    internal static string RepoRoot()
     {
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
         while (dir is not null && !File.Exists(Path.Combine(dir.FullName, "Codestead.sln"))) dir = dir.Parent;
