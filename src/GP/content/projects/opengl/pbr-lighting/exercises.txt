@@ -1,0 +1,31 @@
+=== task: ex-light-colours
+--- file: main.cpp
+--- find:
+        glm::vec3(300.0f, 300.0f, 300.0f),
+        glm::vec3(300.0f, 300.0f, 300.0f),
+--- replace:
+        glm::vec3(300.0f, 60.0f, 30.0f),  // red, top left
+        glm::vec3(30.0f, 60.0f, 300.0f),  // blue, top right
+
+=== task: ex-specular-only
+--- file: pbr.fs
+--- find:
+        Lo += (kD * albedo / PI + specular) * radiance * NdotL;  // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
+--- replace:
+        Lo += specular * radiance * NdotL; // only the specular (Cook-Torrance) part
+
+=== task: ex-gold
+--- file: pbr.fs
+--- find:
+    vec3 albedo     = pow(texture(albedoMap, TexCoords).rgb, vec3(2.2));
+    float metallic  = texture(metallicMap, TexCoords).r;
+--- replace:
+    vec3 albedo     = vec3(1.0, 0.71, 0.29); // gold
+    float metallic  = 1.0;
+
+=== task: ex-polished
+--- file: pbr.fs
+--- find:
+    float roughness = texture(roughnessMap, TexCoords).r;
+--- replace:
+    float roughness = texture(roughnessMap, TexCoords).r * 0.4;    // polished: smoother than the map says

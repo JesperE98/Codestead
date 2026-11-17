@@ -1,0 +1,31 @@
+=== task: ex-light-colours
+--- file: main.cpp
+--- find:
+    XMFLOAT4(300.0f, 300.0f, 300.0f, 1.0f),
+    XMFLOAT4(300.0f, 300.0f, 300.0f, 1.0f),
+--- replace:
+    XMFLOAT4(300.0f, 60.0f, 30.0f, 1.0f),    // red, top left
+    XMFLOAT4(30.0f, 60.0f, 300.0f, 1.0f),    // blue, top right
+
+=== task: ex-specular-only
+--- file: pbr.hlsl
+--- find:
+        Lo += (kD * albedo / PI + specular) * radiance * NdotL;  // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
+--- replace:
+        Lo += specular * radiance * NdotL;    // only the specular (Cook-Torrance) part
+
+=== task: ex-gold
+--- file: pbr.hlsl
+--- find:
+    float3 albedo   = pow(albedoMap.Sample(wrapSampler, input.texCoords).rgb, 2.2f);
+    float metallic  = metallicMap.Sample(wrapSampler, input.texCoords).r;
+--- replace:
+    float3 albedo   = float3(1.0f, 0.71f, 0.29f);    // gold
+    float metallic  = 1.0f;
+
+=== task: ex-polished
+--- file: pbr.hlsl
+--- find:
+    float roughness = roughnessMap.Sample(wrapSampler, input.texCoords).r;
+--- replace:
+    float roughness = roughnessMap.Sample(wrapSampler, input.texCoords).r * 0.4f;    // polished: smoother than the map says

@@ -121,5 +121,16 @@ public static partial class TaskChecks
             // Fresnel: a dielectric 0.04 where it faces the camera, a metal its red albedo; every rim near white.
             ["ex-fresnel"] = c => c.PixelIs(153 / 800.0, 547 / 600.0, 0.04, 0.04, 0.04) && At(c, 153, 53, p => p[0] > 0.4 && p[1] < 0.02) && At(c, 430, 300, p => p[0] > 0.7 && p[1] > 0.7),
         },
+        ["pbr-lighting"] = new()
+        {
+            // A red light top left and a blue one top right: the middle sphere's left highlight red, its right one blue.
+            ["ex-light-colours"] = c => At(c, 370, 270, p => p[0] > p[2] + 0.2) && At(c, 430, 270, p => p[2] > p[0] + 0.2),
+            // Only the specular term: the rust (not metal) loses its colour, the metal's highlights stay.
+            ["ex-specular-only"] = c => At(c, 370, 270, p => p[0] > 0.85) && c.CountPixels(p => p[0] > p[1] + 0.08) < 60 && At(c, 652, 552, p => p[0] < 0.3),
+            // Gold: every sphere yellow, the highlights too.
+            ["ex-gold"] = c => At(c, 150, 100, p => p[0] > p[2] + 0.15 && p[1] > p[2] + 0.1) && At(c, 400, 500, p => p[0] > p[2] + 0.15 && p[1] > p[2] + 0.1) && At(c, 370, 270, p => p[0] > 0.9 && p[2] < p[0] - 0.05),
+            // Roughness × 0.4: the highlight brighter, the metal away from it darker.
+            ["ex-polished"] = c => At(c, 370, 270, p => p[0] > 0.9) && At(c, 150, 100, p => p[0] < 0.3) && At(c, 400, 500, p => p[0] < 0.3),
+        },
     };
 }
