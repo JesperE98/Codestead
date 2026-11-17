@@ -11,6 +11,9 @@ import type { CommandDef } from "../../Types/CommandDef.js";
 import { IO } from "../../Types/IO.js";
 import * as UsersLib from "../../Users/UsersLib.js";
 import { FsError } from "../../Vfs/FsError.js";
+import { crontab } from "./CronCmd.Crontab.js";
+
+export * from "./CronCmd.Crontab.js";
 
 // ---------- Schedules ----------
 
@@ -270,7 +273,7 @@ function runJob(sh: Shell, job: Job, t: number): void {
   if (sh.distro.family === "debian" && output.length > 0) ServicesLib.log(sh, t, "cron", "(CRON) info (No MTA installed, discarding output)", { pid: 530, unit });
 }
 
-/** The group's commands, in the C# order: crontab. Wave 2 fills this in (see PORTING.md). */
+/** The group's commands, in the C# order. */
 export function all(): CommandDef[] {
-  return [];
+  return [crontab];
 }
