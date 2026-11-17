@@ -35,6 +35,11 @@ public static partial class TaskChecks
         foreach (var (chapter, checks) in InPractice3) Add(chapter, checks);
         foreach (var (chapter, checks) in GuestArticles) Add(chapter, checks);
         foreach (var (chapter, checks) in GuestArticles2) Add(chapter, checks);
+        foreach (var (chapter, checks) in ExercisesGettingStarted) Add(chapter, checks);
+        foreach (var (chapter, checks) in ExercisesModelsAndAdvancedOpenGL) Add(chapter, checks);
+        foreach (var (chapter, checks) in ExercisesAdvancedLightingAndPbr) Add(chapter, checks);
+        foreach (var (chapter, checks) in ExercisesInPractice) Add(chapter, checks);
+        foreach (var (chapter, checks) in ExercisesGuestArticles) Add(chapter, checks);
         return d;
     });
 

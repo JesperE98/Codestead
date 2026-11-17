@@ -19,12 +19,19 @@ public class TaskTests
             ? parts.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToHashSet(StringComparer.Ordinal)
             : null;
 
+    /// <summary>For a quick run while writing a chapter: CODESTEAD_GP_CHAPTERS ("textures,camera"); unset: every chapter.</summary>
+    public static IReadOnlySet<string>? ChaptersToTest() =>
+        Environment.GetEnvironmentVariable("CODESTEAD_GP_CHAPTERS") is { Length: > 0 } chapters
+            ? chapters.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToHashSet(StringComparer.Ordinal)
+            : null;
+
     public static TheoryData<string, string> ChaptersAndApis()
     {
         var parts = PartsToTest();
+        var only = ChaptersToTest();
         var data = new TheoryData<string, string>();
         foreach (var api in Apis.All)
-            foreach (var chapter in GpCourse.Chapters.Where(c => c.IsLesson && (parts is null || parts.Contains(c.Part))))
+            foreach (var chapter in GpCourse.Chapters.Where(c => c.IsLesson && (parts is null || parts.Contains(c.Part)) && (only is null || only.Contains(c.Id))))
                 if (Directory.Exists(Path.Combine(Repo.Content, "projects", api.Id, chapter.Id))) data.Add(api.Id, chapter.Id);
         return data;
     }
@@ -73,9 +80,10 @@ public class TaskTests
     public static TheoryData<string, string> ChaptersWithExercises()
     {
         var parts = PartsToTest();
+        var only = ChaptersToTest();
         var data = new TheoryData<string, string>();
         foreach (var api in Apis.All)
-            foreach (var chapter in GpCourse.Chapters.Where(c => c.IsLesson && (parts is null || parts.Contains(c.Part))))
+            foreach (var chapter in GpCourse.Chapters.Where(c => c.IsLesson && (parts is null || parts.Contains(c.Part)) && (only is null || only.Contains(c.Id))))
                 if (GpCourse.Exercises(chapter.Id, api.Id).Count > 0) data.Add(api.Id, chapter.Id);
         return data;
     }
