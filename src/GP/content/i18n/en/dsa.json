@@ -20,6 +20,26 @@
     "texture": {
       "text": "Texture the rectangle with `container.png`, created through DSA: add texture coordinates to the vertices as attribute 1 (two floats, 3 floats into each vertex, same binding point, stride 5 floats), create the texture with `glCreateTextures`, set its parameters with `glTextureParameteri`, allocate immutable storage for all mip levels with `glTextureStorage2D`, upload the image with `glTextureSubImage2D`, generate the mipmaps with `glGenerateTextureMipmap`, and bind it for drawing with `glBindTextureUnit`. The shaders pass the texture coordinates on and sample the texture.",
       "hint": "`glVertexArrayAttribFormat(VAO, 1, 2, GL_FLOAT, GL_FALSE, 3 * sizeof(float))` – the last argument is the offset inside a vertex; the stride moves to `glVertexArrayVertexBuffer(VAO, 0, VBO, 0, sizeof(float) * 5)`. `glCreateTextures(GL_TEXTURE_2D, 1, &texture)`, `glTextureStorage2D(texture, levels, GL_RGB8, width, height)` with `levels = 1 + (int)std::floor(std::log2((float)std::max(width, height)))`, `glTextureSubImage2D(texture, 0, 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, data)`; in the loop `glBindTextureUnit(0, texture);`."
+    },
+    "ex-one-triangle": {
+      "text": {
+        "opengl": "Change a buffer by its name after it has been filled: overwrite the second triangle's three indices in the element buffer with three equal ones (0, 0, 0), so that only the upper right half of the rectangle is left.",
+        "vulkan": "Change the index buffer after it has been filled – Vulkan always names the object it works on: overwrite the second triangle's three indices with three equal ones (0, 0, 0), so that only the upper right half of the rectangle is left.",
+        "d3d12": "Change the index buffer after it has been filled – Direct3D 12 always names the resource it works on: overwrite the second triangle's three indices with three equal ones (0, 0, 0), so that only the upper right half of the rectangle is left."
+      },
+      "hint": {
+        "opengl": "The element buffer was created with `GL_DYNAMIC_STORAGE_BIT`, so a second `glNamedBufferSubData` may update part of it – no binding needed. The offset is in bytes: three `unsigned int`s.",
+        "vulkan": "At the end of `createIndexBuffer`, map `indexBufferMemory` once more – `vkMapMemory` takes an offset in bytes (three `uint16_t`s) – copy the new indices in and unmap. A triangle with three equal corners has no area.",
+        "d3d12": "After the first copy, `Map` the index buffer resource again, copy the new indices to `pIndexDataBegin` plus three `UINT`s (the offset in bytes) and `Unmap`. A triangle with three equal corners has no area."
+      }
+    },
+    "ex-tile": {
+      "text": "Show the container four times on the rectangle, 2 × 2, without changing anything about the texture object.",
+      "hint": "The texture already repeats (`GL_REPEAT`, set with `glTextureParameteri`): let the texture coordinates in the vertex data run from 0 to 2 instead of 0 to 1."
+    },
+    "ex-colour-buffer": {
+      "text": "Tint the rectangle with a colour per vertex (top right red, bottom right green, bottom left blue, top left white) that comes from a **second** buffer, attached to the VAO at binding point 1 – the vertex buffer stays as it is.",
+      "hint": "`glCreateBuffers` + `glNamedBufferStorage` for the colours; attribute 2 gets its format (`glVertexArrayAttribFormat`, 3 floats, offset 0) and binding point 1 (`glVertexArrayAttribBinding`), and `glVertexArrayVertexBuffer(VAO, 1, …)` attaches the buffer with a stride of 3 floats. The shaders pass the colour on and multiply the texture by it."
     }
   }
 }

@@ -118,5 +118,16 @@ public static partial class TaskChecks
             // Displaced twice as far: the peaks reach up to y ≈ 40 (the greys from the height unchanged).
             ["ex-taller"] = c => c.Drew && At(c, 420, 75, p => !Ground(p)) && At(c, 262, 60, p => !Ground(p)) && At(c, 580, 390, p => GreyOf(p, 28, 6)) && At(c, 400, 560, Ground),
         },
+        ["dsa"] = new()
+        {
+            // The second triangle overwritten in the index buffer: the lower left half of the rectangle gone (every API).
+            ["ex-one-triangle"] = c => c.Drew && At(c, 250, 400, Teal) && At(c, 230, 180, Teal) && At(c, 550, 200, p => !Teal(p)) && At(c, 570, 420, p => !Teal(p)),
+            // Texture coordinates 0..2 with GL_REPEAT: four containers, a bolt at the top left of each.
+            ["ex-tile"] = c => c.Drew && new[] { (209, 157), (409, 157), (209, 307), (409, 307) }.All(q => At(c, q.Item1, q.Item2, p => p[0] > 0.65 && Math.Abs(p[0] - p[1]) < 0.05))
+                && At(c, 218, 163, p => p[0] > p[2] + 0.15) && At(c, 100, 100, Teal),
+            // Colours from a second buffer on binding point 1: the corners red, green and blue over the wood.
+            ["ex-colour-buffer"] = c => c.Drew && At(c, 570, 175, p => p[0] > p[1] + 0.2 && p[0] > p[2] + 0.2) && At(c, 570, 425, p => p[1] > p[0] + 0.1 && p[1] > p[2] + 0.1)
+                && At(c, 230, 425, p => p[2] > p[0] + 0.05 && p[2] > p[1] + 0.03) && At(c, 100, 100, Teal),
+        },
     };
 }
