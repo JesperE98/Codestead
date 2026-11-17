@@ -43,6 +43,25 @@ public static partial class TaskChecks
     private static bool AnyPixelIs(CheckContext c, double r, double g, double b) =>
         c.AnyDrawnPixel(p => CheckContext.Near(p[0], r, 0.03) && CheckContext.Near(p[1], g, 0.03) && CheckContext.Near(p[2], b, 0.03));
 
+    /// <summary>The mean of r + g + b over a grid in a box of the frame (relative x0…x1, y0…y1, 0.01 apart); 0 when nothing is shown.</summary>
+    private static double MeanBrightness(CheckContext c, double x0, double y0, double x1, double y1)
+    {
+        if (c.Frame is not { } f) return 0;
+        double sum = 0;
+        int n = 0;
+        for (double y = y0; y <= y1 + 1e-9; y += 0.01)
+            for (double x = x0; x <= x1 + 1e-9; x += 0.01)
+            {
+                var p = f.AtRelative(x, y);
+                sum += p[0] + p[1] + p[2];
+                n++;
+            }
+        return sum / n;
+    }
+
+    /// <summary>The pixels of the check frame that show the emission map's green letters.</summary>
+    private static int GreenLetters(CheckContext c) => c.CountPixels(p => p[1] > p[0] + 0.3 && p[1] > p[2] + 0.2);
+
     private static Dictionary<string, Dictionary<string, TaskCheck>> ExercisesGettingStarted => new()
     {
         // OpenGL has none: its program ends at once (no render loop yet). Nothing is drawn in any API.
@@ -164,6 +183,28 @@ public static partial class TaskChecks
             // Gold under a steady white light: yellow-brown (green about 0.8 of red, little blue), the same at 1 s and 4 s.
             ["ex-gold"] = c => c.Pixel(0.42, 0.6) is { } p && p[0] > 0.25 && p[1] > 0.7 * p[0] && p[1] < 0.95 * p[0] && p[2] < 0.5 * p[1]
                 && PixelAtIs(c, 4.0, 0.42, 0.6, p[0], p[1], p[2], 0.01),
+        },
+        ["lighting-maps"] = new()
+        {
+            // Twice the diffuse light: the lit face (wood and letters) about 1.5 times as bright (0.73 → 1.12).
+            ["ex-bright-light"] = c => MeanBrightness(c, 0.36, 0.52, 0.42, 0.64) > 0.95,
+            // The highlight on the lit face's steel frame goes (1.41 → 0.92); the wood takes the specular light instead.
+            ["ex-invert-specular"] = c => c.DrawnAt(0.32, 0.45) && MeanBrightness(c, 0.29, 0.43, 0.35, 0.48) < 1.15,
+            // No letters on the steel frame any more (about a third of them), but still on the wood.
+            ["ex-emission-mask"] = c => GreenLetters(c) is > 80 and < 290,
+            // The letters move: the picture changes over time (the chapter's scene stands still).
+            ["ex-scroll-emission"] = c => GreenLetters(c) > 80 && c.ChangesOverTime,
+        },
+        ["light-casters"] = new()
+        {
+            // A cone of 25°/30°: the cube to the right of the middle one is lit too (mean brightness 0.14 → 0.42).
+            ["ex-wide-cone"] = c => MeanBrightness(c, 0.7, 0.25, 0.85, 0.45) > 0.3,
+            // A red flashlight: the middle cube keeps its red (0.38), green and blue are only the white ambient part.
+            ["ex-red-light"] = c => c.Pixel(0.5, 0.5) is { } p && p[0] > 0.3 && p[1] < 0.06 && p[2] < 0.04,
+            // A range of about 13 units: the middle cube, 3 units away, gets about a third of the light (0.81 → 0.25).
+            ["ex-short-range"] = c => BrightnessAt(c, 1.0, 0.5, 0.5) is > 0.12 and < 0.45,
+            // The strength follows 0.5 + 0.5 · sin(2t): nearly full at 1 s, (almost) out at 2.36 s (3π/4).
+            ["ex-fading"] = c => BrightnessAt(c, 1.0, 0.5, 0.5) > 0.6 && BrightnessAt(c, 2.356, 0.5, 0.5) < 0.2,
         },
     };
 }

@@ -48,6 +48,34 @@
         "vulkan": "Emitted light doesn't depend on any light source: `vec3 result = ambient + diffuse + specular + emission;`. The bindings array: `{diffuseMapLayoutBinding, specularMapLayoutBinding, uboLayoutBinding, emissionMapLayoutBinding}`.",
         "d3d12": "Emitted light doesn't depend on any light source: `float3 result = ambient + diffuse + specular + emission;`. `LoadTexture(\"matrix.png\", m_emissionMap, emissionMapUploadHeap, 3);`"
       }
+    },
+    "ex-bright-light": {
+      "text": "Give the light its full diffuse strength: (1.0, 1.0, 1.0) instead of (0.5, 0.5, 0.5). Compare the lit face with the faces that only get ambient light.",
+      "hint": {
+        "opengl": "The value of `light.diffuse` that you set in the render loop.",
+        "vulkan": "`ubo.light.diffuse` in `updateUniformBuffer`.",
+        "d3d12": "`constantBufferData.light.diffuse` where the constant buffer is filled."
+      }
+    },
+    "ex-invert-specular": {
+      "text": "Invert the specular map in the shader: let the wood shine and the steel frame stay dull. Does the container still look real?",
+      "hint": {
+        "opengl": "In `lighting_maps.fs`, use `1.0 -` the sampled specular colour where the specular part is computed.",
+        "vulkan": "In `lighting_maps.frag`, use `1.0 -` the sampled specular colour where the specular part is computed. Recompile with `glslc`.",
+        "d3d12": "In `PSMain`, use `1.0f -` the sampled specular colour where the specular part is computed."
+      }
+    },
+    "ex-emission-mask": {
+      "text": "Keep the glowing letters off the steel frame: show the emission only on the wood – where the specular map is (nearly) black, below 0.1.",
+      "hint": "The specular map already tells wood from steel. Sample it once more for the emission, turn its red channel into 1 (wood) or 0 (steel) – a comparison with `?:` will do – and multiply the emission by it."
+    },
+    "ex-scroll-emission": {
+      "text": "Make the letters run over the container like in the film: move the emission map's texture coordinates along y by the time (one face height per second).",
+      "hint": {
+        "opengl": "A `uniform float time;` in `lighting_maps.fs`, added to the y of `TexCoords` only where the emission is sampled (the emission texture repeats); set it every frame with `glfwGetTime()`.",
+        "vulkan": "The time has to reach the fragment shader: the `Material` struct has three padding floats – give one of them a name in C++ and the same name after `shininess` in the shader's `Material`, set it from `glfwGetTime()`, and add it to y only where the emission is sampled.",
+        "d3d12": "The time has to reach the pixel shader: `Material` has three padding floats after `shininess` – turn the first into `float time` in C++ and add `float time;` after `shininess` in the HLSL `Material`. Take the time since the first frame from `std::chrono` and add it to y only where the emission is sampled."
+      }
     }
   }
 }

@@ -1,0 +1,65 @@
+=== task: ex-bright-light
+--- file: main.cpp
+--- find:
+    constantBufferData.light.diffuse = XMFLOAT3(0.5f, 0.5f, 0.5f); // darken diffuse light a bit
+--- replace:
+    constantBufferData.light.diffuse = XMFLOAT3(1.0f, 1.0f, 1.0f); // the full diffuse light
+
+=== task: ex-invert-specular
+--- file: lighting_maps.hlsl
+--- find:
+    float3 specular = light.specular * spec * specularMap.Sample(wrapSampler, input.texCoord).rgb;
+--- replace:
+    float3 specular = light.specular * spec * (1.0f - specularMap.Sample(wrapSampler, input.texCoord).rgb);    // the wood shines, the steel not
+
+=== task: ex-emission-mask
+--- file: lighting_maps.hlsl
+--- find:
+    float3 emission = emissionMap.Sample(wrapSampler, input.texCoord).rgb;
+--- replace:
+    // only on the wood, where the specular map is (nearly) black
+    float onWood = specularMap.Sample(wrapSampler, input.texCoord).r < 0.1f ? 1.0f : 0.0f;
+    float3 emission = emissionMap.Sample(wrapSampler, input.texCoord).rgb * onWood;
+
+=== task: ex-scroll-emission
+--- file: lighting_maps.hlsl
+--- find:
+struct Material
+{
+    float shininess;
+};
+--- replace:
+struct Material
+{
+    float shininess;
+    float time;    // seconds: moves the emission map
+};
+--- file: lighting_maps.hlsl
+--- find:
+    float3 emission = emissionMap.Sample(wrapSampler, input.texCoord).rgb;
+--- replace:
+    float3 emission = emissionMap.Sample(wrapSampler, input.texCoord + float2(0.0f, material.time)).rgb;    // the letters move one face height per second
+--- file: main.cpp
+--- find:
+    struct Material
+    {
+        float shininess;
+        float padding0[3];
+    };
+--- replace:
+    struct Material
+    {
+        float shininess;
+        float time;    // seconds: moves the emission map
+        float padding0[2];
+    };
+--- file: main.cpp
+--- find:
+    constantBufferData.material.shininess = 64.0f;
+--- replace:
+    constantBufferData.material.shininess = 64.0f;
+    // the time in seconds since the first frame
+    static auto startTime = std::chrono::high_resolution_clock::now();
+    auto currentTime = std::chrono::high_resolution_clock::now();
+    float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+    constantBufferData.material.time = time;

@@ -48,6 +48,30 @@
         "vulkan": "`float epsilon = (ubo.light.cutOff - ubo.light.outerCutOff);` – `outerCutOff` sits at 32, and `ambient` (a vec3) must start at 48, hence the three padding floats.",
         "d3d12": "`float epsilon = (light.cutOff - light.outerCutOff);` and `clamp(…, 0.0f, 1.0f)`. Without the branch the maps can be sampled where they are used again."
       }
+    },
+    "ex-wide-cone": {
+      "text": "Widen the flashlight's beam: an inner cone of 25° and an outer cone of 30°.",
+      "hint": "Both cut-offs are passed as the cosine of the angle – keep the `cos(radians(…))` and only change the two angles."
+    },
+    "ex-red-light": {
+      "text": "Turn the flashlight into a red one, as on a night walk: diffuse (0.8, 0, 0) and specular (1, 0, 0). The weak white ambient light stays.",
+      "hint": "Only the light's diffuse and specular colours change. Look at the steel frame: why does it now shine red instead of white?"
+    },
+    "ex-short-range": {
+      "text": "Give the flashlight a short reach of about 13 units: linear 0.35 and quadratic 0.44 (from the attenuation table). How much light is left for the cube right in front of you?",
+      "hint": {
+        "opengl": "Only `light.linear` and `light.quadratic` change; the constant term stays 1.0.",
+        "vulkan": "Only `ubo.light.linear` and `ubo.light.quadratic` change; the constant term stays 1.0.",
+        "d3d12": "Only `linearTerm` and `quadraticTerm` change; `constantTerm` stays 1.0."
+      }
+    },
+    "ex-fading": {
+      "text": "The battery is failing: let the flashlight fade out and in again – multiply its diffuse and specular strength by 0.5 + 0.5 · sin(2 · time).",
+      "hint": {
+        "opengl": "Compute the strength from `glfwGetTime()` before the light is set, and scale the diffuse (0.8) and specular (1.0) values by it – `setVec3` also takes a `glm::vec3`.",
+        "vulkan": "Compute the strength from `glfwGetTime()` in `updateUniformBuffer` and scale the diffuse (0.8) and specular (1.0) values by it.",
+        "d3d12": "This function has no running time yet: take the seconds since the first frame from `std::chrono` (a `static` start time), compute the strength, and scale the diffuse (0.8) and specular (1.0) values by it."
+      }
     }
   }
 }

@@ -48,6 +48,30 @@
         "vulkan": "`float epsilon = (ubo.light.cutOff - ubo.light.outerCutOff);` – `outerCutOff` ligger på 32, och `ambient` (en vec3) måste börja på 48, därav de tre utfyllnadsfloatarna.",
         "d3d12": "`float epsilon = (light.cutOff - light.outerCutOff);` och `clamp(…, 0.0f, 1.0f)`. Utan förgreningen kan texturerna samplas där de används igen."
       }
+    },
+    "ex-wide-cone": {
+      "text": "Vidga ficklampans ljuskägla: en inre kon på 25° och en yttre på 30°.",
+      "hint": "Båda gränserna skickas som cosinus av vinkeln – behåll `cos(radians(…))` och ändra bara de två vinklarna."
+    },
+    "ex-red-light": {
+      "text": "Gör ficklampan röd, som på en nattvandring: diffuse (0.8, 0, 0) och specular (1, 0, 0). Det svaga vita ambienta ljuset är kvar.",
+      "hint": "Bara ljusets diffusa och spekulära färg ändras. Titta på stålramen: varför glänser den nu rött i stället för vitt?"
+    },
+    "ex-short-range": {
+      "text": "Ge ficklampan en kort räckvidd på ungefär 13 enheter: linear 0.35 och quadratic 0.44 (ur dämpningstabellen). Hur mycket ljus finns kvar för kuben rakt framför dig?",
+      "hint": {
+        "opengl": "Bara `light.linear` och `light.quadratic` ändras; den konstanta termen är kvar på 1.0.",
+        "vulkan": "Bara `ubo.light.linear` och `ubo.light.quadratic` ändras; den konstanta termen är kvar på 1.0.",
+        "d3d12": "Bara `linearTerm` och `quadraticTerm` ändras; `constantTerm` är kvar på 1.0."
+      }
+    },
+    "ex-fading": {
+      "text": "Batteriet håller på att ta slut: låt ficklampan tona ut och in igen – multiplicera dess diffusa och spekulära styrka med 0.5 + 0.5 · sin(2 · time).",
+      "hint": {
+        "opengl": "Räkna ut styrkan från `glfwGetTime()` innan ljuset sätts, och skala de diffusa (0.8) och spekulära (1.0) värdena med den – `setVec3` tar också en `glm::vec3`.",
+        "vulkan": "Räkna ut styrkan från `glfwGetTime()` i `updateUniformBuffer` och skala de diffusa (0.8) och spekulära (1.0) värdena med den.",
+        "d3d12": "Den här funktionen har ingen löpande tid än: ta sekunderna sedan första bildrutan från `std::chrono` (en `static` starttid), räkna ut styrkan och skala de diffusa (0.8) och spekulära (1.0) värdena med den."
+      }
     }
   }
 }
