@@ -26,5 +26,16 @@ public static partial class TaskChecks
             // Encoded by the hardware: the floor as before (not encoded twice), the clear colour 0.1 encoded too (≈ 0.35).
             ["ex-hardware-srgb"] = c => At(c, 400, 100, p => Grey(p) && p[0] > 0.3 && p[0] < 0.4) && At(c, 150, 430, p => p[0] > 0.6 && p[0] < 0.8 && p[2] < 0.4),
         },
+        ["shadow-mapping"] = new()
+        {
+            // The shadow test as grey: black in the cube's shadow, white on the lit floor.
+            ["ex-shadow-only"] = c => At(c, 650, 450, p => p[0] < 0.05) && At(c, 330, 520, p => Grey(p) && p[0] > 0.95) && At(c, 750, 560, p => Grey(p) && p[0] > 0.95),
+            // Half a shadow: between the solution's shadow (≈ 0.06) and the lit floor (≈ 0.23).
+            ["ex-lighter-shadow"] = c => At(c, 650, 450, p => p[0] > 0.11 && p[0] < 0.19) && At(c, 560, 440, p => p[0] > 0.11 && p[0] < 0.19) && At(c, 750, 560, p => p[0] > 0.2),
+            // The light at (2, 4, −1): the shadow on the left of the floor, the right lit.
+            ["ex-move-light"] = c => At(c, 150, 450, p => p[0] < 0.1) && At(c, 200, 450, p => p[0] < 0.1) && At(c, 650, 450, p => p[0] > 0.15) && At(c, 560, 440, p => p[0] > 0.15),
+            // A perspective light: the shadow grows, out to the floor's front right corner of the view.
+            ["ex-perspective-light"] = c => InShadow(c) && At(c, 700, 480, p => p[0] < 0.08) && At(c, 750, 560, p => p[0] < 0.15) && At(c, 200, 450, p => p[0] > 0.2),
+        },
     };
 }
