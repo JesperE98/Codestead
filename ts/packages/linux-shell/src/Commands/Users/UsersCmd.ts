@@ -4,7 +4,7 @@
 // Everything reads and writes /etc/passwd, /etc/group and /etc/shadow via Users/ (UsersLib).
 // This is the group's root file: the shared helpers and the list of the group's commands.
 
-import { Js, type Obj } from "../../Js.js";
+import { Js } from "../../Js.js";
 import type { Shell } from "../../Shell/Shell.js";
 import type { MsgArgs } from "../../ShellI18n.js";
 import type { CmdCtx } from "../../Types/CmdCtx.js";
@@ -118,7 +118,7 @@ export function makeHome(sh: Shell, ctx: Sink, prog: string, entry: PasswdEntry,
     n.mtime = Js.now();
     for (const c of (n.children ?? Js.obj<FsNode>()).values()) chownTree(c);
   };
-  for (const [name, node] of skel?.children ?? (Js.obj<FsNode>() as Obj<FsNode>)) {
+  for (const [name, node] of skel?.children ?? Js.obj<FsNode>()) {
     const copy = VfsLib.cloneNode(node);
     chownTree(copy);
     home.children!.set(name, copy);
