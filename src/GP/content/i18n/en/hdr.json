@@ -32,6 +32,30 @@
         "vulkan": "A global `float exposure = 1.0f;`; `float exposure;` in place of `pad1` in `UniformBufferObject`; `ubo.exposure = exposure;`. `hdr.frag`: the uniform block at binding 0 with the same members up to `float exposure;`, and `vec3 result = vec3(1.0) - exp(-hdrColor * ubo.exposure);`.",
         "d3d12": "A global `float exposure = 1.0f;`, `struct HdrConstants { float exposure; };`, root parameter 0 with `D3D12_SHADER_VISIBILITY_ALL`, and before the quad's draw `SetGraphicsRoot32BitConstants(0, sizeof(HdrConstants) / 4, &hdrConstants, 0)`. `hdr.hlsl`: `cbuffer HdrConstants : register(b0) { float exposure; };` and `float3 result = float3(1.0f, 1.0f, 1.0f) - exp(-hdrColor * exposure);`."
       }
+    },
+    "ex-low-exposure": {
+      "text": "Lower the exposure from 1.0 to 0.1, as if your eyes had got used to the bright light: the end of the tunnel is no longer white – you can see the wood there – while the rest of the tunnel goes dark.",
+      "hint": {
+        "opengl": "Only the global `exposure` in `main.cpp` changes (learnopengl changes it with Q and E); `hdr.fs` gets it as a uniform every frame.",
+        "vulkan": "Only the global `exposure` in `main.cpp` changes (learnopengl changes it with Q and E); it goes to `hdr.frag` in the uniform buffer every frame.",
+        "d3d12": "Only the global `exposure` in `main.cpp` changes (learnopengl changes it with Q and E); it goes to the tone-mapping shader in the constant buffer every frame."
+      }
+    },
+    "ex-red-light": {
+      "text": "Make the red light near the camera 50 times as strong: (5, 0, 0) instead of (0.1, 0, 0). In HDR a light may be far brighter than 1.0 – the red glow on the walls near the camera now shows clearly.",
+      "hint": {
+        "opengl": "The second entry of `lightColors` in `main.cpp` (the light at (−1.4, −1.9, 9)).",
+        "vulkan": "The second entry of the global `lightColors` in `main.cpp` (the light at (−1.4, −1.9, 9)).",
+        "d3d12": "The second entry of the global `lightColors` in `main.cpp` (the light at (−1.4, −1.9, 9))."
+      }
+    },
+    "ex-aces": {
+      "text": "Try another tone-mapping curve: the filmic ACES curve (Krzysztof Narkowicz's fit), with x = the HDR colour × exposure: result = x(2.51x + 0.03) / (x(2.43x + 0.59) + 0.14), clamped to 0…1. Compare the contrast with the exposure curve.",
+      "hint": {
+        "opengl": "In `hdr.fs` replace the exposure line (keep it as a comment) with a `vec3 x` and the formula, then `clamp(…, 0.0, 1.0)`; the gamma correction after it stays.",
+        "vulkan": "In `hdr.frag` replace the exposure line (keep it as a comment) with a `vec3 x` and the formula, then `clamp(…, 0.0, 1.0)`; the gamma correction after it stays.",
+        "d3d12": "In the tone-mapping `PSMain` replace the exposure line (keep it as a comment) with a `float3 x` and the formula, then `saturate(…)`; the gamma correction after it stays."
+      }
     }
   }
 }

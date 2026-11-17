@@ -70,5 +70,14 @@ public static partial class TaskChecks
             // −70°: a flatter, lower quad – the middle drawn, the solution's lower and upper parts now background.
             ["ex-steeper"] = c => c.DrawnAt(0.5, 350 / 600.0) && c.IsClear(500 / 800.0, 450 / 600.0) && c.IsClear(0.5, 170 / 600.0),
         },
+        ["hdr"] = new()
+        {
+            // Exposure 0.1: the far end no longer white (the wood's colour), the walls next to it dark.
+            ["ex-low-exposure"] = c => At(c, 400, 300, p => p[0] > 0.7 && p[0] < 0.9 && p[2] < 0.5) && At(c, 350, 300, p => p[0] < 0.4),
+            // A red light of 5: the walls near the camera clearly red at the bottom right.
+            ["ex-red-light"] = c => At(c, 700, 550, p => p[0] > 0.35 && p[1] < 0.1) && At(c, 400, 300, p => p[0] > 0.95),
+            // ACES: more contrast – the glow round the far end brighter, the dim walls darker than with the exposure curve.
+            ["ex-aces"] = c => At(c, 350, 300, p => p[0] > 0.8) && At(c, 250, 300, p => p[0] < 0.09) && At(c, 400, 300, p => p[0] > 0.95),
+        },
     };
 }
