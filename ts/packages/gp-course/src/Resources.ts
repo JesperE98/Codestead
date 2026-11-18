@@ -24,7 +24,8 @@ const textGlobs: Record<string, string> = {
   ...import.meta.glob<string>(
     [
       "../../../../src/GP/content/projects/*/*/start/**/*",
-      "!**/*.{png,jpg,hdr,obj,mtl,otf,ttf,gltf,bin,PNG,JPG,HDR,OBJ,MTL,OTF,TTF,GLTF,BIN}",
+      // (A negative pattern is relative to this file too: "!**/…" would leave src/GP alone.)
+      "!../../../../src/GP/content/projects/*/*/start/**/*.{png,jpg,hdr,obj,mtl,otf,ttf,gltf,bin,PNG,JPG,HDR,OBJ,MTL,OTF,TTF,GLTF,BIN}",
     ],
     { query: "?raw", import: "default", eager: true },
   ),

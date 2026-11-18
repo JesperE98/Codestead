@@ -2,5 +2,14 @@
   "name": "@codestead/app-gp",
   "private": true,
   "type": "module",
-  "description": "Codestead GP – the Electron app (port of Codestead.GP)."
+  "description": "Codestead GP – the Electron app (port of Codestead.GP).",
+  "main": "dist-electron/main.cjs",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && vite build -c vite.electron.config.ts --mode main && vite build -c vite.electron.config.ts --mode preload && vite build -c vite.electron.config.ts --mode worker",
+    "start": "electron .",
+    "smoke-test": "electron . --smoke-test",
+    "test": "vitest run --root ../.. apps/gp/test",
+    "test:e2e": "vitest run -c vitest.e2e.config.ts"
+  }
 }
