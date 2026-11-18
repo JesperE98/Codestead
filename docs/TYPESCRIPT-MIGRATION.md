@@ -5,6 +5,12 @@ React för gränssnittet, **Electron** för de installerade apparna (som före o
 i TypeScript** (Linux-skalet och GPU-simulatorn). C#-apparna finns kvar och släpps som vanligt **parallellt** tills
 TypeScript-versionerna kan lika mycket; då byter vi.
 
+**Bytet är gjort (fas 6, 2026-11-18).** Release-flödet bygger nu TypeScript-apparna: nästa version av varje produkt –
+Codestead Linux 0.6.6, Codestead GP 0.2.6 och hubben 0.2.5 – är den första i TypeScript, och C#-koden är borttagen ur
+repot (den finns kvar i git-historiken, t.ex. i commit `a616425`). Den här filen är historiken över flytten; hur
+projektet byggs, testas och släpps i dag står i [DEVELOPMENT.md](DEVELOPMENT.md). Kommentarer som "Port of
+Codestead.Shell/…" eller "Port of tests/…" i TypeScript-koden pekar på C#-koden i historiken.
+
 ## Principer
 - **Översätt dagens C#-kod, med dess tester.** Varje C#-modul får en TypeScript-motsvarighet med samma beteende, och
   dess xUnit-tester översätts till Vitest. Paritet bevisas av testerna, inte av att koden "ser likadan ut". Den gamla
@@ -47,8 +53,8 @@ TypeScript-versionerna kan lika mycket; då byter vi.
 - [x] 2. Gemensam kärna och UI – `learning` och `ui` (React): lärfönstret, markdown, dialoger, spelvyer; samma sparfiler som C#
 - [x] 3. Linux – `linux-shell` (hela skalet, alla kommandon), `linux-content` (alla kapitel lösta av sina lösningar i 4 distar och 11 språk) och appen `ts/apps/linux` (Electron, terminalen i React, `--smoke-test`, e2e-test)
 - [x] 4. GP – `gp-gpu` (kärnan och läsarna för OpenGL, Vulkan, D3D12; samma bilder som C#), `gp-course` (alla 623 uppgifts- och övningstester gröna i alla tre API:er; körs i CI-jobbet `ts-gp-tasks`) och appen `ts/apps/gp` (Electron, "Ditt projekt" med Kontrollera min kod i en arbetstråd, `--smoke-test`, e2e-test)
-- [ ] 5. Hubben och paketering – appen `ts/apps/hub` klar (samma katalog, paket och installationer som C#-hubben); paketering (`build-linux.sh --ts`, `build-windows.ps1 -TsApp`: samma artefakter, namn, id:n och sökvägar), självuppdatering med Velopack (samma uppdateringskälla) och installationstesterna (`ts-packaging.yml`) klara – Linux provat lokalt (se "Paketering och uppdateringar"); kvar: en första körning av `ts-packaging.yml` (Windows har bara byggts och testats där)
-- [ ] 6. Byte – uppgraderingstestet (en användares släppta C#-installation uppdaterar sig till TypeScript-bygget, se "Uppgraderingstest" nedan) klart och provat lokalt för AppImage (alla tre produkterna); Windows (Setup.exe) körs bara i `ts-packaging.yml`
+- [x] 5. Hubben och paketering – appen `ts/apps/hub` klar (samma katalog, paket och installationer som C#-hubben); paketering (`build-linux.sh --ts`, `build-windows.ps1 -TsApp`: samma artefakter, namn, id:n och sökvägar), självuppdatering med Velopack (samma uppdateringskälla) och installationstesterna (`ts-packaging.yml`, grön i CI för Linux och Windows) klara
+- [x] 6. Byte – uppgraderingstestet (en användares släppta C#-installation uppdaterar sig till TypeScript-bygget, se "Uppgraderingstest" nedan) grönt i `ts-packaging.yml` (AppImage och Setup.exe); release.yml bygger TypeScript-apparna och har uppgraderingstestet som spärr före publiceringen; C#-koden borttagen (se "Fas 6: bytet" nedan). Kvar: den första releasen för hand (Actions → Release → publish) och checklistan på riktiga datorer ([RELEASE-CHECKLIST.md](RELEASE-CHECKLIST.md), "Första TypeScript-releasen")
 
 ## Apparna
 
@@ -150,6 +156,8 @@ och verktygens `profile.json`/`whatsnew.json` i deras egna mappar.
   erbjuder som förut en nyare hubb i katalogen som nedladdning).
 
 ## Paketering och uppdateringar (fas 5)
+Så som det gjordes i fas 5, då C#-apparna fortfarande släpptes; vad som ändrades vid bytet står i "Fas 6: bytet" nedan.
+
 TypeScript-apparna blir **samma artefakter** som C#-apparna – samma filnamn, paket-id:n, installationsmappar
 (`/opt/<id>/`, `/usr/bin/<id>`, `%LOCALAPPDATA%\<id>\current\`), skrivbordsfiler, ikoner och körbara filer
 (`Codestead.Linux`, `Codestead.GP`, `Codestead.Hub`; hubbens `current.json` och katalogen pekar på dem) – så att en
@@ -229,3 +237,47 @@ TypeScript-version kan släppas som nästa version av samma produkt (fas 6).
   | Codestead (hubben), TS | 124 MB | 130 MB | 127 MB | 130 MB | 122 MB |
 
   Windows (C#: Setup.exe 77/96/75 MB, zip 94/113/92 MB): Codestead Linux i TypeScript gav korsvis ≈ 162 MB Setup.exe.
+
+## Fas 6: bytet
+Gjort 2026-11-18 (grenen `ts-switch`, från `ts-migration`). Användarna får samma filer, namn, paket-id:n, kanaler,
+uppdateringskälla (`<id>-latest`), katalog och signering som förut – bara appen i dem är ny.
+
+- **Produkterna i `packaging/products.json`.** Namn, id, körbar fil (`Codestead.Linux`, `Codestead.GP`,
+  `Codestead.Hub`), version (`majorMinor`: 0.6, 0.2, 0.2), appens mapp i `ts/apps` och den sista C#-releasen
+  (`lastCSharpRelease`: 0.6.5, 0.2.5, 0.2.4) – förut i `build/Codestead.props`, `src/GP/Directory.Build.props` och
+  C#-projektens `AssemblyName`, lästa med `dotnet msbuild`. `plan.py`, `releases_readme.py`, byggskripten och apparna
+  (`@codestead/common`: `Products`, som `ProductInfo` och `HubInfo` använder) läser filen; inget behöver .NET.
+  `paths`/`own`/`exclude` pekar på TypeScript-källorna (appen och dess paket är produktens egna, `ts/packages/common`,
+  `learning` och `ui` delade; testerna räknas inte). Hubbens `exclude` är de delar av `ui` och `learning` som bara
+  lärapparna använder; `ProductFilesTests` följer hubbens importer och kontrollerar att den aldrig använder dem.
+- **release.yml bygger TypeScript-apparna.** `build-linux.sh <app> <id> "<namn>" <exe> <version>` och
+  `build-windows.ps1 -App … -Executable …` paketerar alltid appen med `packaging/ts/package-app.mjs` (vägen med
+  `dotnet publish` och C#:s `nfpm.yaml` är borta). Testjobben är TypeScript-testerna (typkontroll, Vitest och GP:s
+  TaskTests i parallella jobb per kursdel); installationstesterna och hubbens end-to-end-test är desamma.
+- **Uppgraderingsspärren.** `upgrade-linux` (AppImage på Ubuntu 24.04 och Fedora) och `upgrade-windows` (Setup.exe på
+  Windows Server 2025 och 2022) i release.yml uppdaterar varje produkt som får en ny version från en användares
+  installation av dess **sista C#-release** (hämtad från release-repot, C#-appens egen Velopack tillämpar
+  uppdateringen, sedan TS → TS) – så att en gammal installation alltid kan uppdatera sig direkt till den nyaste
+  versionen – och, när det finns en, från dess **föregående (TypeScript-)release** (ett Linux- och ett Windows-mål,
+  utan TS → TS; dess egen uppdateringskod tillämpar uppdateringen). Så länge den föregående releasen är den sista
+  C#-releasen hoppas det fallet över (`plan.py` listar fallen). `publish` väntar på båda jobben. `upgrade-driver` är
+  kvar (det är C#-appens uppdateringsknapp), med Velopack 1.2.161 – de sista C#-releasernas – fast i sitt eget
+  projekt; .NET installeras bara i jobben som kör den eller `vpk`.
+- **CI.** `ci.yml` kör bara TypeScript: typkontroll och Vitest, GP:s TaskTests per kursdel och apparnas e2e-tester
+  (Playwright, Xvfb). `ts-packaging.yml` och `packaging/ts/products.py` är borttagna: release.yml körd för hand utan
+  "publish" bygger, installationstestar och uppgraderingstestar på samma sätt (också från en gren).
+- **Ändringsloggarna** har en post för 0.6.6, 0.2.6 och 0.2.5 på alla erbjudna språk: samma app med en ny motor,
+  framstegen kvar, och det man kan märka (nedladdningen ungefär dubbelt så stor, systemets typsnitt i stället för det
+  inbyggda Inter). Release-sidorna ber inte längre Fedora 45-användare installera OpenSSL 3 (det var för .NET).
+- **C#-koden borttagen**: `src/Shared`, alla projekt, `.cs`/`.axaml`-filer och app-manifest i `src/Linux`, `src/GP`,
+  `src/Hub`, `tests/`, `Codestead.sln`, `Directory.Build.props`, `global.json`, `build/Codestead.props` och
+  `build/Codestead.App.props`. Datan som låg bredvid C#-koden ligger kvar på samma sökvägar (apparna läser den
+  därifrån): UI-texterna (`src/Linux/Codestead.Content/i18n`, `src/GP/Codestead.GP.Course/i18n`,
+  `src/Hub/Codestead.Hub/i18n`), skalets texter och världar (`src/Linux/Codestead.Shell/i18n`, `world`), GPU:ns
+  API-symboler och glyfer (`src/GP/Codestead.GP.Gpu/symbols`, `Fonts`) och ikonerna i `Assets/`.
+  `src/GP/tools/RenderResults` blev `ts/packages/gp-gpu/test/RenderResults.test.ts` (körs bara med
+  `CODESTEAD_RENDER_RESULTS`); `src/GP/verify` använde inte C#-koden och är kvar.
+- **Testerna.** Alla C#-tester hade redan TypeScript-motsvarigheter; de som jämförde med C#-källorna (temats färger,
+  accentfärgerna, simulatorns meddelanden) kontrollerar nu TypeScript-sidan. `CodeLayoutTests` regler (en typ per fil,
+  högst 800 rader) gällde C#-koden och följde inte med; dess kontroll att varje app anropar Velopack först finns i
+  `SelfUpdateTests`.
