@@ -1,10 +1,32 @@
 // The tables of Arm optimized-routines' exp, log, log2 and pow (math/exp_data.c, log_data.c, log2_data.c,
 // pow_log_data.c at https://github.com/ARM-software/optimized-routines, commit 20859d3fd9e797dde592c489c8ef7d383f778620),
 // printed by a C program that compiled those files (configuration as on x86-64 with -mfma: HAVE_FAST_FMA, so log's and
-// log2's tab2 are not needed). Used by libm-arm.ts; see the licence there.
+// log2's tab2 are not needed). Used by libm-arm.ts.
 //
 // Copyright (c) 2018-2026, Arm Limited.
-// SPDX-License-Identifier: MIT OR Apache-2.0 WITH LLVM-exception (used here under the MIT licence, see libm-arm.ts)
+// SPDX-License-Identifier: MIT OR Apache-2.0 WITH LLVM-exception. Used here under the MIT licence:
+//
+// MIT License
+//
+// Copyright (c) 1999-2022, Arm Limited.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 
 // exp (math/exp_data.c): N = 2^7
 export const EXP_INVLN2N = 184.66496523378731;

@@ -3,7 +3,36 @@
 // https://github.com/nak5124/core-math, commit 018fa97cbdacf59924b899a9dfa422d532cb2bb7), extracted from the C sources
 // by a script: doubles parsed exactly from their hexadecimal form and printed in the shortest decimal form that reads
 // back as the same double, 64- and 128-bit integers as bigints, dint64_t/tint_t structures split into arrays.
-// Used by libm-coremath.ts; the copyright lines and the MIT licence of these tables are there.
+// Used by libm-coremath.ts.
+//
+// Copyright (c) 2026 Paul Zimmermann and Alexei Sibidanov (sin.c)
+// Copyright (c) 2026 Paul Zimmermann (cos.c)
+// Copyright (c) 2022-2025 Paul Zimmermann and Tom Hubrecht (tan.c)
+// Copyright (c) 2022-2026 Alexei Sibidanov <sibid@uvic.ca>. (asin.c)
+// Copyright (c) 2024-2025 Alexei Sibidanov. (acos.c)
+// Copyright (c) 2023-2026 Alexei Sibidanov <sibid@uvic.ca>. (atan.c)
+// Copyright (c) 2024-2025 Paul Zimmermann and Alexei Sibidanov (atan2.c)
+// Copyright (c) 2023-2024 Paul Zimmermann and Alexei Sibidanov (atan2/tint.h)
+//
+// These files are part of the CORE-MATH project (https://core-math.gitlabpages.inria.fr/).
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 
 
 // ---------- sin.c and cos.c (shared tables; cos.c copies them from sin.c) ----------
