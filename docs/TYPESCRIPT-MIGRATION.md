@@ -47,7 +47,7 @@ TypeScript-versionerna kan lika mycket; då byter vi.
 - [x] 2. Gemensam kärna och UI – `learning` och `ui` (React): lärfönstret, markdown, dialoger, spelvyer; samma sparfiler som C#
 - [x] 3. Linux – `linux-shell` (hela skalet, alla kommandon), `linux-content` (alla kapitel lösta av sina lösningar i 4 distar och 11 språk) och appen `ts/apps/linux` (Electron, terminalen i React, `--smoke-test`, e2e-test)
 - [x] 4. GP – `gp-gpu` (kärnan och läsarna för OpenGL, Vulkan, D3D12; samma bilder som C#), `gp-course` (alla 623 uppgifts- och övningstester gröna i alla tre API:er; körs i CI-jobbet `ts-gp-tasks`) och appen `ts/apps/gp` (Electron, "Ditt projekt" med Kontrollera min kod i en arbetstråd, `--smoke-test`, e2e-test)
-- [ ] 5. Hubben och paketering – appen `ts/apps/hub` klar (samma katalog, paket och installationer som C#-hubben); kvar: paketering, självuppdatering, installationstester
+- [ ] 5. Hubben och paketering – appen `ts/apps/hub` klar (samma katalog, paket och installationer som C#-hubben); paketering (`build-linux.sh --ts`, `build-windows.ps1 -TsApp`: samma artefakter, namn, id:n och sökvägar), självuppdatering med Velopack (samma uppdateringskälla) och installationstesterna (`ts-packaging.yml`) klara – Linux provat lokalt (se "Paketering och uppdateringar"); kvar: en första körning av `ts-packaging.yml` (Windows har bara byggts och testats där)
 - [ ] 6. Byte
 
 ## Apparna
@@ -76,8 +76,8 @@ Electron-appen: samma lärfönster (`@codestead/ui`) med Linux-verktyget och den
   Playwright måste kunna hittas med `require("playwright")`, utan skärm startas Xvfb, `E2E_SHOTS=<mapp>` sparar bilder).
 - Fönstret: `contextIsolation`, ingen `nodeIntegration`, `sandbox`; preload ger `window.codestead` (`electron/api.ts`):
   lagring (synkron, som i C#), webblänkar (bara http/https), fil- och mappväljare, version, avsluta.
-- Kvar (fas 5): uppdateringar (Velopack i C#; nu "inga uppdateringar") och paketering; typsnittet Inter följer inte med
-  än (C# bäddar in det), så systemets typsnitt används.
+- Uppdateringar och paketering: se "Paketering och uppdateringar" nedan (`LinuxTool` får preloadens `selfUpdate`).
+- Kvar: typsnittet Inter följer inte med än (C# bäddar in det), så systemets typsnitt används.
 
 ### `ts/apps/gp` – Codestead GP
 Electron-appen: samma lärfönster (`@codestead/ui`) med GP-verktyget – kursen (`@codestead/gp-course`), API:erna som
@@ -119,8 +119,9 @@ varianter, IDE-väljaren och panelen "Your project" som arbetsyta.
   dit och Check my code bockar av stegen, lösningsfönstret stängs med ✕ och Escape, förväntat resultat ritas och
   förstoras; sedan `--smoke-test` och `--version`. Mappväljaren besvaras från testet. Playwright måste kunna hittas
   med `require("playwright")`, utan skärm startas Xvfb, `E2E_SHOTS=<mapp>` sparar bilder).
-- Kvar (fas 5): uppdateringar (Velopack; nu "inga uppdateringar") och paketering – paketet måste ta med kursens
-  innehåll (`src/GP/content`) och peka arbetstråden dit.
+- Uppdateringar och paketering: se "Paketering och uppdateringar" nedan. Arbetstrådens bygge listar kursens binära
+  filer i `dist-electron/repo-files.json`; paketet har dem på samma plats i förhållande till appen som i repot, så
+  arbetstråden hittar dem utan ändring.
 
 ### `ts/apps/hub` – hubben (Codestead)
 Översättning av `src/Hub/Codestead.Hub.Core` (i `src/core/`) och `src/Hub/Codestead.Hub` (React). Hubben installerar
@@ -145,5 +146,66 @@ och verktygens `profile.json`/`whatsnew.json` i deras egna mappar.
   (`_electron`; Playwright hittas där det är installerat, t.ex. globalt) mot en egen signerad katalog med lokala paket,
   så inget laddas ner (`CODESTEAD_HUB_E2E=1` gör att `--catalog`/`--public-key` gäller utan `--smoke-test`). Utan
   skärm startar testet en egen Xvfb; `CODESTEAD_E2E_SHOTS=<mapp>` sparar skärmbilder.
-- **Kvar (TODO):** självuppdatering (Velopack i C#; nu "inga uppdateringar", en nyare hubb i katalogen erbjuds som
-  nedladdning) och paketering kommer i fas 5.
+- Självuppdatering och paketering: se "Paketering och uppdateringar" nedan (en hubb som inte kan uppdatera sig själv
+  erbjuder som förut en nyare hubb i katalogen som nedladdning).
+
+## Paketering och uppdateringar (fas 5)
+TypeScript-apparna blir **samma artefakter** som C#-apparna – samma filnamn, paket-id:n, installationsmappar
+(`/opt/<id>/`, `/usr/bin/<id>`, `%LOCALAPPDATA%\<id>\current\`), skrivbordsfiler, ikoner och körbara filer
+(`Codestead.Linux`, `Codestead.GP`, `Codestead.Hub`; hubbens `current.json` och katalogen pekar på dem) – så att en
+TypeScript-version kan släppas som nästa version av samma produkt (fas 6).
+
+- **Bygga:** `packaging/build-linux.sh --ts ts/apps/<app> <csproj> <id> "<namn>" <version> [ut]` och
+  `packaging/build-windows.ps1 -TsApp ts/apps/<app> -Project <csproj> …`: i stället för `dotnet publish` gör
+  `packaging/ts/package-app.mjs` app-mappen, sedan samma steg som för C# (tar.gz/zip, nfpm, `vpk pack`). C#-projektet
+  anges fortfarande: det ger den körbara filens namn. Utan `--ts`/`-TsApp` är skripten oförändrade.
+- **`packaging/ts/package-app.mjs`:** bygger appen (`npm run build` med `VITE_CODESTEAD_VERSION`, som C#:s
+  `-p:Version`), lägger den i Electrons app-mapp `resources/app` med **repots layout** (`ts/apps/<app>/dist`,
+  `dist-electron`, och filerna appen läser från repot vid körning – GP:s kursfiler enligt `repo-files.json`), låter
+  electron-builder (`--dir`) byta namn på Electron till den körbara filen, sätta ikon och versionsinformation i .exe
+  (rcedit, bara på Windows) och ta bort Chromiums språkfiler utom apparnas språk. Ingen asar (arbetstråden och den
+  inbyggda modulen är vanliga filer). `desktopName` = `<exe>.desktop` ger fönstret klassen `<exe>` som C#-appens
+  (skrivbordsfilens `StartupWMClass`).
+- **Linux: Chromiums sandlåda.** Den körbara filen (`<exe>`) är ett litet skript (`packaging/ts/launcher.sh`) bredvid
+  Electron (`<exe>.bin`): Chromium sandlådar med användarnamnrymder eller med den setuid-märkta hjälpen
+  `chrome-sandbox`, och startar inte alls där ingen av dem fungerar. Skriptet startar då med `--no-sandbox`: som root
+  (containrar, installationstesterna), när namnrymderna är avstängda eller begränsade (Ubuntu 23.10 och senare,
+  AppArmor) och `chrome-sandbox` inte är setuid root (hubbens installation per användare, AppImage). .deb/.rpm/Arch
+  gör `chrome-sandbox` setuid root (`packaging/ts/postinstall.sh`), så där fungerar sandlådan alltid.
+  Beroendena (`packaging/ts/nfpm.yaml`) är Electrons bibliotek (GTK, NSS, ALSA, CUPS …; på Ubuntu t64-paketen först).
+- **Uppdateringar:** Velopacks Node-SDK (npm-paketet `velopack` 1.2.161 – samma version som C#-apparnas Velopack och
+  `vpk`) i main-processen, `@codestead/ui/electron-main` (`runVelopackHooks` först i main, som
+  `VelopackApp.Build().Run()`; `VelopackSelfUpdate` som C#:s `SelfUpdate`, med samma källa
+  `https://github.com/<repo>/releases/download/<id>-latest/` som `HttpSource` – en sträng skulle Node-SDK:n tolka som
+  ett GitHub-repo) och `@codestead/ui/electron-bridge` (preloadens `window.codestead.selfUpdate`). Installerad med
+  Setup.exe eller som AppImage uppdaterar appen sig själv; .deb/.rpm/Arch och hubbens installation inte (Velopack är
+  inte installerat där), som i C#. `vpk pack` får `--skipVeloAppCheck` på Windows (anropet finns i JavaScript, som
+  vpk inte kan granska). Nupkg-filerna har samma id, kanal (`linux`/`win`) och `mainExe` som C#:s, och AppImagens
+  `UpdateNix` och `AppRun` är byte för byte desamma, så en C#-installation uppdateras till en TypeScript-version från
+  samma källa.
+- **glibc:** Velopacks Linux-modul är byggd mot glibc 2.39 men använder 2.39-funktionerna (`pidfd_spawnp`,
+  `pidfd_getpid`) bara som svaga symboler; `package-app.mjs` märker den versionen som valfri i modulen, så den laddas
+  även med glibc 2.34–2.38 (Ubuntu 22.04, Debian 12). Modulen laddas först när den behövs; går den inte att ladda
+  startar appen ändå, utan självuppdatering.
+- **Testa:** `packaging/install-test.sh <id> <exe> <deb|rpm|arch|appimage> electron` (AppImagens bibliotek, och att
+  `chrome-sandbox` är setuid root i paketen), `packaging/hub-e2e.sh` och `install-test-windows.ps1` som för C#.
+  `.github/workflows/ts-packaging.yml` (vid `workflow_dispatch` och push till `ts-migration`) bygger de tre apparnas
+  Linux- och Windows-artefakter och kör samma testmatris som release.yml, utan att publicera något.
+- **Provat lokalt (2026-11-18):** alla Linux-artefakter för de tre apparna; installationstesterna i docker – Codestead
+  Linux på Ubuntu 24.04 och 22.04 (.deb), Fedora (.rpm), Arch (.pkg.tar.zst) och AppImage på Ubuntu 24.04, Fedora och
+  Arch; GP och hubben på Ubuntu (.deb), Fedora (.rpm), Arch och som AppImage; `hub-e2e.sh` med TypeScript-hubben som
+  installerar TypeScript-versionerna av Linux och GP, och med den släppta C#-hubben 0.2.4 som installerar
+  TypeScript-Linux; som vanlig användare (med sandlådan) och som root; en AppImage som uppdaterar sig från 0.6.0 till
+  0.6.1 med Velopack från en lokal källa. Windows-mappen och `vpk pack` för Windows provades bara korsvis från Linux.
+- **Storlek** (Electron i stället för .NET; C#: de släppta versionerna):
+
+  | | Linux tar.gz | AppImage | .deb | .rpm | .pkg.tar.zst |
+  |---|---|---|---|---|---|
+  | Codestead Linux, C# 0.6.5 | 63 MB | 68 MB | 65 MB | 68 MB | 62 MB |
+  | Codestead Linux, TS | 126 MB | 132 MB | 128 MB | 132 MB | 123 MB |
+  | Codestead GP, C# 0.2.5 | 82 MB | 87 MB | 84 MB | 87 MB | 69 MB |
+  | Codestead GP, TS | 157 MB | 148 MB | 159 MB | 163 MB | 139 MB |
+  | Codestead (hubben), C# 0.2.4 | 61 MB | 66 MB | 63 MB | 65 MB | 60 MB |
+  | Codestead (hubben), TS | 124 MB | 130 MB | 127 MB | 130 MB | 122 MB |
+
+  Windows (C#: Setup.exe 77/96/75 MB, zip 94/113/92 MB): Codestead Linux i TypeScript gav korsvis ≈ 162 MB Setup.exe.

@@ -3,19 +3,40 @@
 // the apps' main processes import it as "@codestead/ui/electron-main" and keep velopack outside their bundle (it has a
 // native module); the window reaches it through SelfUpdateBridge.ts.
 
-import { HttpSource, UpdateManager, type UpdateInfo, VelopackApp } from "velopack";
+import { createRequire } from "node:module";
+import type * as Velopack from "velopack";
 import type { SelfUpdate } from "../SelfUpdate.js";
 import { SelfUpdateChannels } from "./SelfUpdateBridge.js";
+
+let velopackModule: typeof Velopack | null | undefined;
+
+/**
+ * Velopack's Node SDK, loaded when first needed – or null when its native module cannot be loaded (a C library too old
+ * for it, a platform without one): then the app has no self-update, but it starts (C#'s Velopack is managed code and
+ * always loads).
+ */
+function velopack(): typeof Velopack | null {
+  if (velopackModule === undefined) {
+    try {
+      // From where this code is: the apps' CommonJS bundle (__filename; its import.meta is empty) or the ES module.
+      velopackModule = createRequire(typeof __filename === "string" ? __filename : import.meta.url)("velopack") as typeof Velopack;
+    } catch (e) {
+      process.stderr.write(`Velopack is not available: ${e instanceof Error ? e.message : String(e)}\n`);
+      velopackModule = null;
+    }
+  }
+  return velopackModule;
+}
 
 /**
  * Velopack's install/update hooks (C#: VelopackApp.Build().Run() first in Program.Main): when Setup.exe or an update
  * starts the app for one of them, Velopack handles it and ends the process; an update downloaded earlier is applied
  * here. Call it first in the main process. Outside a Velopack installation it does nothing. A failure (say, the native
- * module is missing) must not stop the app, so it is only reported.
+ * module cannot be loaded) must not stop the app, so it is only reported.
  */
 export function runVelopackHooks(): void {
   try {
-    VelopackApp.build().run();
+    velopack()?.VelopackApp.build().run();
   } catch (e) {
     process.stderr.write(`Velopack: ${e instanceof Error ? e.message : String(e)}\n`);
   }
@@ -32,8 +53,8 @@ export function updateFeedUrl(releasesRepo: string, packageId: string): string {
  * else owns the files, so {@link canUpdateItself} is false.
  */
 export class VelopackSelfUpdate implements SelfUpdate {
-  private readonly manager: UpdateManager | null = null;
-  private pending: UpdateInfo | null = null;
+  private readonly manager: Velopack.UpdateManager | null = null;
+  private pending: Velopack.UpdateInfo | null = null;
 
   /**
    * @param releasesRepo "owner/repo" of the public releases repository.
@@ -45,10 +66,12 @@ export class VelopackSelfUpdate implements SelfUpdate {
     packageId: string,
     private readonly exit: () => void,
   ) {
+    const vp = velopack();
+    if (vp === null) return;
     try {
       // HttpSource, not the URL as a string: Velopack's Node SDK would take a github.com address for a GitHub
       // repository (C#'s UpdateManager(string) reads it as a plain web feed, as here).
-      this.manager = new UpdateManager(new HttpSource(updateFeedUrl(releasesRepo, packageId)));
+      this.manager = new vp.UpdateManager(new vp.HttpSource(updateFeedUrl(releasesRepo, packageId)));
     } catch {
       // Not installed by Velopack (development build, native package, the hub's installation) – no self-update.
     }

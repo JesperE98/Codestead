@@ -1,0 +1,188 @@
+name: TypeScript packaging
+
+# Builds the TypeScript/Electron apps (ts/apps/linux, ts/apps/gp, ts/apps/hub; docs/TYPESCRIPT-MIGRATION.md, phase 5)
+# into the same artifacts the release workflow makes from the C# apps – portable .tar.gz and .zip, .deb, .rpm,
+# .pkg.tar.zst, the self-updating AppImage and Setup.exe (packaging/build-linux.sh --ts, build-windows.ps1 -TsApp) – and
+# runs the same installation tests: every distribution and kind of package in a clean container, Windows Server
+# 2022/2025 with the setup program and the .zip, and the hub installing Codestead Linux end to end. Nothing is published:
+# the release workflow (release.yml) still releases the C# apps; at the switch (phase 6) a product's TypeScript build is
+# released as its next version.
+on:
+  workflow_dispatch:
+  push:
+    branches: [ts-migration]
+
+concurrency:
+  group: ts-packaging-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+  DOTNET_NOLOGO: '1'
+  # The same tools as release.yml: vpk 1.2.161 matches the npm package velopack (ts/package.json) and the C# apps'.
+  NFPM_VERSION: 2.43.0
+  VPK_VERSION: 1.2.161
+
+jobs:
+  products:
+    runs-on: ubuntu-latest
+    outputs:
+      products: ${{ steps.products.outputs.products }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - id: products
+        run: python3 packaging/ts/products.py
+
+  build-linux:
+    needs: products
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        product: ${{ fromJSON(needs.products.outputs.products) }}
+    name: Build Linux – ${{ matrix.product.name }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ts/package-lock.json
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - run: npm ci
+        working-directory: ts
+      - name: Install packaging tools (nfpm, vpk)
+        run: |
+          curl -sSfL -o /tmp/nfpm.deb "https://github.com/goreleaser/nfpm/releases/download/v${NFPM_VERSION}/nfpm_${NFPM_VERSION}_amd64.deb"
+          sudo apt-get install -y /tmp/nfpm.deb squashfs-tools
+          dotnet tool install -g vpk --version "$VPK_VERSION"
+      - name: Build Linux artifacts
+        env:
+          PKG_SUMMARY: ${{ matrix.product.summary }}
+          PKG_DESCRIPTION: ${{ matrix.product.name }} - ${{ matrix.product.summary }}.
+        run: packaging/build-linux.sh --ts "${{ matrix.product.app }}" "${{ matrix.product.project }}" "${{ matrix.product.id }}" "${{ matrix.product.name }}" "${{ matrix.product.version }}" artifacts
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ts-linux-${{ matrix.product.id }}
+          # The packages only: the install tests do not need the Velopack update feed (velopack-linux/, as large again).
+          path: |
+            artifacts/
+            !artifacts/velopack-*/**
+          if-no-files-found: error
+          retention-days: 1
+
+  build-windows:
+    needs: products
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        product: ${{ fromJSON(needs.products.outputs.products) }}
+    name: Build Windows – ${{ matrix.product.name }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ts/package-lock.json
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - run: npm ci
+        working-directory: ts
+      - run: dotnet tool install -g vpk --version $env:VPK_VERSION
+      - name: Build Windows artifacts
+        run: packaging/build-windows.ps1 -TsApp "${{ matrix.product.app }}" -Project "${{ matrix.product.project }}" -PackageName "${{ matrix.product.id }}" -DisplayName "${{ matrix.product.name }}" -Version "${{ matrix.product.version }}" -Out artifacts
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ts-windows-${{ matrix.product.id }}
+          path: |
+            artifacts/
+            !artifacts/velopack-*/**
+          if-no-files-found: error
+          retention-days: 1
+
+  # Installation tests on clean systems (as release.yml): a fresh container per distribution, installing the package
+  # exactly like a user would, starting the app (--smoke-test) on a virtual display and removing it again.
+  test-linux:
+    needs: [products, build-linux]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        product: ${{ fromJSON(needs.products.outputs.products) }}
+        target:
+          - { name: Ubuntu 24.04 LTS (.deb), image: 'ubuntu:24.04', kind: deb }
+          - { name: Ubuntu 22.04 LTS (.deb), image: 'ubuntu:22.04', kind: deb }
+          - { name: Fedora (.rpm), image: 'fedora:latest', kind: rpm }
+          - { name: Arch Linux (.pkg.tar.zst), image: 'archlinux:latest', kind: arch }
+          - { name: CachyOS (.pkg.tar.zst), image: 'cachyos/cachyos:latest', kind: arch }
+          - { name: Ubuntu 24.04 LTS (AppImage), image: 'ubuntu:24.04', kind: appimage }
+          - { name: Fedora (AppImage), image: 'fedora:latest', kind: appimage }
+          - { name: Arch Linux (AppImage), image: 'archlinux:latest', kind: appimage }
+    name: Install test – ${{ matrix.product.name }} – ${{ matrix.target.name }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: ts-linux-${{ matrix.product.id }}
+          path: artifacts
+      - name: Install and start in a clean ${{ matrix.target.image }} container
+        run: |
+          docker run --rm -v "$PWD/artifacts:/artifacts" -v "$PWD/packaging:/packaging:ro" "${{ matrix.target.image }}" \
+            bash /packaging/install-test.sh "${{ matrix.product.id }}" "${{ matrix.product.exe }}" "${{ matrix.target.kind }}" electron
+
+  test-windows:
+    needs: [products, build-windows]
+    strategy:
+      fail-fast: false
+      matrix:
+        product: ${{ fromJSON(needs.products.outputs.products) }}
+        os: [windows-2022, windows-2025]
+    runs-on: ${{ matrix.os }}
+    name: Install test – ${{ matrix.product.name }} – ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: ts-windows-${{ matrix.product.id }}
+          path: artifacts
+      - name: Install with the setup program, start, uninstall
+        shell: pwsh
+        run: packaging/install-test-windows.ps1 -PackageName "${{ matrix.product.id }}" -Executable "${{ matrix.product.exe }}" -Artifacts artifacts
+
+  # The TypeScript hub installs, starts and removes the TypeScript Codestead Linux from a signed catalog (throw-away key).
+  test-hub:
+    needs: [products, build-linux, build-windows]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, platform: linux, rid: linux-x64, ext: tar.gz }
+          - { os: windows-latest, platform: windows, rid: win-x64, ext: zip }
+    runs-on: ${{ matrix.os }}
+    name: Hub end-to-end – ${{ matrix.platform }}
+    env:
+      PRODUCTS: ${{ needs.products.outputs.products }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: ts-${{ matrix.platform }}-*
+          path: dist
+      - if: matrix.platform == 'linux'
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq xvfb xauth
+      - name: Hub installs and starts Codestead Linux
+        shell: bash
+        run: |
+          py=$(command -v python || command -v python3)
+          get() { "$py" -c 'import json,os,sys; p=[x for x in json.loads(os.environ["PRODUCTS"]) if x["key"]==sys.argv[1]][0]; print(p[sys.argv[2]])' "$1" "$2"; }
+          hub_id=$(get hub id); tool_id=$(get linux id)
+          hub=$(ls dist/ts-${{ matrix.platform }}-$hub_id/$hub_id-*-${{ matrix.rid }}.${{ matrix.ext }})
+          tool=$(ls dist/ts-${{ matrix.platform }}-$tool_id/$tool_id-*-${{ matrix.rid }}.${{ matrix.ext }})
+          packaging/hub-e2e.sh "$hub" "$(get hub exe)" "$tool" "$tool_id" "$(get linux name)" "$(get linux version)" \
+            "$(get linux exe)${{ matrix.platform == 'windows' && '.exe' || '' }}" "${{ matrix.rid }}" "$(get linux dir)"
