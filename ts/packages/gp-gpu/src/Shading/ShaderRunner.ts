@@ -4,6 +4,8 @@ import {
   and64, clamp, formatCustom, formatE, formatFixed, formatG, hex64, isUpper, isWhiteSpace, notU32, or64, roundEven, sar64, shl32, sign, toChar,
   toInt, toLong, toLongBig, toUint, trimChars, tryParseDouble, tryParseInt, xor64,
 } from "../internal/dotnet.js";
+// libm: sin, cos, pow … as C#'s Math.Sin, Math.Pow … compute them on Linux (glibc), instead of V8's Math.* (see internal/libm.ts).
+import * as libm from "../internal/libm.js";
 import { FreeTypeGlyphs, type Glyph } from "../Fonts/FreeTypeGlyphs.js";
 import { GltfModel } from "../Models/GltfModel.js";
 import type { Image } from "../Textures/Image.js";
@@ -1177,22 +1179,22 @@ export class ShaderRunner {
     };
 
     switch (name) {
-      case "sin": return map(Math.sin);
-      case "cos": return map(Math.cos);
-      case "tan": return map(Math.tan);
-      case "asin": return map(Math.asin);
-      case "acos": return map(Math.acos);
-      case "atan": return a.length === 2 ? zip(Math.atan2) : map(Math.atan);
+      case "sin": return map(libm.sin);
+      case "cos": return map(libm.cos);
+      case "tan": return map(libm.tan);
+      case "asin": return map(libm.asin);
+      case "acos": return map(libm.acos);
+      case "atan": return a.length === 2 ? zip(libm.atan2) : map(libm.atan);
       case "atan2":
-        if (a.length === 2) return zip(Math.atan2);
+        if (a.length === 2) return zip(libm.atan2);
         break;
       case "radians": return map((x) => (x * Math.PI) / 180);
       case "degrees": return map((x) => (x * 180) / Math.PI);
       case "XMConvertToRadians": return map((x) => (x * Math.PI) / 180);
-      case "exp": return map(Math.exp);
-      case "exp2": return map((x) => Math.pow(2, x));
-      case "log": return map(Math.log);
-      case "log2": return map(Math.log2);
+      case "exp": return map(libm.exp);
+      case "exp2": return map((x) => libm.pow(2, x));
+      case "log": return map(libm.log);
+      case "log2": return map(libm.log2);
       case "sqrt": return map(Math.sqrt);
       case "inversesqrt": case "rsqrt": return map((x) => 1 / Math.sqrt(x));
       case "abs": case "fabs": return map(Math.abs);
@@ -1203,7 +1205,7 @@ export class ShaderRunner {
       case "trunc": return map(Math.trunc);
       case "fract": case "frac": return map((x) => x - Math.floor(x));
       case "saturate": return map((x) => clamp(x, 0, 1));
-      case "pow": return zip(Math.pow);
+      case "pow": return zip(libm.pow);
       case "mod": return zip((x, y) => x - y * Math.floor(x / y));
       case "fmod": return zip((x, y) => x % y);
       case "min": case "fmin": case "fminf": return zip(Math.min);
@@ -1746,7 +1748,7 @@ export class ShaderRunner {
         break;
       case "perspective":
         if (a.length === 4) {
-          const f = 1 / Math.tan(S(0) / 2), aspect = S(1), n = S(2), fa = S(3);
+          const f = 1 / libm.tan(S(0) / 2), aspect = S(1), n = S(2), fa = S(3);
           return this.depthZeroToOne
             ? rows([[f / aspect, 0, 0, 0], [0, f, 0, 0], [0, 0, fa / (n - fa), -(fa * n) / (fa - n)], [0, 0, -1, 0]])
             : rows([[f / aspect, 0, 0, 0], [0, f, 0, 0], [0, 0, -(fa + n) / (fa - n), -(2 * fa * n) / (fa - n)], [0, 0, -1, 0]]);
@@ -1826,15 +1828,15 @@ export class ShaderRunner {
       case "XMMatrixScaling":
         return rows([[S(0), 0, 0, 0], [0, S(1), 0, 0], [0, 0, S(2), 0], [0, 0, 0, 1]]);
       case "XMMatrixRotationX": {
-        const c = Math.cos(S(0)), s = Math.sin(S(0));
+        const c = libm.cos(S(0)), s = libm.sin(S(0));
         return rows([[1, 0, 0, 0], [0, c, s, 0], [0, -s, c, 0], [0, 0, 0, 1]]);
       }
       case "XMMatrixRotationY": {
-        const c = Math.cos(S(0)), s = Math.sin(S(0));
+        const c = libm.cos(S(0)), s = libm.sin(S(0));
         return rows([[c, 0, -s, 0], [0, 1, 0, 0], [s, 0, c, 0], [0, 0, 0, 1]]);
       }
       case "XMMatrixRotationZ": {
-        const c = Math.cos(S(0)), s = Math.sin(S(0));
+        const c = libm.cos(S(0)), s = libm.sin(S(0));
         return rows([[c, s, 0, 0], [-s, c, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]);
       }
       case "XMMatrixRotationAxis": case "XMMatrixRotationNormal":
@@ -1843,13 +1845,13 @@ export class ShaderRunner {
         break;
       case "XMMatrixPerspectiveFovLH":
         if (a.length === 4) {
-          const h = 1 / Math.tan(S(0) / 2), w = h / S(1), range = S(3) / (S(3) - S(2));
+          const h = 1 / libm.tan(S(0) / 2), w = h / S(1), range = S(3) / (S(3) - S(2));
           return rows([[w, 0, 0, 0], [0, h, 0, 0], [0, 0, range, 1], [0, 0, -range * S(2), 0]]);
         }
         break;
       case "XMMatrixPerspectiveFovRH":
         if (a.length === 4) {
-          const h = 1 / Math.tan(S(0) / 2), w = h / S(1), range = S(3) / (S(2) - S(3));
+          const h = 1 / libm.tan(S(0) / 2), w = h / S(1), range = S(3) / (S(2) - S(3));
           return rows([[w, 0, 0, 0], [0, h, 0, 0], [0, 0, range, -1], [0, 0, range * S(2), 0]]);
         }
         break;
@@ -2578,13 +2580,13 @@ function newGlyph(g: Glyph | null): ShaderValue {
 }
 
 const UnaryMath: ((x: number) => number)[] = [
-  Math.sin, Math.cos, Math.tan, Math.asin, Math.acos, Math.atan, (x) => (x * Math.PI) / 180, (x) => (x * 180) / Math.PI, Math.exp, (x) => Math.pow(2, x),
-  Math.log, Math.log2, Math.sqrt, (x) => 1 / Math.sqrt(x), Math.abs, sign, Math.floor, Math.ceil, roundEven, Math.trunc,
+  libm.sin, libm.cos, libm.tan, libm.asin, libm.acos, libm.atan, (x) => (x * Math.PI) / 180, (x) => (x * 180) / Math.PI, libm.exp, (x) => libm.pow(2, x),
+  libm.log, libm.log2, Math.sqrt, (x) => 1 / Math.sqrt(x), Math.abs, sign, Math.floor, Math.ceil, roundEven, Math.trunc,
   (x) => x - Math.floor(x), (x) => clamp(x, 0, 1),
 ];
 
 const BinaryMath: ((x: number, y: number) => number)[] = [
-  Math.pow, (x, y) => x - y * Math.floor(x / y), (x, y) => x % y, Math.min, Math.max, (edge, x) => (x < edge ? 0 : 1), Math.atan2,
+  libm.pow, (x, y) => x - y * Math.floor(x / y), (x, y) => x % y, Math.min, Math.max, (edge, x) => (x < edge ? 0 : 1), libm.atan2,
 ];
 
 /** The built-in functions with a fast path: 0–99 one argument, 100–199 two, 200 and up their own code. */
@@ -2630,7 +2632,7 @@ function dot3(a: number[], b: number[]): number {
 /** A rotation about a normalised axis (right-handed, counter-clockwise looking down the axis) as a column-vector matrix. */
 function axisAngle(angle: number, axis: number[]): ShaderValue {
   const a = normalize3(axis);
-  const c = Math.cos(angle), s = Math.sin(angle), t = 1 - c;
+  const c = libm.cos(angle), s = libm.sin(angle), t = 1 - c;
   const x = a[0]!, y = a[1]!, z = a[2]!;
   return rows([
     [t * x * x + c, t * x * y - s * z, t * x * z + s * y, 0],
@@ -2665,8 +2667,8 @@ function slerp(x: number[], y: number[], t: number, linearAbove: number): Shader
     for (let i = 0; i < 4; i++) r[i] = x[i]! + (z[i]! - x[i]!) * t;
     return ShaderValue.vecOf(r);
   }
-  const angle = Math.acos(Math.min(1, cos)), s = Math.sin(angle);
-  const a = Math.sin((1 - t) * angle) / s, b = Math.sin(t * angle) / s;
+  const angle = libm.acos(Math.min(1, cos)), s = libm.sin(angle);
+  const a = libm.sin((1 - t) * angle) / s, b = libm.sin(t * angle) / s;
   for (let i = 0; i < 4; i++) r[i] = a * x[i]! + b * z[i]!;
   return ShaderValue.vecOf(r);
 }

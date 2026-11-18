@@ -96,9 +96,15 @@ reader sorts with them and keys can tie, check which order C# really produces. `
 `Distinct`/`Union` keep first-seen order (`[...new Set(…)]`). `FirstOrDefault` of a tuple gives a default tuple, not
 null – check what the C# code does with it.
 
-Maths: `Math.Sin`, `Pow`, `Exp`, `Log2` … are the C runtime's in .NET and V8's own in JavaScript; they can differ in the
-last bit. The core's frames matched C# byte for byte over every course shader (below); if a reader's picture is off by
-one in a pixel, suspect this first.
+Maths: `Math.Sin`, `Pow`, `Exp`, `Log2` … are the C runtime's in .NET (glibc on Linux) and V8's own in JavaScript; they
+differ in the last bit for a few percent of arguments, enough to move a pixel. So the port never calls JavaScript's
+`Math.sin`, `cos`, `tan`, `asin`, `acos`, `atan`, `atan2`, `exp`, `log`, `log2`, `pow`: it calls `libm.sin` … from
+`src/internal/libm.ts` (`import * as libm from "../internal/libm.js"`), permissively licensed code (see its header):
+`exp`, `log`, `log2`, `pow` are Arm optimized-routines, the same code glibc uses, and give glibc's results bit for bit;
+`sin` … `atan2` are CORE-MATH's correctly rounded routines, which give glibc's results except for about 1 argument in
+400 to 1800 (glibc's last bit is off there). `Math.sqrt`, `floor`, `ceil`, `trunc`, `round`, `abs`, `min`, `max`,
+`fround` are exact and stay. Any other transcendental function (`sinh`, `cbrt`, `hypot`, `log10` …) would need adding
+there first.
 
 ## The shared API you will use (C# → TypeScript)
 

@@ -2,6 +2,8 @@
 // test, blending, the colour mask, framebuffer objects and renderbuffers, blits, cube maps, uniform buffer objects,
 // buffer updates (glBufferSubData, glMapBuffer, glCopyBufferSubData), instancing and point sizes.
 import { parseInt32, roundEven, toInt, trimChars, trimNet } from "../internal/dotnet.js";
+// libm: sin, cos, pow … as C#'s Math.Sin, Math.Pow … compute them on Linux (glibc), instead of V8's Math.* (see internal/libm.ts).
+import * as libm from "../internal/libm.js";
 import { BlendFactor } from "../Scene/BlendFactor.js";
 import { BlendOp } from "../Scene/BlendOp.js";
 import type { BlendState } from "../Scene/BlendState.js";
@@ -413,7 +415,7 @@ export function generateTargetMips(r: GlReader, tex: TextureObject): void {
   const target = tex.framebuffer;
   if (target === null || !target.startsWith("tex:") || !r.scene.targets.has(target)) return;
   const texture = target.slice(4);
-  const levels = 1 + Math.floor(Math.log2(Math.max(1, Math.max(tex.width, tex.height))));
+  const levels = 1 + Math.floor(libm.log2(Math.max(1, Math.max(tex.width, tex.height))));
   for (let level = 1; level < levels; level++) {
     const id = levelTarget(texture, level);
     r.scene.targets.set(id, new RenderTarget(id, { width: Math.max(1, tex.width >> level), height: Math.max(1, tex.height >> level), colorAttachments: 1, depth: false, stencil: false, samples: 1, float: tex.float }));

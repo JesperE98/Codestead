@@ -1,4 +1,6 @@
 import { clamp, roundEven, splitNoEmpty, toByte, tryParseInt } from "../internal/dotnet.js";
+// libm: sin, cos, pow … as C#'s Math.Sin, Math.Pow … compute them on Linux (glibc), instead of V8's Math.* (see internal/libm.ts).
+import * as libm from "../internal/libm.js";
 import { Image } from "./Image.js";
 
 /**
@@ -67,7 +69,7 @@ export const RadianceHdr = {
     const rgba = new Uint8Array(width * height * 4);
     for (let i = 0; i < width * height; i++) {
       const e = rgbe[i * 4 + 3]!;
-      const scale = e === 0 ? 0 : Math.pow(2, e - 136); // 2^(e - 128) / 256
+      const scale = e === 0 ? 0 : libm.pow(2, e - 136); // 2^(e - 128) / 256
       for (let k = 0; k < 3; k++) {
         const v = rgbe[i * 4 + k]! * scale;
         floats[i * 4 + k] = v;
