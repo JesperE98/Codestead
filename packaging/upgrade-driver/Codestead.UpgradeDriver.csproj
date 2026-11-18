@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    The upgrade test's stand-in for an installed C# app's update button (packaging/upgrade-test.sh,
+    upgrade-test-windows.ps1): Velopack's UpdateManager, the same package and version as the apps
+    (read from src/Shared/Codestead.UI/Codestead.UI.csproj, so the two cannot drift apart), run against
+    an installed app and a local update feed. Not part of Codestead.sln and never shipped.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>Codestead.UpgradeDriver</AssemblyName>
+    <RootNamespace>Codestead.UpgradeDriver</RootNamespace>
+    <!-- Runs in bare test containers (no ICU there). -->
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <CodesteadUiProject>$(MSBuildThisFileDirectory)../../src/Shared/Codestead.UI/Codestead.UI.csproj</CodesteadUiProject>
+    <VelopackVersion>$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText($(CodesteadUiProject))), 'Include="Velopack" Version="([^"]+)"').Groups[1].Value)</VelopackVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Velopack" Version="$(VelopackVersion)" />
+  </ItemGroup>
+  <Target Name="CheckVelopackVersion" BeforeTargets="CollectPackageReferences">
+    <Error Condition="'$(VelopackVersion)' == ''" Text="No Velopack version found in $(CodesteadUiProject)." />
+  </Target>
+</Project>

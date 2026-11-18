@@ -4,9 +4,10 @@ name: TypeScript packaging
 # into the same artifacts the release workflow makes from the C# apps – portable .tar.gz and .zip, .deb, .rpm,
 # .pkg.tar.zst, the self-updating AppImage and Setup.exe (packaging/build-linux.sh --ts, build-windows.ps1 -TsApp) – and
 # runs the same installation tests: every distribution and kind of package in a clean container, Windows Server
-# 2022/2025 with the setup program and the .zip, and the hub installing Codestead Linux end to end. Nothing is published:
-# the release workflow (release.yml) still releases the C# apps; at the switch (phase 6) a product's TypeScript build is
-# released as its next version.
+# 2022/2025 with the setup program and the .zip, and the hub installing Codestead Linux end to end. The upgrade tests
+# update a user's installation of the latest released C# version (AppImage, Setup.exe) to these builds. Nothing is
+# published: the release workflow (release.yml) still releases the C# apps; at the switch (phase 6) a product's
+# TypeScript build is released as its next version (the version products.py gives these builds).
 on:
   workflow_dispatch:
   push:
@@ -34,6 +35,9 @@ jobs:
         with:
           global-json-file: global.json
       - id: products
+        env:
+          # The releases (public) give the next version, as in release.yml's plan job.
+          GH_TOKEN: ${{ github.token }}
         run: python3 packaging/ts/products.py
 
   build-linux:
@@ -74,6 +78,16 @@ jobs:
             !artifacts/velopack-*/**
           if-no-files-found: error
           retention-days: 1
+      # The update feed as release.yml publishes it (for the upgrade test): the feed files and the full package.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ts-feed-linux-${{ matrix.product.id }}
+          path: |
+            artifacts/velopack-linux/releases.linux.json
+            artifacts/velopack-linux/assets.linux.json
+            artifacts/velopack-linux/*.nupkg
+          if-no-files-found: error
+          retention-days: 1
 
   build-windows:
     needs: products
@@ -103,6 +117,15 @@ jobs:
           path: |
             artifacts/
             !artifacts/velopack-*/**
+          if-no-files-found: error
+          retention-days: 1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ts-feed-windows-${{ matrix.product.id }}
+          path: |
+            artifacts/velopack-win/releases.win.json
+            artifacts/velopack-win/assets.win.json
+            artifacts/velopack-win/*.nupkg
           if-no-files-found: error
           retention-days: 1
 
@@ -154,6 +177,76 @@ jobs:
       - name: Install with the setup program, start, uninstall
         shell: pwsh
         run: packaging/install-test-windows.ps1 -PackageName "${{ matrix.product.id }}" -Executable "${{ matrix.product.exe }}" -Artifacts artifacts
+
+  # Upgrade tests: a user's AppImage of the latest released C# version (downloaded from the releases repository, not
+  # rebuilt) updates itself with Velopack to this TypeScript build from a local feed, keeps the user's data and goes on
+  # updating (TS -> TS) – packaging/upgrade-test.sh.
+  upgrade-linux:
+    needs: [products, build-linux]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        product: ${{ fromJSON(needs.products.outputs.products) }}
+        target:
+          - { name: Ubuntu 24.04 LTS (AppImage), image: 'ubuntu:24.04' }
+          - { name: Fedora (AppImage), image: 'fedora:latest' }
+    name: Upgrade test – ${{ matrix.product.name }} – C# release to TypeScript – ${{ matrix.target.name }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Install vpk (the TS -> TS step repacks the build as the next version)
+        run: |
+          sudo apt-get install -y squashfs-tools
+          dotnet tool install -g vpk --version "$VPK_VERSION"
+      - uses: actions/download-artifact@v4
+        with:
+          name: ts-linux-${{ matrix.product.id }}
+          path: artifacts
+      - uses: actions/download-artifact@v4
+        with:
+          name: ts-feed-linux-${{ matrix.product.id }}
+          path: artifacts/velopack-linux
+      - name: Update the released C# AppImage to the TypeScript build in a clean ${{ matrix.target.image }} container
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          packaging/upgrade-test.sh "${{ matrix.product.id }}" "${{ matrix.product.exe }}" "${{ matrix.product.name }}" \
+            "${{ matrix.product.dir }}" artifacts "${{ matrix.target.image }}"
+
+  # The same with the released Setup.exe: packaging/upgrade-test-windows.ps1 (and a silent uninstall at the end).
+  upgrade-windows:
+    needs: [products, build-windows]
+    strategy:
+      fail-fast: false
+      matrix:
+        product: ${{ fromJSON(needs.products.outputs.products) }}
+        os: [windows-2022, windows-2025]
+    runs-on: ${{ matrix.os }}
+    name: Upgrade test – ${{ matrix.product.name }} – C# release to TypeScript – ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - run: dotnet tool install -g vpk --version $env:VPK_VERSION
+      - uses: actions/download-artifact@v4
+        with:
+          name: ts-windows-${{ matrix.product.id }}
+          path: artifacts
+      - uses: actions/download-artifact@v4
+        with:
+          name: ts-feed-windows-${{ matrix.product.id }}
+          path: artifacts/velopack-win
+      - name: Update the released C# installation to the TypeScript build, then uninstall
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          packaging/upgrade-test-windows.ps1 -PackageName "${{ matrix.product.id }}" -Executable "${{ matrix.product.exe }}" `
+            -DisplayName "${{ matrix.product.name }}" -ProductDir "${{ matrix.product.dir }}" -Artifacts artifacts
 
   # The TypeScript hub installs, starts and removes the TypeScript Codestead Linux from a signed catalog (throw-away key).
   test-hub:

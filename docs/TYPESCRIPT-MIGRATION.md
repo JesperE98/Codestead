@@ -48,7 +48,7 @@ TypeScript-versionerna kan lika mycket; då byter vi.
 - [x] 3. Linux – `linux-shell` (hela skalet, alla kommandon), `linux-content` (alla kapitel lösta av sina lösningar i 4 distar och 11 språk) och appen `ts/apps/linux` (Electron, terminalen i React, `--smoke-test`, e2e-test)
 - [x] 4. GP – `gp-gpu` (kärnan och läsarna för OpenGL, Vulkan, D3D12; samma bilder som C#), `gp-course` (alla 623 uppgifts- och övningstester gröna i alla tre API:er; körs i CI-jobbet `ts-gp-tasks`) och appen `ts/apps/gp` (Electron, "Ditt projekt" med Kontrollera min kod i en arbetstråd, `--smoke-test`, e2e-test)
 - [ ] 5. Hubben och paketering – appen `ts/apps/hub` klar (samma katalog, paket och installationer som C#-hubben); paketering (`build-linux.sh --ts`, `build-windows.ps1 -TsApp`: samma artefakter, namn, id:n och sökvägar), självuppdatering med Velopack (samma uppdateringskälla) och installationstesterna (`ts-packaging.yml`) klara – Linux provat lokalt (se "Paketering och uppdateringar"); kvar: en första körning av `ts-packaging.yml` (Windows har bara byggts och testats där)
-- [ ] 6. Byte
+- [ ] 6. Byte – uppgraderingstestet (en användares släppta C#-installation uppdaterar sig till TypeScript-bygget, se "Uppgraderingstest" nedan) klart och provat lokalt för AppImage (alla tre produkterna); Windows (Setup.exe) körs bara i `ts-packaging.yml`
 
 ## Apparna
 
@@ -191,6 +191,26 @@ TypeScript-version kan släppas som nästa version av samma produkt (fas 6).
   `chrome-sandbox` är setuid root i paketen), `packaging/hub-e2e.sh` och `install-test-windows.ps1` som för C#.
   `.github/workflows/ts-packaging.yml` (vid `workflow_dispatch` och push till `ts-migration`) bygger de tre apparnas
   Linux- och Windows-artefakter och kör samma testmatris som release.yml, utan att publicera något.
+- **Uppgraderingstest (C# → TypeScript):** `packaging/upgrade-test.sh <id> <exe> "<namn>" <produktmapp> <artefakter> [image]`
+  (AppImage, i en ren container) och `packaging/upgrade-test-windows.ps1` (Setup.exe), jobben `upgrade-linux` och
+  `upgrade-windows` i `ts-packaging.yml`. Den **släppta** C#-versionen (den som `<id>-latest`:s källa anger, hämtad
+  från release-repot, inte byggd om) installeras som en användare gör, får användardata (lärapparna: en `state.json`
+  med språk, tema och ett godkänt prov; C#-appen startas normalt en gång och skriver själv `state.json`,
+  `profile.json` med sin XP och `whatsnew.json`; hubben: sina inställningar) och uppdaterar sig sedan från en lokal
+  källa med TypeScript-bygget (samma filer som release.yml publicerar). Uppdateringen görs av
+  `packaging/upgrade-driver`: C#-appens uppdateringsknapp utan fönster – `SelfUpdate`:s anrop på Velopacks
+  `UpdateManager` (samma paket och version som apparna, läses ur `Codestead.UI.csproj`) med den installerade appens
+  körbara fil som "den körande processen" (Velopacks `IProcessImpl`), så att installationens egen `UpdateNix`/`Update.exe`
+  tillämpar uppdateringen och startar om appen (med `--smoke-test`). Sedan kontrolleras att installationen (samma
+  AppImage-fil, `current\`, avinstallationsposten, genvägen) är TypeScript-bygget och startar, att användardatan är
+  orörd och att TypeScript-appen läser den (normalt startad skriver den samma XP och utmärkelser i `profile.json` och
+  den nya versionen i `whatsnew.json`); därefter TS → TS: bygget packat om som nästa version och tillämpat med
+  TypeScript-appens egen uppdateringskod (Velopacks Node-SDK i den installerade appen, körd av dess Electron som Node:
+  `packaging/ts/update-from-feed.cjs`), och på Windows en tyst avinstallation. Därför ger `packaging/ts/products.py`
+  byggena den version bytet skulle släppa dem som (en patch över den senaste releasen, som `plan.py`), och
+  `ts-packaging.yml` laddar upp uppdateringskällorna (`ts-feed-linux-<id>`, `ts-feed-windows-<id>`). Provat lokalt
+  (2026-11-18) med AppImage på Ubuntu 24.04: Codestead Linux 0.6.5 → 0.6.6 → 0.6.7, Codestead GP 0.2.5 → 0.2.6 → 0.2.7,
+  hubben 0.2.4 → 0.2.5 → 0.2.6 (Fedora-målet och Windows bara i CI).
 - **Provat lokalt (2026-11-18):** alla Linux-artefakter för de tre apparna; installationstesterna i docker – Codestead
   Linux på Ubuntu 24.04 och 22.04 (.deb), Fedora (.rpm), Arch (.pkg.tar.zst) och AppImage på Ubuntu 24.04, Fedora och
   Arch; GP och hubben på Ubuntu (.deb), Fedora (.rpm), Arch och som AppImage; `hub-e2e.sh` med TypeScript-hubben som
