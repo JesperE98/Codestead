@@ -46,7 +46,7 @@ TypeScript-versionerna kan lika mycket; då byter vi.
 - [x] 1. Grund – `ts/` (npm-workspace, TypeScript, Vitest), `@codestead/common`, CI-jobbet `TypeScript` i ci.yml
 - [x] 2. Gemensam kärna och UI – `learning` och `ui` (React): lärfönstret, markdown, dialoger, spelvyer; samma sparfiler som C#
 - [x] 3. Linux – `linux-shell` (hela skalet, alla kommandon), `linux-content` (alla kapitel lösta av sina lösningar i 4 distar och 11 språk) och appen `ts/apps/linux` (Electron, terminalen i React, `--smoke-test`, e2e-test)
-- [ ] 4. GP – `gp-gpu` (kärnan och läsarna för OpenGL, Vulkan, D3D12; samma bilder som C#) och `gp-course` (alla 623 uppgifts- och övningstester gröna i alla tre API:er; körs i CI-jobbet `ts-gp-tasks`) klara; kvar: appen `ts/apps/gp`
+- [x] 4. GP – `gp-gpu` (kärnan och läsarna för OpenGL, Vulkan, D3D12; samma bilder som C#), `gp-course` (alla 623 uppgifts- och övningstester gröna i alla tre API:er; körs i CI-jobbet `ts-gp-tasks`) och appen `ts/apps/gp` (Electron, "Ditt projekt" med Kontrollera min kod i en arbetstråd, `--smoke-test`, e2e-test)
 - [ ] 5. Hubben och paketering – appen `ts/apps/hub` klar (samma katalog, paket och installationer som C#-hubben); kvar: paketering, självuppdatering, installationstester
 - [ ] 6. Byte
 
@@ -78,6 +78,49 @@ Electron-appen: samma lärfönster (`@codestead/ui`) med Linux-verktyget och den
   lagring (synkron, som i C#), webblänkar (bara http/https), fil- och mappväljare, version, avsluta.
 - Kvar (fas 5): uppdateringar (Velopack i C#; nu "inga uppdateringar") och paketering; typsnittet Inter följer inte med
   än (C# bäddar in det), så systemets typsnitt används.
+
+### `ts/apps/gp` – Codestead GP
+Electron-appen: samma lärfönster (`@codestead/ui`) med GP-verktyget – kursen (`@codestead/gp-course`), API:erna som
+varianter, IDE-väljaren och panelen "Your project" som arbetsyta.
+
+| C# | TypeScript |
+|---|---|
+| `Program.cs`, `AppHost` (`--version`, `--smoke-test`) | `electron/main.ts` |
+| `App.axaml(.cs)` (tema, GP-färgen, lärfönstret) | `src/App.tsx`, `src/main.tsx`, `src/gp.css` |
+| `ProductInfo.cs` (ur `src/GP/Directory.Build.props` och `build/Codestead.props`) | `src/ProductInfo.ts` (läser samma filer) |
+| `GpTool.cs`, `GpTool.Ide.cs`, `GpTool.Project.cs`, `GpTool.Files.cs`, `NoSandbox.cs` | `src/GpTool.tsx` (en klass), `src/GpTool.Ide.tsx` (väljaren), `src/ProjectResources.ts` (vad "Save resources…" sparar) |
+| `GpTool.Solution.cs` | `src/GpTool.Solution.tsx` (lösningen i ett eget fönster; ✕, Escape och Close stänger) |
+| `GpTool.SmokeTest.cs`, `LearningWindow.SmokeTest.cs` | `src/GpTool.SmokeTest.ts`, `src/SmokeTest.ts`, `GpTool.solveForSmokeTest` |
+| `YourProject/*` (panelen, uppgifternas lägen, förväntat resultat) | `src/YourProject/*` (`MainFiles` finns i `@codestead/gp-course`) |
+| Bakgrundstrådarna (`Task.Run`: kontrollen, bilderna) och filerna | `electron/worker.ts` + `electron/CourseService.ts` (arbetstråd i main-processen), `electron/CourseWorkers.ts`, `src/CourseHost.ts` |
+| `Codestead.UI.Storage` | `electron/FileStorage.ts` (samma mapp och filer: `state.json`, `profile.json`, `ide.json`, `mainfiles.json`, `folders.json`, `project.<api>.<kapitel>.json` …) |
+
+- **Var kursen körs:** fönstret (sandlådat, utan `node:fs`) har kursens texter, uppgifter och kontroller men läser och
+  skriver inga filer. "Check my code" (elevens filer läses och körs i den simulerade GPU:n, kan ta sekunder), de
+  förväntade bilderna och "Save resources…"/"Save my earlier code…" körs i en **Node-arbetstråd i main-processen**
+  (`dist-electron/worker.cjs`, två stycken: en för kontroller och sparande, en för bilder – som C# kör dem på egna
+  trådar), så varken fönstret eller main-processen (som svarar på fönstrets synkrona lagringsanrop) väntar. En
+  kontroll som blir inaktuell (annan fil, annat kapitel, ny kontroll) stoppas genom att tråden avslutas. Fönstret
+  frågar bara om sökvägar och om filer finns (synkron IPC, `PathOp`). Rapporten går över som data (`CheckReportData`)
+  och blir `CheckReport`/`BuildFacts` igen; bilden som BGRA-pixlar och visas som BMP (ingen canvas behövs).
+- **Kursens binära filer** (texturer, modeller, typsnitt) läses med `node:fs` i arbetstråden – inte med `preloadBytes`
+  i fönstret: de behövs bara där simulatorn kör och där filer sparas, och båda sker i arbetstråden (som ändå måste
+  läsa elevens filer); fönstret slipper ladda ~30 MB i onödan. Arbetstråden hittar dem i `src/GP/content` via
+  sökvägen till `Resources.ts` (sätts i `vite.electron.config.ts`). Kapitlens bilder visas med URL:erna Vite ger dem
+  (`GpTool.picture`), så bara de som visas laddas.
+- **Bygga:** `npm run build` i `ts/apps/gp` – sidan till `dist/`, sedan main, preload och arbetstråden var för sig till
+  `dist-electron/{main,preload,worker}.cjs`. **Köra:** `npm start` (som root: `npx electron . --no-sandbox`);
+  `npm run smoke-test` skriver `SMOKE OK Codestead GP … (… chapters, … languages, … projects, … simulated builds, 4 IDEs,
+  … checks of the learner's code)`. `npm run dev` ger sidan i en webbläsare (utan filer: ingen kontroll, inga bilder).
+- **Testa:** `npm test` (Vitest: verktyget och panelen i fönstret med kursens arbete i samma process, rapportens
+  överföring, lagringen och C#:s `PictureTests`) och `npm run test:e2e` (bygger appen och kör den med Playwrights
+  `_electron`: första kapitlet; i Hello Triangle besvaras frågorna, en uppgift bockas av med Mark as done, den tidigare
+  editorns kod – startfilerna – sparas i en mapp, Check my code på den (inga uppgifter lösta), kursens lösning skrivs
+  dit och Check my code bockar av stegen, lösningsfönstret stängs med ✕ och Escape, förväntat resultat ritas och
+  förstoras; sedan `--smoke-test` och `--version`. Mappväljaren besvaras från testet. Playwright måste kunna hittas
+  med `require("playwright")`, utan skärm startas Xvfb, `E2E_SHOTS=<mapp>` sparar bilder).
+- Kvar (fas 5): uppdateringar (Velopack; nu "inga uppdateringar") och paketering – paketet måste ta med kursens
+  innehåll (`src/GP/content`) och peka arbetstråden dit.
 
 ### `ts/apps/hub` – hubben (Codestead)
 Översättning av `src/Hub/Codestead.Hub.Core` (i `src/core/`) och `src/Hub/Codestead.Hub` (React). Hubben installerar
