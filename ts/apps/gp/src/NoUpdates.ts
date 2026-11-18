@@ -1,6 +1,5 @@
-// The app's own updates (C#: SelfUpdate with Velopack). TODO(phase 5): packaging and updates are a separate step
-// (electron-builder and an updater, see docs/TYPESCRIPT-MIGRATION.md); until then the app never offers an update –
-// the hub or the package manager keeps it up to date.
+// "No updates" – the tool's SelfUpdate where there is no Electron main process (the page in a browser, the tests). In
+// the app, the preload's window.codestead.selfUpdate (Velopack in the main process, @codestead/ui/electron-main) is used.
 
 import type { SelfUpdate } from "@codestead/ui";
 

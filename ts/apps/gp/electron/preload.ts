@@ -1,6 +1,7 @@
 // The preload script (sandboxed): gives the renderer `window.codestead` (see api.ts) over IPC – nothing else of
 // Electron or Node reaches the page.
 
+import { selfUpdateBridge } from "@codestead/ui/electron-bridge";
 import { contextBridge, ipcRenderer } from "electron";
 import type { CheckReportData, CourseHost, DrawnData, FilesToSave, SaveResult } from "../src/CourseHost.js";
 import { type AppInfo, Channels, type CodesteadApi, type FileFilter, type PathOp } from "./api.js";
@@ -31,6 +32,7 @@ const api: CodesteadApi = {
   openExternal: (url: string) => ipcRenderer.send(Channels.openExternal, url),
   pickFile: (title: string, filters?: FileFilter[], startFolder?: string | null) => ipcRenderer.invoke(Channels.pickFile, title, filters, startFolder) as Promise<string | null>,
   pickFolder: (title: string, startFolder?: string | null) => ipcRenderer.invoke(Channels.pickFolder, title, startFolder) as Promise<string | null>,
+  selfUpdate: selfUpdateBridge(ipcRenderer),
   quit: (exitCode = 0) => ipcRenderer.send(Channels.quit, exitCode),
   smokeResult: (ok: boolean, text: string) => ipcRenderer.send(Channels.smokeResult, ok, text),
 };

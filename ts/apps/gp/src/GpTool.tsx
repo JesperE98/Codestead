@@ -125,7 +125,14 @@ export class GpTool implements LearningTool {
   private ideValue: string | null = null;
   private smokeChecks = 0;
 
-  constructor(readonly host: GpHost) {}
+  /**
+   * @param host The course's work and the files outside the window.
+   * @param selfUpdate The app's own updates (C#'s LearningWindow makes a Velopack SelfUpdate; the app passes the preload's).
+   */
+  constructor(
+    readonly host: GpHost,
+    readonly selfUpdate: SelfUpdate = NoUpdates,
+  ) {}
 
   private get w(): LearningWindow {
     if (this.window === undefined) throw new Error("The tool is not in a window yet.");
@@ -145,9 +152,6 @@ export class GpTool implements LearningTool {
   translate(lang: string, key: string, args?: Readonly<Record<string, unknown>>): string {
     return UiStrings.translate(lang, key, args);
   }
-
-  // TODO(phase 5): Velopack's self-update in C#; packaging and updates come with electron-builder.
-  readonly selfUpdate: SelfUpdate = NoUpdates;
 
   /** The API the learner chose. */
   private get api(): string {

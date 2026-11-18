@@ -1,4 +1,4 @@
-import type { Storage } from "@codestead/ui";
+import type { SelfUpdate, Storage } from "@codestead/ui";
 import type { InstalledTool } from "./core/InstalledTool.js";
 
 // What the window gets from the main process (electron/preload.ts puts it on window.codestead). The hub's logic that
@@ -76,6 +76,12 @@ export interface HubApi {
   setStartsWithComputer(value: boolean): Promise<void>;
 
   // ---------- The app ----------
+  /**
+   * The hub's own updates (Velopack in the main process, @codestead/ui/electron-main): installed with Setup.exe or as
+   * an AppImage it updates itself; otherwise canUpdateItself is false and a newer hub in the catalog is offered as a
+   * download.
+   */
+  readonly selfUpdate: SelfUpdate;
   /** Opens an http(s) address in the browser. */
   openExternal(url: string): Promise<void>;
   pickFile(): Promise<string | null>;

@@ -60,7 +60,8 @@ export class LinuxTool implements LearningTool {
   private lastResult: ExecResult | null = null;
   private readonly ran = new RanEvent();
 
-  constructor() {
+  /** @param selfUpdate The app's own updates (C#'s LearningWindow makes a Velopack SelfUpdate; the app passes the preload's). */
+  constructor(readonly selfUpdate: SelfUpdate = NoUpdates) {
     this.terminal.onCommandExecuted((r) => this.onTerminalResult(r));
   }
 
@@ -87,9 +88,6 @@ export class LinuxTool implements LearningTool {
   translate(lang: string, key: string, args?: Readonly<Record<string, unknown>>): string {
     return UiStrings.translate(lang, key, args);
   }
-
-  // TODO(phase 5): Velopack's self-update in C#; packaging and updates come with electron-builder.
-  readonly selfUpdate: SelfUpdate = NoUpdates;
 
   // ---------- The course ----------
 

@@ -6,6 +6,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./storage": "./src/Storage.ts",
-    "./codestead.css": "./src/Themes/codestead.css"
+    "./codestead.css": "./src/Themes/codestead.css",
+    "./electron-main": "./src/electron/VelopackUpdate.ts",
+    "./electron-bridge": "./src/electron/SelfUpdateBridge.ts"
   }
 }

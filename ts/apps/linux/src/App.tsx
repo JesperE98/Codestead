@@ -25,7 +25,7 @@ export function startApp(container: HTMLElement, api: CodesteadApi, storage: Sto
   LinkOpener.open = (url) => api.openExternal(url);
   // C# also installs DeadKeys here (~ with a dead key on Linux); Chromium composes dead keys itself.
 
-  const tool = new LinuxTool();
+  const tool = new LinuxTool(api.selfUpdate);
   const window = new LearningWindow(tool, { storage, smokeTest: api.info.smokeTest });
   const renderErrors: unknown[] = [];
   const root = createRoot(container, {

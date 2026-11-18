@@ -1,6 +1,7 @@
 import { type ChildProcess } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { runVelopackHooks, serveSelfUpdate, VelopackSelfUpdate } from "@codestead/ui/electron-main";
 import { app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, net, shell } from "electron";
 import iconData from "../../../../src/Hub/Codestead.Hub/Assets/icon.png?inline";
 import { Catalog } from "../src/core/Catalog.js";
@@ -24,6 +25,10 @@ import { HubTray } from "./HubTray.js";
 // The hub's main process: Program.cs (--version, one hub per user, the options), App.axaml.cs (the window, starting in
 // the background) and the parts of MainWindow that need the file system, the network or processes – the ToolStore,
 // the CatalogClient, starting tools, the tray (MainWindow.Background.cs) and the smoke test's end.
+
+// Velopack's install/update hooks first (C#: VelopackApp.Build().Run() first in Program.Main); it ends the process
+// when Setup.exe or an update started the hub for one of them.
+runVelopackHooks();
 
 // The built-in public key for catalog.json (build/catalog-signing.pub.pem), when the repository has one (HubInfo.cs's
 // CatalogPublicKey; only the main process has it).
@@ -159,6 +164,12 @@ async function openExternal(url: string): Promise<void> {
   if (protocol === "https:" || protocol === "http:") await shell.openExternal(url);
 }
 
+/** The packaged app's executable on Linux is a launcher script next to Electron (`<exe>` for `<exe>.bin`). */
+function launcherOf(execPath: string): string {
+  const launcher = execPath.endsWith(".bin") ? execPath.slice(0, -".bin".length) : null;
+  return launcher !== null && existsSync(launcher) ? launcher : execPath;
+}
+
 let smokeFinished = false;
 function smokeTestDone(ok: boolean, text: string): void {
   if (smokeFinished) return;
@@ -270,8 +281,9 @@ function registerIpc(): void {
   ipcMain.handle(Ipc.startsWithComputer, () => autostart.isEnabled);
   ipcMain.handle(Ipc.setStartsWithComputer, (_e, value: boolean) => {
     if (value) {
-      // An AppImage is started by its own file; an unpacked build needs its app folder.
-      const executable = process.env.APPIMAGE ?? process.execPath;
+      // An AppImage is started by its own file; an unpacked build needs its app folder; a packaged hub on Linux by its
+      // launcher script next to Electron (<exe> for <exe>.bin, packaging/ts/launcher.sh), which decides about the sandbox.
+      const executable = process.env.APPIMAGE ?? launcherOf(process.execPath);
       autostart.enable(HubInfo.name, executable, app.isPackaged || process.env.APPIMAGE ? "--background" : `"${app.getAppPath()}" --background`);
     } else autostart.disable();
   });
@@ -285,6 +297,8 @@ function registerIpc(): void {
     const r = window ? await dialog.showOpenDialog(window, { properties: ["openDirectory"] }) : null;
     return r && !r.canceled ? (r.filePaths[0] ?? null) : null;
   });
+  // The hub's own updates (C#: MainWindow's SelfUpdate): installed with Setup.exe or as an AppImage.
+  serveSelfUpdate(ipcMain, () => new VelopackSelfUpdate(HubInfo.releasesRepo, HubInfo.id, () => app.exit(0)));
   ipcMain.on(Ipc.smokeTestDone, (_e, ok: boolean, text: string) => smokeTestDone(ok === true, String(text)));
   ipcMain.on(Ipc.quit, () => quit());
 }

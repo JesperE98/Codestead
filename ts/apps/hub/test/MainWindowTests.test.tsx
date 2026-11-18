@@ -31,6 +31,7 @@ const tool = (id: string, name: string, version: string, versions: string[] = []
   });
 
 class FakeApi implements HubApi {
+  readonly selfUpdate = noSelfUpdate;
   readonly storages = new Map<string, MemoryStorage>();
   installedList: InstalledTool[] = [installedTool("codestead-linux", "0.6.3", "Codestead.Linux", null, "/x")];
   catalog = new Catalog({ schema: 1, generated: "2026", tools: [tool("codestead-gp", "Codestead GP", "0.2.5", ["0.2.5"]), tool("codestead-hub", "Codestead", "9.9.9"), tool("codestead-linux", "Codestead Linux", "0.6.5", ["0.6.5", "0.6.4", "0.6.3"])] });

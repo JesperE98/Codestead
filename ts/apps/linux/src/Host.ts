@@ -3,6 +3,7 @@
 
 import { MemoryStorage, type Storage } from "@codestead/ui";
 import type { CodesteadApi } from "../electron/api.js";
+import { NoUpdates } from "./NoUpdates.js";
 import { ProductInfo } from "./ProductInfo.js";
 
 /** A stand-in for the browser: memory storage, links in a new tab, no pickers. */
@@ -14,6 +15,7 @@ function browserApi(): CodesteadApi {
     openExternal: (url) => void globalThis.open?.(url, "_blank", "noopener,noreferrer"),
     pickFile: () => Promise.resolve(null),
     pickFolder: () => Promise.resolve(null),
+    selfUpdate: NoUpdates,
     quit: () => globalThis.close?.(),
     smokeResult: (ok, text) => console.log(ok ? "SMOKE OK" : "SMOKE FAILED", text),
   };

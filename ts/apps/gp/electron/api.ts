@@ -1,6 +1,7 @@
 // The small API the preload script gives the renderer as `window.codestead` (contextBridge), and the IPC channel
 // names behind it. Types only, shared by the main process, the preload and the renderer.
 
+import type { SelfUpdate } from "@codestead/ui";
 import type { CourseHost } from "../src/CourseHost.js";
 
 /** What the main process tells the renderer at start. */
@@ -48,6 +49,11 @@ export interface CodesteadApi {
   pickFile(title: string, filters?: FileFilter[], startFolder?: string | null): Promise<string | null>;
   /** Lets the learner pick a folder (starting in a folder, if given); null when cancelled. */
   pickFolder(title: string, startFolder?: string | null): Promise<string | null>;
+  /**
+   * The app's own updates (Velopack in the main process, see @codestead/ui/electron-main): installed with Setup.exe or
+   * as an AppImage it updates itself; otherwise canUpdateItself is false.
+   */
+  readonly selfUpdate: SelfUpdate;
   /** Ends the app with an exit code. */
   quit(exitCode?: number): void;
   /** The result of --smoke-test: "SMOKE OK …" on stdout (exit 0) or "SMOKE FAILED: …" on stderr (exit 1). */

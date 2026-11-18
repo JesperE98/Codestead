@@ -1,3 +1,4 @@
+import { selfUpdateBridge } from "@codestead/ui/electron-bridge";
 import { contextBridge, ipcRenderer } from "electron";
 import type { Storage } from "@codestead/ui";
 import type { HubApi } from "../src/HubApi.js";
@@ -54,6 +55,7 @@ const api: HubApi = {
   setTrayToolTip: (text) => ipcRenderer.send(Ipc.setTrayToolTip, text),
   startsWithComputer: () => ipcRenderer.invoke(Ipc.startsWithComputer),
   setStartsWithComputer: (value) => ipcRenderer.invoke(Ipc.setStartsWithComputer, value),
+  selfUpdate: selfUpdateBridge(ipcRenderer),
   openExternal: (url) => ipcRenderer.invoke(Ipc.openExternal, url),
   pickFile: () => ipcRenderer.invoke(Ipc.pickFile),
   pickFolder: () => ipcRenderer.invoke(Ipc.pickFolder),

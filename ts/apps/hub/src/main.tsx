@@ -6,7 +6,6 @@ import type { HubApi } from "./HubApi.js";
 import { HubInfo } from "./HubInfo.js";
 import { MainWindow } from "./MainWindow.js";
 import { MainWindowView } from "./MainWindow.Layout.js";
-import { noSelfUpdate } from "./SelfUpdate.js";
 
 // The window's start (C#: App.axaml.cs): the hub's accent colour, the window, and its first Render.
 
@@ -15,7 +14,7 @@ async function start(): Promise<void> {
   Brand.Hub.applyTo(document);
   // electron/preload.ts (not declared on Window globally: every app has its own window.codestead).
   const api = (window as unknown as { codestead: HubApi }).codestead;
-  const w = new MainWindow(api, await api.info(), noSelfUpdate);
+  const w = new MainWindow(api, await api.info(), api.selfUpdate);
   document.title = HubInfo.name;
   createRoot(document.getElementById("root")!).render(<MainWindowView w={w} />);
   await w.start();

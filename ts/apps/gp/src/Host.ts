@@ -6,6 +6,7 @@ import { IOException, type FileSystem } from "@codestead/gp-course";
 import { MemoryStorage, type Storage } from "@codestead/ui";
 import type { CodesteadApi, PathOp } from "../electron/api.js";
 import type { CourseHost } from "./CourseHost.js";
+import { NoUpdates } from "./NoUpdates.js";
 import { ProductInfo } from "./ProductInfo.js";
 
 /** The browser has no files: nothing to check, no pictures, nothing saved. */
@@ -50,6 +51,7 @@ function browserApi(): CodesteadApi {
     openExternal: (url) => void globalThis.open?.(url, "_blank", "noopener,noreferrer"),
     pickFile: () => Promise.resolve(null),
     pickFolder: () => Promise.resolve(null),
+    selfUpdate: NoUpdates,
     quit: () => globalThis.close?.(),
     smokeResult: (ok, text) => console.log(ok ? "SMOKE OK" : "SMOKE FAILED", text),
   };

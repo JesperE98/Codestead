@@ -19,7 +19,8 @@ export default defineConfig(({ mode }) => {
       sourcemap: false,
       ssr: entry,
       rollupOptions: {
-        external: ["electron", ...builtinModules, ...builtinModules.map((m) => `node:${m}`)],
+        // velopack (updates) has a native module: it stays a require() of node_modules/velopack (packaging/ts/package-app.mjs).
+        external: ["electron", "velopack", ...builtinModules, ...builtinModules.map((m) => `node:${m}`)],
         output: { format: "cjs", entryFileNames: `${mode === "preload" ? "preload" : "main"}.cjs`, codeSplitting: false },
       },
     },

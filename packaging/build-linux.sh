@@ -1,11 +1,19 @@
 #!/usr/bin/env bash
 # Builds every Linux artifact for one Codestead tool:
 #   portable .tar.gz, .deb, .rpm, Arch .pkg.tar.zst (nfpm) and a self-updating .AppImage (Velopack).
-# Usage: packaging/build-linux.sh <project> <package-name> "<display name>" <version> [out-dir]
+# Usage: packaging/build-linux.sh [--ts <app-dir>] <project> <package-name> "<display name>" <version> [out-dir]
 #   e.g. packaging/build-linux.sh src/Linux/Codestead.Linux/Codestead.Linux.csproj codestead-linux "Codestead Linux" 0.4.0
-# Needs: dotnet, nfpm, vpk (dotnet tool install -g vpk).
+#   --ts ts/apps/linux: the TypeScript/Electron app instead of the C# project (docs/TYPESCRIPT-MIGRATION.md): the same
+#   artifacts, names, package ids and paths, from the app folder packaging/ts/package-app.mjs makes; the C# project
+#   still names the executable.
+# Needs: dotnet (or, with --ts, node and the npm workspace in ts/ installed), nfpm, vpk (dotnet tool install -g vpk).
 set -euo pipefail
 
+ts_app=""
+if [[ "${1:-}" == "--ts" ]]; then
+  ts_app="$2"
+  shift 2
+fi
 project="$1"
 export PKG_NAME="$2"
 export PKG_DISPLAY_NAME="$3"
@@ -24,20 +32,28 @@ export GEN_DIR="$root/obj/packaging/$PKG_NAME"
 rm -rf "$PUBLISH_DIR" "$GEN_DIR"
 mkdir -p "$GEN_DIR"
 
-dotnet publish "$project" -c Release -r linux-x64 --self-contained true \
-  -p:Version="$VERSION" -p:PublishSingleFile=false -o "$PUBLISH_DIR"
+if [[ -n "$ts_app" ]]; then
+  node packaging/ts/package-app.mjs --app "$ts_app" --id "$PKG_NAME" --name "$PKG_DISPLAY_NAME" --exe "$PKG_EXECUTABLE" \
+    --version "$VERSION" --platform linux --out "$PUBLISH_DIR"
+  nfpm_config=packaging/ts/nfpm.yaml
+else
+  dotnet publish "$project" -c Release -r linux-x64 --self-contained true \
+    -p:Version="$VERSION" -p:PublishSingleFile=false -o "$PUBLISH_DIR"
+  nfpm_config=packaging/nfpm.yaml
+fi
 
 # Generated files with the names filled in.
 fill() { sed -e "s|\${PKG_NAME}|$PKG_NAME|g" -e "s|\${PKG_DISPLAY_NAME}|$PKG_DISPLAY_NAME|g" \
              -e "s|\${PKG_EXECUTABLE}|$PKG_EXECUTABLE|g" -e "s|\${PKG_SUMMARY}|$PKG_SUMMARY|g" "$1"; }
 fill packaging/linux/launcher.sh > "$GEN_DIR/launcher.sh"
 fill packaging/linux/app.desktop > "$GEN_DIR/app.desktop"
+[[ -z "$ts_app" ]] || fill packaging/ts/postinstall.sh > "$GEN_DIR/postinstall.sh"
 
 # Portable archive (used by the Codestead hub).
 tar -C "$PUBLISH_DIR" -czf "$out/$PKG_NAME-$VERSION-linux-x64.tar.gz" .
 
 # Native packages. nfpm does not expand ${VARS} in file paths, so the config is filled in first.
-perl -pe 's/\$\{(\w+)\}/$ENV{$1}/g' packaging/nfpm.yaml > "$GEN_DIR/nfpm.yaml"
+perl -pe 's/\$\{(\w+)\}/$ENV{$1}/g' "$nfpm_config" > "$GEN_DIR/nfpm.yaml"
 nfpm package --config "$GEN_DIR/nfpm.yaml" --packager deb --target "$out/${PKG_NAME}_${VERSION}_amd64.deb"
 nfpm package --config "$GEN_DIR/nfpm.yaml" --packager rpm --target "$out/$PKG_NAME-$VERSION-1.x86_64.rpm"
 nfpm package --config "$GEN_DIR/nfpm.yaml" --packager archlinux --target "$out/$PKG_NAME-$VERSION-1-x86_64.pkg.tar.zst"

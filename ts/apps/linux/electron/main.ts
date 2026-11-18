@@ -6,10 +6,15 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, shell, type IpcMainEvent } from "electron";
 import { storageDirectory } from "@codestead/ui";
+import { runVelopackHooks, serveSelfUpdate, VelopackSelfUpdate } from "@codestead/ui/electron-main";
 import iconDataUrl from "../../../../src/Linux/Codestead.Linux/Assets/icon.png";
 import { ProductInfo } from "../src/ProductInfo.js";
 import { type AppInfo, Channels, type FileFilter } from "./api.js";
 import { FileStorage } from "./FileStorage.js";
+
+// Velopack's install/update hooks first (C#: VelopackApp.Build().Run() first in Program.Main); it ends the process
+// when Setup.exe or an update started the app for one of them.
+runVelopackHooks();
 
 const args = process.argv.slice(1);
 
@@ -21,9 +26,6 @@ const smokeTest = args.includes("--smoke-test");
 
 /** The smoke test may not hang an installation test: it fails after this long. */
 const SmokeTimeoutMs = 5 * 60_000;
-
-// TODO(phase 5): updates (Velopack's install/update hooks in C#) – packaging and updates are a separate step; the
-// renderer's SelfUpdate says "no updates" until then.
 
 if (args.includes("--version")) {
   process.stdout.write(ProductInfo.version + "\n");
@@ -77,6 +79,8 @@ function start(): void {
     const r = await dialog.showOpenDialog(window, { title: typeof title === "string" ? title : undefined, properties: ["openDirectory", "createDirectory"] });
     return r.canceled ? null : (r.filePaths[0] ?? null);
   });
+  // The app's own updates (C#: the learning window's SelfUpdate): installed with Setup.exe or as an AppImage.
+  serveSelfUpdate(ipcMain, () => new VelopackSelfUpdate(ProductInfo.releasesRepo, ProductInfo.toolId, () => app.exit(0)));
   ipcMain.on(Channels.quit, (_e, code: unknown) => app.exit(typeof code === "number" ? code : 0));
   ipcMain.on(Channels.smokeResult, (_e, ok: unknown, text: unknown) => {
     if (!smokeTest) return;
