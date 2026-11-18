@@ -9,7 +9,7 @@ export default defineConfig({
   root: fileURLToPath(new URL(".", import.meta.url)),
   base: "./",
   plugins: [react()],
-  // The hub reads the repository's files by path (texts, icons, changelog, build/Codestead.props).
+  // The hub reads the repository's files by path (texts, icons, changelog, packaging/products.json).
   server: { fs: { allow: [repoRoot] } },
   build: { outDir: "dist", emptyOutDir: true, target: "chrome140", assetsInlineLimit: 0 },
 });

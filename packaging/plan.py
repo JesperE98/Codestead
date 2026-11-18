@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Decides the version of every product and which ones to publish (the "plan" job of release.yml).
 
-For each product in packaging/products.json:
-  - major.minor comes from build/Codestead.props (e.g. CodesteadLinuxVersion = 0.5);
+For each product in packaging/products.json (its id, name, executable, TypeScript app and folder are there too):
+  - major.minor is its "majorMinor" (e.g. 0.6);
   - the patch number is one more than the newest release <id>-v<major.minor>.<patch> in the releases
     repository, or 0 if there is none;
   - a new version is made if the product's own files ("own": its folder and icon) changed since the commit
@@ -12,20 +12,34 @@ For each product in packaging/products.json:
     shared code that does not change the product (say, a hook only Codestead GP uses) then waits for the
     product's next release instead of releasing it with nothing to tell;
     "exclude" lists files in a shared folder that the product does not use, e.g. the lesson controls in
-    src/Shared/Codestead.UI for the hub (tests/Hub/Codestead.Hub.Tests checks that the hub really does not use them).
+    ts/packages/ui for the hub (ts/apps/hub/test/ProductFilesTests.test.ts checks that the hub really does not use them).
   - every product has its own folder ("dir", e.g. src/Linux) with changelog.json (What's new, must have an entry
     for the next version), description.json (shown by the hub) and release-notes.md (the release page).
 Publishing also needs WANT_PUBLISH=true (a run by hand on main with "publish" ticked) and both secrets.
 Merges to main do not publish: several pull requests are collected, and they all add their lines to the one
 changelog entry for the next version (which stays the same until it is published).
-Writes products=[...] and publish=[...] to $GITHUB_OUTPUT.
+
+The upgrade gate (release.yml's upgrade-linux and upgrade-windows jobs): every product that gets a new version is
+updated to the new build from a user's installation of
+  - its last C# release ("lastCSharpRelease" in products.json: the releases before the switch to TypeScript), so that an
+    old installation can always update straight to the newest version, and
+  - its previous release, when that is not the same one (a TypeScript release).
+Writes products=[...], publish=[...], upgrade_linux=[...] and upgrade_windows=[...] to $GITHUB_OUTPUT.
 """
 import json
 import os
 import re
 import subprocess
 
-REPO = os.environ.get("RELEASES_REPO", "JesperE98/codestead-releases")
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+with open(os.path.join(ROOT, "packaging", "products.json"), encoding="utf-8") as _f:
+    PRODUCTS = json.load(_f)
+REPO = os.environ.get("RELEASES_REPO", PRODUCTS["releasesRepo"])
+
+# Where the upgrade tests run: (name, docker image) on Linux (AppImage), runner images on Windows (Setup.exe). The update
+# from the last C# release runs on all of them; the cheaper one from a TypeScript release on the first only.
+UPGRADE_LINUX = [("Ubuntu 24.04 LTS (AppImage)", "ubuntu:24.04"), ("Fedora (AppImage)", "fedora:latest")]
+UPGRADE_WINDOWS = ["windows-2025", "windows-2022"]
 
 
 def run(*cmd):
@@ -68,7 +82,7 @@ def changed_since(sha, specs):
 
 
 # The languages the apps offer (build/languages.json); parked languages need no changelog lines.
-with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "build", "languages.json"), encoding="utf-8") as _f:
+with open(os.path.join(ROOT, "build", "languages.json"), encoding="utf-8") as _f:
     LANGUAGES = [l["code"] for l in json.load(_f)["languages"] if l["offered"]]
 
 
@@ -93,6 +107,25 @@ def changelog_problem(path, version):
     return None
 
 
+def parse_version(v):
+    return tuple(int(x) for x in v.split("."))
+
+
+def upgrade_cases(product, previous):
+    """The upgrade tests of a product that gets a new version: from its last C# release (with the TypeScript build
+    then updating itself once more, TS -> TS), and from its previous release when that is a TypeScript one."""
+    cs = product["lastCSharpRelease"]
+    cases = [dict(product, upgradeFrom=cs, upgradeKind="csharp", upgradeChain=True)]
+    if previous is not None and previous != cs:
+        cases.append(dict(product, upgradeFrom=previous, upgradeKind="typescript", upgradeChain=False))
+        note = f"upgrade tests from the last C# release {cs} and from the previous release {previous}"
+    else:
+        note = f"upgrade test from the last C# release {cs} (the previous release; no TypeScript release yet)"
+    linux = [dict(c, targetName=name, image=image) for c in cases for (name, image) in (UPGRADE_LINUX if c["upgradeKind"] == "csharp" else UPGRADE_LINUX[:1])]
+    windows = [dict(c, os=os_) for c in cases for os_ in (UPGRADE_WINDOWS if c["upgradeKind"] == "csharp" else UPGRADE_WINDOWS[:1])]
+    return linux, windows, note
+
+
 def main():
     want = os.environ.get("WANT_PUBLISH") == "true"
     # Everything publishing needs, with what is missing named one by one.
@@ -108,16 +141,16 @@ def main():
     tags = releases()
     products, publish = [], []
     problems = []
-    for p in json.load(open("packaging/products.json")):
-        out = subprocess.check_output(["dotnet", "msbuild", p["project"], "-getProperty:AssemblyName",
-                                       f"-getProperty:{p['idProperty']}", f"-getProperty:{p['nameProperty']}",
-                                       f"-getProperty:{p['versionProperty']}"], text=True)
-        props = json.loads(out)["Properties"]
-        pid, minor = props[p["idProperty"]], props[p["versionProperty"]]
+    upgrade_linux, upgrade_windows = [], []
+    for p in PRODUCTS["products"]:
+        pid, minor, name = p["id"], p["majorMinor"], p["name"]
         if not re.fullmatch(r"\d+\.\d+", minor):
-            raise SystemExit(f"{p['versionProperty']} must be major.minor (e.g. 0.5), not {minor!r}")
+            raise SystemExit(f"{p['key']}: majorMinor in packaging/products.json must be major.minor (e.g. 0.5), not {minor!r}")
         patches = sorted(int(m.group(1)) for t in tags if (m := re.fullmatch(rf"{re.escape(pid)}-v{re.escape(minor)}\.(\d+)", t)))
         why = ""
+        # The newest release of the product (of any major.minor): what an up-to-date user has.
+        released = [parse_version(m.group(1)) for t in tags if (m := re.fullmatch(rf"{re.escape(pid)}-v(\d+\.\d+\.\d+)", t))]
+        previous = ".".join(map(str, max(released))) if released else None
         if patches:
             last, nxt = f"{minor}.{patches[-1]}", f"{minor}.{patches[-1] + 1}"
             source = source_commit(f"{pid}-v{last}")
@@ -131,19 +164,29 @@ def main():
             version = nxt if changed else last
         else:
             changed, version = True, f"{minor}.0"
+        cs = p["lastCSharpRelease"]
+        if parse_version(version) < parse_version(cs):
+            # Below what users already have: the releases could not be listed (or majorMinor went down).
+            problems.append(f"{name} would be {version}, older than its last C# release {cs}: are the releases of "
+                            f"{REPO} readable (GH_TOKEN)?")
         if changed:
             missing_note = changelog_problem(f"{p['dir']}/changelog.json", version)
             if missing_note:
                 problems.append(missing_note)
-        name = props[p["nameProperty"]]
         product = {"key": p["key"], "id": pid, "name": name, "version": version,
                    # The title of its releases in codestead-releases (several products share that repository).
                    "title": p.get("title", name),
-                   "exe": props["AssemblyName"], "project": p["project"], "summary": p["summary"], "dir": p["dir"]}
+                   "exe": p["exe"], "app": p["app"], "summary": p["summary"], "dir": p["dir"],
+                   "changed": changed, "lastCSharpRelease": cs}
         products.append(product)
         if want and changed and secrets_ok:
             publish.append(product)
         state = ("new version" + why) if changed else (why or "no changes since the last release")
+        if changed:
+            linux, windows, note = upgrade_cases(product, previous)
+            upgrade_linux += linux
+            upgrade_windows += windows
+            state += f"; {note}"
         print(f"{product['name']} {version}: {state}" + (", will be published" if product in publish else ""))
     if want and not secrets_ok and any(True for _ in products):
         print(f"::warning::Nothing is published. Missing: {', '.join(missing)}. Secrets must be repository "
@@ -155,6 +198,8 @@ def main():
     with open(os.environ.get("GITHUB_OUTPUT", os.devnull), "a") as f:
         f.write(f"products={json.dumps(products)}\n")
         f.write(f"publish={json.dumps(publish)}\n")
+        f.write(f"upgrade_linux={json.dumps(upgrade_linux)}\n")
+        f.write(f"upgrade_windows={json.dumps(upgrade_windows)}\n")
 
 
 if __name__ == "__main__":

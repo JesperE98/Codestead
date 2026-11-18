@@ -43,7 +43,7 @@ function unlock(w: LearningWindow, chapterId: string): void {
 }
 
 describe("LinuxToolTests", () => {
-  it("produkten kommer från build/Codestead.props", () => {
+  it("produkten kommer från packaging/products.json", () => {
     expect(ProductInfo.meta).toEqual({ name: "Codestead Linux", id: "codestead-linux", releasesRepo: "JesperE98/codestead-releases", version: "0.6.0" });
     const { tool } = open();
     expect(tool.product).toBe(ProductInfo.meta);

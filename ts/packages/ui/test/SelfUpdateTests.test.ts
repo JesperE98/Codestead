@@ -1,9 +1,13 @@
 // The Electron apps' self-update (Velopack in the main process, a bridge in the preload): not installed by Velopack,
 // nothing is offered; the window's calls reach the main process's updater, the download's progress comes back.
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { Products } from "@codestead/common";
 import type { SelfUpdate } from "../src/SelfUpdate.js";
 import { SelfUpdateChannels, selfUpdateBridge, type SelfUpdateIpcRenderer } from "../src/electron/SelfUpdateBridge.js";
 import { runVelopackHooks, serveSelfUpdate, type SelfUpdateIpcMain, updateFeedUrl, VelopackSelfUpdate } from "../src/electron/VelopackUpdate.js";
+import { repoRoot } from "./repo.js";
 
 /** ipcMain and ipcRenderer in one process. */
 function fakeIpc(): { main: SelfUpdateIpcMain; renderer: SelfUpdateIpcRenderer } {
@@ -33,6 +37,19 @@ function fakeIpc(): { main: SelfUpdateIpcMain; renderer: SelfUpdateIpcRenderer }
 }
 
 describe("SelfUpdateTests", () => {
+  it.each(Products.all.map((p) => [p.key, p.app] as const))("appen anropar Velopack först i sin main-process: %s", (_key, app) => {
+    // Setup.exe and the updater start the app with Velopack's hook arguments, which VelopackApp.build().run() must
+    // handle before anything else; vpk pack cannot check it in JavaScript (packaging/build-windows.ps1: --skipVeloAppCheck).
+    const main = readFileSync(join(repoRoot(), app, "electron", "main.ts"), "utf8");
+    const code = main
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .split("\n")
+      .map((l) => l.trim())
+      .filter((l) => l !== "" && !l.startsWith("//"));
+    const firstStatement = code.findIndex((l) => !/^(import\b|from\b|[\w$, {}]+\} from\b|type\b.*from\b)/.test(l) && !/^[\w$]+,?$/.test(l) && l !== "}");
+    expect(code[firstStatement], `${app}/electron/main.ts`).toBe("runVelopackHooks();");
+  });
+
   it("uppdateringskällan är releasen <id>-latest i release-repot (som i C#)", () => {
     expect(updateFeedUrl("JesperE98/codestead-releases", "codestead-linux")).toBe(
       "https://github.com/JesperE98/codestead-releases/releases/download/codestead-linux-latest/",

@@ -102,7 +102,7 @@ const markDoneName = "✓ " + t("yourProject.markDone");
 const taskKeys = (chapter: string, api = "opengl") => GpCourse.allTasks(chapter, api).map((x) => GpCourse.taskKey(chapter, x.id, api));
 
 describe("GpToolTests", () => {
-  it("produkten kommer från src/GP/Directory.Build.props", () => {
+  it("produkten kommer från packaging/products.json", () => {
     expect(ProductInfo.meta).toEqual({ name: "Codestead GP", id: "codestead-gp", releasesRepo: "JesperE98/codestead-releases", version: "0.2.0" });
     const { tool } = open();
     expect(tool.product).toBe(ProductInfo.meta);

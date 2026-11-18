@@ -1,99 +1,168 @@
-[
-  {
-    "key": "linux",
-    "project": "src/Linux/Codestead.Linux/Codestead.Linux.csproj",
-    "dir": "src/Linux",
-    "idProperty": "CodesteadLinuxId",
-    "nameProperty": "CodesteadLinuxName",
-    "title": "Codestead Linux",
-    "summary": "Learn the Linux shell by doing",
-    "versionProperty": "CodesteadLinuxVersion",
-    "paths": [
-      "src/Linux",
-      "src/Shared",
-      "build/icons/codestead-linux.*",
-      "build/Codestead.props",
-      "build/languages.json",
-      "build/Codestead.App.props",
-      "packaging/build-linux.sh",
-      "packaging/build-windows.ps1",
-      "packaging/nfpm.yaml",
-      "packaging/linux",
-      "global.json",
-      "Directory.Build.props"
-    ],
-    "own": [
-      "src/Linux",
-      "build/icons/codestead-linux.*"
-    ]
-  },
-  {
-    "key": "gp",
-    "project": "src/GP/Codestead.GP/Codestead.GP.csproj",
-    "dir": "src/GP",
-    "idProperty": "CodesteadGPId",
-    "nameProperty": "CodesteadGPName",
-    "title": "Codestead GP",
-    "summary": "Learn graphics programming with OpenGL, Vulkan or DirectX 12",
-    "versionProperty": "CodesteadGPVersion",
-    "paths": [
-      "src/GP",
-      "src/Shared",
-      "build/icons/codestead-gp.*",
-      "build/Codestead.props",
-      "build/languages.json",
-      "build/Codestead.App.props",
-      "packaging/build-linux.sh",
-      "packaging/build-windows.ps1",
-      "packaging/nfpm.yaml",
-      "packaging/linux",
-      "global.json",
-      "Directory.Build.props"
-    ],
-    "own": [
-      "src/GP",
-      "build/icons/codestead-gp.*"
-    ],
-    "exclude": [
-      "src/GP/verify"
-    ]
-  },
-  {
-    "key": "hub",
-    "project": "src/Hub/Codestead.Hub/Codestead.Hub.csproj",
-    "dir": "src/Hub",
-    "idProperty": "CodesteadHubId",
-    "nameProperty": "CodesteadHubName",
-    "title": "Codestead hub",
-    "summary": "Install and update the Codestead learning tools",
-    "versionProperty": "CodesteadHubVersion",
-    "paths": [
-      "src/Hub",
-      "src/Shared",
-      "build/icons/codestead-hub.*",
-      "build/catalog-signing.pub.pem",
-      "build/Codestead.props",
-      "build/languages.json",
-      "build/Codestead.App.props",
-      "packaging/build-linux.sh",
-      "packaging/build-windows.ps1",
-      "packaging/nfpm.yaml",
-      "packaging/linux",
-      "global.json",
-      "Directory.Build.props"
-    ],
-    "own": [
-      "src/Hub",
-      "build/icons/codestead-hub.*",
-      "build/catalog-signing.pub.pem"
-    ],
-    "exclude": [
-      "src/Shared/Codestead.Learning",
-      "src/Shared/Codestead.Learning.UI",
-      "src/Shared/Codestead.UI/Learning",
-      "src/Shared/Codestead.UI/Controls/CheckpointView.cs",
-      "src/Shared/Codestead.UI/Controls/CheckpointTexts.cs",
-      "src/Shared/Codestead.UI/Controls/Sandbox"
-    ]
-  }
-]
+{
+  "releasesRepo": "JesperE98/codestead-releases",
+  "products": [
+    {
+      "key": "linux",
+      "id": "codestead-linux",
+      "name": "Codestead Linux",
+      "title": "Codestead Linux",
+      "summary": "Learn the Linux shell by doing",
+      "majorMinor": "0.6",
+      "exe": "Codestead.Linux",
+      "app": "ts/apps/linux",
+      "dir": "src/Linux",
+      "lastCSharpRelease": "0.6.5",
+      "paths": [
+        "src/Linux",
+        "ts/apps/linux",
+        "ts/packages/linux-shell",
+        "ts/packages/linux-content",
+        "build/icons/codestead-linux.*",
+        "ts/packages/common",
+        "ts/packages/learning",
+        "ts/packages/ui",
+        "ts/package.json",
+        "ts/package-lock.json",
+        "ts/tsconfig.base.json",
+        "build/languages.json",
+        "packaging/products.json",
+        "packaging/build-linux.sh",
+        "packaging/build-windows.ps1",
+        "packaging/linux",
+        "packaging/ts"
+      ],
+      "own": [
+        "src/Linux",
+        "ts/apps/linux",
+        "ts/packages/linux-shell",
+        "ts/packages/linux-content",
+        "build/icons/codestead-linux.*"
+      ],
+      "exclude": [
+        "ts/apps/linux/test",
+        "ts/apps/linux/e2e",
+        "ts/apps/linux/vitest.e2e.config.ts",
+        "ts/packages/linux-shell/test",
+        "ts/packages/linux-shell/PORTING.md",
+        "ts/packages/linux-content/test",
+        "ts/packages/common/test",
+        "ts/packages/learning/test",
+        "ts/packages/ui/test",
+        "packaging/ts/update-from-feed.cjs"
+      ]
+    },
+    {
+      "key": "gp",
+      "id": "codestead-gp",
+      "name": "Codestead GP",
+      "title": "Codestead GP",
+      "summary": "Learn graphics programming with OpenGL, Vulkan or DirectX 12",
+      "majorMinor": "0.2",
+      "exe": "Codestead.GP",
+      "app": "ts/apps/gp",
+      "dir": "src/GP",
+      "lastCSharpRelease": "0.2.5",
+      "paths": [
+        "src/GP",
+        "ts/apps/gp",
+        "ts/packages/gp-course",
+        "ts/packages/gp-gpu",
+        "build/icons/codestead-gp.*",
+        "ts/packages/common",
+        "ts/packages/learning",
+        "ts/packages/ui",
+        "ts/package.json",
+        "ts/package-lock.json",
+        "ts/tsconfig.base.json",
+        "build/languages.json",
+        "packaging/products.json",
+        "packaging/build-linux.sh",
+        "packaging/build-windows.ps1",
+        "packaging/linux",
+        "packaging/ts"
+      ],
+      "own": [
+        "src/GP",
+        "ts/apps/gp",
+        "ts/packages/gp-course",
+        "ts/packages/gp-gpu",
+        "build/icons/codestead-gp.*"
+      ],
+      "exclude": [
+        "src/GP/verify",
+        "src/GP/tools",
+        "ts/apps/gp/test",
+        "ts/apps/gp/e2e",
+        "ts/apps/gp/vitest.e2e.config.ts",
+        "ts/packages/gp-course/test",
+        "ts/packages/gp-gpu/test",
+        "ts/packages/gp-gpu/PORTING.md",
+        "ts/packages/common/test",
+        "ts/packages/learning/test",
+        "ts/packages/ui/test",
+        "packaging/ts/update-from-feed.cjs"
+      ]
+    },
+    {
+      "key": "hub",
+      "id": "codestead-hub",
+      "name": "Codestead",
+      "title": "Codestead hub",
+      "summary": "Install and update the Codestead learning tools",
+      "majorMinor": "0.2",
+      "exe": "Codestead.Hub",
+      "app": "ts/apps/hub",
+      "dir": "src/Hub",
+      "lastCSharpRelease": "0.2.4",
+      "paths": [
+        "src/Hub",
+        "ts/apps/hub",
+        "build/icons/codestead-hub.*",
+        "build/catalog-signing.pub.pem",
+        "ts/packages/common",
+        "ts/packages/learning",
+        "ts/packages/ui",
+        "ts/package.json",
+        "ts/package-lock.json",
+        "ts/tsconfig.base.json",
+        "build/languages.json",
+        "packaging/products.json",
+        "packaging/build-linux.sh",
+        "packaging/build-windows.ps1",
+        "packaging/linux",
+        "packaging/ts"
+      ],
+      "own": [
+        "src/Hub",
+        "ts/apps/hub",
+        "build/icons/codestead-hub.*",
+        "build/catalog-signing.pub.pem"
+      ],
+      "exclude": [
+        "ts/packages/ui/src/Learning",
+        "ts/packages/ui/src/Controls/CheckpointView.tsx",
+        "ts/packages/ui/src/Controls/CheckpointTexts.ts",
+        "ts/packages/ui/src/Controls/Sandbox",
+        "ts/packages/ui/src/Controls/Game/Views/AchievementToast.tsx",
+        "ts/packages/ui/src/Controls/Game/Views/CelebrationView.tsx",
+        "ts/packages/ui/src/Controls/Game/Views/GameBar.tsx",
+        "ts/packages/ui/src/Controls/Game/Views/NoticeLayer.tsx",
+        "ts/packages/learning/src/Game",
+        "ts/packages/learning/src/ChapterKinds.ts",
+        "ts/packages/learning/src/Checkpoint.ts",
+        "ts/packages/learning/src/CourseChapter.ts",
+        "ts/packages/learning/src/CourseOutline.ts",
+        "ts/packages/learning/src/LearningState.ts",
+        "ts/packages/learning/src/OutlinePart.ts",
+        "ts/packages/learning/src/Reference.ts",
+        "ts/apps/hub/test",
+        "ts/apps/hub/e2e",
+        "ts/apps/hub/vitest.e2e.config.ts",
+        "ts/packages/common/test",
+        "ts/packages/learning/test",
+        "ts/packages/ui/test",
+        "packaging/ts/update-from-feed.cjs"
+      ]
+    }
+  ]
+}

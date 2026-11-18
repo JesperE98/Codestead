@@ -8,9 +8,9 @@ import { it } from "vitest";
 
 function find(): string {
   let dir = dirname(fileURLToPath(import.meta.url));
-  while (!existsSync(join(dir, "Codestead.sln"))) {
+  while (!existsSync(join(dir, "packaging", "products.json"))) {
     const parent = dirname(dir);
-    if (parent === dir) throw new Error("Codestead.sln not found");
+    if (parent === dir) throw new Error("packaging/products.json not found");
     dir = parent;
   }
   return dir;

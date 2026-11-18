@@ -5,7 +5,7 @@ export type Version = readonly [major: number, minor: number, build: number];
 
 const int32Max = 2147483647;
 
-/** Versions "major.minor.patch" (as in build/Codestead.props). */
+/** Versions "major.minor.patch" (packaging/products.json gives major.minor; the release adds the patch). */
 export const SemVer = {
   /**
    * The version, or null when `s` is not exactly digits.digits.digits (C#: the regex \A\d+\.\d+\.\d+\z and
