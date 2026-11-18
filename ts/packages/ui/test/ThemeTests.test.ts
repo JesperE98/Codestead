@@ -2,14 +2,10 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { Brand } from "../src/index.js";
-import { repoRoot } from "./repo.js";
 
 type Theme = Map<string, string>;
 
-/** "CsSurface2" → "cs-surface-2" (the CSS variable of a C# colour resource). */
-const cssName = (key: string) => key.replace(/([a-z])([A-Z0-9])/g, "$1-$2").toLowerCase();
-
-/** The #rrggbb variables of a CSS rule (the rgba ones are Fluent's control colours, not the C# theme's). */
+/** The #rrggbb variables of a CSS rule (the rgba ones are the controls' own colours, not the theme's). */
 function variables(css: string, selector: string): Theme {
   const start = css.indexOf(selector + " {");
   if (start < 0) throw new Error(`no rule ${selector}`);
@@ -24,15 +20,6 @@ const themes: Record<"Light" | "Dark", Theme> = {
   Light: variables(css, ':root,\n:root[data-theme="light"]'),
   Dark: variables(css, ':root[data-theme="dark"]'),
 };
-
-/** The same from the C# theme, Codestead.axaml. */
-function axamlThemes(): Record<string, Theme> {
-  const xaml = readFileSync(join(repoRoot(), "src", "Shared", "Codestead.UI", "Themes", "Codestead.axaml"), "utf8");
-  const result: Record<string, Theme> = {};
-  for (const m of xaml.matchAll(/<ResourceDictionary x:Key="(Light|Dark)">([\s\S]*?)<\/ResourceDictionary>/g))
-    result[m[1]!] = new Map([...m[2]!.matchAll(/<SolidColorBrush x:Key="(\w+)" Color="(#[0-9a-fA-F]{6})"/g)].map((b) => [cssName(b[1]!), b[2]!.toLowerCase()]));
-  return result;
-}
 
 function luminance(hex: string): number {
   const channel = (i: number) => {
@@ -62,10 +49,7 @@ describe("ThemeTests", () => {
     expect(themes.Light.has("cs-on-accent")).toBe(true);
   });
 
-  it("färgerna är desamma som i C#-appens tema, och mörkt tema är detsamma från systemet och från inställningen", () => {
-    const xaml = axamlThemes();
-    expect(Object.fromEntries(themes.Light)).toEqual(Object.fromEntries(xaml.Light!));
-    expect(Object.fromEntries(themes.Dark)).toEqual(Object.fromEntries(xaml.Dark!));
+  it("mörkt tema är detsamma från systemet och från inställningen", () => {
     expect(Object.fromEntries(variables(css, ':root:not([data-theme="light"])'))).toEqual(Object.fromEntries(themes.Dark));
   });
 
@@ -106,17 +90,8 @@ describe("ThemeTests", () => {
     }
   });
 
-  it("appens accentfärger är desamma som i C#", () => {
-    const brandCs = readFileSync(join(repoRoot(), "src", "Shared", "Codestead.UI", "Themes", "Brand.cs"), "utf8");
-    const gpCs = readFileSync(join(repoRoot(), "src", "GP", "Codestead.GP", "App.axaml.cs"), "utf8");
-    const colours = (source: string, name: string) => {
-      const m = new RegExp(`new\\("${name}",([\\s\\S]*?)\\);`).exec(source)!;
-      return [...m[1]!.matchAll(/Color\.Parse\("(#[0-9a-f]{6})"\)|Colors\.White/gi)].map((c) => (c[1] ?? "#ffffff").toLowerCase());
-    };
-    const ours = (b: Brand) => [b.light.accent, b.light.accentSoft, b.light.onAccent, b.dark.accent, b.dark.accentSoft, b.dark.onAccent];
-    expect(ours(Brand.Linux)).toEqual(colours(brandCs, "linux"));
-    expect(ours(Brand.Hub)).toEqual(colours(brandCs, "hub"));
-    expect(ours(Brand.GP)).toEqual(colours(gpCs, "gp"));
+  it("appens accentfärg blir temats CSS-variabler", () => {
     expect(Brand.Linux.css()).toContain("--cs-accent: #0f766e;");
+    for (const brand of [Brand.Linux, Brand.Hub, Brand.GP]) expect(brand.css()).toContain(`--cs-on-accent: ${brand.light.onAccent}`);
   });
 });

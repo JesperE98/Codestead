@@ -1,6 +1,6 @@
-"""Turns the frames that src/GP/tools/RenderResults renders into the chapters' result pictures.
+"""Turns the frames that ts/packages/gp-gpu/test/RenderResults.test.ts renders into the chapters' result pictures.
 
-    dotnet run -c Release --project src/GP/tools/RenderResults -- src/GP/content <frames dir> [chapter ...]
+    (cd ts && CODESTEAD_RENDER_RESULTS=<frames dir> [CODESTEAD_RENDER_CHAPTERS=a,b] npx vitest run packages/gp-gpu/test/RenderResults.test.ts)
     python3 src/GP/content/images/make_results.py <frames dir>
 
 Each chapter's result – the course's own OpenGL solution, run by the simulated GPU – becomes

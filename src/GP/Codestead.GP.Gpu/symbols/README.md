@@ -12,6 +12,6 @@ report a misspelt name the way a compiler would ("'glClearColour' was not declar
   after `->`.
 
 See the commands in the commit that added this folder, or regenerate with grep over the headers using the
-patterns in `Codestead.GP.Gpu/Build/BuildChecker.cs`.
+patterns in `ts/packages/gp-gpu/src/Build/BuildChecker.ts`.
 - `assimp-methods.txt`: every name followed by `(` in Assimp's headers (`/usr/include/assimp`, libassimp-dev 5.3),
   so `mesh->HasNormals()` and `material->GetTextureCount(…)` are known when a DirectX 12 program uses Assimp.

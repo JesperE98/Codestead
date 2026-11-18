@@ -15,7 +15,7 @@ edits.txt holds one section per task, in the order the tasks are shown:
         }
 
 A section may have several edits (several --- file: blocks). "find" must occur exactly once in the file at that
-point. The app applies the same edits when the learner clicks a solution (Codestead.GP.Course/Edits.cs).
+point. The app applies the same edits when the learner clicks a solution (ts/packages/gp-course/src/Edits.ts).
 """
 import os, sys, filecmp
 

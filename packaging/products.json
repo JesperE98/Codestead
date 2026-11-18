@@ -90,7 +90,6 @@
       ],
       "exclude": [
         "src/GP/verify",
-        "src/GP/tools",
         "ts/apps/gp/test",
         "ts/apps/gp/e2e",
         "ts/apps/gp/vitest.e2e.config.ts",

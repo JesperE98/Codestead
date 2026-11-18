@@ -5,14 +5,17 @@ For each product in packaging/products.json (its id, name, executable, TypeScrip
   - major.minor is its "majorMinor" (e.g. 0.6);
   - the patch number is one more than the newest release <id>-v<major.minor>.<patch> in the releases
     repository, or 0 if there is none;
-  - a new version is made if the product's own files ("own": its folder and icon) changed since the commit
-    the newest release was built from (recorded as <!-- codestead-source: SHA --> in its release notes);
-  - if only shared files changed ("paths" minus "own", minus "exclude": src/Shared, the build and packaging
-    files), a new version is made only when the product's changelog already has an entry for it – a change in
-    shared code that does not change the product (say, a hook only Codestead GP uses) then waits for the
-    product's next release instead of releasing it with nothing to tell;
-    "exclude" lists files in a shared folder that the product does not use, e.g. the lesson controls in
-    ts/packages/ui for the hub (ts/apps/hub/test/ProductFilesTests.test.ts checks that the hub really does not use them).
+  - a new version is made if the product's own files ("own": its folder, its app and packages in ts/, its icon)
+    changed since the commit the newest release was built from (recorded as <!-- codestead-source: SHA --> in its
+    release notes);
+  - if only shared files changed ("paths" minus "own", minus "exclude": the shared packages ts/packages/common,
+    learning and ui, the workspace's package files, the build and packaging files), a new version is made only
+    when the product's changelog already has an entry for it – a change in shared code that does not change the
+    product (say, a hook only Codestead GP uses) then waits for the product's next release instead of releasing it
+    with nothing to tell;
+    "exclude" lists what does not go into the product: tests, and files in a shared folder that the product does
+    not use, e.g. the learning window in ts/packages/ui for the hub (ts/apps/hub/test/ProductFilesTests.test.ts
+    checks that the hub really does not use them).
   - every product has its own folder ("dir", e.g. src/Linux) with changelog.json (What's new, must have an entry
     for the next version), description.json (shown by the hub) and release-notes.md (the release page).
 Publishing also needs WANT_PUBLISH=true (a run by hand on main with "publish" ticked) and both secrets.

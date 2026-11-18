@@ -47,18 +47,14 @@ describe("UiStringsTests", () => {
 
   it("simulatorns meddelanden har texter", () => {
     const en = load("en");
-    // The C# simulator's sources, as in C#, and the port's (@codestead/gp-gpu: SimNote.info / warning / error).
-    const cs = join(Repo.root, "src", "GP", "Codestead.GP.Gpu");
+    // The simulator's sources (@codestead/gp-gpu: SimNote.info / warning / error).
     const ts = join(Repo.root, "ts", "packages", "gp-gpu", "src");
     const keysIn = (dir: string, ext: string, re: RegExp): string[] =>
       filesUnder(dir)
         .filter((f) => f.endsWith(ext))
         .flatMap((f) => [...readFileSync(f, "utf8").matchAll(re)].map((m) => m[1]!));
-    const csKeys = keysIn(cs, ".cs", /SimNote\.(?:Info|Warning|Error)\("(\w+)"/g);
-    const tsKeys = keysIn(ts, ".ts", /SimNote\.(?:info|warning|error)\("(\w+)"/g);
-    expect(csKeys.length).toBeGreaterThan(0);
-    expect(tsKeys.length).toBeGreaterThan(0);
-    const keys = new Set([...csKeys, ...tsKeys]);
+    const keys = new Set(keysIn(ts, ".ts", /SimNote\.(?:info|warning|error)\("(\w+)"/g));
+    expect(keys.size).toBeGreaterThan(0);
     for (const k of keys) expect(Object.hasOwn(en, "sim." + k), "sim." + k).toBe(true);
   });
 

@@ -1,8 +1,6 @@
-# .NET build output
+# Build output (packaging/ builds the apps' folders and packages in obj/; the upgrade driver's .NET build)
 bin/
 obj/
-*.user
-TestResults/
 
 # Release artifacts built locally (packaging/build-*.sh)
 artifacts/
