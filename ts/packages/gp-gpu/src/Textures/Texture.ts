@@ -1,4 +1,6 @@
 import { clamp, roundEven, toByte, toInt } from "../internal/dotnet.js";
+// libm: sin, cos, pow … as C#'s Math.Sin, Math.Pow … compute them on Linux (glibc), instead of V8's Math.* (see internal/libm.ts).
+import * as libm from "../internal/libm.js";
 import { SrgbCurve } from "../Raster/SrgbCurve.js";
 import { Image } from "./Image.js";
 import type { SamplerState } from "./SamplerState.js";
@@ -129,7 +131,7 @@ export class Texture {
     if (this.mipmapped && f !== null && img.width * img.height > 1) {
       // The level of detail: log2 of how many texels one pixel covers (the longer of its two directions).
       const rx = Math.sqrt(sq(f[0] * img.width) + sq(f[1] * img.height)), ry = Math.sqrt(sq(f[2] * img.width) + sq(f[3] * img.height));
-      let lod = Math.log2(Math.max(rx, ry));
+      let lod = libm.log2(Math.max(rx, ry));
       if (lod > 0 && !Number.isNaN(lod)) {
         const levels = this.levels(img);
         lod = Math.min(lod, levels.length - 1);

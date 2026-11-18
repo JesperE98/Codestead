@@ -1,4 +1,6 @@
 import { clamp, toInt } from "../internal/dotnet.js";
+// libm: sin, cos, pow … as C#'s Math.Sin, Math.Pow … compute them on Linux (glibc), instead of V8's Math.* (see internal/libm.ts).
+import * as libm from "../internal/libm.js";
 
 // The C# code computes in 64-bit integers (long); every value here stays far below 2^53, so plain numbers with
 // Math.trunc for the divisions give the same results. The bit operations are on values below 2^31.
@@ -300,7 +302,7 @@ export const Tessellator = {
       ]);
     }
     const pos = (s: number[], k: number): number => (s.length <= 1 ? 0.5 : dist(s[0]!, s[k]!) / Math.max(1e-12, dist(s[0]!, s[s.length - 1]!)));
-    const dist = (a: number, bb: number): number => Math.sqrt(Math.pow(points[a]![0] - points[bb]![0], 2) + Math.pow(points[a]![1] - points[bb]![1], 2));
+    const dist = (a: number, bb: number): number => Math.sqrt(libm.pow(points[a]![0] - points[bb]![0], 2) + libm.pow(points[a]![1] - points[bb]![1], 2));
     const join = (outerSide: number[], innerSide: number[]): void => {
       // Both sides run the same way; positions compared by their share of the side's length.
       let a = 0, bb = 0;
