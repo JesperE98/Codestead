@@ -351,7 +351,8 @@ describe("GpToolTests", () => {
     act(() => w2.navigate("creating-a-window"));
     await waitFor(() => expect(document.querySelector(".cs-gp-expected-note")!.textContent).not.toBe(t("expected.drawing")), { timeout: 5000 });
     expect([t("expected.noWindow"), t("expected.closed"), t("expected.nothing"), t("expected.none")]).toContain(document.querySelector(".cs-gp-expected-note")!.textContent);
-  });
+    // Three pictures drawn by the simulated GPU take about five seconds: more than Vitest's default for a test.
+  }, 30_000);
 
   it("Save resources… sparar kursens texturer i en vald mapp och frågar innan något annat skrivs över", async () => {
     const { tool, w, answers, asked } = open();

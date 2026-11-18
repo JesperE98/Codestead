@@ -55,9 +55,9 @@ host() {
     fetch "$id-latest" releases.linux.json "$work/cs"
     v0=$(feed_version "$work/cs/releases.linux.json")
   fi
-  local last_cs; last_cs=$(python3 -c 'import json,sys; print([p for p in json.load(open(sys.argv[1]))["products"] if p["id"]==sys.argv[2]][0]["lastCSharpRelease"])' "$root/packaging/products.json" "$id")
+  local last_cs; last_cs=$(python3 -c 'import json,sys; print([p for p in json.load(open(sys.argv[1]))["products"] if p["id"]==sys.argv[2]][0].get("lastCSharpRelease") or "")' "$root/packaging/products.json" "$id")
   local kind=typescript
-  newer "$v0" "$last_cs" || kind=csharp
+  [[ -z "$last_cs" ]] || newer "$v0" "$last_cs" || kind=csharp
   local cs_file="$id-$v0-linux-x86_64.AppImage"
   fetch "$id-v$v0" "$cs_file" "$work/cs"
   echo "Released ($kind): $id $v0 ($cs_file, $(stat -c %s "$work/cs/$cs_file") bytes)"
@@ -219,7 +219,7 @@ ts_wrote() { [[ "$(stat -c %.3Y "$DATA/profile.json")" != "$PROFILE_TIME" && "$(
 inside() {
   local id="$1" v0="$3" v1="$4" v2="$5" exam="$6" kind="$7"
   EXE="$2" V0="$3" V1="$4"
-  local old; old=$([[ "$kind" == csharp ]] && echo "C# app" || echo "released TypeScript app")
+  local old; old=$([[ "$kind" == csharp ]] && echo "C# app" || echo "TypeScript app")
   install_deps
   # One display for everything (the updater restarts the app after the driver has exited).
   Xvfb :99 -screen 0 1440x900x24 -nolisten tcp >/tmp/xvfb.log 2>&1 &

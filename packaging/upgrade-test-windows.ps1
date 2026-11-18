@@ -162,8 +162,8 @@ if (-not $v0) {
 }
 $product = (Get-Content (Join-Path $root "packaging\products.json") -Raw | ConvertFrom-Json).products | Where-Object id -eq $PackageName
 if (-not $product) { Fail "$PackageName is not in packaging/products.json" }
-$fromCSharp = [version]$v0 -le [version]$product.lastCSharpRelease
-$old = if ($fromCSharp) { "C# app" } else { "released TypeScript app" }
+$fromCSharp = [bool]$product.lastCSharpRelease -and ([version]$v0 -le [version]$product.lastCSharpRelease)
+$old = if ($fromCSharp) { "C# app" } else { "TypeScript app" }
 $setupName = "$PackageName-$v0-win-x64-Setup.exe"
 Fetch "$PackageName-v$v0" $setupName $cs
 $v1 = FeedVersion (Join-Path $Artifacts "velopack-win\releases.win.json")

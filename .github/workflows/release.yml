@@ -134,6 +134,7 @@ jobs:
           cache-dependency-path: ts/package-lock.json
       - run: npm ci
       - run: npx vitest run packages/gp-course/test/TaskTests.test.ts
+
   build-linux:
     needs: plan
     runs-on: ubuntu-latest
@@ -164,7 +165,7 @@ jobs:
           PKG_DESCRIPTION: ${{ matrix.product.name }} - ${{ matrix.product.summary }}.
         run: packaging/build-linux.sh "${{ matrix.product.app }}" "${{ matrix.product.id }}" "${{ matrix.product.name }}" "${{ matrix.product.exe }}" "${{ matrix.product.version }}" artifacts
       - uses: actions/upload-artifact@v4
-        # Pull requests and pushes only check that everything builds: a run uploads about 1.6 GB of builds,
+        # Pull requests and pushes only check that everything builds: a run uploads several GB of builds,
         # and the repository's artifact storage must stay free for the runs by hand that install and publish.
         if: github.event_name == 'workflow_dispatch'
         with:
@@ -198,7 +199,7 @@ jobs:
       - name: Build Windows artifacts
         run: packaging/build-windows.ps1 -App "${{ matrix.product.app }}" -PackageName "${{ matrix.product.id }}" -DisplayName "${{ matrix.product.name }}" -Executable "${{ matrix.product.exe }}" -Version "${{ matrix.product.version }}" -Out artifacts
       - uses: actions/upload-artifact@v4
-        # Pull requests and pushes only check that everything builds: a run uploads about 1.6 GB of builds,
+        # Pull requests and pushes only check that everything builds: a run uploads several GB of builds,
         # and the repository's artifact storage must stay free for the runs by hand that install and publish.
         if: github.event_name == 'workflow_dispatch'
         with:

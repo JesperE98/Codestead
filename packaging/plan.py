@@ -115,17 +115,24 @@ def parse_version(v):
 
 
 def upgrade_cases(product, previous):
-    """The upgrade tests of a product that gets a new version: from its last C# release (with the TypeScript build
-    then updating itself once more, TS -> TS), and from its previous release when that is a TypeScript one."""
+    """The upgrade tests of a product that gets a new version: from its last C# release (with the new build then
+    updating itself once more, TS -> TS), and from its previous release when that is a TypeScript one. A product
+    that never was C# (no lastCSharpRelease) has only the second, once it has a release; its first has none."""
     cs = product["lastCSharpRelease"]
-    cases = [dict(product, upgradeFrom=cs, upgradeKind="csharp", upgradeChain=True)]
+    cases = []
+    if cs is not None:
+        cases.append(dict(product, upgradeFrom=cs, upgradeKind="csharp", upgradeChain=True))
     if previous is not None and previous != cs:
-        cases.append(dict(product, upgradeFrom=previous, upgradeKind="typescript", upgradeChain=False))
-        note = f"upgrade tests from the last C# release {cs} and from the previous release {previous}"
-    else:
-        note = f"upgrade test from the last C# release {cs} (the previous release; no TypeScript release yet)"
-    linux = [dict(c, targetName=name, image=image) for c in cases for (name, image) in (UPGRADE_LINUX if c["upgradeKind"] == "csharp" else UPGRADE_LINUX[:1])]
-    windows = [dict(c, os=os_) for c in cases for os_ in (UPGRADE_WINDOWS if c["upgradeKind"] == "csharp" else UPGRADE_WINDOWS[:1])]
+        # The TS -> TS step of the C# case is the cheap stand-in for this one when there is no C# case.
+        cases.append(dict(product, upgradeFrom=previous, upgradeKind="typescript", upgradeChain=cs is None))
+    notes = ([f"the last C# release {cs}"] if cs is not None else []) + \
+            ([f"the previous release {previous}"] if previous is not None and previous != cs else [])
+    note = ("upgrade tests from " + " and from ".join(notes)) if notes else "no release to upgrade from yet"
+    if cs is not None and previous == cs:
+        note += " (the previous release; no TypeScript release yet)"
+    full = lambda c: c["upgradeKind"] == "csharp" or cs is None  # the main case of the product: every target
+    linux = [dict(c, targetName=name, image=image) for c in cases for (name, image) in (UPGRADE_LINUX if full(c) else UPGRADE_LINUX[:1])]
+    windows = [dict(c, os=os_) for c in cases for os_ in (UPGRADE_WINDOWS if full(c) else UPGRADE_WINDOWS[:1])]
     return linux, windows, note
 
 
@@ -167,8 +174,8 @@ def main():
             version = nxt if changed else last
         else:
             changed, version = True, f"{minor}.0"
-        cs = p["lastCSharpRelease"]
-        if parse_version(version) < parse_version(cs):
+        cs = p.get("lastCSharpRelease")
+        if cs is not None and parse_version(version) < parse_version(cs):
             # Below what users already have: the releases could not be listed (or majorMinor went down).
             problems.append(f"{name} would be {version}, older than its last C# release {cs}: are the releases of "
                             f"{REPO} readable (GH_TOKEN)?")

@@ -4,7 +4,7 @@
 // The summaries in en.json and sv.json are generated from CommandDef.summaryEn/summary. After changing a summary
 // in the code, regenerate them with
 //   CODESTEAD_UPDATE_SHELL_I18N=1 npx vitest run packages/linux-shell
-// (or the C# test, while the C# app is the source) and translate the change in the other languages.
+// and translate the change in the other languages.
 
 import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
