@@ -46,6 +46,12 @@ case "$kind" in
     run=("$pkg")
     ;;
   arch)
+    # CachyOS's pacman runs install scripts and hooks without network access, which a container can't set up, so it
+    # refuses to run them at all (and chrome-sandbox would not be made setuid). A real system can; let the container
+    # run them with the network, as Arch's pacman does.
+    if grep -q '^ID=cachyos' /etc/os-release || grep -q 'DisableSandboxNetwork' /etc/pacman.conf; then
+      grep -q '^DisableSandboxNetwork' /etc/pacman.conf || sed -i 's/^\[options\]$/[options]\nDisableSandboxNetwork/' /etc/pacman.conf
+    fi
     pacman -Syu --noconfirm --needed xorg-server-xvfb xorg-xauth which >/dev/null
     pacman -U --noconfirm ./"$pkg"-*-x86_64.pkg.tar.zst
     run=("$pkg")
