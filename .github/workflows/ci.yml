@@ -73,3 +73,33 @@ jobs:
         with:
           global-json-file: global.json
       - run: dotnet test --project tests/GP/Codestead.GP.Tests -c Release -- --filter-class Codestead.GP.Tests.TaskTests
+
+  # The same TaskTests in the TypeScript port (ts/packages/gp-course), in parallel jobs by course part. Every part with
+  # lessons must be in one list (the TypeScript CiTests check it; the lists are in double quotes so that the C# CiTests,
+  # which read the single-quoted lists above, don't count them twice).
+  ts-gp-tasks:
+    name: TypeScript GP tasks (${{ matrix.parts }})
+    strategy:
+      fail-fast: false
+      matrix:
+        parts:
+          - "start,getting-started,lighting,model-loading,advanced-opengl"
+          - "advanced-lighting"
+          - "pbr"
+          - "in-practice"
+          - "guest-articles"
+    runs-on: ubuntu-latest
+    env:
+      CODESTEAD_GP_PARTS: ${{ matrix.parts }}
+    defaults:
+      run:
+        working-directory: ts
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ts/package-lock.json
+      - run: npm ci
+      - run: npx vitest run packages/gp-course/test/TaskTests.test.ts

@@ -16,4 +16,14 @@ describe("CiTests", () => {
       expect(listed.filter((p) => !GpCourse.parts.includes(p))).toEqual([]);
       expect(new Set(listed).size).toBe(listed.length);
     });
+
+  it("TypeScript-CI:s parallella uppgiftsjobb täcker varje kursdel (.github/workflows/ci.yml, ts-gp-tasks)", () => {
+    const text = readFileSync(join(Repo.root, ".github/workflows/ci.yml"), "utf8").replaceAll("\r\n", "\n");
+    const job = text.slice(text.indexOf("\n  ts-gp-tasks:"));
+    const listed = [...job.matchAll(/^\s*-\s*"([a-z-]+(?:,[a-z-]+)*)"\s*$/gm)].flatMap((m) => m[1]!.split(",").map((s) => s.trim()));
+    const lessonParts = GpCourse.parts.filter((p) => GpCourse.lessonsIn(p).length > 0);
+    expect(lessonParts.filter((p) => !listed.includes(p))).toEqual([]);
+    expect(listed.filter((p) => !GpCourse.parts.includes(p))).toEqual([]);
+    expect(new Set(listed).size).toBe(listed.length);
+  });
 });
