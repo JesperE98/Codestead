@@ -1,5 +1,39 @@
 [
   {
+    "version": "0.2.5",
+    "date": "2026-11-18",
+    "changes": {
+      "en": [
+        "**A new engine under the hood**: the hub is now built with Electron, the technology behind many desktop apps, instead of .NET. It is the same hub: it installs, starts and updates the tools as before, and your installed tools, settings and the tools' progress are kept.",
+        "What you may notice: the download is about twice as large as before, because the hub now brings its own browser engine, and the text is shown in your system's font."
+      ],
+      "sv": [
+        "**En ny motor under huven**: hubben är nu byggd med Electron, tekniken bakom många skrivbordsappar, i stället för .NET. Det är samma hubb: den installerar, startar och uppdaterar verktygen som förut, och dina installerade verktyg, inställningar och verktygens framsteg finns kvar.",
+        "Det du kan märka: nedladdningen är ungefär dubbelt så stor som förut, eftersom hubben nu har med sig en egen webbläsarmotor, och texten visas med datorns eget typsnitt."
+      ],
+      "de": [
+        "**Ein neuer Motor unter der Haube**: Der Hub wird jetzt mit Electron gebaut, der Technik hinter vielen Desktop-Apps, statt mit .NET. Es ist derselbe Hub: Er installiert, startet und aktualisiert die Tools wie bisher, und Ihre installierten Tools, Einstellungen und der Fortschritt in den Tools bleiben erhalten.",
+        "Was Ihnen auffallen kann: Der Download ist etwa doppelt so groß wie bisher, weil der Hub jetzt eine eigene Browser-Engine mitbringt, und der Text erscheint in der Schrift Ihres Systems."
+      ],
+      "fr": [
+        "**Un nouveau moteur sous le capot** : le hub est désormais construit avec Electron, la technologie de nombreuses applications de bureau, au lieu de .NET. C'est le même hub : il installe, lance et met à jour les outils comme avant, et vos outils installés, vos réglages et votre progression dans les outils sont conservés.",
+        "Ce que vous pourriez remarquer : le téléchargement est environ deux fois plus gros qu'avant, car le hub embarque désormais son propre moteur de navigateur, et le texte s'affiche dans la police de votre système."
+      ],
+      "es": [
+        "**Un motor nuevo por dentro**: el hub ahora está hecho con Electron, la tecnología de muchas aplicaciones de escritorio, en lugar de .NET. Es el mismo hub: instala, inicia y actualiza las herramientas como antes, y se conservan tus herramientas instaladas, tus ajustes y tu progreso en las herramientas.",
+        "Lo que puedes notar: la descarga es aproximadamente el doble de grande que antes, porque el hub ahora trae su propio motor de navegador, y el texto se muestra con la fuente de tu sistema."
+      ],
+      "zh": [
+        "**全新的内部引擎**：中心现在改用 Electron（许多桌面应用使用的技术）构建，而不再使用 .NET。中心本身没有变：它像以前一样安装、启动和更新工具，你已安装的工具、设置以及在各工具中的进度都会保留。",
+        "你可能会注意到：下载文件大约是以前的两倍，因为中心现在自带浏览器引擎；文字使用系统自带的字体显示。"
+      ],
+      "ja": [
+        "**中身が新しいエンジンに**：ハブは .NET ではなく、多くのデスクトップアプリで使われている Electron で作られるようになりました。ハブは同じです。これまでどおりツールをインストール・起動・更新し、インストール済みのツール、設定、各ツールの進捗はそのまま引き継がれます。",
+        "気づくかもしれない点：ハブが独自のブラウザーエンジンを内蔵するようになったため、ダウンロードサイズは以前の約 2 倍になり、文字はシステムのフォントで表示されます。"
+      ]
+    }
+  },
+  {
     "version": "0.2.4",
     "date": "2026-11-12",
     "changes": {

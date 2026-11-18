@@ -1,5 +1,39 @@
 [
   {
+    "version": "0.6.6",
+    "date": "2026-11-18",
+    "changes": {
+      "en": [
+        "**A new engine under the hood**: Codestead Linux is now built with Electron, the technology behind many desktop apps, instead of .NET. It is the same app – the same chapters, tasks, terminal and look – and your progress, XP, achievements, settings and terminals are kept.",
+        "What you may notice: the download is about twice as large as before, because the app now brings its own browser engine, and the text is shown in your system's font."
+      ],
+      "sv": [
+        "**En ny motor under huven**: Codestead Linux är nu byggd med Electron, tekniken bakom många skrivbordsappar, i stället för .NET. Det är samma app – samma kapitel, uppgifter, terminal och utseende – och dina framsteg, din XP, dina utmärkelser, inställningar och terminaler finns kvar.",
+        "Det du kan märka: nedladdningen är ungefär dubbelt så stor som förut, eftersom appen nu har med sig en egen webbläsarmotor, och texten visas med datorns eget typsnitt."
+      ],
+      "de": [
+        "**Ein neuer Motor unter der Haube**: Codestead Linux wird jetzt mit Electron gebaut, der Technik hinter vielen Desktop-Apps, statt mit .NET. Es ist dieselbe App – dieselben Kapitel, Aufgaben, dasselbe Terminal und Aussehen – und Ihr Fortschritt, Ihre XP, Auszeichnungen, Einstellungen und Terminals bleiben erhalten.",
+        "Was Ihnen auffallen kann: Der Download ist etwa doppelt so groß wie bisher, weil die App jetzt eine eigene Browser-Engine mitbringt, und der Text erscheint in der Schrift Ihres Systems."
+      ],
+      "fr": [
+        "**Un nouveau moteur sous le capot** : Codestead Linux est désormais construit avec Electron, la technologie de nombreuses applications de bureau, au lieu de .NET. C'est la même application – les mêmes chapitres, tâches, le même terminal et la même apparence – et votre progression, vos XP, vos succès, vos réglages et vos terminaux sont conservés.",
+        "Ce que vous pourriez remarquer : le téléchargement est environ deux fois plus gros qu'avant, car l'application embarque désormais son propre moteur de navigateur, et le texte s'affiche dans la police de votre système."
+      ],
+      "es": [
+        "**Un motor nuevo por dentro**: Codestead Linux ahora está hecho con Electron, la tecnología de muchas aplicaciones de escritorio, en lugar de .NET. Es la misma aplicación – los mismos capítulos, tareas, terminal y aspecto – y se conservan tu progreso, tu XP, tus logros, tus ajustes y tus terminales.",
+        "Lo que puedes notar: la descarga es aproximadamente el doble de grande que antes, porque la aplicación ahora trae su propio motor de navegador, y el texto se muestra con la fuente de tu sistema."
+      ],
+      "zh": [
+        "**全新的内部引擎**：Codestead Linux 现在改用 Electron（许多桌面应用使用的技术）构建，而不再使用 .NET。应用本身没有变——同样的章节、任务、终端和外观——你的进度、XP、成就、设置和终端都会保留。",
+        "你可能会注意到：下载文件大约是以前的两倍，因为应用现在自带浏览器引擎；文字使用系统自带的字体显示。"
+      ],
+      "ja": [
+        "**中身が新しいエンジンに**：Codestead Linux は .NET ではなく、多くのデスクトップアプリで使われている Electron で作られるようになりました。アプリは同じです（章、課題、ターミナル、見た目も同じ）。進捗、XP、実績、設定、ターミナルはそのまま引き継がれます。",
+        "気づくかもしれない点：アプリが独自のブラウザーエンジンを内蔵するようになったため、ダウンロードサイズは以前の約 2 倍になり、文字はシステムのフォントで表示されます。"
+      ]
+    }
+  },
+  {
     "version": "0.6.5",
     "date": "2026-11-12",
     "changes": {

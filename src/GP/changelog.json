@@ -1,5 +1,39 @@
 [
   {
+    "version": "0.2.6",
+    "date": "2026-11-18",
+    "changes": {
+      "en": [
+        "**A new engine under the hood**: Codestead GP is now built with Electron, the technology behind many desktop apps, instead of .NET, and the simulated GPU that checks your code and draws the expected results was rewritten with it – with the same results in every chapter and API. It is the same app, and your progress, XP, achievements, settings, IDE and chosen project files are kept.",
+        "What you may notice: the download is about twice as large as before, because the app now brings its own browser engine, and the text is shown in your system's font."
+      ],
+      "sv": [
+        "**En ny motor under huven**: Codestead GP är nu byggd med Electron, tekniken bakom många skrivbordsappar, i stället för .NET, och den simulerade GPU:n som kontrollerar din kod och ritar förväntat resultat har skrivits om med den – med samma resultat i varje kapitel och API. Det är samma app, och dina framsteg, din XP, dina utmärkelser, inställningar, din IDE och dina valda projektfiler finns kvar.",
+        "Det du kan märka: nedladdningen är ungefär dubbelt så stor som förut, eftersom appen nu har med sig en egen webbläsarmotor, och texten visas med datorns eget typsnitt."
+      ],
+      "de": [
+        "**Ein neuer Motor unter der Haube**: Codestead GP wird jetzt mit Electron gebaut, der Technik hinter vielen Desktop-Apps, statt mit .NET, und die simulierte GPU, die Ihren Code prüft und die erwarteten Ergebnisse zeichnet, wurde dabei neu geschrieben – mit denselben Ergebnissen in jedem Kapitel und jeder API. Es ist dieselbe App, und Ihr Fortschritt, Ihre XP, Auszeichnungen, Einstellungen, Ihre IDE und die gewählten Projektdateien bleiben erhalten.",
+        "Was Ihnen auffallen kann: Der Download ist etwa doppelt so groß wie bisher, weil die App jetzt eine eigene Browser-Engine mitbringt, und der Text erscheint in der Schrift Ihres Systems."
+      ],
+      "fr": [
+        "**Un nouveau moteur sous le capot** : Codestead GP est désormais construit avec Electron, la technologie de nombreuses applications de bureau, au lieu de .NET, et le GPU simulé qui vérifie votre code et dessine les résultats attendus a été réécrit avec lui – avec les mêmes résultats dans chaque chapitre et chaque API. C'est la même application, et votre progression, vos XP, vos succès, vos réglages, votre IDE et les fichiers de projet choisis sont conservés.",
+        "Ce que vous pourriez remarquer : le téléchargement est environ deux fois plus gros qu'avant, car l'application embarque désormais son propre moteur de navigateur, et le texte s'affiche dans la police de votre système."
+      ],
+      "es": [
+        "**Un motor nuevo por dentro**: Codestead GP ahora está hecho con Electron, la tecnología de muchas aplicaciones de escritorio, en lugar de .NET, y la GPU simulada que revisa tu código y dibuja los resultados esperados se ha reescrito con él, con los mismos resultados en cada capítulo y API. Es la misma aplicación, y se conservan tu progreso, tu XP, tus logros, tus ajustes, tu IDE y los archivos de proyecto que elegiste.",
+        "Lo que puedes notar: la descarga es aproximadamente el doble de grande que antes, porque la aplicación ahora trae su propio motor de navegador, y el texto se muestra con la fuente de tu sistema."
+      ],
+      "zh": [
+        "**全新的内部引擎**：Codestead GP 现在改用 Electron（许多桌面应用使用的技术）构建，而不再使用 .NET；检查你的代码并绘制预期结果的模拟 GPU 也随之重写——每个章节和每个 API 的结果都与以前相同。应用本身没有变，你的进度、XP、成就、设置、IDE 和所选的项目文件都会保留。",
+        "你可能会注意到：下载文件大约是以前的两倍，因为应用现在自带浏览器引擎；文字使用系统自带的字体显示。"
+      ],
+      "ja": [
+        "**中身が新しいエンジンに**：Codestead GP は .NET ではなく、多くのデスクトップアプリで使われている Electron で作られるようになり、コードを確認して期待される結果を描くシミュレーション GPU も合わせて書き直されました（どの章・どの API でも結果は同じです）。アプリは同じで、進捗、XP、実績、設定、IDE、選んだプロジェクトファイルはそのまま引き継がれます。",
+        "気づくかもしれない点：アプリが独自のブラウザーエンジンを内蔵するようになったため、ダウンロードサイズは以前の約 2 倍になり、文字はシステムのフォントで表示されます。"
+      ]
+    }
+  },
+  {
     "version": "0.2.5",
     "date": "2026-11-17",
     "changes": {
