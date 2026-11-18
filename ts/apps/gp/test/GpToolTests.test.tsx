@@ -331,7 +331,9 @@ describe("GpToolTests", () => {
     render(<LearningWindowView window={w} />);
     act(() => w.navigate("hello-triangle"));
     expect(screen.getByText(t("expected.task", { n: 1 }))).toBeTruthy();
-    expect(screen.getByText(t("expected.drawing"))).toBeTruthy();
+    // "Drawing…" until the picture is there – unless an earlier test's drawing of the same task (the session's pictures
+    // are shared, as in C#) finished first.
+    expect(screen.queryByText(t("expected.drawing")) ?? document.querySelector(".cs-gp-expected img")).not.toBeNull();
     const img = await waitFor(() => found<HTMLImageElement>(".cs-gp-expected img"), { timeout: 5000 });
     expect(img.src.startsWith("data:image/bmp;base64,")).toBe(true);
     expect(img.alt).toBe(t("expected.task", { n: 1 }));
