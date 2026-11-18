@@ -274,11 +274,12 @@ function asinPoly(cc: Float64Array, j: number, t: number, z: number, zl: number,
   const o = 8 * j;
   const t2 = t * t;
   const d = t * (cc[o + 2]! + t * cc[o + 3]! + t2 * (cc[o + 4]! + t * cc[o + 5]! + t2 * (cc[o + 6]! + t * cc[o + 7]!)));
-  let fh = cc[o]!, fl = cc[o + 1]! + d;
-  fh = muldd(z, zl, fh, fl);
-  fl = LO;
-  fh = fastsum(f0h, f0l, fh, fl);
-  return fh;
+  const c0 = cc[o]!, c1 = cc[o + 1]! + d;
+  // fh + fl = muldd(z, zl, c0, c1), then fastsum(f0h, f0l, fh, fl), the helpers written out
+  const ph = z * c0, pl = z * c1 + zl * c0 + mulErr(z, c0, ph);
+  const sh = f0h + ph;
+  LO = f0l + pl + (ph - (sh - f0h));
+  return sh;
 }
 
 /** The arcsine, correctly rounded (CORE-MATH's cr_asin). */
@@ -354,7 +355,7 @@ function rotate(x: number, j: number): number {
   return fasttwosum(v, dv);
 }
 
-/** asin(v + dv) - (v + dv) ... the series of asin_refine/acos_refine: (v + dv)*asin-poly((v+dv)^2), LO = low part. */
+/** The series of asin_refine/acos_refine: sg*(v + dv) times the asin polynomial in (v + dv)^2; LO = the low part. */
 function asinSeries(v: number, dv: number, sg: number): number {
   const v2 = muldd(v, dv, v, dv), dv2 = LO;
   v *= sg;
@@ -555,13 +556,13 @@ function evalPCu(u2: bigint, u2h: bigint, u4: bigint): bigint {
   return (s + mhUU(sh, u4)) & M128;
 }
 
-let reduceNeg = 0;
+/** reduceLargeAcc's second and third results (the C code's out-parameters r and neg). */
+let reduceR = 0n, reduceNeg = 0;
 
 /**
- * reduce_large_acc: the argument reduction of the accurate paths, for |x| >= 2^-16. Returns k (13 bits) and the
+ * reduce_large_acc: the argument reduction of the accurate paths, for |x| >= 2^-27. Returns k (13 bits) and the
  * 128-bit r (reduceR) such that |x|/(2pi) mod 1 = k/2^13 + r/2^128 (r negated if reduceNeg) + eps, |r/2^128| <= 2^-14.
  */
-let reduceR = 0n;
 function reduceLargeAcc(x: number): number {
   const e = (hiWord(x) >>> 20) & 0x7ff;
   const m = (1n << 52n) | (asU64(x) & 0xfffffffffffffn);
@@ -592,8 +593,10 @@ function reduceLargeAcc(x: number): number {
   return k;
 }
 
-/** The tables' approximations of |sin(z)| and cos(z), z = pi*i1/2^6 + pi*i2/2^12 (accurate paths); trigC = cos. */
+/** trigTables' second result: the approximation of cos(z). */
 let trigC = 0n;
+
+/** The tables' approximations (u128) of |sin(z)| (returned) and cos(z) (trigC), z = pi*i1/2^6 + pi*i2/2^12. */
 function trigTables(i1: number, i2: number): bigint {
   const s1 = i1 <= 32 ? S1U[i1]! : S1U[64 - i1]!; // use sin(pi-x) = sin(x)
   const c1 = i1 <= 32 ? S1U[32 - i1]! : S1U[i1 - 32]!; // |C1u[i1]| = |S1u[(i1+32) mod 64]|
@@ -662,14 +665,23 @@ function sinModerate(x: number, sbit: number): number {
   const ax = Math.abs(x);
   const invpi = 5215.189175235227;
   const k = roundeven(invpi * ax);
-  const rh = fma(k, SIN_PIH, ax), rl = k * SIN_PIL; // rh is exact
+  // rh = fma(k, pih, ax) is exact (C comment), so it equals ax + k*pih computed exactly: k*pih rounded is within a
+  // factor 2 of -ax (or 0), thus ax + kp is exact (Sterbenz), and adding the product's error gives the exact rh.
+  const kp = k * SIN_PIH;
+  const rh = ax + kp + mulErr(k, SIN_PIH, kp), rl = k * SIN_PIL;
   const r = rh + rl; // |r| < 2^-13.339
   const r2 = r * r;
   // j = k (int64, < 2^45): its bits through doubles
   sbit ^= Math.floor(k / 16384) & 1; // reduction by an odd multiple of pi?
   const i1 = Math.floor(k / 128) & 0x7f, i2 = k & 0x7f;
-  const Sh = sinFastS(i1, i2), Sl = LO;
-  const Ch = U1[4 * i1 + 2]! * U2[4 * i2 + 2]! - U1[4 * i1]! * U2[4 * i2]!;
+  // Sh + Sl = fastsum(muldd(U1[i1][0..1], U2[i2][2..3]), muldd(U2[i2][0..1], U1[i1][2..3])), the helpers written out
+  const a = 4 * i1, b = 4 * i2;
+  const u0 = U1[a]!, u1 = U1[a + 1]!, u2 = U1[a + 2]!, u3 = U1[a + 3]!;
+  const v0 = U2[b]!, v1 = U2[b + 1]!, v2 = U2[b + 2]!, v3 = U2[b + 3]!;
+  const s1h = u0 * v2, s1l = u0 * v3 + u1 * v2 + mulErr(u0, v2, s1h);
+  const s2h = v0 * u2, s2l = v0 * u3 + v1 * u2 + mulErr(v0, u2, s2h);
+  const Sh = s1h + s2h, Sl = s1l + s2l + (s2h - (Sh - s1h));
+  const Ch = u2 * v2 - u0 * v0;
   const sh = r * (1.0 - 0.16666666659950335 * r2);
   const ch = r2 * (-0.5 + 0.041666666655141404 * r2);
   let fh = Sh, fl = Sl + Sh * ch + Ch * sh;
@@ -683,6 +695,7 @@ function sinModerate(x: number, sbit: number): number {
   return sinLargeAccurate(x);
 }
 
+/** reduceLarge's second result (the C code's out-parameter r). */
 let reduceLargeR = 0;
 
 /** reduce_large: |x|/(2pi) mod 1 = j/2^15 + r + s (r in reduceLargeR) with 0 <= r < 2^-15, for |x| >= 2^31. */
@@ -793,13 +806,21 @@ function cosFastC(i1: number, i2: number): number {
 function cosModerate(x: number): number {
   const invpi = 5215.189175235227;
   const k = roundeven(invpi * x);
-  const rh = fma(k, SIN_PIH, x), rl = k * SIN_PIL; // rh is exact
+  // rh = fma(k, pih, x), exact (see sinModerate)
+  const kp = k * SIN_PIH;
+  const rh = x + kp + mulErr(k, SIN_PIH, kp), rl = k * SIN_PIL;
   const r = rh + rl;
   const r2 = r * r;
   const sbit = Math.floor(k / 16384) & 1; // reduction by an odd multiple of pi?
   const i1 = Math.floor(k / 128) & 0x7f, i2 = k & 0x7f;
-  const Ch = cosFastC(i1, i2), Cl = LO;
-  const Sh = U1[4 * i1]! * U2[4 * i2 + 2]! + U1[4 * i1 + 2]! * U2[4 * i2]!;
+  // Ch + Cl = fastsum(muldd(U1[i1][2..3], U2[i2][2..3]), -muldd(U2[i2][0..1], U1[i1][0..1])), the helpers written out
+  const a = 4 * i1, b = 4 * i2;
+  const u0 = U1[a]!, u1 = U1[a + 1]!, u2 = U1[a + 2]!, u3 = U1[a + 3]!;
+  const v0 = U2[b]!, v1 = U2[b + 1]!, v2 = U2[b + 2]!, v3 = U2[b + 3]!;
+  const c1h = u2 * v2, c1l = u2 * v3 + u3 * v2 + mulErr(u2, v2, c1h);
+  const c2h = v0 * u0, c2l = v0 * u1 + v1 * u0 + mulErr(v0, u0, c2h);
+  const Ch = c1h + -c2h, Cl = c1l + -c2l + (-c2h - (Ch - c1h));
+  const Sh = u0 * v2 + u2 * v0;
   const sh = r * (1.0 - 0.16666666659950335 * r2);
   const ch = r2 * (-0.5 + 0.041666666655141404 * r2);
   let fh = Ch, fl = Cl + Ch * ch - Sh * sh;
@@ -1213,6 +1234,7 @@ function tanAccurate(x: number): number {
   return dintTod(U);
 }
 
+/** The low part of the double-double results of tan's helpers (the C code's out-parameters l, lo). */
 let tanL = 0;
 
 /** a_mul + fma: s_mul, a * (bh + bl) as a double-double (low part in tanL). */
@@ -1264,8 +1286,10 @@ function setDd(c1: bigint, c0: bigint): number {
   return h;
 }
 
-/** reduce_fast: i/2^11 + h + tanL approximates frac(x/(2pi)) for 0x1.7137449123ef6p-26 < x < +Inf (returns i, h). */
+/** reduceFast's second result (the C code's out-parameter h; l is in tanL). */
 let reduceFastH = 0;
+
+/** reduce_fast: i/2^11 + h + l approximates frac(x/(2pi)) for 0x1.7137449123ef6p-26 < x < +Inf; returns i. */
 function reduceFast(x: number): number {
   let h: number;
   if (x <= 6.283185307179585) {
@@ -1329,6 +1353,7 @@ function fastDiv(bh: number, bl: number, ah: number, al: number): number {
   return h;
 }
 
+/** tanFast's high part (the C code's out-parameter h). */
 let tanH = 0;
 
 /** tan_fast: tanH + tanL ~ tan(x) for a finite |x| > 0x1.d12ed0af1a27ep-27; returns the error bound. */

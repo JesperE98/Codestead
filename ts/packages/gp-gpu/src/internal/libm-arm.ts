@@ -4,8 +4,9 @@
 //
 // The C code is compiled by GCC with -O2 -mfma (as x86-64 C libraries build their FMA variants): GCC contracts a*b + c
 // into one fused multiply-add wherever it can, and the results depend on it. This translation calls fma() exactly where
-// GCC 13's optimized GIMPLE for these files has .FMA / fma (checked against -fdump-tree-optimized); a product that
-// is exact (a power of two times a double) is written as a plain multiplication. Built that way, the C code gives
+// GCC 13's optimized GIMPLE for these files has .FMA / fma (checked against -fdump-tree-optimized); where the fma's
+// result is exact (a product by a power of two, the error of a product: fma(a, b, -a*b)) it is computed more cheaply
+// with the same result, and exp's fma(x, InvLn2N, Shift) - Shift is roundProduct. Built that way, the C code gives
 // glibc 2.39's results (x86-64, FMA) bit for bit on millions of arguments, and so does this translation (see
 // test/Libm.test.ts). The C code's 64-bit integer operations on the bits of doubles work on their 32-bit words here.
 // errno and floating-point exceptions are left out (JavaScript has neither).
@@ -36,7 +37,19 @@
 // SOFTWARE.
 
 import * as D from "./libm-arm-data.js";
-import { fma, fromWords, hiWord, loWord } from "./libm-fma.js";
+import { fma, fromWords, hiWord, loWord, mulErr } from "./libm-fma.js";
+
+/**
+ * fma(x, y, Shift) - Shift for exp's Shift = 0x1.8p52, i.e. x*y rounded once to the nearest integer (ties to even), for
+ * |x*y| < 2^51. The rounded product decides unless it lies within its own rounding error of a half-integer; only then
+ * is the fma computed.
+ */
+function roundProduct(x: number, y: number): number {
+  const p = x * y;
+  const k = Math.round(p);
+  if (Math.abs(p - k) < 0.5 - Math.abs(p) * 2.220446049250313e-16) return k; // p - k is exact; |x*y - p| <= |p|*2^-53
+  return fma(x, y, D.EXP_SHIFT) - D.EXP_SHIFT;
+}
 
 const EXP_C2 = D.EXP_POLY[0]!, EXP_C3 = D.EXP_POLY[1]!, EXP_C4 = D.EXP_POLY[2]!, EXP_C5 = D.EXP_POLY[3]!;
 
@@ -86,9 +99,8 @@ export function exp(x: number): number {
     abstop = 0; // large x is special cased below
   }
   // exp(x) = 2^(k/N) * exp(r), with exp(r) in [2^(-1/2N),2^(1/2N)]; x = ln2/N*k + r.
-  const z = fma(x, D.EXP_INVLN2N, D.EXP_SHIFT);
-  // ki = asuint64(z): its low 32 bits are k (z = Shift + k exactly, Shift = 6755399441055744), which is all the code uses.
-  const kd = z - D.EXP_SHIFT;
+  const kd = roundProduct(x, D.EXP_INVLN2N); // z = fma(x, InvLn2N, Shift); kd = z - Shift
+  // ki = asuint64(z): its low 32 bits are k (z = Shift + k exactly, Shift = 0x1.8p52), which is all the code uses.
   const ki = kd | 0;
   const r = fma(kd, D.EXP_NEGLN2LON, fma(kd, D.EXP_NEGLN2HIN, x));
   // 2^(k/N) ~= scale * (1 + tail); sbits = T[idx + 1] + (ki << 45) changes the high word only.
@@ -172,7 +184,7 @@ export function log2(x: number): number {
     if (x === 1) return 0;
     const r = x - 1.0;
     const hi = r * D.LOG2_INVLN2HI;
-    let lo = fma(D.LOG2_INVLN2LO, r, fma(r, D.LOG2_INVLN2HI, -hi));
+    let lo = fma(D.LOG2_INVLN2LO, r, mulErr(r, D.LOG2_INVLN2HI, hi));
     const r2 = r * r;
     const r4 = r2 * r2;
     // p = r2*(B[0] + r*B[1]); y = hi + p; lo += hi - y + p (p is not rounded on its own: both sums are fused)
@@ -207,7 +219,7 @@ export function log2(x: number): number {
   // log2(x) = log2(z/c) + log2(c) + k.
   const r = fma(z, invc, -1.0);
   const t1 = r * D.LOG2_INVLN2HI;
-  const t2 = fma(D.LOG2_INVLN2LO, r, fma(r, D.LOG2_INVLN2HI, -t1));
+  const t2 = fma(D.LOG2_INVLN2LO, r, mulErr(r, D.LOG2_INVLN2HI, t1));
   // hi + lo = r/ln2 + log2(c) + k.
   const t3 = kd + logc;
   const hi = t3 + t1;
@@ -247,7 +259,9 @@ function logInline(ixHi: number, ixLo: number): number {
   // log(x) = k*Ln2 + log(c) + log1p(z/c-1).
   const invc = D.POW_INVC[i]!, logc = D.POW_LOGC[i]!, logctail = D.POW_LOGCTAIL[i]!;
   // 1/c is j/N or j/N/2 and |z/c - 1| < 1/N, so r = z/c - 1 is exactly representible.
-  const r = fma(z, invc, -1.0);
+  // r = fma(z, invc, -1.0), exact: z*invc rounded is in [1/2, 2], so subtracting 1 is exact too
+  const zc = z * invc;
+  const r = zc - 1.0 + mulErr(z, invc, zc);
   // k*Ln2 + log(c) + r.
   const t1 = fma(kd, D.POW_LN2HI, logc);
   const t2 = r + t1;
@@ -258,7 +272,7 @@ function logInline(ixHi: number, ixLo: number): number {
   const ar3 = r * ar2;
   // k*Ln2 + log(c) + r + A[0]*r*r.
   const hi = t2 + ar2;
-  const lo3 = fma(ar, r, -ar2);
+  const lo3 = mulErr(ar, r, ar2); // fma(ar, r, -ar2)
   const lo4 = ar2 + (t2 - hi);
   // p = ar3*(A[1] + r*A[2] + ar2*(A[3] + r*A[4] + ar2*(A[5] + r*A[6]))); lo = lo1 + lo2 + lo3 + lo4 + p
   const q = fma(ar2, fma(ar2, fma(r, POW_A[6]!, POW_A[5]!), fma(r, POW_A[4]!, POW_A[3]!)), fma(r, POW_A[2]!, POW_A[1]!));
@@ -304,8 +318,7 @@ function expInline(x: number, xtail: number, signBias: number): number {
     if (abstop >= 0x409) return x < 0 ? uflow(signBias) : oflow(signBias); // inf and nan are already handled
     abstop = 0; // large x is special cased below
   }
-  const z = fma(x, D.EXP_INVLN2N, D.EXP_SHIFT);
-  const kd = z - D.EXP_SHIFT;
+  const kd = roundProduct(x, D.EXP_INVLN2N); // z = fma(x, InvLn2N, Shift); kd = z - Shift
   const ki = kd | 0; // the low 32 bits of asuint64(z)
   let r = fma(kd, D.EXP_NEGLN2LON, fma(kd, D.EXP_NEGLN2HIN, x));
   r = xtail + r;
@@ -369,6 +382,6 @@ export function pow(x: number, y: number): number {
   const hi = logInline(ixHi, ixLo);
   const lo = logTail;
   const ehi = y * hi;
-  const elo = fma(y, lo, fma(y, hi, -ehi));
+  const elo = fma(y, lo, mulErr(y, hi, ehi)); // fma(y, hi, -ehi) is the exact error of ehi
   return expInline(ehi, elo, signBias);
 }
