@@ -1,30 +1,34 @@
 #!/usr/bin/env bash
-# Upgrade test (docs/TYPESCRIPT-MIGRATION.md, phase 6): a user's AppImage of the latest RELEASED C# version of a product
-# updates itself with Velopack to the TypeScript/Electron build of the same product, and keeps the user's data.
+# Upgrade test (release.yml's upgrade gate): a user's AppImage of a RELEASED version of a product updates itself with
+# Velopack to the new build of the same product, and keeps the user's data. The released version is the product's last
+# C# release (packaging/products.json, "lastCSharpRelease"), whose own C# update code applies the update to the
+# TypeScript/Electron build, or a TypeScript release, whose TypeScript update code does.
 #
-# Usage (on the host; needs docker, dotnet, python3, and gh with GH_TOKEN or curl; vpk and mksquashfs for TS -> TS):
-#   packaging/upgrade-test.sh <package-id> <executable> "<display name>" <product-dir> <ts-artifacts-dir> [image]
-#   e.g. packaging/upgrade-test.sh codestead-linux Codestead.Linux "Codestead Linux" src/Linux artifacts ubuntu:24.04
+# Usage (on the host; needs docker, python3, and gh with GH_TOKEN or curl; dotnet for an update from a C# release;
+# vpk and mksquashfs for TS -> TS):
+#   packaging/upgrade-test.sh <package-id> <executable> "<display name>" <product-dir> <artifacts-dir> [image]
+#   e.g. UPGRADE_FROM=0.6.5 packaging/upgrade-test.sh codestead-linux Codestead.Linux "Codestead Linux" src/Linux artifacts ubuntu:24.04
 #   <product-dir>: the product's folder in the repository (its course: src/<x>/content/chapters).
-#   <ts-artifacts-dir>: what packaging/build-linux.sh --ts made: the portable .tar.gz and velopack-linux/ (the feed).
-#   UPGRADE_TS_CHAIN=0 skips step 5 (TS -> TS).
+#   <artifacts-dir>: what packaging/build-linux.sh made: the portable .tar.gz and velopack-linux/ (the feed).
+#   UPGRADE_FROM=<version>: the released version to start from (default: the one <id>-latest's update feed names, i.e.
+#   the newest release). UPGRADE_TS_CHAIN=0 skips step 5 (TS -> TS).
 #
-# 1. Downloads the released C# AppImage from the releases repository (the version that <id>-latest's update feed
-#    names), exactly what users have; nothing of C# is rebuilt.
+# 1. Downloads the released AppImage from the releases repository, exactly what users have; nothing old is rebuilt.
 # 2. In a clean container: puts it in ~/Applications, starts it (--version, --smoke-test) and gives it user data: the
-#    learning apps get a state.json (language, theme, a passed exam) and are started normally once, so that the C# app
+#    learning apps get a state.json (language, theme, a passed exam) and are started normally once, so that the app
 #    itself writes its files (state.json, profile.json with the XP it derives from them, whatsnew.json); the hub gets
 #    its settings (state.json).
-# 3. Serves the TypeScript build's update feed (releases.linux.json, assets.linux.json and the full .nupkg – what
-#    release.yml publishes to <id>-latest) on localhost and lets the INSTALLED C# app update itself to it:
-#    packaging/upgrade-driver is the app's update button without its window (Codestead.UI.SelfUpdate's calls on
-#    Velopack's UpdateManager, the apps' package and version) with the installed AppImage as the app being updated,
-#    so the AppImage's own UpdateNix applies the update and restarts the app, as when the user clicks "Update".
-# 4. Checks: the AppImage (the same file) is now the TypeScript build (sq.version, launcher and Electron, --version),
-#    it starts (--smoke-test), the user data is unchanged, and the TypeScript app reads it (started normally, it
-#    writes the same XP into profile.json as the C# app derived, and marks the new version as seen in whatsnew.json).
-# 5. TS -> TS: the TypeScript build repacked as the next version and applied by the TypeScript app's own update code
-#    (Velopack's Node SDK in the installed app, run by its Electron as Node: packaging/ts/update-from-feed.cjs).
+# 3. Serves the new build's update feed (releases.linux.json, assets.linux.json and the full .nupkg – what release.yml
+#    publishes to <id>-latest) on localhost and lets the INSTALLED app update itself to it, as when the user clicks
+#    "Update", so the AppImage's own UpdateNix applies the update and restarts the app:
+#    - a C# release: packaging/upgrade-driver is the C# app's update button without its window (SelfUpdate's calls on
+#      Velopack's UpdateManager, the apps' package and version) with the installed AppImage as the app being updated;
+#    - a TypeScript release: the installed app's own update code (Velopack's Node SDK in the installed app, run by its
+#      Electron as Node: packaging/ts/update-from-feed.cjs).
+# 4. Checks: the AppImage (the same file) is now the new build (sq.version, launcher and Electron, --version), it starts
+#    (--smoke-test), the user data is unchanged, and the new app reads it (started normally, it writes the same XP into
+#    profile.json as the released app derived, and marks the new version as seen in whatsnew.json).
+# 5. TS -> TS: the new build repacked as the next version and applied by its own update code (update-from-feed.cjs).
 # The feeds are local; nothing is applied from the real update feed.
 set -euo pipefail
 
@@ -45,22 +49,28 @@ host() {
     fi
   }
 
-  # 1. The released C# AppImage.
-  fetch "$id-latest" releases.linux.json "$work/cs"
-  local v0; v0=$(feed_version "$work/cs/releases.linux.json")
+  # 1. The released AppImage: C# up to the product's last C# release, TypeScript after it.
+  local v0="${UPGRADE_FROM:-}"
+  if [[ -z "$v0" ]]; then
+    fetch "$id-latest" releases.linux.json "$work/cs"
+    v0=$(feed_version "$work/cs/releases.linux.json")
+  fi
+  local last_cs; last_cs=$(python3 -c 'import json,sys; print([p for p in json.load(open(sys.argv[1]))["products"] if p["id"]==sys.argv[2]][0]["lastCSharpRelease"])' "$root/packaging/products.json" "$id")
+  local kind=typescript
+  newer "$v0" "$last_cs" || kind=csharp
   local cs_file="$id-$v0-linux-x86_64.AppImage"
   fetch "$id-v$v0" "$cs_file" "$work/cs"
-  echo "Released C#: $id $v0 ($cs_file, $(stat -c %s "$work/cs/$cs_file") bytes)"
+  echo "Released ($kind): $id $v0 ($cs_file, $(stat -c %s "$work/cs/$cs_file") bytes)"
 
-  # The TypeScript build's feed, as release.yml publishes it to <id>-latest.
+  # The new build's feed, as release.yml publishes it to <id>-latest.
   local v1; v1=$(feed_version "$ts/velopack-linux/releases.linux.json")
   if ! newer "$v1" "$v0"; then
-    echo "The TypeScript build ($v1) must have a higher version than the released C# one ($v0) (packaging/ts/products.py)." >&2
+    echo "The new build ($v1) must have a higher version than the released one ($v0) (packaging/plan.py)." >&2
     exit 1
   fi
   mkdir -p "$work/feed1"
   cp "$ts/velopack-linux/releases.linux.json" "$ts/velopack-linux/assets.linux.json" "$ts"/velopack-linux/*.nupkg "$work/feed1/"
-  echo "TypeScript feed: $(cd "$work/feed1" && echo *)"
+  echo "The new build's feed: $(cd "$work/feed1" && echo *)"
 
   # 5.'s feed: the same build repacked as the next version (its --version stays $v1; Velopack's version is $v2).
   local v2=""
@@ -76,7 +86,9 @@ host() {
   fi
 
   # The C# app's update button, self-contained (the container has no .NET).
-  dotnet publish "$root/packaging/upgrade-driver" -c Release -r linux-x64 --self-contained -o "$work/driver" -v quiet -nologo
+  if [[ "$kind" == csharp ]]; then
+    dotnet publish "$root/packaging/upgrade-driver" -c Release -r linux-x64 --self-contained -o "$work/driver" -v quiet -nologo
+  fi
 
   # The learning apps' seeded state has a passed exam: the first exam of the product's course (none: the hub).
   local exam=""
@@ -86,7 +98,7 @@ host() {
   fi
 
   docker run --rm -v "$work:/work" -v "$root/packaging:/packaging:ro" "$image" \
-    bash /packaging/upgrade-test.sh --inside "$id" "$exe" "$v0" "$v1" "$v2" "$exam"
+    bash /packaging/upgrade-test.sh --inside "$id" "$exe" "$v0" "$v1" "$v2" "$exam" "$kind"
 }
 
 # The newest full release in a Velopack feed file (releases.<channel>.json).
@@ -98,7 +110,7 @@ newer() { [[ "$1" != "$2" && "$(printf '%s\n%s\n' "$1" "$2" | sort -V | tail -1)
 # --- In the container -------------------------------------------------------------------------------------------------
 
 install_deps() {
-  # The C# app's libraries (install-test.sh's .NET AppImage list) and Electron's (its electron list), a display, python.
+  # A C# app's libraries (.NET and Avalonia: fontconfig, X11, OpenSSL 3) and Electron's (as install-test.sh), a display, python.
   if command -v apt-get >/dev/null; then
     export DEBIAN_FRONTEND=noninteractive
     local asound=libasound2 attempt
@@ -199,14 +211,15 @@ kill_tree() {
 
 json() { python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(eval(sys.argv[2], {}, {"d": d}))' "$@"; }
 seen() { json "$DATA/whatsnew.json" 'd["seen"]' 2>/dev/null || true; }
-# The C# app has written its files: profile.json, and whatsnew.json with its version.
+# The released app has written its files: profile.json, and whatsnew.json with its version.
 cs_wrote() { [[ -f "$DATA/profile.json" && "$(seen)" == "$V0" ]]; }
-# The TypeScript app has rewritten profile.json and marked its version as seen.
+# The new app has rewritten profile.json and marked its version as seen.
 ts_wrote() { [[ "$(stat -c %.3Y "$DATA/profile.json")" != "$PROFILE_TIME" && "$(seen)" == "$V1" ]]; }
 
 inside() {
-  local id="$1" v0="$3" v1="$4" v2="$5" exam="$6"
+  local id="$1" v0="$3" v1="$4" v2="$5" exam="$6" kind="$7"
   EXE="$2" V0="$3" V1="$4"
+  local old; old=$([[ "$kind" == csharp ]] && echo "C# app" || echo "released TypeScript app")
   install_deps
   # One display for everything (the updater restarts the app after the driver has exited).
   Xvfb :99 -screen 0 1440x900x24 -nolisten tcp >/tmp/xvfb.log 2>&1 &
@@ -215,7 +228,7 @@ inside() {
   export APPIMAGE_EXTRACT_AND_RUN=1
   sleep 1
 
-  echo "=== 1. The released C# app $v0, installed as a user does"
+  echo "=== 1. The released $old $v0, installed as a user does"
   mkdir -p ~/Applications
   APP=~/Applications/"$id-linux-x86_64.AppImage"
   cp "/work/cs/$id-$v0-linux-x86_64.AppImage" "$APP"
@@ -225,24 +238,28 @@ inside() {
   [[ "$(manifest_field version <<<"$m")" == "$v0" ]] || fail "the released AppImage is not $v0"
   local channel main
   channel=$(manifest_field channel <<<"$m"); main=$(manifest_field mainExe <<<"$m")
-  local out; out=$(run_app --version) || { echo "$out"; fail "the C# app's --version failed"; }
+  local x0=/tmp/x-old; rm -rf "$x0"; mkdir -p "$x0" && (cd "$x0" && "$APP" --appimage-extract >/dev/null)
+  if [[ -e "$x0/squashfs-root/usr/bin/$main.dll" ]]; then [[ "$kind" == csharp ]] || fail "$v0 is a C# build, not a TypeScript one"
+  else [[ "$kind" == typescript ]] || fail "$v0 is not a C# build"; fi
+  rm -rf "$x0"
+  local out; out=$(run_app --version) || { echo "$out"; fail "the $old's --version failed"; }
   echo "--version: $out"
-  [[ "$(tail -1 <<<"$out")" == "$v0" ]] || fail "the C# app's --version is not $v0"
-  out=$(CODESTEAD_DATA_DIR=/tmp/smoke-cs run_app --smoke-test) || { echo "$out"; fail "the C# app's smoke test failed"; }
-  grep "SMOKE OK" <<<"$out" || { echo "$out"; fail "the C# app did not print SMOKE OK"; }
+  [[ "$(tail -1 <<<"$out")" == "$v0" ]] || fail "the $old's --version is not $v0"
+  out=$(CODESTEAD_DATA_DIR=/tmp/smoke-cs run_app --smoke-test) || { echo "$out"; fail "the $old's smoke test failed"; }
+  grep "SMOKE OK" <<<"$out" || { echo "$out"; fail "the $old did not print SMOKE OK"; }
 
-  echo "=== 2. User data, as the C# app stores it"
+  echo "=== 2. User data, as the $old stores it"
   DATA=~/.config/Codestead/"$id"
   mkdir -p "$DATA"
   if [[ -n "$exam" ]]; then
-    # Language, theme and a perfect exam; the C# app, started normally, derives XP and achievements from it and writes
+    # Language, theme and a perfect exam; the app, started normally, derives XP and achievements from it and writes
     # state.json, profile.json (for the hub) and whatsnew.json (the version whose news were shown).
     printf '{"lang":"sv","theme":"dark","exams":{"%s":100}}' "$exam" >"$DATA/state.json"
-    start_until "The C# app" cs_wrote
+    start_until "The $old" cs_wrote
     cp "$DATA/profile.json" /tmp/profile-cs.json
     local xp; xp=$(json "$DATA/profile.json" 'd["xp"]')
-    echo "The C# app wrote: $(ls "$DATA"); XP $xp; state.json: $(cat "$DATA/state.json")"
-    (( xp >= 150 )) || fail "the C# app did not count the seeded exam (XP $xp)"
+    echo "The $old wrote: $(ls "$DATA"); XP $xp; state.json: $(cat "$DATA/state.json")"
+    (( xp >= 150 )) || fail "the $old did not count the seeded exam (XP $xp)"
   else
     # The hub's settings (HubState).
     printf '{"lang":"sv","theme":"dark","hideOnToolOpen":false,"closeToTray":true,"autoCheckUpdates":false,"autoInstallUpdates":true}' >"$DATA/state.json"
@@ -250,29 +267,39 @@ inside() {
   snapshot >/tmp/data-before.txt
   cat /tmp/data-before.txt
 
-  echo "=== 3. The installed C# app updates itself to $v1 (local feed)"
+  echo "=== 3. The installed $old updates itself to $v1 (local feed)"
   serve /work/feed1 8471
-  # The running app's files, as the AppImage's mount (the locator finds UpdateNix and sq.version there and the
-  # AppImage itself through $APPIMAGE, as at a normal start).
+  # The running app's files, as the AppImage's mount (Velopack finds UpdateNix and sq.version there and the AppImage
+  # itself through $APPIMAGE, as at a normal start).
   local mnt=/tmp/.mount_cs
   mkdir -p "$mnt" && (cd "$mnt" && "$APP" --appimage-extract >/dev/null)
-  if cmp -s "$mnt/squashfs-root/usr/bin/Velopack.dll" /work/driver/Velopack.dll; then
-    echo "The driver runs the same Velopack.dll as the installed app."
-  else
-    echo "Note: the installed app's Velopack.dll differs from the driver's (another Velopack version)."
-  fi
-  # The updater restarts the app with --smoke-test (with a data folder of its own: it inherits the environment) and
-  # inherits the driver's output, so the restarted app's SMOKE OK ends up there too.
+  # The updater restarts the app with --smoke-test (with a data folder of its own: it inherits the environment).
   watch_restart
-  CODESTEAD_DATA_DIR=/tmp/smoke-restart APPIMAGE="$APP" /work/driver/Codestead.UpgradeDriver --app "$mnt/squashfs-root/usr/bin/$main" \
-    --feed http://127.0.0.1:8471/ --expect "$v1" -- --smoke-test >/tmp/update1.log 2>&1 || { cat /tmp/update1.log; fail "the C# app's update did not start"; }
+  if [[ "$kind" == csharp ]]; then
+    if cmp -s "$mnt/squashfs-root/usr/bin/Velopack.dll" /work/driver/Velopack.dll; then
+      echo "The driver runs the same Velopack.dll as the installed app."
+    else
+      echo "Note: the installed app's Velopack.dll differs from the driver's (another Velopack version)."
+    fi
+    # The updater inherits the driver's output, so the restarted app's SMOKE OK ends up there too.
+    CODESTEAD_DATA_DIR=/tmp/smoke-restart APPIMAGE="$APP" /work/driver/Codestead.UpgradeDriver --app "$mnt/squashfs-root/usr/bin/$main" \
+      --feed http://127.0.0.1:8471/ --expect "$v1" -- --smoke-test >/tmp/update1.log 2>&1 || { cat /tmp/update1.log; fail "the $old's update did not start"; }
+  else
+    # The installed TypeScript app's own update code (its Electron as Node, its velopack module).
+    CODESTEAD_DATA_DIR=/tmp/smoke-restart APPIMAGE="$APP" ELECTRON_RUN_AS_NODE=1 "$mnt/squashfs-root/usr/bin/$main.bin" \
+      /packaging/ts/update-from-feed.cjs --feed http://127.0.0.1:8471/ --expect "$v1" -- --smoke-test >/tmp/update1.log 2>&1 \
+      || { cat /tmp/update1.log; fail "the $old's update did not start"; }
+  fi
   wait_for_update "$v1"
   wait_for_restart || { cat /tmp/update1.log; fail "the updater did not restart the app"; }
   cat /tmp/update1.log
-  grep -q "SMOKE OK.* $v1 " /tmp/update1.log || fail "the app the updater restarted did not print SMOKE OK for $v1"
-  echo "The updater applied $v1 and restarted the app, which passed its smoke test."
+  # (Velopack's Node SDK does not pass its output on to the updater: there the restart is only seen as a process.)
+  if [[ "$kind" == csharp ]]; then
+    grep -q "SMOKE OK.* $v1 " /tmp/update1.log || fail "the app the updater restarted did not print SMOKE OK for $v1"
+  fi
+  echo "The updater applied $v1 and restarted the app."
 
-  echo "=== 4. The installed app is now the TypeScript build"
+  echo "=== 4. The installed app is now the new build"
   m=$(manifest "$APP")
   echo "$m"
   [[ "$(manifest_field id <<<"$m")" == "$id" && "$(manifest_field channel <<<"$m")" == "$channel" && "$(manifest_field mainExe <<<"$m")" == "$main" ]] \
@@ -281,7 +308,7 @@ inside() {
   head -c 2 "$x/squashfs-root/usr/bin/$main" | grep -q '#!' || fail "usr/bin/$main is not the launcher script"
   file "$x/squashfs-root/usr/bin/$main.bin" | grep -q ELF || fail "usr/bin/$main.bin (Electron) is missing"
   [[ "$(json "$x/squashfs-root/usr/bin/resources/app/package.json" 'd["version"]')" == "$v1" ]] || fail "resources/app is not $v1"
-  [[ ! -e "$x/squashfs-root/usr/bin/$main.dll" ]] || fail "the C# app's files are still there"
+  [[ ! -e "$x/squashfs-root/usr/bin/$main.dll" ]] || fail "a C# app's files are still there"
   rm -rf "$x" "$mnt"
   ls /var/tmp/velopack/"$id"/packages/
   out=$(run_app --version) || { echo "$out"; fail "--version failed after the update"; }
@@ -293,26 +320,25 @@ inside() {
   echo "The user data is unchanged."
   if [[ -n "$exam" ]]; then
     PROFILE_TIME=$(stat -c %.3Y "$DATA/profile.json")
-    start_until "The TypeScript app" ts_wrote
-    echo "The TypeScript app wrote: $(ls "$DATA"); state.json: $(cat "$DATA/state.json")"
-    [[ "$(json "$DATA/profile.json" 'd["xp"]')" == "$(json /tmp/profile-cs.json 'd["xp"]')" ]] || fail "the TypeScript app derived other XP from the C# data"
+    start_until "The new app" ts_wrote
+    echo "The new app wrote: $(ls "$DATA"); state.json: $(cat "$DATA/state.json")"
+    [[ "$(json "$DATA/profile.json" 'd["xp"]')" == "$(json /tmp/profile-cs.json 'd["xp"]')" ]] || fail "the new app derived other XP from the $old's data"
     [[ "$(json "$DATA/profile.json" 'sorted(a["id"] for a in d["achievements"] if a.get("unlockedAt"))')" == "$(json /tmp/profile-cs.json 'sorted(a["id"] for a in d["achievements"] if a.get("unlockedAt"))')" ]] \
-      || fail "the TypeScript app has other achievements than the C# app"
-    [[ "$(json "$DATA/state.json" '(d["lang"], d["theme"], d["exams"])')" == "('sv', 'dark', {'$exam': 100})" ]] || fail "state.json lost the C# app's settings or progress"
-    echo "The TypeScript app read the C# app's data: XP $(json "$DATA/profile.json" 'd["xp"]'), the same achievements; whatsnew.json: $v1"
+      || fail "the new app has other achievements than the $old"
+    [[ "$(json "$DATA/state.json" '(d["lang"], d["theme"], d["exams"])')" == "('sv', 'dark', {'$exam': 100})" ]] || fail "state.json lost the $old's settings or progress"
+    echo "The new app read the $old's data: XP $(json "$DATA/profile.json" 'd["xp"]'), the same achievements; whatsnew.json: $v1"
   else
-    out=$(run_app --smoke-test) || { echo "$out"; fail "the hub's smoke test with the C# hub's settings failed"; }
+    out=$(run_app --smoke-test) || { echo "$out"; fail "the hub's smoke test with the released hub's settings failed"; }
     grep "SMOKE OK" <<<"$out"
     snapshot | diff /tmp/data-before.txt - || fail "the hub's settings changed"
   fi
 
   if [[ -n "$v2" ]]; then
-    echo "=== 5. TypeScript $v1 -> $v2 with the TypeScript app's own update code"
+    echo "=== 5. $v1 -> $v2 with the new app's own update code"
     snapshot >/tmp/data-before.txt
     serve /work/feed2 8472
     mnt=/tmp/.mount_ts
     mkdir -p "$mnt" && (cd "$mnt" && "$APP" --appimage-extract >/dev/null)
-    # (Velopack's Node SDK does not pass its output on to the updater: the restart is seen as a process.)
     watch_restart
     CODESTEAD_DATA_DIR=/tmp/smoke-restart2 APPIMAGE="$APP" ELECTRON_RUN_AS_NODE=1 "$mnt/squashfs-root/usr/bin/$main.bin" \
       /packaging/ts/update-from-feed.cjs --feed http://127.0.0.1:8472/ --expect "$v2" -- --smoke-test >/tmp/update2.log 2>&1 \
@@ -327,7 +353,7 @@ inside() {
     snapshot | diff /tmp/data-before.txt - || fail "the user data changed during the second update"
     echo "Velopack version $v2 (the same build repacked), the user data is unchanged."
   fi
-  echo "UPGRADE TEST OK ($id: C# $v0 -> TypeScript $v1${v2:+ -> $v2}, AppImage)"
+  echo "UPGRADE TEST OK ($id: $([[ "$kind" == csharp ]] && echo C# || echo TypeScript) $v0 -> $v1${v2:+ -> $v2}, AppImage)"
 }
 
 if [[ "${1:-}" == --inside ]]; then

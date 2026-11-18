@@ -1,24 +1,30 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!--
     The upgrade test's stand-in for an installed C# app's update button (packaging/upgrade-test.sh,
-    upgrade-test-windows.ps1): Velopack's UpdateManager, the same package and version as the apps
-    (read from src/Shared/Codestead.UI/Codestead.UI.csproj, so the two cannot drift apart), run against
-    an installed app and a local update feed. Not part of Codestead.sln and never shipped.
+    upgrade-test-windows.ps1): Velopack's UpdateManager, the same package and version as the released C# apps,
+    run against an installed app and a local update feed. A test tool, never shipped; the only .NET code left in
+    the repository (the apps are TypeScript since Codestead Linux 0.6.6, Codestead GP 0.2.6 and the hub 0.2.5).
+    Needs the .NET 10 SDK (release.yml installs it only in the upgrade jobs).
   -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
     <AssemblyName>Codestead.UpgradeDriver</AssemblyName>
     <RootNamespace>Codestead.UpgradeDriver</RootNamespace>
     <!-- Runs in bare test containers (no ICU there). -->
     <InvariantGlobalization>true</InvariantGlobalization>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
-    <CodesteadUiProject>$(MSBuildThisFileDirectory)../../src/Shared/Codestead.UI/Codestead.UI.csproj</CodesteadUiProject>
-    <VelopackVersion>$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText($(CodesteadUiProject))), 'Include="Velopack" Version="([^"]+)"').Groups[1].Value)</VelopackVersion>
+    <!--
+      The Velopack of the last C# releases (codestead-linux 0.6.5, codestead-gp 0.2.5, codestead-hub 0.2.4: their
+      Codestead.UI.csproj), whose update code this stands in for. It stays at that version: the C# installations
+      that update themselves have it. (vpk and the TypeScript apps' npm package velopack are the same 1.2.161 today.)
+    -->
+    <VelopackVersion>1.2.161</VelopackVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Velopack" Version="$(VelopackVersion)" />
   </ItemGroup>
-  <Target Name="CheckVelopackVersion" BeforeTargets="CollectPackageReferences">
-    <Error Condition="'$(VelopackVersion)' == ''" Text="No Velopack version found in $(CodesteadUiProject)." />
-  </Target>
 </Project>

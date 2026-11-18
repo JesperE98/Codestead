@@ -1,13 +1,13 @@
 #!/usr/bin/env node
-// Makes the unpacked app folder of one TypeScript/Electron app (ts/apps/<name>) – what `dotnet publish` makes for the
-// C# app: the folder packaging/build-linux.sh and build-windows.ps1 turn into the portable archive, the native packages,
-// the AppImage and the Windows installer (`--ts <app>` there runs this script).
+// Makes the unpacked app folder of one TypeScript/Electron app (ts/apps/<name>): the folder packaging/build-linux.sh and
+// build-windows.ps1 turn into the portable archive, the native packages, the AppImage and the Windows installer (both
+// run this script first).
 //
 // Usage: node packaging/ts/package-app.mjs --app ts/apps/linux --id codestead-linux --name "Codestead Linux"
 //          --exe Codestead.Linux --version 0.6.0 --platform linux|win32 --out <folder> [--no-build]
 //
-// 1. Builds the app (`npm run build` in its folder) with the release's version (VITE_CODESTEAD_VERSION, as C#'s
-//    -p:Version), unless --no-build.
+// 1. Builds the app (`npm run build` in its folder) with the release's version (VITE_CODESTEAD_VERSION; without it the
+//    app is major.minor.0 from packaging/products.json), unless --no-build.
 // 2. Stages Electron's app folder (resources/app) with the repository's layout, so that the app finds everything
 //    by the same relative paths as in the repository:
 //      package.json                     main: ts/apps/<name>/dist-electron/main.cjs

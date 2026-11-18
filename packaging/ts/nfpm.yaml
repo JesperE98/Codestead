@@ -1,6 +1,7 @@
-# nfpm config for the native Linux packages of one TypeScript/Electron Codestead tool (.deb, .rpm, Arch .pkg.tar.zst):
-# the same package, files and paths as packaging/nfpm.yaml (the C# app's), with Electron's libraries as dependencies
-# and its sandbox helper made setuid root. Values come from environment variables set by packaging/build-linux.sh --ts.
+# nfpm config for the native Linux packages of one Codestead tool (.deb, .rpm, Arch .pkg.tar.zst): the app in
+# /opt/<id>/, /usr/bin/<id>, the desktop entry and the icon (the same package, files and paths as the C# apps' before
+# them), with Electron's libraries as dependencies and its sandbox helper made setuid root. Values come from
+# environment variables set by packaging/build-linux.sh.
 name: ${PKG_NAME}
 arch: amd64
 platform: linux

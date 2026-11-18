@@ -2,14 +2,13 @@
 # Installation test on a clean system. Runs INSIDE a fresh container (ubuntu, fedora, archlinux, cachyos)
 # with the release artifacts mounted at /artifacts. Installs the native package exactly as a user would,
 # starts the app with --smoke-test under a virtual display and removes the package again.
-# Usage (in the container): bash install-test.sh <package-name> <executable> <kind: deb|rpm|arch|appimage> [electron]
-#   electron: the TypeScript/Electron build of the tool (packaging/build-linux.sh --ts): only the AppImage's libraries
-#   differ (the native packages bring their own dependencies).
+# Usage (in the container): bash install-test.sh <package-name> <executable> <kind: deb|rpm|arch|appimage>
+#   (the native packages bring their own dependencies; for the AppImage, Electron's libraries are installed first, as
+#   a desktop system has them).
 set -euo pipefail
 pkg="$1"
 exe="$2"
 kind="$3"
-runtime="${4:-dotnet}"
 cd /artifacts
 
 # apt-get on Ubuntu: its package servers are sometimes unreachable from the runners' containers (archive.ubuntu.com
@@ -57,28 +56,19 @@ case "$kind" in
     run=("$pkg")
     ;;
   appimage)
-    if [[ "$runtime" == electron ]]; then
-      # The libraries Electron links against (packaging/ts/nfpm.yaml); a desktop system has them.
-      if command -v apt-get >/dev/null; then
-        # ALSA by its real package (libasound2t64 on Ubuntu 24.04 and later): apt could take another provider of libasound2.
-        apt-get update -qq || true
-        asound=libasound2; apt-cache show libasound2t64 >/dev/null 2>&1 && asound=libasound2t64
-        apt_install xvfb xauth libgtk-3-0 libnss3 libgbm1 "$asound" libcups2 libxkbcommon0 libatk-bridge2.0-0 \
-          libxcomposite1 libxdamage1 libxrandr2 libdrm2 xdg-utils
-      elif command -v dnf >/dev/null; then
-        dnf install -y -q xorg-x11-server-Xvfb xorg-x11-xauth gtk3 nss mesa-libgbm alsa-lib cups-libs libxkbcommon \
-          at-spi2-atk libXcomposite libXdamage libXrandr libdrm xdg-utils >/dev/null
-      else
-        pacman -Syu --noconfirm --needed xorg-server-xvfb xorg-xauth gtk3 nss mesa alsa-lib libcups at-spi2-core \
-          libxcomposite libxdamage libxrandr libxkbcommon xdg-utils >/dev/null
-      fi
-    elif command -v apt-get >/dev/null; then
-      apt_install xvfb xauth libfontconfig1 libx11-6 libice6 libsm6 libxrandr2 libxi6 libxcursor1
+    # The libraries Electron links against (packaging/ts/nfpm.yaml); a desktop system has them.
+    if command -v apt-get >/dev/null; then
+      # ALSA by its real package (libasound2t64 on Ubuntu 24.04 and later): apt could take another provider of libasound2.
+      apt-get update -qq || true
+      asound=libasound2; apt-cache show libasound2t64 >/dev/null 2>&1 && asound=libasound2t64
+      apt_install xvfb xauth libgtk-3-0 libnss3 libgbm1 "$asound" libcups2 libxkbcommon0 libatk-bridge2.0-0 \
+        libxcomposite1 libxdamage1 libxrandr2 libdrm2 xdg-utils
     elif command -v dnf >/dev/null; then
-      # OpenSSL 3 by its library name (openssl3-libs on Fedora 45 and later): .NET cannot use OpenSSL 4.
-      dnf install -y -q xorg-x11-server-Xvfb xorg-x11-xauth fontconfig libX11 libICE libSM libXrandr libXi libXcursor 'libssl.so.3()(64bit)' >/dev/null
+      dnf install -y -q xorg-x11-server-Xvfb xorg-x11-xauth gtk3 nss mesa-libgbm alsa-lib cups-libs libxkbcommon \
+        at-spi2-atk libXcomposite libXdamage libXrandr libdrm xdg-utils >/dev/null
     else
-      pacman -Syu --noconfirm --needed xorg-server-xvfb xorg-xauth fontconfig libx11 libice libsm libxrandr libxi libxcursor >/dev/null
+      pacman -Syu --noconfirm --needed xorg-server-xvfb xorg-xauth gtk3 nss mesa alsa-lib libcups at-spi2-core \
+        libxcomposite libxdamage libxrandr libxkbcommon xdg-utils >/dev/null
     fi
     app=$(ls ./"$pkg"-*-linux-x86_64.AppImage | head -1)
     chmod +x "$app"
@@ -92,7 +82,7 @@ case "$kind" in
 esac
 
 # Electron's sandbox helper must be setuid root in the native packages (packaging/ts/postinstall.sh).
-if [[ "$runtime" == electron && "$kind" != appimage ]]; then
+if [[ "$kind" != appimage ]]; then
   [[ -u "/opt/$pkg/chrome-sandbox" && "$(stat -c %u "/opt/$pkg/chrome-sandbox")" == 0 ]] \
     || { ls -l "/opt/$pkg/chrome-sandbox"; echo "chrome-sandbox is not setuid root" >&2; exit 1; }
 fi
