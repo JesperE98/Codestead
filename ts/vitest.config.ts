@@ -10,5 +10,8 @@ export default defineConfig({
   test: {
     include: ["packages/*/test/**/*.test.{ts,tsx}", "apps/*/test/**/*.test.{ts,tsx}"],
     exclude: gpTasks ? configDefaults.exclude : [...configDefaults.exclude, "packages/gp-course/test/TaskTests.test.ts"],
+    // The simulated GPU's chapter pictures (compute shaders, tessellation) take 1-3 s each on a free core and over 5 s
+    // (Vitest's default) on a two-core CI runner running every test file at once.
+    testTimeout: 30_000,
   },
 });
