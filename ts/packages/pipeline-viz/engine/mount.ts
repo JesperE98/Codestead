@@ -9,6 +9,7 @@
 
 import { setCodeDrawerHost } from '../visualizer/core/codeDrawer';
 import { Derived } from '../visualizer/core/derived';
+import { reducedMotion } from '../visualizer/core/dom';
 import { tr } from '../visualizer/core/i18n';
 import type { AppState } from '../visualizer/core/state';
 import { builtinMesh, type BuiltinId } from '../visualizer/model/builtins';
@@ -138,9 +139,12 @@ class Scene implements MountedScene {
       const light = this.options.theme === 'light';
       const onFrame = view.onFrame;
       const tweens = this.tweens;
+      // With reduced motion the idle motion stops (the model's spin, the drifting dust): time stands still for the
+      // view's frames. The slides' own steps still play (their tweens take no time then).
+      const still = reducedMotion();
       view.onFrame = (t, dt) =>
         withContext(tweens, () => {
-          onFrame?.(t, dt);
+          onFrame?.(still ? 0 : t, still ? 0 : dt);
           themeScene(view.scene, light);
         });
       themeScene(view.scene, light);
