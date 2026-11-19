@@ -820,7 +820,7 @@ HLSL kopplar ihop det ett steg skriver med det nästa läser via semantiken. Str
 
 ## Uniform buffer objects
 
-![Uniform-data når shaderna genom buffertar som programmet uppdaterar.](images/viz-uniforms.webp "Uniform-data når shaderna genom buffertar som programmet uppdaterar.")
+![Uniform-data når shaderna genom buffertar som programmet uppdaterar.](viz:uniforms "Uniform-data når shaderna genom buffertar som programmet uppdaterar.")
 
 :::opengl
 Vi har använt OpenGL ett bra tag nu och lärt oss en del häftiga knep, men också stött på några irritationsmoment. När

@@ -1,0 +1,25 @@
+/* ---------- 05 Input layout ---------- */
+@media (min-width: 901px) { .il-ms .ms-slot.right { width: min(42%, 400px); } }
+.il-ms .il-key .stat { flex-basis: 80px; }
+.il-ms .il-key .stat .v { font-size: 15px; }
+.il-ms .il-key .stat .k { font-size: 9.5px; }
+.il-bytes { display: grid; gap: 2px; font-size: 11px; }
+.il-bytes .mem-cell { min-width: 0; transition: background 0.4s, color 0.4s; }
+.il-bytes .mem-cell.raw { background: rgba(255, 255, 255, 0.05); color: var(--muted); }
+.il-hint { margin-top: 6px; font-family: var(--mono); font-size: 10.5px; color: var(--dim); }
+.il-rows { display: grid; gap: 5px; }
+.il-row { padding: 5px 8px; border-radius: 8px; border: 1px solid color-mix(in srgb, var(--rc) 40%, transparent); background: color-mix(in srgb, var(--rc) 7%, transparent); transition: opacity 0.4s; font-size: 11.5px; }
+.il-row.pos { --rc: var(--cyan); }
+.il-row.nrm { --rc: var(--magenta); }
+.il-row.uv { --rc: var(--amber); }
+.il-row.off { opacity: 0.2; }
+.il-row-top { display: flex; gap: 10px; align-items: baseline; }
+.il-row-bot { display: flex; gap: 10px; justify-content: space-between; margin-top: 2px; }
+.il-an { color: var(--rc); text-shadow: 0 0 10px color-mix(in srgb, var(--rc) 60%, transparent); min-width: 60px; }
+.il-off { margin-left: auto; color: var(--muted); }
+.il-fmt { font-size: 10.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.il-val { color: var(--text); white-space: nowrap; }
+.il-attr-panel .ms-body { overflow-x: auto; }
+.il-decl-block { margin: 8px 0 0; padding: 7px 9px; border-radius: 8px; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 63, 210, 0.35); font-family: var(--mono); font-size: 11px; line-height: 1.55; color: var(--text); white-space: pre; overflow-x: auto; transition: opacity 0.4s; }
+.il-decl-block.off { opacity: 0.15; }
+.il-cap { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--text); }

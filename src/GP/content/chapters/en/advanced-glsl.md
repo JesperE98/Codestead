@@ -835,7 +835,7 @@ HLSL matches what one stage writes with what the next reads by semantic. The str
 
 ## Uniform buffer objects
 
-![Uniform data reaches the shaders through buffers the program updates.](images/viz-uniforms.webp "Uniform data reaches the shaders through buffers the program updates.")
+![Uniform data reaches the shaders through buffers the program updates.](viz:uniforms "Uniform data reaches the shaders through buffers the program updates.")
 
 :::opengl
 We've been using OpenGL for quite a while now and learned some pretty cool tricks, but also a few annoyances. For

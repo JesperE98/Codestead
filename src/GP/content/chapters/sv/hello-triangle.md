@@ -69,7 +69,7 @@ Grafikpipelinen tar en lista med 3D-koordinater som indata och omvandlar dem til
 sak, och därför kan de lätt köras parallellt. Tack vare den parallella naturen har dagens grafikkort tusentals små
 processorkärnor som kör små program för varje steg i pipelinen på GPU:n. De här små programmen kallas **shaders**.
 
-![Hela vägen från en modell på disk till pixlar på skärmen](images/viz-pipeline.webp "Hela vägen från en modell på disk till pixlar på skärmen: på CPU:n, genom API:t och drivrutinen, sedan på GPU:n.")
+![Hela vägen från en modell på disk till pixlar på skärmen](viz:pipeline "Hela vägen från en modell på disk till pixlar på skärmen: på CPU:n, genom API:t och drivrutinen, sedan på GPU:n.")
 
 En del av shaderna kan du skriva själv. Då kan du ersätta ett stegs standardbeteende med din egen kod, vilket ger
 dig mycket finare kontroll över specifika delar av pipelinen – och eftersom shaders körs på GPU:n sparar de
@@ -240,7 +240,7 @@ skickas till grafikkortet. Att skicka data från CPU:n till grafikkortet är rel
 så mycket data som möjligt på en gång – och låta den ligga kvar. När datan väl finns i grafikkortets minne har
 vertex shadern nästan omedelbar tillgång till vertexarna.
 
-![En vertexbuffer](images/viz-buffers.webp "En vertexbuffer: vertexdatan kopieras från systemminnet till GPU:ns minne en gång, innan den ritas.")
+![En vertexbuffer](viz:buffers "En vertexbuffer: vertexdatan kopieras från systemminnet till GPU:ns minne en gång, innan den ritas.")
 
 :::opengl
 Det här minnet hanteras av ett **vertex buffer object** (VBO), som kan lagra ett stort antal vertexar i GPU:ns
@@ -979,7 +979,7 @@ Vertex shadern låter dig ange vilken indata du vill i form av vertexattribut. D
 betyder också att du själv måste ange vilken del av indatan som hör till vilket vertexattribut i vertex shadern. Med
 andra ord: du måste tala om för {{api}} hur vertexdatan ska tolkas innan du renderar.
 
-![Vertexattribut](images/viz-input-layout.webp "Vertexattribut: en stride stegar från vertex till vertex, en offset hittar varje attribut i den.")
+![Vertexattribut](viz:input-layout "Vertexattribut: en stride stegar från vertex till vertex, en offset hittar varje attribut i den.")
 
 Vertexbuffertens data är upplagd så här:
 
@@ -1498,7 +1498,7 @@ Formatet låses när PSO:n skapas; bufferten kan bytas från ett ritanrop till n
 
 ## Triangeln vi alla har väntat på
 
-![Rasterisering](images/viz-rasterization.webp "Rasterisering: pixlarna som triangeln täcker blir fragment, med hörnens färger interpolerade.")
+![Rasterisering](viz:rasterization "Rasterisering: pixlarna som triangeln täcker blir fragment, med hörnens färger interpolerade.")
 
 :::opengl
 För att rita det du vill har OpenGL funktionen `glDrawArrays`, som ritar primitiver med den aktiva shadern, den
@@ -1657,7 +1657,7 @@ Standardinställningen för rasterizern cullar baksidor (`D3D12_CULL_MODE_BACK`)
 
 ## Element Buffer Objects
 
-![Index](images/viz-indices.webp "Index: delade vertexar lagras en gång, och indexen säger vilka tre som bildar varje triangel.")
+![Index](viz:indices "Index: delade vertexar lagras en gång, och indexen säger vilka tre som bildar varje triangel.")
 
 Det finns en sista sak att gå igenom när det gäller att rendera vertexar: **element buffer objects**, förkortat EBO
 (Vulkan och Direct3D kallar dem **indexbuffertar**). För att förklara hur de fungerar tar vi ett exempel: anta att du

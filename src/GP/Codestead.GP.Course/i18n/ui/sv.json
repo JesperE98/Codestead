@@ -369,5 +369,21 @@
   "yourProject.steps": "Följ med",
   "yourProject.exercises": "Övningar",
   "yourProject.solutionExercise": "Lösning · övning {n}",
-  "expected.exercise": "Förväntat resultat · övning {n}"
+  "expected.exercise": "Förväntat resultat · övning {n}",
+  "viz.prev": "Föregående steg",
+  "viz.next": "Nästa steg",
+  "viz.replay": "Spela steget igen",
+  "viz.code": "Kod",
+  "viz.step": "Steg {n} av {total}",
+  "viz.loading": "Laddar scenen…",
+  "viz.start": "Starta scenen",
+  "viz.model": "Modell",
+  "viz.modeData": "Verklig data",
+  "viz.modeConcept": "Koncept",
+  "viz.model.triangle": "En triangel",
+  "viz.model.cube": "Kub",
+  "viz.model.teapot": "Utah-tekanna",
+  "viz.model.sphere": "Sfär",
+  "viz.model.torusknot": "Torusknut",
+  "viz.model.ico": "Ikosaeder"
 }

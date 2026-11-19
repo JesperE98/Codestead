@@ -206,7 +206,8 @@ ts/
 │   ├── linux-content/           Linux-kursen: kapitel och uppgifter (Chapters/, ChapterDefinitions.ts, Checks.ts),
 │   │                            Linux-spelet (Game/), språk, UI-texterna
 │   ├── gp-gpu/                  Codestead GP:s simulerade GPU (se "Codestead GP")
-│   └── gp-course/               Codestead GP:s kurs
+│   ├── gp-course/               Codestead GP:s kurs
+│   └── pipeline-viz/            Render Pipeline Visualizers scener i GP:s kapitel (se "Scener ur visualiseraren")
 └── apps/
     ├── linux/                   Codestead Linux: Electron (electron/: main, preload, lagring) och appens React-del
     │                            (src/: LinuxTool – Linux-kursen och terminalen i lärfönstret –, terminalvyn)
@@ -365,10 +366,44 @@ godkänns av kapitlets program men av sin lösning; `CODESTEAD_GP_CHAPTERS=a,b` 
 **Bilder i kapitlen.** Ett stycke som bara är en bild, `![alt](images/namn.webp "bildtext")`, visas av textvyn
 (`AnimatedImage` i `ts/packages/ui`: PNG, JPEG, WebP och animerad GIF/WebP; bildrutor på en sekund eller mer är ett bildspel som tonar
 över; ett klick pausar). Bilderna ligger i `src/GP/content/images/` – `sv/`/`en/` för bilder med text i, annars
-gemensamma – och bäddas in; `PictureTests` kräver att varje bild finns och används. `images/visualizer/` fångar steg ur
-[Render Pipeline Visualizer](https://github.com/jesper-e98/RenderpipelineVisualizer) (`capture.js` med Playwright,
-`make_pictures.py`), och `ts/packages/gp-gpu/test/RenderResults.test.ts` (körs bara med `CODESTEAD_RENDER_RESULTS=<mapp>`)
-+ `images/make_results.py` renderar varje kapitels resultat med simulatorn till `images/results/<kapitel>.webp`.
+gemensamma – och bäddas in; `PictureTests` kräver att varje bild finns och används. `ts/packages/gp-gpu/test/RenderResults.test.ts`
+(körs bara med `CODESTEAD_RENDER_RESULTS=<mapp>`) + `images/make_results.py` renderar varje kapitels resultat med
+simulatorn till `images/results/<kapitel>.webp`.
+
+**Scener ur visualiseraren.** [Render Pipeline Visualizer](https://github.com/jesper-e98/RenderpipelineVisualizer)s
+slides visas levande i kapitlen: eleven stegar fram och tillbaka genom en slides steg (knappar, prickar, ← → Home End när
+scenen har fokus), spelar ett steg igen, byter modell (triangel, kub, tekanna …) och läge (verklig data/koncept) och kan
+visa API:ts kod för steget – i det API eleven valt, på svenska eller engelska (andra språk får engelska; knapparnas texter
+är `viz.*` i UI-texterna) och i fönstrets ljusa eller mörka tema, och de följer med när något av dem ändras.
+
+- **I texten** är en scen en bild vars källa är `viz:<scen>`, ensam i sitt stycke, med alt-text och bildtext som en bild:
+  `![Vertexattribut](viz:input-layout "Vertexattribut: en stride stegar …")`. Scenens namn finns i
+  `ts/packages/pipeline-viz/src/Scenes.ts`: vilken slide, vilka av dess steg (`first`–`last`) och vilken modell och vilket
+  läge som passar kapitlet; `viz:buffers?model=teapot&mode=concept` väljer något annat i ett enskilt kapitel. En ny scen
+  får en rad i `Scenes.ts` och en stillbild (nedan). `PictureTests` kräver att varje `viz:`-scen finns och har sin bild.
+- **Stillbilden** `images/[sv|en/]viz-<scen>.webp` visas där scenen inte kan köra: utan WebGL 2 (t.ex. en dator utan
+  grafikdrivrutin – Chromium ritar inte WebGL i mjukvara som standard), när scenen inte startar eller när WebGL-kontexten
+  försvinner. Den räknas som använd av scenen. `images/visualizer/` fångar bilderna ur visualiseraren (`capture.js` med
+  Playwright, `steps.txt`, `make_pictures.py`: bild → slidens steg); ta om dem när slidesen ändras.
+- **Prestanda**: paketet `ts/packages/pipeline-viz` och three.js laddas först när en scen närmar sig skärmen (en egen chunk,
+  `mount-*.js`, ungefär 1,3 MB, och visualiserarens worker). En scen kör bara nära skärmen, pausar (ritning och
+  animationer) utom synhåll och stängs några sekunder efter att den lämnat närheten; högst två scener kör samtidigt
+  (`SceneBudget`: varje scen har en egen WebGL-kontext, som ges tillbaka direkt när den stängs). Med
+  `prefers-reduced-motion` spelas inga övergångar upp; stegen fungerar som vanligt.
+- **Hur det är byggt** (`ts/packages/pipeline-viz/README.md`): `visualizer/` är visualiserarens kod (slides, mjukvarupipeline,
+  vyer, modeller, worker, stilar – inte WebXR-labbet), typkontrollerad med visualiserarens egna inställningar (`npm run
+  typecheck` kör båda); `engine/` kör en slide i en ruta (shadow root, egen renderare, ljust tema för stilarna och
+  3D-materialen, `tween.ts` i stället för GSAP, vars licens inte är öppen); `src/` är React-delen (`PipelineScene`).
+  GP lägger in scenerna med `pictureView` (`ts/apps/gp/src/VizScene.tsx`), som textvyns `pictureRenderer` anropar.
+- **Uppdatera från visualiseraren**: `node scripts/sync-visualizer.mjs <visualiserarens klon>` i `ts/packages/pipeline-viz`
+  kopierar koden på nytt (och ändrar bara importerna av GSAP och stilarna samt testernas sökvägar); skriv in commiten i
+  paketets README, kör `npm run typecheck` och testerna och titta på scenerna i appen. Visualiserarens egna tester av den
+  kopierade koden (`visualizer/tests/`) körs med `npm test`.
+- **Testerna**: `ts/packages/pipeline-viz/test/` (stegen, `viz:`-källorna, budgeten, stilarnas ljusa version,
+  tween-motorn, komponenten med en låtsasmotor i jsdom), `GpToolTests` (scenerna står där bilderna stod, stillbilderna
+  utan WebGL) och e2e-testet (`ts/apps/gp/e2e`): med SwiftShader (`--use-angle=swiftshader --enable-unsafe-swiftshader`)
+  körs Hello Triangles scener, stegas och är aldrig fler än två; med `--disable-gpu --disable-software-rasterizer` visas
+  stillbilderna.
 
 **Diagram och simulatorbilder** (`src/GP/content/images/diagrams/`). Bilderna som förklarar kapitlen (inte
 visualiserarens) ritas från källkod i repot: en fil `<namn>.mjs` per bild, som `make.mjs` gör till `images/<variant>.webp`.

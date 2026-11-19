@@ -34,6 +34,7 @@ Codestead.Shell/…" eller "Port of tests/…" i TypeScript-koden pekar på C#-k
 | `ts/packages/linux-content` | `Codestead.Content` | Linux-kursens laddning och kontroller |
 | `ts/packages/gp-gpu` | `Codestead.GP.Gpu` | den simulerade GPU:n: läsare, GLSL/HLSL-tolk, rasterizer |
 | `ts/packages/gp-course` | `Codestead.GP.Course` | GP-kursen: uppgifter, övningar, kontroller, "Kontrollera min kod" |
+| `ts/packages/pipeline-viz` | (ny, Render Pipeline Visualizer) | visualiserarens scener, interaktiva i GP:s kapitel (`viz:`) |
 | `ts/apps/linux`, `ts/apps/gp`, `ts/apps/hub` | apparna | Electron (main + preload) och appens React-del |
 
 ## Faser

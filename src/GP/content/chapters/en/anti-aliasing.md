@@ -57,7 +57,7 @@ exactly the background. Zoom in on a slanted edge in your mind's eye and you see
 To understand what multisampling is and how it works into solving the aliasing problem we first need to delve a bit
 further into the inner workings of the rasterizer.
 
-![Multisampling](images/viz-msaa.webp "Multisampling: coverage is tested at several points per pixel, but the fragment shader usually runs once.")
+![Multisampling](viz:msaa "Multisampling: coverage is tested at several points per pixel, but the fragment shader usually runs once.")
 
 The rasterizer is the combination of all algorithms and processes that sit between your final processed vertices and
 the fragment shader. The rasterizer takes all vertices belonging to a single primitive and transforms this to a set of

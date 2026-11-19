@@ -73,6 +73,7 @@ function LessonContent({ window: w }: { window: LearningWindow }) {
       onLinkClicked={(url) => w.openLink(url)}
       customBlockRenderer={checkpointRenderer(w, chapter, exam)}
       imageSource={(path) => tool.picture?.(path, w.lang) ?? null}
+      pictureRenderer={(picture) => tool.pictureView?.(picture, w.lang) ?? null}
     />
   );
 

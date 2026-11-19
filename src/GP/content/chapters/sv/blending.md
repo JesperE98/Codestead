@@ -480,7 +480,7 @@ Att kasta fragment är bra och så, men det ger oss inte flexibiliteten att rita
 ritar vi fragmentet eller så kastar vi det helt. För att rita bilder med olika grader av genomskinlighet måste vi slå
 på *blending*.
 
-![Blending](images/viz-blending.webp "Blending: fragmentets färg blandas med färgen som redan finns i framebuffern, efter dess alfa.")
+![Blending](viz:blending "Blending: fragmentets färg blandas med färgen som redan finns i framebuffern, efter dess alfa.")
 
 Blending sker efter fragment shadern: färgen som shadern skriver ut – *källfärgen* (source) – kombineras med färgen som
 redan finns i color buffern på den platsen – *målfärgen* (destination). Det görs med följande ekvation:

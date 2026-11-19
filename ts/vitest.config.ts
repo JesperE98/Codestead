@@ -8,7 +8,12 @@ const gpTasks = Boolean(process.env.CODESTEAD_GP_PARTS || process.env.CODESTEAD_
 // One test run for every package and app of the workspace.
 export default defineConfig({
   test: {
-    include: ["packages/*/test/**/*.test.{ts,tsx}", "apps/*/test/**/*.test.{ts,tsx}"],
+    include: [
+      "packages/*/test/**/*.test.{ts,tsx}",
+      "apps/*/test/**/*.test.{ts,tsx}",
+      // The Render Pipeline Visualizer's own tests of the code @codestead/pipeline-viz copies from it.
+      "packages/pipeline-viz/visualizer/tests/**/*.test.ts",
+    ],
     exclude: gpTasks ? configDefaults.exclude : [...configDefaults.exclude, "packages/gp-course/test/TaskTests.test.ts"],
     // The simulated GPU's chapter pictures (compute shaders, tessellation) take 1-3 s each on a free core and over 5 s
     // (Vitest's default) on a two-core CI runner running every test file at once.

@@ -66,7 +66,7 @@ Alla uppgifter i det här kapitlet ändrar ett program som redan fungerar: varje
 
 ## {{shaderLanguage}}
 
-![Från shaderkälla till GPU-kod](images/viz-shaders.webp "Från shaderkälla till GPU-kod: drivrutinen (eller en kompilator i förväg) gör din text till instruktioner.")
+![Från shaderkälla till GPU-kod](viz:shaders "Från shaderkälla till GPU-kod: drivrutinen (eller en kompilator i förväg) gör din text till instruktioner.")
 
 :::opengl
 Shaders skrivs i det C-liknande språket GLSL. GLSL är skräddarsytt för grafik och har användbara funktioner som är
@@ -484,7 +484,7 @@ Utdata och indata mellan stegen matchas efter sin semantik; en och samma struct 
 
 ## Uniforms
 
-![Uniforms](images/viz-uniforms.webp "Uniforms: värden som programmet sätter och som är desamma för varje vertex och fragment i en ritning.")
+![Uniforms](viz:uniforms "Uniforms: värden som programmet sätter och som är desamma för varje vertex och fragment i en ritning.")
 
 :::opengl
 *Uniforms* är ett annat sätt att skicka data från vårt program på CPU:n till shaderna på GPU:n. Uniforms skiljer

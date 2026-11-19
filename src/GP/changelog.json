@@ -6,36 +6,43 @@
       "en": [
         "**The same text on every computer again**: Codestead GP brings its text font, Inter, with it again, so the text looks as it did before 0.2.6 instead of taking whatever font your system has.",
         "**More pictures in Getting started**: every chapter from *Setting up your IDE* to *Camera* now has diagrams and pictures of the hard parts – the frame loop, normalized device coordinates, how shaders are connected, texture coordinates, wrapping and filtering, the order of transformations, projections and the camera's axes – most of them drawn by the course's own simulator from the code you write, and made for the API you have chosen.",
+        "**Pipeline scenes you can step through**: the Render Pipeline Visualizer's pictures in the chapters are now its live scenes – step forward and back, play a step again, switch model or mode and look at the code, in the graphics API, language and theme you chose. Without 3D graphics the pictures are shown as before.",
         "**15 new achievements**: passing exams, solving exercises, your first texture, the depth test and wireframes, 100 tasks – and six new hidden ones to find by experimenting with your code."
       ],
       "sv": [
         "**Samma text på alla datorer igen**: Codestead GP har åter med sig sitt typsnitt Inter, så texten ser ut som före 0.2.6 i stället för att ta det typsnitt som råkar finnas på datorn.",
         "**Fler bilder i Kom igång**: varje kapitel från *Sätt upp din IDE* till *Kamera* har nu diagram och bilder över de svåra delarna – en frame i programmet, normalized device coordinates, hur shaders kopplas ihop, texturkoordinater, wrapping och filtrering, transformationernas ordning, projektioner och kamerans axlar – många av dem ritade av kursens egen simulator från koden du skriver, och gjorda för det API du har valt.",
+        "**Pipelinescener att stega igenom**: Render Pipeline Visualizers bilder i kapitlen är nu dess levande scener – stega fram och tillbaka, spela ett steg igen, byt modell eller läge och titta på koden, i det grafik-API, det språk och det tema du valt. Utan 3D-grafik visas bilderna som förut.",
         "**15 nya utmärkelser**: för godkända prov, lösta övningar, din första textur, djuptestet och trådmodeller, 100 uppgifter – och sex nya dolda att hitta genom att experimentera med din kod."
       ],
       "de": [
         "**Wieder dieselbe Schrift auf jedem Computer**: Codestead GP bringt seine Schriftart Inter wieder selbst mit, sodass der Text wie vor 0.2.6 aussieht, statt die Schrift zu nehmen, die dein System gerade hat.",
         "**Mehr Bilder in „Erste Schritte“**: Jedes Kapitel von *Setting up your IDE* bis *Camera* hat jetzt Diagramme und Bilder zu den schwierigen Stellen – der Frame, normalisierte Gerätekoordinaten, wie Shader verbunden sind, Texturkoordinaten, Wrapping und Filterung, die Reihenfolge der Transformationen, Projektionen und die Achsen der Kamera –, viele davon vom kurseigenen Simulator aus dem Code gezeichnet, den du schreibst, und passend zur gewählten API.",
+        "**Pipeline-Szenen zum Durchklicken**: Die Bilder des Render Pipeline Visualizers in den Kapiteln sind jetzt seine lebendigen Szenen – Schritt vor und zurück, einen Schritt noch einmal abspielen, Modell oder Modus wechseln und den Code ansehen, in der Grafik-API, Sprache und dem Design, die du gewählt hast. Ohne 3D-Grafik erscheinen die Bilder wie bisher.",
         "**15 neue Erfolge**: für bestandene Prüfungen, gelöste Übungen, deine erste Textur, den Tiefentest und Drahtgittermodelle, 100 Aufgaben – und sechs neue versteckte, die du durch Experimentieren mit deinem Code findest."
       ],
       "fr": [
         "**Le même texte sur chaque ordinateur** : Codestead GP embarque de nouveau sa police Inter, si bien que le texte s'affiche comme avant la 0.2.6 au lieu d'utiliser la police que votre système a sous la main.",
         "**Plus d'images dans Pour commencer** : chaque chapitre, de *Setting up your IDE* à *Camera*, a maintenant des schémas et des images des passages difficiles – une frame du programme, les coordonnées normalisées, la liaison des shaders, les coordonnées de texture, le wrapping et le filtrage, l'ordre des transformations, les projections et les axes de la caméra –, dont beaucoup sont dessinées par le simulateur du cours à partir du code que vous écrivez, et adaptées à l'API choisie.",
+        "**Des scènes du pipeline à parcourir pas à pas** : les images du Render Pipeline Visualizer dans les chapitres sont désormais ses scènes animées – avancez et reculez d'une étape, rejouez une étape, changez de modèle ou de mode et regardez le code, dans l'API graphique, la langue et le thème que vous avez choisis. Sans graphismes 3D, les images s'affichent comme avant.",
         "**15 nouveaux succès** : examens réussis, exercices résolus, votre première texture, le test de profondeur et le fil de fer, 100 tâches – et six nouveaux succès cachés à découvrir en expérimentant avec votre code."
       ],
       "es": [
         "**El mismo texto en todos los ordenadores otra vez**: Codestead GP vuelve a incluir su tipografía, Inter, así que el texto se ve como antes de la 0.2.6 en lugar de usar la fuente que tenga tu sistema.",
         "**Más imágenes en Primeros pasos**: cada capítulo, de *Setting up your IDE* a *Camera*, tiene ahora diagramas e imágenes de las partes difíciles – un frame del programa, las coordenadas normalizadas, cómo se conectan los shaders, las coordenadas de textura, el wrapping y el filtrado, el orden de las transformaciones, las proyecciones y los ejes de la cámara –, muchas dibujadas por el propio simulador del curso a partir del código que escribes y hechas para la API que has elegido.",
+        "**Escenas del pipeline que puedes recorrer paso a paso**: las imágenes del Render Pipeline Visualizer en los capítulos son ahora sus escenas animadas: avanza y retrocede, repite un paso, cambia de modelo o de modo y mira el código, en la API gráfica, el idioma y el tema que elegiste. Sin gráficos 3D, las imágenes se muestran como antes.",
         "**15 logros nuevos**: por aprobar exámenes, resolver ejercicios, tu primera textura, la prueba de profundidad y el modo alámbrico, 100 tareas – y seis logros ocultos nuevos que descubrirás experimentando con tu código."
       ],
       "zh": [
         "**每台电脑上的文字重新一致**：Codestead GP 再次自带其文字字体 Inter，文字显示与 0.2.6 之前相同，不再使用系统碰巧安装的字体。",
         "**“入门”部分有了更多图片**：从 *Setting up your IDE* 到 *Camera*，每一章都为难点配上了示意图和图片——一帧的流程、标准化设备坐标、着色器之间如何连接、纹理坐标、环绕和过滤、变换的顺序、投影以及摄像机的坐标轴——其中许多由课程自己的模拟器根据你编写的代码绘制，并按你选择的 API 显示。",
+        "**可逐步浏览的管线场景**：章节中 Render Pipeline Visualizer 的图片现在是它的实时场景——前进和后退、重播某一步、切换模型或模式并查看代码，全部使用你选择的图形 API、语言和主题。没有 3D 图形时，仍像以前一样显示图片。",
         "**15 个新成就**：通过测验、完成练习、你的第一个纹理、深度测试和线框模式、100 个任务——还有六个新的隐藏成就，等你动手试验代码去发现。"
       ],
       "ja": [
         "**どのパソコンでも同じ文字表示に**：Codestead GP が再び文字フォント Inter を同梱するようになり、システムにあるフォントではなく、0.2.6 より前と同じ見た目で表示されます。",
         "**「はじめに」に図を追加**：*Setting up your IDE* から *Camera* までの各章に、難しいところの図や画像が加わりました。1 フレームの流れ、正規化デバイス座標、シェーダーのつながり方、テクスチャ座標、ラッピングとフィルタリング、変換の順序、投影、カメラの軸などで、その多くはあなたが書くコードからコース自身のシミュレーターが描いたもので、選んだ API に合わせて表示されます。",
+        "**ステップごとに進められるパイプラインのシーン**：各章の Render Pipeline Visualizer の画像が、動くシーンになりました。ステップを進めたり戻したり、もう一度再生したり、モデルやモードを切り替えてコードを見たりでき、選んだグラフィックス API・言語・テーマで表示されます。3D グラフィックスが使えない環境では、これまでどおり画像が表示されます。",
         "**新しい実績 15 個**：テストの合格、演習、はじめてのテクスチャ、深度テストとワイヤーフレーム、課題 100 個――さらに、コードをいろいろ試すと見つかる隠し実績が 6 個増えました。"
       ]
     }

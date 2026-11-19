@@ -116,7 +116,7 @@ några också) genom att läsa in all modellens data i Assimps generella datastr
 modellen kan vi hämta all data vi behöver ur Assimps datastruktur. Eftersom Assimps datastruktur är densamma oavsett
 vilket filformat vi importerade, skyddar den oss från alla de olika filformaten därute.
 
-![Att läsa in en modell](images/viz-parse.webp "Att läsa in en modell: filens text blir tal, sedan vertexar, sedan ett mesh som går att rita.")
+![Att läsa in en modell](viz:parse "Att läsa in en modell: filens text blir tal, sedan vertexar, sedan ett mesh som går att rita.")
 
 När en modell importeras via Assimp läser biblioteket in hela modellen i ett *scen*-objekt som innehåller all data i
 den importerade modellen/scenen. Assimp har sedan en samling noder, där varje nod innehåller index till data som
