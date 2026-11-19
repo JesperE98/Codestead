@@ -5,21 +5,13 @@
 // node:fs for the learner's files and the course's binary files, so the window never waits for them. What crosses
 // over is plain data (structured clone): the classes of the report are rebuilt here.
 
-import { BuildFacts, CheckMessage, CheckReport, TaskResult } from "@codestead/gp-course";
+import { BuildFacts, type BuildFactsInit, CheckMessage, CheckReport, TaskResult } from "@codestead/gp-course";
 
-/** A {@link BuildFacts} as plain data. */
-export interface BuildFactsData {
-  line: string;
-  output: string;
-  exitCode: number;
-  api: string;
-  succeeded: boolean;
-  showsFrames: boolean;
-  drew: boolean;
-  clearColor: number[] | null;
+/** A {@link BuildFacts} as plain data: its init-only properties, the API functions it calls and the first words. */
+export type BuildFactsData = Required<BuildFactsInit> & {
   names: string[];
   firstWords: string[];
-}
+};
 
 /** A {@link CheckReport} as plain data. */
 export interface CheckReportData {
@@ -41,14 +33,9 @@ export function reportToData(r: CheckReport): CheckReportData {
       f === null
         ? null
         : {
-            line: f.line,
-            output: f.output,
-            exitCode: f.exitCode,
-            api: f.api,
-            succeeded: f.succeeded,
-            showsFrames: f.showsFrames,
-            drew: f.drew,
+            ...f.init,
             clearColor: f.clearColor === null ? null : [...f.clearColor],
+            printed: [...f.printed],
             names: [...f.names],
             firstWords: [...f.firstWords],
           },

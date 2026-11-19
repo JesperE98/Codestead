@@ -151,7 +151,10 @@ Ett verktyg beskriver sin kurs med en `CourseOutline` (delar, lektioner, vilka d
 `new GameRules(outline, utmärkelser)`. Codestead Linux gör det i `ts/packages/linux-content/src/Game/LinuxGame.ts`,
 med sina egna utmärkelser i `AchievementsLib.ts` och kommandoanalysen i `CommandInfo.ts` (en `CommandFacts` som också
 räknar pipes, sudo, loopar …); Linux-kursens tester finns i `ts/packages/linux-content/test/GameTests.test.ts`.
-Codestead GP har sina i `ts/packages/gp-course/src/Game/`. Vyerna (topprad, notiser, firande, galleri, profilrad)
+Codestead GP har sina i `ts/packages/gp-course/src/Game/` (`GpAchievements.ts`; det en "Kontrollera min kod" såg –
+API, bygge, fönster, clear-färg, texturer, djuptest, trådmodell, trianglar, fönstrets storlek och titel, utskrifter –
+finns i `BuildFacts.ts`, som räknas fram i appens worker och bara får ta det kontrollerna redan räknat ut eller det som
+är billigt), testade i `ts/packages/gp-course/test/GameTests.test.ts`. Vyerna (topprad, notiser, firande, galleri, profilrad)
 finns i `ts/packages/ui/src/Controls/Game/` och tar färdigöversatta texter, så att samma vyer fungerar i alla
 verktyg och i hubben; lärfönstret kopplar ihop dem (`ts/packages/ui/src/Learning/LearningWindow.Game.tsx`).
 - **XP räknas fram** ur det som är gjort (`XpRules.Total`), så inget kan ges två gånger: uppgift 10, utan
@@ -161,10 +164,12 @@ verktyg och i hubben; lärfönstret kopplar ihop dem (`ts/packages/ui/src/Learni
   ser till att hela kursen alltid räcker till högsta nivån.
 - **Dagar i rad**: en lokal kalenderdag räknas när man löser en uppgift eller svarar rätt på en fråga. En
   missad dag startar om räkningen, men inget dras av.
-- **Ny utmärkelse**: lägg till en rad i verktygets lista (Linux: `AchievementsLib.All`; allmänna finns färdiga i
-  `CommonAchievements`) (id, emoji, kategori, villkor och gärna en
+- **Ny utmärkelse**: lägg till en rad i verktygets lista (Linux: `AchievementsLib.All`, GP: `GpAchievements.all`;
+  allmänna finns färdiga i `CommonAchievements`) (id, emoji, kategori, villkor och gärna en
   räknare för "x / y"), texterna `ach.<id>.title` och `ach.<id>.desc` på alla erbjudna språk, och ett "vittne" i
-  `GameTests.Witnesses` (testet kräver ett för varje utmärkelse). Kategori `Hidden` = dold: titeln visas som
+  verktygets `GameTests` (`witnesses`; testet kräver ett för varje utmärkelse, GP:s test också unika emoji). En dold
+  utmärkelse ska inte gå att få genom kursen själv: GP:s dolda villkor är valda så att inget kapitels lösning eller
+  övning uppfyller dem. Id:n sparas i användarens framsteg och byter aldrig namn. Kategori `Hidden` = dold: titeln visas som
   "???" tills den hittats och skrivs inte heller till profilfilen. Använd emoji från Unicode 11 eller äldre.
 - **Kommandon** analyseras med skalets parser (`CommandInfo`): namn (även genom sudo, time, xargs …), pipes,
   omdirigeringar, loopar, skript och man-sidor.
