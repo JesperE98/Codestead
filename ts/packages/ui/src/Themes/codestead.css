@@ -1,3 +1,8 @@
+/* Inter, the apps' text font, comes with them (as Avalonia.Fonts.Inter did in the C# apps), so the text looks the same
+   on every system instead of falling back to whatever sans-serif font the system has. OFL-1.1. */
+@import "@fontsource-variable/inter/wght.css";
+@import "@fontsource-variable/inter/wght-italic.css";
+
 /*
   The Codestead look, shared by every tool (port of Codestead.UI/Themes/Codestead.axaml).
 
@@ -130,8 +135,8 @@
   --cs-term-text: #e6edf3;
   --cs-term-muted: #7d8590;
   --cs-term-green: #7ee787;
-  /* The text font, then colour emoji fonts so that emoji (💡 🏆 🔥) are drawn in colour everywhere. */
-  --cs-ui-font: Inter, "Segoe UI", system-ui, -apple-system, "Noto Sans", sans-serif, "Segoe UI Emoji", "Noto Color Emoji", "Apple Color Emoji";
+  /* The text font (bundled, see the top), then colour emoji fonts so that emoji (💡 🏆 🔥) are drawn in colour everywhere. */
+  --cs-ui-font: "Inter Variable", Inter, "Segoe UI", system-ui, -apple-system, "Noto Sans", sans-serif, "Segoe UI Emoji", "Noto Color Emoji", "Apple Color Emoji";
   --cs-mono-font: "Cascadia Mono", "JetBrains Mono", "DejaVu Sans Mono", "Liberation Mono", "Noto Sans Mono", Menlo, Consolas, monospace;
   --cs-emoji-font: "Segoe UI Emoji", "Noto Color Emoji", "Apple Color Emoji", "Twemoji Mozilla", sans-serif;
 }

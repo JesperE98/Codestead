@@ -9,5 +9,8 @@
     "./codestead.css": "./src/Themes/codestead.css",
     "./electron-main": "./src/electron/VelopackUpdate.ts",
     "./electron-bridge": "./src/electron/SelfUpdateBridge.ts"
+  },
+  "dependencies": {
+    "@fontsource-variable/inter": "^5.3.0"
   }
 }

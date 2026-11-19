@@ -1,5 +1,32 @@
 [
   {
+    "version": "0.2.7",
+    "date": "2026-11-19",
+    "changes": {
+      "en": [
+        "**The same text on every computer again**: Codestead GP brings its text font, Inter, with it again, so the text looks as it did before 0.2.6 instead of taking whatever font your system has."
+      ],
+      "sv": [
+        "**Samma text på alla datorer igen**: Codestead GP har åter med sig sitt typsnitt Inter, så texten ser ut som före 0.2.6 i stället för att ta det typsnitt som råkar finnas på datorn."
+      ],
+      "de": [
+        "**Wieder dieselbe Schrift auf jedem Computer**: Codestead GP bringt seine Schriftart Inter wieder selbst mit, sodass der Text wie vor 0.2.6 aussieht, statt die Schrift zu nehmen, die dein System gerade hat."
+      ],
+      "fr": [
+        "**Le même texte sur chaque ordinateur** : Codestead GP embarque de nouveau sa police Inter, si bien que le texte s'affiche comme avant la 0.2.6 au lieu d'utiliser la police que votre système a sous la main."
+      ],
+      "es": [
+        "**El mismo texto en todos los ordenadores otra vez**: Codestead GP vuelve a incluir su tipografía, Inter, así que el texto se ve como antes de la 0.2.6 en lugar de usar la fuente que tenga tu sistema."
+      ],
+      "zh": [
+        "**每台电脑上的文字重新一致**：Codestead GP 再次自带其文字字体 Inter，文字显示与 0.2.6 之前相同，不再使用系统碰巧安装的字体。"
+      ],
+      "ja": [
+        "**どのパソコンでも同じ文字表示に**：Codestead GP が再び文字フォント Inter を同梱するようになり、システムにあるフォントではなく、0.2.6 より前と同じ見た目で表示されます。"
+      ]
+    }
+  },
+  {
     "version": "0.2.6",
     "date": "2026-11-18",
     "changes": {

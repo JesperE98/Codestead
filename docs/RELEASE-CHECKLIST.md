@@ -49,4 +49,4 @@ Windows Server och i containrar; gör det en gång på riktiga datorer med en an
 - [ ] Hubben 0.2.4 (C#): den uppdaterar sig själv till 0.2.5 (Setup.exe, AppImage) eller erbjuder den som
       nedladdning; den nya hubben ser de installerade verktygen och uppdaterar Codestead Linux och GP till de nya
       versionerna, och **Gå tillbaka** på Codestead Linux startar C#-versionen 0.6.5 igen.
-- [ ] Texten ser rimlig ut på kinesiska och japanska (systemets typsnitt används nu i stället för det inbyggda Inter).
+- [ ] Texten ser rimlig ut på kinesiska och japanska (Inter saknar de tecknen, så de tas från systemets typsnitt, som i C#-apparna).

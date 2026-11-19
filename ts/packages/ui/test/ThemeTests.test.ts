@@ -94,4 +94,13 @@ describe("ThemeTests", () => {
     expect(Brand.Linux.css()).toContain("--cs-accent: #0f766e;");
     for (const brand of [Brand.Linux, Brand.Hub, Brand.GP]) expect(brand.css()).toContain(`--cs-on-accent: ${brand.light.onAccent}`);
   });
+  it("texten har typsnittet Inter med sig, normal och kursiv, först bland typsnitten", () => {
+    // As the C# apps (Avalonia.Fonts.Inter): the text looks the same on every system, not like its own sans-serif font.
+    expect(css).toContain('@import "@fontsource-variable/inter/wght.css";');
+    expect(css).toContain('@import "@fontsource-variable/inter/wght-italic.css";');
+    const stack = /--cs-ui-font:\s*([^;]+);/.exec(css)![1]!;
+    expect(stack.split(",")[0]!.trim()).toBe('"Inter Variable"');
+    const sheet = readFileSync(join(import.meta.dirname, "..", "..", "..", "node_modules", "@fontsource-variable", "inter", "wght.css"), "utf8");
+    expect(sheet).toContain("font-family: 'Inter Variable';");
+  });
 });

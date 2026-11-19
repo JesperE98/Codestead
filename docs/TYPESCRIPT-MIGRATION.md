@@ -83,7 +83,8 @@ Electron-appen: samma lärfönster (`@codestead/ui`) med Linux-verktyget och den
 - Fönstret: `contextIsolation`, ingen `nodeIntegration`, `sandbox`; preload ger `window.codestead` (`electron/api.ts`):
   lagring (synkron, som i C#), webblänkar (bara http/https), fil- och mappväljare, version, avsluta.
 - Uppdateringar och paketering: se "Paketering och uppdateringar" nedan (`LinuxTool` får preloadens `selfUpdate`).
-- Kvar: typsnittet Inter följer inte med än (C# bäddar in det), så systemets typsnitt används.
+- Typsnittet Inter följer med apparna (`@fontsource-variable/inter` i `codestead.css`), som i C#. Det saknades i de
+  första TypeScript-versionerna (0.6.6 / 0.2.6 / 0.2.5), som visade systemets typsnitt.
 
 ### `ts/apps/gp` – Codestead GP
 Electron-appen: samma lärfönster (`@codestead/ui`) med GP-verktyget – kursen (`@codestead/gp-course`), API:erna som

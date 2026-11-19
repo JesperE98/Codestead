@@ -140,7 +140,8 @@ Färgerna har fasta betydelser i alla appar (och i kommande verktyg). De finns s
 - `ThemeTests` kontrollerar att alla färger finns i båda teman och att text går att läsa (kontrast minst 4,5:1
   mot bakgrunderna och mot den egna "soft"-färgen, och för knapptext på accentfärgen). Byt en färg → kör testet.
 - Emoji visas i färg genom att fönstrets typsnitt (`--cs-ui-font`) har emoji-typsnitt som reserv. Texten visas med
-  Inter om det finns på datorn, annars med systemets typsnitt (C#-apparna hade Inter inbyggt).
+  Inter, som följer med apparna (`@fontsource-variable/inter`, importerat överst i `codestead.css`, OFL-1.1), så den ser
+  likadan ut på alla datorer. Tecken Inter saknar (kinesiska, japanska) tas från systemets typsnitt.
 
 ## Spelifiering (XP, nivåer, utmärkelser)
 
