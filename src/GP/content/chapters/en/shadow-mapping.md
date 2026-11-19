@@ -97,6 +97,8 @@ In pass 2, a floor fragment transformed into the light's view has the depth 0.9,
 The depth map stores the closest depth the light sees in each direction. A fragment that is farther from the light than that closest surface is behind it – in its shadow.
 ```
 
+![The two passes of shadow mapping](images/shadow-map-idea.webp "Pass 1 stores the closest depth along each of the light's rays in the depth map. In pass 2 the floor point P has the depth 0.9 in the light's view, but the depth map holds 0.4 there, the top of the box: P is in shadow, Q is lit.")
+
 ## The depth map
 
 The first pass requires us to generate a depth map. The depth map is the depth texture as rendered from the light's
@@ -1031,6 +1033,8 @@ What causes shadow acne, and what does the bias do against it?
 The depth map's limited resolution turns a sloped surface into a staircase of stored depths. A bias – larger for steeper angles to the light – moves the comparison a little towards the light, so a surface no longer counts as its own occluder.
 ```
 
+![Shadow acne and the bias](images/shadow-acne.webp "The floor magnified, tilted to the light. Each depth map texel stores one depth, a little flat tile across the light: along it the floor is partly in front of the tile (lit) and partly behind it (in shadow). With the bias the whole floor is in front.")
+
 :::opengl
 Now do the task **bias**. In `ShadowCalculation`:
 
@@ -1310,6 +1314,8 @@ Build and run: the shadow's **edges become soft**. Inside the shadow and on the 
 pixels now get in-between values: where 3 of the 9 samples are in shadow, the fragment is a third in shadow. From a
 distance the shadows look a lot better and less hard. If you zoom in, you can still see the resolution artifacts of
 shadow mapping, but in general this gives good results for most applications.
+
+![Shadow acne, bias and PCF](images/shadow-steps.webp "The floor around the cube's shadow after the tasks shadows, bias and pcf, drawn by the course's simulator, magnified: the stripes of shadow acne, the jagged edge, the soft edge.")
 
 ```quiz
 With the 3 × 3 PCF, a fragment on the shadow's edge finds 6 of the 9 samples in shadow. What is its `shadow` value?

@@ -17,6 +17,8 @@ us: it seems to jump through the dark tones and to crawl through the bright ones
 physically correct. Because colours have always been chosen by looking at what the monitor shows, the values we work
 with are in a non-linear space: if you double the value of a colour, you do not get twice the light.
 
+![Two rows of grey tones](images/gamma-ramps.webp "Above, equal steps of the value sent to the monitor: they look even. Below, equal steps of light, physically linear: they seem to rush through the dark tones.")
+
 The problem is that all our lighting calculations are done in linear space: doubling a light's intensity, adding the
 contributions of two lights, or scaling a colour by `diff` all assume that the result is shown as it was computed. On
 the monitor, however, a value of 0.5 – half as bright, as far as our maths is concerned – comes out as 0.5 to the power
@@ -40,6 +42,8 @@ The idea of gamma correction is to apply the inverse of the monitor's gamma to t
 displaying it on the monitor. Looking back at the gamma curve, we see that the monitor darkens our colours with a
 power of 2.2; if we brighten them first with the inverse power, 1/2.2, the two cancel out and the light reaches our eye
 as linear as we computed it.
+
+![The gamma curves](images/gamma-curves.webp "The monitor shows a value v as v^2.2, so 0.5 appears as 0.218. Corrected with the power 1/2.2 first, 0.5 becomes 0.73, which the monitor shows as 0.5: together the two curves are a straight line.")
 
 Let's give another example. Say we again have the dark-red colour (0.5, 0.0, 0.0). Before displaying this colour on
 the monitor we first apply the gamma correction curve to the colour value. Linear colours displayed by a monitor are
@@ -567,6 +571,8 @@ Build and run: the light **falls off faster** – brighter right below the light
 This is learnopengl's gamma-corrected picture. Compare it with the start: there the right light's pool was a saturated
 orange blot and the four lights' greys (0.25 to 1.00) looked more different than they are; now the brightness follows
 the light colours and the distance the way physics says it should.
+
+![The floor after each task](images/gamma-steps.webp "The floor after each task, drawn by the course's simulator: no correction, the shader's correction alone (washed out), the sRGB texture, and the quadratic attenuation.")
 
 In general, gamma correction allows us to work and visualize our renders in linear space. Because linear space makes
 sense in the physical world, most physical equations now actually give good results (like real light attenuation). The

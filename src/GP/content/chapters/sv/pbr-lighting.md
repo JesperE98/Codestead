@@ -87,6 +87,8 @@ Några tal skiljer sig från learnopengls program:
 Sfären är learnopengls `renderSphere()`: en *UV-sfär*, vars vertex ligger på ett rutnät med 25 × 25 punkter i (u, v) =
 (xSegment, ySegment), där var och en görs om till en punkt på sfären:
 
+![Sfärens triangelstrip](images/sphere-strip.webp "Indexordningen på ett litet rutnät med 4 × 2 segment: den jämna raden från vänster till höger, den udda tillbaka; varje index efter de två första bildar en triangel med de två före.")
+
 ```cpp
 float xPos = std::cos(xSegment * 2.0f * PI) * std::sin(ySegment * PI);
 float yPos = std::cos(ySegment * PI);
@@ -772,6 +774,8 @@ Varför är sfärerna i de översta raderna så mörka utom i sina högdagrar ef
 ---
 Den översta raden har metallic = 6/7, så bara 1/7 av dess diffusa ljus finns kvar. Dess reflektioner är röda eftersom F0 blandas mot albedot; den nedersta radens högdagrar är vita eftersom ett dielektrikums F0 är samma 0.04 för alla färger.
 ```
+
+![Sfärerna efter varje uppgift](images/pbr-steps.webp "De 7 × 7 sfärerna efter uppgifterna lambert, ndf, geometry, fresnel och tone-map, ritade av kursens simulator.")
 
 ## Linjär rendering och HDR
 

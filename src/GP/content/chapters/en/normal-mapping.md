@@ -26,6 +26,8 @@ complex. This technique to use per-fragment normals compared to per-surface norm
 mapping. Like everything in this part, it is the same in every API: only shaders and vertex data change. Where the
 APIs differ is the direction of the texture's v axis – and that matters here, as you'll see.
 
+![One normal or a normal per fragment](images/normals-per-fragment.webp "A brick wall seen from the side. Above, the flat quad has one normal for all fragments. Below, the quad is just as flat, but each fragment gets the normal of the bumpy surface the normal map describes.")
+
 :::opengl
 Start from your program from *Advanced Lighting* in a new folder (it has the textured, lit floor) and turn it into
 learnopengl's scene: a 2 × 2 quad facing +z, built by `renderQuad()` from the positions `pos1`…`pos4` ((-1, 1), (-1,
@@ -101,6 +103,8 @@ Why does a normal map look mostly blue?
 ---
 Each component is stored as `normal * 0.5 + 0.5`. A normal of (0, 0, 1) becomes (0.5, 0.5, 1.0); normals tilted upwards add green, tilted to the right add red.
 ```
+
+![Colours of the normal map](images/normal-map-colours.webp "The chapter's brickwall_normal.png, a part of it magnified, and three texels decoded with colour · 2 − 1: a brick's flat face, the bevel at its right edge (red, +x) and at its top edge (green, +y).")
 
 In the fragment shader we sample the normal map, map the colour from [0,1] back to [-1,1] and normalize it. Then we
 proceed with the lighting calculations using the sampled normal vector instead of the surface's normal.
@@ -236,6 +240,13 @@ We already know the up vector, which is the surface's normal vector. The right a
 bitangent vector respectively: the directions on the surface in which the texture coordinates u and v grow. The tangent
 points along the texture's u axis, the bitangent along its v axis – so the normal map's x (red) is measured along the
 tangent, its y (green) along the bitangent, its z (blue) along the normal.
+
+:::opengl vulkan
+![Tangent space on the quad](images/tangent-space-opengl-vulkan.webp "The tangent T points where u grows, the bitangent B where v grows: up the wall, as the images are flipped on load. The normal map's red, green and blue are measured along T, B and N.")
+:::
+:::d3d12
+![Tangent space on the quad](images/tangent-space-d3d12.webp "The tangent T points where u grows, the bitangent B where v grows: with Direct3D's texture coordinates down the wall. The normal map's red, green and blue are measured along T, B and N.")
+:::
 
 ### Manual calculation of tangents and bitangents
 
@@ -620,6 +631,8 @@ no flip: used as a world-space normal, the map's y was simply the wall's up.) No
 Build and run: the bricks' **bumps are lit correctly**. The flat faces of the bricks look as at the start – they are
 flat in the normal map too – but the bevels facing the light are bright now, and those facing away are in their own
 shade. The wall looks like it has depth, and it's still just two triangles.
+
+![The wall after each task](images/normal-steps.webp "The wall at the start, after the task normal-map and after tbn, drawn by the course's simulator: flat, lit wrongly with the map's normals as world-space normals, lit right in tangent space.")
 
 :::opengl
 ```quiz

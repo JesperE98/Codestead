@@ -27,6 +27,8 @@ ursprungliga HDR-bilden av scenen. Steg för steg:
 2. Blurra den andra buffern – en gaussisk blur, gjord i flera pass.
 3. Addera den blurrade bilden till scenens HDR-färger, och tone mappa och gammakorrigera sedan summan på fönstret.
 
+![Bloomens tre steg](images/bloom-steps.webp "Buffertarna efter varje uppgift, ritade av kursens simulator: ett pass ritar scenen och dess ljusa delar i två färgbuffertar, de ljusa delarna blurras, och bluren adderas till scenen före tone mappingen.")
+
 Inget av detta är en ny mekanism: det är förra kapitlets flyttalsmål plus två saker – att rita i två färgbuffrar på en
 gång, och pass som turas om att rita i en buffer och läsa en annan. Alla API:er har båda; det här kapitlet visar hur
 {{api}} gör.
@@ -404,6 +406,8 @@ bort. Summan är 1.0 (mitten en gång, de andra två gånger), så bluren ändra
 binomialkoefficienterna 924, 792, 495, 220 och 66 från rad 12 i Pascals triangel, delade med sin summa 4070 –
 binomialkoefficienter är en god approximation av en gausskurva.) En texel är `1.0` delat med texturens storlek i texlar.
 
+![Blurkärnan](images/bloom-kernel.webp "Kärnans nio vikter, 0.227 i mitten, och de två passen: ett horisontellt och sedan ett vertikalt ger samma blur som 9 × 9-kärnan.")
+
 ```quiz
 Varför körs bluren som separata horisontella och vertikala pass?
 - [ ] En shader kan bara läsa texlar i en riktning per pass
@@ -432,6 +436,8 @@ för ljusa färger; varje senare pass läser den buffer det föregående skrev. 
 `bool horizontal`: ett horisontellt pass ritar i buffer 1 (`horizontal` = true = 1) och läser buffer 0 (`!horizontal`),
 och sedan växlar `horizontal`. Efter det tionde passet – ett vertikalt i buffer 0 – är `horizontal` true igen, så det
 sista resultatet ligger i buffer `[!horizontal]`, buffer 0.
+
+![De tio ping-pong-passen](images/bloom-pingpong.webp "Första passet läser den ljusa bufferten; varje horisontellt pass (H) ritar i pingpong[1] och varje vertikalt (V) i pingpong[0], och läser den andra. Det tionde lämnar resultatet i pingpong[0].")
 
 ```quiz
 Varför behöver bluren två ping-pong-buffrar i stället för att blurra buffern för ljusa färger på plats?

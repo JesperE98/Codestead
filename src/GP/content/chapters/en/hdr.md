@@ -566,6 +566,8 @@ Build and run: **the far end shows its wood again** – the boards are back in t
 no pixel is pure white any more. The glow on the walls around it gets a little darker; the dark rest of the tunnel looks
 the same, because small values pass through Reinhard almost unchanged.
 
+![Clamped and tone-mapped](images/hdr-tonemap.webp "The tunnel's far end, drawn by the course's simulator, magnified: clamped in the 8-bit window it is flat white; with Reinhard tone mapping the boards show again.")
+
 With Reinhard tone mapping applied we no longer lose any detail on the bright areas of our scene. It does tend to
 slightly favour brighter areas, making darker regions seem less detailed and distinct.
 
@@ -588,6 +590,8 @@ a **higher exposure** pushes the dark values up the steep part of the curve and 
 while the bright values all crowd together near 1.0; a **lower exposure** darkens the dark regions towards black but
 spreads the bright values over the curve, bringing out the details in the bright parts. With an exposure of 1.0 the
 result is close to Reinhard's – a bit brighter (1.0 maps to 0.63 instead of 0.5).
+
+![Tone mapping curves](images/tone-curves.webp "What the window's clamp, Reinhard's curve and the exposure curve with the exposures 0.1, 1.0 and 5.0 make of HDR values from 0 to 6.")
 
 :::opengl
 The exposure is a uniform, set from a global in `main.cpp` (`float exposure = 1.0f;`) before the quad is drawn:
@@ -720,6 +724,8 @@ With exposure tone mapping, what does a higher exposure (5.0 instead of 1.0) do?
 ---
 The exposure multiplies the HDR colour before the curve. Dark values move up the steep start of the curve; bright values are pushed to the flat end, where they all look alike. A night scene wants a high exposure, a sunny one a low exposure.
 ```
+
+![Three exposures](images/hdr-exposure.webp "The tunnel with the exposures 0.1, 1.0 and 5.0, drawn by the course's simulator: a low exposure shows the bright end, a high one the dark walls.")
 
 ```quiz
 Why does the gamma correction move from the lighting shader into the screen quad's shader?

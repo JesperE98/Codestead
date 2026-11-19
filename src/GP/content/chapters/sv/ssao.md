@@ -326,6 +326,8 @@ Varför samplar SSAO en halvsfär orienterad längs normalen i stället för en 
 Cryteks ursprungliga SSAO använde en sfär, vilket gav dess karaktäristiska grå, kantframhävande utseende. Normalen från G-buffern gör halvsfären möjlig.
 ```
 
+![Sfär- och halvsfärkärna](images/ssao-hemisphere.webp "Ett fragment på golvet framför en vägg, sett från sidan. Ett sampel inne i geometrin räknas som skymt: med en sfär är halvan under golvet också skymd; med en halvsfär längs normalen skymmer bara väggen.")
+
 Med en enhetshalvsfär kan vi få en samplingskärna med högst 32 samplingar så här: vi varierar x- och y-riktningen i
 tangentrymden mellan -1.0 och 1.0, och z-riktningen mellan 0.0 och 1.0 (om vi varierade även z mellan -1.0 och 1.0 skulle
 vi få en sfärisk kärna). Eftersom samplingskärnan orienteras längs ytnormalen hamnar alla de resulterande vektorerna i
@@ -1181,6 +1183,8 @@ Bygg och kör: den belysta scenen är tillbaka, **mörkare där AO:n var grå**.
 (dess yttre delar tappar hälften till två tredjedelar av sin ljusstyrka), golvet precis under planeten har en mjuk
 kontaktskugga som ställer planeten på golvet, och golv-/väggkanten är lite mörkare. Det öppna golvet, väggarna,
 planetens framsida och dess belysta kant är oförändrade. Det är lösningen, och learnopengls SSAO.
+
+![SSAO efter varje uppgift](images/ssao-steps.webp "Den råa SSAO-texturen med sitt brus, den blurrade, och scenen utan och med skymningen, ritade av kursens simulator.")
 
 Screen-space ambient occlusion är en mycket anpassningsbar effekt som i hög grad bygger på att justera parametrarna
 efter typen av scen. Det finns ingen perfekt kombination av parametrar för alla sorters scener. Vissa scener fungerar

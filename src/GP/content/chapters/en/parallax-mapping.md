@@ -76,6 +76,8 @@ value at A, giving a vector P, and take P's projection onto the surface – its 
 coordinate offset. This works because the depth at A is approximately the depth at B. It isn't exact, of course: if the
 surface changes depth quickly, the approximation fails, and we'll come back to that.
 
+![Parallax mapping in cross-section](images/parallax-offset.webp "The eye looks at the fragment A on the flat quad; a real relief would let the ray go on to B. Parallax mapping follows the ray down to the depth at A and uses the texture coordinates there, offset by P: close to B, not exactly B.")
+
 The texture we use is not a height map but a *depth map* – a height map inverted: `bricks2_disp.png` is white where the
 surface is deep (the mortar) and black where it is at the surface (the bricks' tops). learnopengl prefers it because it
 is easier to fake depth than height on flat surfaces: the bricks stay where the quad is, and the mortar sinks into it.
@@ -536,6 +538,8 @@ Where between the two steps does the difference cross zero? Assuming it changes 
 `weight = afterDepth / (afterDepth - beforeDepth)` of the way back from the last step to the one before. The final
 texture coordinates mix the two steps with that weight.
 
+![Steep parallax and parallax occlusion mapping](images/parallax-layers.webp "Steep parallax mapping steps along the ray one layer at a time and stops at the first step below the surface. Parallax occlusion mapping interpolates between that step and the one before, where the difference to the depth map crosses zero.")
+
 ```quiz
 In parallax occlusion mapping, `afterDepth = -0.03` and `beforeDepth = 0.01`. Where do the final texture coordinates lie?
 - [ ] Exactly at `currentTexCoords`, the first step below the surface
@@ -610,6 +614,8 @@ Now do the last task, **occlusion**.
 
 Build and run: **the steps disappear** – the bricks' front sides become smooth gradients. The tops of the bricks and the
 background are unchanged.
+
+![Parallax, steep and occlusion](images/parallax-steps.webp "The same bricks after the tasks parallax, steep and occlusion, drawn by the course's simulator, magnified: smeared sides, sides made of steps, smooth sides.")
 
 Parallax occlusion mapping gives surprisingly good results and although some slight artifacts and aliasing issues are
 still visible, it's generally a good trade-off and only really visible when heavily zoomed in or looking at very steep

@@ -1002,6 +1002,8 @@ that (due to the general properties of a spherical shape) the hemisphere's discr
 the zenith angle θ as the sample regions converge towards the centre top. To compensate for the smaller areas, we weigh
 its contribution by scaling the area by sin θ.
 
+![Samples on the hemisphere](images/irradiance-samples.webp "The convolution samples at equal steps of φ and θ, coarser than the course's. Every ring has the same number of samples, but the rings near N are short, so each sample there is weighted with sin θ, and with cos θ for the angle of the light.")
+
 Discretely sampling the hemisphere given the integral's spherical coordinates translates to the following fragment
 code:
 
@@ -1169,6 +1171,8 @@ Build and run: the background is **a very soft blur** with no detail – the hil
 grey-violet everywhere, slightly bluer at the top and warmer at the bottom. It is bright even below the horizon: every
 direction's hemisphere reaches part of the sky or the sun. This is the light a matt surface facing that direction
 receives from the whole environment.
+
+![Environment and irradiance map](images/irradiance-map.webp "The environment and the irradiance map convolved from it, each drawn as the background, drawn by the course's simulator with the spheres left out.")
 
 ```quiz
 In the convolution loop each sample is multiplied by `cos(theta) * sin(theta)`. What is the `sin(theta)` for?

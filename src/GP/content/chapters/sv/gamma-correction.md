@@ -16,6 +16,8 @@ för oss: den verkar rusa genom de mörka tonerna och krypa genom de ljusa. Änd
 korrekt. Eftersom färger alltid har valts genom att titta på vad bildskärmen visar, ligger värdena vi arbetar med i ett
 icke-linjärt rum: dubblar du värdet på en färg får du inte dubbelt så mycket ljus.
 
+![Två rader med gråtoner](images/gamma-ramps.webp "Överst lika steg i värdet som skickas till bildskärmen: de ser jämna ut. Nederst lika steg i ljus, fysikaliskt linjärt: de verkar rusa genom de mörka tonerna.")
+
 Problemet är att alla våra belysningsberäkningar görs i ett linjärt rum: att dubbla ett ljus intensitet, att addera
 bidragen från två ljus eller att skala en färg med `diff` förutsätter allt att resultatet visas som det beräknades. På
 bildskärmen blir dock värdet 0.5 – hälften så ljust, enligt vår matematik – 0.5 upphöjt till 2.2 ≈ 0.218 av full
@@ -39,6 +41,8 @@ Idén med gammakorrigering är att tillämpa inversen av bildskärmens gamma på
 bildskärmen. Tittar vi tillbaka på gammakurvan ser vi att bildskärmen mörkar våra färger med potensen 2.2; om vi först gör
 dem ljusare med den inversa potensen, 1/2.2, tar de två ut varandra och ljuset når vårt öga lika linjärt som vi beräknade
 det.
+
+![Gammakurvorna](images/gamma-curves.webp "Bildskärmen visar ett värde v som v^2.2, så 0.5 syns som 0.218. Korrigeras det först med potensen 1/2.2 blir 0.5 till 0.73, som bildskärmen visar som 0.5: tillsammans blir de två kurvorna en rak linje.")
 
 Ett exempel till. Säg att vi återigen har den mörkröda färgen (0.5, 0.0, 0.0). Innan färgen visas på bildskärmen
 tillämpar vi först gammakorrigeringskurvan på färgvärdet. Linjära färger som visas av en bildskärm skalas ungefär med
@@ -560,6 +564,8 @@ Bygg och kör: ljuset **avtar snabbare** – ljusare rakt under ljusen, mörkare
 learnopengls gammakorrigerade bild. Jämför med hur det började: där var det högra ljusets pöl en mättad orange fläck,
 och de fyra ljusens gråtoner (0.25 till 1.00) såg mer olika ut än de är; nu följer ljusstyrkan ljusens färger och
 avståndet så som fysiken säger att den ska.
+
+![Golvet efter varje uppgift](images/gamma-steps.webp "Golvet efter varje uppgift, ritat av kursens simulator: ingen korrigering, bara shaderns korrigering (urblekt), sRGB-texturen och den kvadratiska dämpningen.")
 
 Gammakorrigering låter oss alltså arbeta med och visa våra renderingar i linjärt rum. Eftersom linjärt rum är meningsfullt
 i den fysiska världen ger de flesta fysikaliska ekvationer nu faktiskt bra resultat (som verklig ljusdämpning). Ju mer

@@ -202,6 +202,8 @@ framebuffer med format med 3 komponenter komplett.
 Geometripasset behöver också en egen djupbuffer: det är djuptestet som gör att G-buffern för varje pixel håller den
 närmaste ytan.
 
+![G-buffern](images/g-buffer.webp "Vad G-buffern håller för de nio lådorna, ritat av kursens simulator: positioner och normaler omräknade till färger, albedon och den spekulära intensiteten.")
+
 ```quiz
 Varför är gPosition och gNormal 16-bitars flyttalsmål, medan albedo och spekulär delar ett 8-bitars mål?
 - [x] En position som (-3.75, -1.25, 2.4) eller en normal med negativa komponenter ryms inte i 0..1, och positioner behöver fler än 256 steg; en färg och en intensitet mellan 0 och 1 klarar sig med 8 bitar
@@ -1086,6 +1088,8 @@ Varför måste G-bufferns djup kopieras till fönstrets djupbuffer innan ljuskub
 ---
 Blitten kopierar bara `GL_DEPTH_BUFFER_BIT`, och fungerar bara om båda djupbuffrarna har samma format – learnopengls kommentar i koden varnar för det.
 ```
+
+![Ljuskuber utan och med djupkopian](images/depth-copy-opengl.webp "Ljuskuberna, ritade av kursens simulator, utan och med glBlitFramebuffer: utan kopian håller fönstrets djupbuffer bara skärmfyrhörningens platta djup, som döljer nästan alla.")
 :::
 :::vulkan
 ```quiz
@@ -1162,6 +1166,8 @@ d = (-Kl + sqrt(Kl² - 4 * Kq * (Kc - Imax * 256/5))) / (2 * Kq)
 Med Kc = 1, Kl = 0.7 och Kq = 1.8 når ett ljus vars ljusaste kanal är 0.5 ungefär 3.5 enheter, ett ljus med en kanal på
 1.0 ungefär 5.1. Varje ljuskällas radie beräknas en gång per ljus på CPU:n och skickas med det; shadern hoppar över ljuset
 överallt där fragmentet ligger längre bort:
+
+![Ett ljus radie](images/light-radius.webp "Ett ljus starkaste kanal gånger dess dämpning över avståndet, för 1.0 och 0.5. Där en kurva faller under 5/256 ligger ljusets radie: ungefär 5.1 och 3.5 enheter.")
 
 ```text
 for(int i = 0; i < NR_LIGHTS; ++i)

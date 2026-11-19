@@ -181,6 +181,8 @@ Vi lagrar de förfiltrerade spekulära reflektionerna i nivåerna: nivå `mip` i
 `mip / 4`, från 0 (64 × 64, en skarp reflektion) till 1.0 (4 × 4, helt sträv). Ju suddigare reflektionen är, desto mindre
 upplösning behöver den, så de krympande mipnivåerna passar bra.
 
+![Pre-filter-mapens mipnivåer](images/prefilter-levels.webp "Pre-filter-mapens fem mipnivåer, ritade som bakgrund av kursens simulator: varje nivå håller miljön blurrad för en högre roughness, med halva upplösningen.")
+
 I förra kapitlet konvolverade vi environment mappen genom att generera samplingsvektorer jämnt fördelade över halvsfären Ω
 med sfäriska koordinater. Det fungerar utmärkt för irradians, men för spekulära reflektioner är det mindre effektivt.
 Vid spekulära reflektioner reflekteras ljuset, beroende på ytans strävhet, tätt eller brett kring en reflektionsvektor r
@@ -344,6 +346,8 @@ jämnt, utan slumptalens klumpar.
 ---
 Det är Van der Corput-sekvensen i bas 2. Jämnt spridda samplingspunkter gör att Monte Carlo-skattningen konvergerar snabbare än med slumpmässiga (Quasi-Monte Carlo), och eftersom den är deterministisk blir den förfiltrerade mappen likadan varje gång.
 ```
+
+![Slumptal och Hammersleypunkter](images/hammersley.webp "64 punkter från slumptal och Hammersleysekvensens 64 punkter: slumptalen klumpar ihop sig och lämnar luckor, Hammersleypunkterna täcker kvadraten jämnt.")
 
 ### GGX-importance sampling
 
@@ -1229,6 +1233,8 @@ Vad innehåller BRDF-integrationsmappens vågräta axel, lodräta axel och två 
 ---
 F0 kunde flyttas ut ur integralen eftersom Fresnel-Schlick-termen är linjär i F0: det som återstår är två integraler av två variabler var, lagrade som två kanaler i en 2D-textur.
 ```
+
+![BRDF-integrationskartan](images/brdf-lut.webp "Uppslagstexturen, ritad av kursens simulator: NdotV åt höger, roughness uppåt; rött är skalan för F0, grönt biasen.")
 
 :::opengl
 ```quiz

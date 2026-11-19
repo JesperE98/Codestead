@@ -185,6 +185,8 @@ We store the pre-filtered specular reflections in the levels: level `mip` holds 
 roughness `mip / 4`, from 0 (64 × 64, a sharp reflection) to 1.0 (4 × 4, completely rough). The blurrier the
 reflection, the less resolution it needs, so the shrinking mip levels fit well.
 
+![The pre-filter mip levels](images/prefilter-levels.webp "The pre-filter map's five mip levels drawn as the background, drawn by the course's simulator: each level holds the environment blurred for a higher roughness, at half the resolution.")
+
 In the previous chapter we convoluted the environment map by generating sample vectors uniformly spread over the
 hemisphere Ω using spherical coordinates. While this works just fine for irradiance, for specular reflections it's less
 efficient. When it comes to specular reflections, based on the roughness of a surface, the light reflects closely or
@@ -353,6 +355,8 @@ points cover the square evenly, without the clumps of random numbers.
 ---
 That is the Van der Corput sequence in base 2. Evenly spread sample points make the Monte Carlo estimate converge faster than random ones (Quasi-Monte Carlo), and being deterministic, the pre-filtered map comes out the same every time.
 ```
+
+![Random and Hammersley points](images/hammersley.webp "64 points from random numbers and the 64 points of the Hammersley sequence: the random ones clump and leave gaps, the Hammersley points cover the square evenly.")
 
 ### GGX importance sampling
 
@@ -1247,6 +1251,8 @@ In the BRDF integration map, what do the horizontal axis, the vertical axis and 
 ---
 F0 could be moved out of the integral because the Fresnel-Schlick term is linear in F0: what remains are two integrals of two variables each, stored as two channels of one 2D texture.
 ```
+
+![The BRDF integration map](images/brdf-lut.webp "The lookup texture, drawn by the course's simulator: NdotV to the right, the roughness upwards; red is the scale of F0, green the bias.")
 
 :::opengl
 ```quiz
