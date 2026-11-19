@@ -193,7 +193,7 @@ En rektangels texturkoordinater går från 0.0 till 2.0 längs båda axlarna, oc
 - [ ] Bilden en gång i en fjärdedel, och bildens kantpixlar utdragna över resten
 - [ ] Bilden en gång, utsträckt över hela rektangeln
 ---
-Med repeat räknas bara koordinatens decimaldel, så både 0..1 och 1..2 täcker hela bilden: två gånger på bredden och två på höjden. Det tredje svaret beskriver clamp-to-edge, som du använder i övningarna.
+Med repeat räknas bara koordinatens decimaldel, så både 0..1 och 1..2 täcker hela bilden: två gånger på bredden och två på höjden. Utdragna kantpixlar är det clamp-to-edge ger, som du använder i övningarna.
 ```
 
 :::opengl

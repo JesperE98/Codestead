@@ -194,7 +194,7 @@ A rectangle's texture coordinates go from 0.0 to 2.0 on both axes, and the textu
 - [ ] The image once in one quarter, and the image's edge pixels stretched over the rest
 - [ ] The image once, stretched over the whole rectangle
 ---
-With repeat addressing only the fractional part of a coordinate counts, so 0..1 and 1..2 both cover the whole image: twice across and twice down. The third answer describes clamp-to-edge, which you will use in the exercises.
+With repeat addressing only the fractional part of a coordinate counts, so 0..1 and 1..2 both cover the whole image: twice across and twice down. Stretched edge pixels are what clamp-to-edge gives, which you will use in the exercises.
 ```
 
 :::opengl
