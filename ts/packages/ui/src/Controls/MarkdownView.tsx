@@ -10,6 +10,15 @@ export interface FencedBlock {
   text: string;
 }
 
+/** A picture of the text (`![alt](href "title")` alone in a paragraph), for {@link MarkdownViewProps.pictureRenderer}. */
+export interface MarkdownPicture {
+  href: string;
+  /** The alt text, entities decoded. */
+  alt: string;
+  /** The caption, or "" when it has none. */
+  title: string;
+}
+
 export interface MarkdownViewProps {
   /** The markdown (already preprocessed: placeholders filled in, distro blocks resolved). */
   markdown: string;
@@ -28,6 +37,11 @@ export interface MarkdownViewProps {
    * null when there is none (the picture is then left out). Without it pictures are not shown.
    */
   imageSource?: (path: string) => Uint8Array | string | null | undefined;
+  /**
+   * Optional renderer for a picture of the text that is something else than a picture file (e.g. Codestead GP's
+   * `viz:` scenes). Return null to show it as a picture (imageSource); the caption is shown under it either way.
+   */
+  pictureRenderer?: (picture: MarkdownPicture) => ReactNode | null | undefined;
   /** Tooltip on animations (a click pauses them). */
   animationHint?: string;
   /** Writing direction of the text ("ltr" or "rtl"); code is always left to right. */
@@ -223,9 +237,17 @@ class Renderer {
 
   /** A picture with its caption (the title), or nothing when it cannot be read. */
   private picture(link: Tokens.Image): ReactNode {
+    const alt = decodeEntities(link.text);
+    const custom = this.p.pictureRenderer?.({ href: link.href, alt, title: link.title ?? "" });
+    if (custom != null)
+      return (
+        <div className="cs-md-picture">
+          {custom}
+          {link.title ? <span className="cs-md-caption">{link.title}</span> : null}
+        </div>
+      );
     const source = this.p.imageSource?.(link.href);
     if (source == null || (typeof source !== "string" && source.length === 0)) return null;
-    const alt = decodeEntities(link.text);
     return (
       <div className="cs-md-picture">
         <AnimatedImage source={source} alt={alt} hint={this.p.animationHint} />
