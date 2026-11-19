@@ -328,6 +328,8 @@ Why does SSAO sample a hemisphere oriented along the normal instead of a full sp
 Crytek's original SSAO used a sphere, which gave its characteristic grey, edge-highlighting look. The normal from the G-buffer makes the hemisphere possible.
 ```
 
+![Sphere and hemisphere kernels](images/ssao-hemisphere.webp "A fragment on the floor in front of a wall, seen from the side. A sample inside the geometry counts as occluded: with a sphere the half below the floor is occluded too; with a hemisphere along the normal only the wall occludes.")
+
 Assuming we have a unit hemisphere, we can obtain a sample kernel with a maximum of 32 samples like this: we vary the x
 and y direction in tangent space between -1.0 and 1.0, and vary the z direction of the samples between 0.0 and 1.0 (if
 we varied the z direction between -1.0 and 1.0 as well we'd have a sphere sample kernel). As the sample kernel will be
@@ -1188,6 +1190,8 @@ Build and run: the lit scene is back, **darker where the AO was grey**. The ring
 (its outer parts lose half to two thirds of their brightness), the floor right under the planet has a soft contact
 shadow that sets the planet on the floor, and the floor/wall edge is a little darker. The open floor, the walls, the
 planet's front and its lit edge are unchanged. That is the solution, and learnopengl's SSAO.
+
+![SSAO after each task](images/ssao-steps.webp "The raw SSAO texture with its noise, the blurred one, and the scene without and with the occlusion, drawn by the course's simulator.")
 
 Screen-space ambient occlusion is a highly customizable effect that relies heavily on tweaking its parameters based on
 the type of scene. There is no perfect combination of parameters for every type of scene. Some scenes only work with a

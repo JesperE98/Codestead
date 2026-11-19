@@ -308,6 +308,8 @@ Varför använder ljusets projektion ett synfält på exakt 90° och bildförhå
 Med mindre än 90° skulle det finnas riktningar som ingen sida täcker, med mer skulle sidorna överlappa och deras kanter inte mötas. Bildförhållandet är 1 eftersom varje sida är kvadratisk.
 ```
 
+![De sex vyerna runt ljuset](images/point-shadow-faces.webp "Rummet sett ovanifrån. Ljuset tittar längs +X, −X, +Z och −Z (och ±Y) med 90° vardera, vilket fyller alla riktningar. Väggfragmentet bakom kuben hittar kubens avstånd i riktningen fragToLight: det ligger längre bort, i skugga.")
+
 Eftersom projektionsmatrisen inte ändras per riktning kan vi återanvända den för alla 6 transformationsmatriserna. Vi
 behöver däremot en egen vymatris per riktning. Med en lookAt-funktion skapar vi 6 vyriktningar, var och en mot en sida
 av cube mapen, i ordningen höger, vänster, upp, ner, nära och fjärran – +X, -X, +Y, -Y, +Z, -Z, ordningen på cube
@@ -1141,6 +1143,8 @@ Gör nu den sista uppgiften, **pcf**: de här raderna ersätter den enda samplin
 Bygg och kör: skuggans **kanter blir mjuka** – dess inre är lika mörkt som förut och den belysta väggen runtom
 oförändrad, men längs kanterna ändras ljusstyrkan nu gradvis: där 5 av de 20 samplingarna ligger i skugga ligger
 fragmentet till en fjärdedel i skugga. Bara pixlarna vid skuggans kanter ändras.
+
+![Rummet från en vid kamera](images/point-shadow-views.webp "Rummet från en kamera nära den främre väggen med ett synfält på 100°, ritat av kursens simulator: djup-cube mapen, och skuggorna av alla fem kuberna med PCF.")
 
 PCF-algoritmen här är fortfarande ganska enkel; det finns mycket mer att säga om mjuka skuggor, och om punktskuggor över
 huvud taget: en geometry shader som skickar ut varje triangel sex gånger är inte gratis, och en del renderare ritar de

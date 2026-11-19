@@ -61,10 +61,10 @@ degrees anyways, right?
 Wrong, this only applies to the diffuse component where an angle higher than 90 degrees between the normal and light
 source means the light source is below the lighted surface and thus the light's diffuse contribution should equal 0.0.
 However, with specular lighting we're not measuring the angle between the light source and the normal, but between the
-view and reflection vector. Picture the light and the camera close above a flat floor, both looking at a point between
-them at a grazing angle: the reflection vector points away from the viewer, more than 90 degrees from the view
-direction – and so the specular term is clamped to exactly 0.0, even though the fragment is lit and a rough surface
-would still show some reflected light there.
+view and reflection vector. Picture the light and the camera close above a flat floor, and a point of the floor farther
+away, beyond the light, that both see at a grazing angle: the reflection vector points away from the viewer, more than
+90 degrees from the view direction – and so the specular term is clamped to exactly 0.0, even though the fragment is lit
+and a rough surface would still show some reflected light there.
 
 This becomes an issue when the specular exponent is low: the highlight then spreads over a large area, wide enough to
 reach the places where the angle passes 90 degrees, and there it stops abruptly. With a high exponent the highlight is
@@ -90,6 +90,8 @@ aligns with the surface's normal vector, the higher the specular contribution.
 When the view direction is perfectly aligned with the (now imaginary) reflection vector, the halfway vector aligns
 perfectly with the normal vector. The closer the view direction is to the original reflection direction, the stronger
 the specular highlight.
+
+![Phong and Blinn-Phong vectors](images/blinn-phong-vectors.webp "The light L and the viewer V low above a floor, on the same side of the point. Phong: the reflection vector R is more than 90° from V, so its specular term is cut off. Blinn-Phong: the halfway vector H stays within 90° of the normal N.")
 
 Here you can see that whatever direction the viewer looks from, the angle between the halfway vector and the surface
 normal never exceeds 90 degrees (unless the light is far below the surface of course). The results are slightly
@@ -424,6 +426,8 @@ Phong and Blinn-Phong are both used with a light and a viewer above a flat floor
 ---
 With L and V both on the normal's side, their sum also points to that side, so dot(N, H) is never negative. That's why Blinn-Phong fades out smoothly where Phong is clamped.
 ```
+
+![Phong and Blinn-Phong on the floor](images/blinn-phong-floor.webp "The chapter's floor drawn by the course's simulator. Above, only the specular term with the exponent 1: Phong's highlight ends at a hard edge, Blinn-Phong's fades out. Below, the whole lighting with the chapter's exponents.")
 
 The difference may look small on a wooden floor, but Blinn-Phong is the more plausible model, especially for rough
 surfaces with low exponents, and it's what the rest of this part uses – the next chapter's four lights are already

@@ -91,6 +91,8 @@ A few numbers differ from learnopengl's program:
 The sphere is learnopengl's `renderSphere()`: a *UV sphere*, whose vertices lie on a grid of 25 × 25 points in (u, v) =
 (xSegment, ySegment), each turned into a point on the sphere:
 
+![The sphere's triangle strip](images/sphere-strip.webp "The index order on a small grid of 4 × 2 segments: the even row from left to right, the odd one back; every index after the first two makes a triangle with the two before it.")
+
 ```cpp
 float xPos = std::cos(xSegment * 2.0f * PI) * std::sin(ySegment * PI);
 float yPos = std::cos(ySegment * PI);
@@ -781,6 +783,8 @@ After the task fresnel, why are the spheres of the top rows so dark apart from t
 ---
 The top row has metallic = 6/7, so only 1/7 of its diffuse light remains. Its reflections are red because F0 is mixed towards the albedo; the bottom row's highlights are white because a dielectric's F0 is the same 0.04 for every colour.
 ```
+
+![The spheres after each task](images/pbr-steps.webp "The 7 × 7 spheres after the tasks lambert, ndf, geometry, fresnel and tone-map, drawn by the course's simulator.")
 
 ## Linear and HDR rendering
 

@@ -554,6 +554,8 @@ Bygg och kör: **den bortre änden visar sitt trä igen** – brädorna är till
 detaljerade, och ingen pixel är rent vit längre. Skenet på väggarna runt den blir lite mörkare; resten av den mörka
 tunneln ser likadan ut, eftersom små värden passerar Reinhard nästan oförändrade.
 
+![Klippt och tone mappad](images/hdr-tonemap.webp "Tunnelns bortre ände, ritad av kursens simulator och förstorad: klippt i det 8-bitars fönstret är den platt vit; med Reinhards tone mapping syns plankorna igen.")
+
 Med Reinhard tone mapping förlorar vi inte längre några detaljer i scenens ljusa områden. Den tenderar dock att gynna
 ljusare områden lite, så att mörkare partier verkar mindre detaljerade och tydliga.
 
@@ -576,6 +578,8 @@ mapped = 1.0 - exp(-hdrColor * exposure)
 de ljusa värdena trängs ihop nära 1.0; en **lägre exponering** gör de mörka partierna mörkare, mot svart, men sprider ut
 de ljusa värdena över kurvan och tar fram detaljerna i de ljusa delarna. Med exponeringen 1.0 blir resultatet nära
 Reinhards – lite ljusare (1.0 avbildas på 0.63 i stället för 0.5).
+
+![Tone mapping-kurvor](images/tone-curves.webp "Vad fönstrets klippning, Reinhards kurva och exponeringskurvan med exponeringarna 0.1, 1.0 och 5.0 gör av HDR-värden från 0 till 6.")
 
 :::opengl
 Exponeringen är en uniform, satt från en global variabel i `main.cpp` (`float exposure = 1.0f;`) innan fyrhörningen
@@ -709,6 +713,8 @@ Vad gör en högre exponering (5.0 i stället för 1.0) med exponerings-tone map
 ---
 Exponeringen multiplicerar HDR-färgen före kurvan. Mörka värden flyttas upp längs kurvans branta början; ljusa värden skjuts ut till den platta änden, där de ser likadana ut. En nattscen vill ha hög exponering, en solig låg.
 ```
+
+![Tre exponeringar](images/hdr-exposure.webp "Tunneln med exponeringarna 0.1, 1.0 och 5.0, ritad av kursens simulator: en låg exponering visar den ljusa änden, en hög de mörka väggarna.")
 
 ```quiz
 Varför flyttar gammakorrigeringen från belysningsshadern till skärmfyrhörningens shader?

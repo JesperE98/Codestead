@@ -95,6 +95,8 @@ I pass 2 får ett golvfragment, transformerat till ljusets vy, djupet 0.9, och d
 Djupkartan lagrar det närmaste djup som ljuset ser i varje riktning. Ett fragment som ligger längre från ljuset än den närmaste ytan ligger bakom den – i dess skugga.
 ```
 
+![Shadow mappingens två pass](images/shadow-map-idea.webp "Pass 1 lagrar det närmaste djupet längs var och en av ljusets strålar i depth map. I pass 2 har golvpunkten P djupet 0.9 sett från ljuset, men depth map håller 0.4 där, lådans ovansida: P ligger i skugga, Q är belyst.")
+
 ## Djupkartan
 
 Det första passet kräver att vi skapar en djupkarta. Djupkartan är djuptexturen renderad från ljusets perspektiv, som vi
@@ -1017,6 +1019,8 @@ Vad orsakar shadow acne, och vad gör biasen mot det?
 Djupkartans begränsade upplösning gör en lutande yta till en trappa av lagrade djup. En bias – större för brantare vinklar mot ljuset – flyttar jämförelsen lite mot ljuset, så att en yta inte längre räknas som sitt eget hinder.
 ```
 
+![Shadow acne och bias](images/shadow-acne.webp "Golvet förstorat, lutat mot ljuset. Varje texel i depth map lagrar ett djup, en liten platt platta tvärs mot ljuset: längs den ligger golvet dels framför plattan (belyst), dels bakom den (i skugga). Med bias ligger hela golvet framför.")
+
 :::opengl
 Gör nu uppgiften **bias**. I `ShadowCalculation`:
 
@@ -1293,6 +1297,8 @@ Bygg och kör: skuggans **kanter blir mjuka**. Inne i skuggan och på det belyst
 kantpixlarna får nu mellanvärden: där 3 av de 9 samplen ligger i skugga är fragmentet till en tredjedel skuggat. På
 avstånd ser skuggorna mycket bättre och mindre hårda ut. Zoomar du in kan du fortfarande se shadow mappingens
 upplösningsartefakter, men i allmänhet ger det här bra resultat för de flesta tillämpningar.
+
+![Shadow acne, bias och PCF](images/shadow-steps.webp "Golvet kring kubens skugga efter uppgifterna shadows, bias och pcf, ritat av kursens simulator och förstorat: shadow acnens ränder, den taggiga kanten, den mjuka kanten.")
 
 ```quiz
 Med 3 × 3-PCF:n hittar ett fragment på skuggans kant 6 av de 9 samplen i skugga. Vilket värde får dess `shadow`?

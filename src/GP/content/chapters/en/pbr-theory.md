@@ -78,6 +78,8 @@ In the microfacet model, what does the roughness parameter describe?
 The microfacets are far smaller than a pixel, so they are not modelled one by one; one number says how they are distributed. The light that arrives is the same – a rough surface spreads its reflection over a wider area, so each part of it is dimmer.
 ```
 
+![Smooth and rough microfacets](images/microfacets.webp "A smooth and a rough surface magnified: parallel light rays reflect in about the same direction from the aligned microfacets, and scatter from the rough ones.")
+
 ## Energy conservation
 
 The microfacet approximation employs a form of *energy conservation*: outgoing light energy should never exceed the
@@ -118,6 +120,8 @@ This distinction between reflected and refracted light brings us to another obse
 they're *mutually exclusive*. Whatever light energy gets reflected will no longer be absorbed by the material itself.
 Thus, the energy left to enter the surface as refracted light is directly the resulting energy after we've taken
 reflection into account.
+
+![Reflection and refraction](images/reflect-refract.webp "Light splits into a reflected part, kS, and a refracted part, kD = 1.0 - kS. In a dielectric the refracted light scatters and partly leaves again as diffuse light; in a metal it is absorbed.")
 
 We preserve this energy conserving relation by first calculating the specular fraction that amounts to the percentage
 the incoming light's energy is reflected. The fraction of refracted light is then directly calculated from the
@@ -223,6 +227,8 @@ p as viewed from ωo.
 The reflectance equation is based around irradiance, which is the sum of all incoming radiance, so we measure light
 of not just a single incoming light direction, but of all incoming light directions within a hemisphere Ω centred
 around point p. A *hemisphere* can be described as half a sphere aligned around a surface's normal n.
+
+![The hemisphere of the reflectance equation](images/reflectance-hemisphere.webp "The hemisphere Ω around the normal n at the point p: light arrives from every direction ωi in it, weakened by cos θ = n · ωi, and Lo is what is reflected towards the viewer, in the direction ωo.")
 
 To calculate the total of values inside an area or (in the case of a hemisphere) a volume, we use a mathematical
 construct called an *integral*, denoted in the reflectance equation as ∫ over all incoming directions dωi within the
@@ -555,6 +561,8 @@ The spheres of the next chapter have the albedo (0.5, 0.0, 0.0). Which base refl
 ---
 Dielectrics reflect a few percent of the light at normal incidence, the same for every colour; metals reflect much more and tinted. The metallic workflow therefore uses the albedo as F0 for metals – and gives metals no diffuse light at all.
 ```
+
+![D, G and F on spheres](images/brdf-terms.webp "Each function of the BRDF alone on a row of the next chapter's spheres, drawn by the course's simulator, with the light at the camera. D and G from smooth to rough; F for base reflectivities from the table.")
 
 ## Cook-Torrance reflectance equation
 

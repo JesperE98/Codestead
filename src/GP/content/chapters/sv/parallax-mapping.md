@@ -76,6 +76,8 @@ vilket ger en vektor P, och tar P:s projektion på ytan – dess x och y i tange
 texturkoordinaterna. Det fungerar eftersom djupet i A ungefär är djupet i B. Exakt är det förstås inte: om ytans djup
 ändras snabbt misslyckas approximationen, och dit kommer vi tillbaka.
 
+![Parallax mapping i genomskärning](images/parallax-offset.webp "Ögat ser fragmentet A på den platta fyrhörningen; en verklig relief skulle låta strålen fortsätta till B. Parallax mapping följer strålen ner till djupet vid A och använder texturkoordinaterna där, förskjutna med P: nära B, inte exakt B.")
+
 Texturen vi använder är inte en höjdkarta utan en *djupkarta* – en inverterad höjdkarta: `bricks2_disp.png` är vit där
 ytan är djup (fogarna) och svart där den ligger i ytan (teglens ovansidor). learnopengl föredrar den eftersom det är
 lättare att fejka djup än höjd på platta ytor: teglen stannar där fyrhörningen är, och fogarna sjunker in i den.
@@ -530,6 +532,8 @@ de två stegen passerar skillnaden noll? Om den ändras linjärt, vid andelen
 `weight = afterDepth / (afterDepth - beforeDepth)` av vägen tillbaka från det sista steget till steget före. De slutliga
 texturkoordinaterna blandar de två stegen med den vikten.
 
+![Steep parallax och parallax occlusion mapping](images/parallax-layers.webp "Steep parallax mapping går längs strålen ett lager i taget och stannar vid första steget under ytan. Parallax occlusion mapping interpolerar mellan det steget och steget före, där skillnaden mot djupkartan passerar noll.")
+
 ```quiz
 I parallax occlusion mapping är `afterDepth = -0.03` och `beforeDepth = 0.01`. Var hamnar de slutliga texturkoordinaterna?
 - [ ] Exakt på `currentTexCoords`, det första steget under ytan
@@ -604,6 +608,8 @@ Gör nu den sista uppgiften, **occlusion**.
 
 Bygg och kör: **trappstegen försvinner** – teglens framsidor blir mjuka övergångar. Teglens ovansidor och bakgrunden är
 oförändrade.
+
+![Parallax, steep och occlusion](images/parallax-steps.webp "Samma tegelstenar efter uppgifterna parallax, steep och occlusion, ritade av kursens simulator och förstorade: utsmetade sidor, sidor av trappsteg, jämna sidor.")
 
 Parallax occlusion mapping ger förvånansvärt bra resultat, och även om några små artefakter och aliasingproblem
 fortfarande syns är det i allmänhet en bra avvägning som bara märks på mycket nära håll eller i mycket branta vinklar.

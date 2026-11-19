@@ -77,6 +77,8 @@ Vad beskriver strävhetsparametern (roughness) i mikrofasettmodellen?
 Mikrofasetterna är mycket mindre än en pixel, så de modelleras inte en och en; ett enda tal säger hur de är fördelade. Ljuset som kommer in är detsamma – en sträv yta sprider sin reflektion över en större yta, så varje del av den blir svagare.
 ```
 
+![Släta och grova mikrofasetter](images/microfacets.webp "En slät och en grov yta förstorade: parallella ljusstrålar reflekteras åt ungefär samma håll från de inriktade mikrofasetterna och sprids från de grova.")
+
 ## Energibevarande
 
 Mikrofasettapproximationen använder en form av *energibevarande*: den utgående ljusenergin får aldrig överstiga den
@@ -111,6 +113,8 @@ mellan metaller och dielektrika behandlas de olika i PBR-pipelinen, vilket vi g�
 Skillnaden mellan reflekterat och brutet ljus leder till en annan iakttagelse om energibevarande: de *utesluter
 varandra*. Den ljusenergi som reflekteras absorberas inte längre av själva materialet. Den energi som är kvar att tränga
 in i ytan som brutet ljus är alltså precis det som återstår när reflektionen är avräknad.
+
+![Reflektion och brytning](images/reflect-refract.webp "Ljuset delas i en reflekterad del, kS, och en bruten del, kD = 1.0 - kS. I ett dielektrikum sprids det brutna ljuset och lämnar delvis ytan igen som diffust ljus; i en metall absorberas det.")
 
 Vi bevarar det här energisambandet genom att först räkna ut den spekulära andelen, alltså hur stor del av det inkommande
 ljusets energi som reflekteras. Andelen brutet ljus räknas sedan direkt ut ur den spekulära andelen:
@@ -211,6 +215,8 @@ reflekterade summan av ljusens irradians mot punkten p, sedd från ωo.
 Reflektansekvationen bygger på irradians, som är summan av all inkommande radians, så vi mäter ljus inte bara från en
 enda inkommande ljusriktning, utan från alla inkommande ljusriktningar inom en halvsfär Ω centrerad kring punkten p. En
 *halvsfär* kan beskrivas som en halv sfär riktad kring ytans normal n.
+
+![Reflektansekvationens halvsfär](images/reflectance-hemisphere.webp "Halvsfären Ω runt normalen n i punkten p: ljus kommer in från varje riktning ωi i det, försvagat med cos θ = n · ωi, och Lo är det som reflekteras mot betraktaren, i riktningen ωo.")
 
 För att räkna ut summan av värdena inom en area eller (som för en halvsfär) en volym använder vi en matematisk
 konstruktion som kallas *integral*, som i reflektansekvationen skrivs ∫ över alla inkommande riktningar dωi inom
@@ -529,6 +535,8 @@ Sfärerna i nästa kapitel har albedot (0.5, 0.0, 0.0). Vilken grundreflektivite
 ---
 Dielektrika reflekterar några procent av ljuset vid vinkelrätt infall, lika mycket för alla färger; metaller reflekterar mycket mer och färgat. Det metalliska arbetsflödet använder därför albedot som F0 för metaller – och ger metaller inget diffust ljus alls.
 ```
+
+![D, G och F på sfärer](images/brdf-terms.webp "Varje funktion i BRDF:en ensam på en rad av nästa kapitels sfärer, ritade av kursens simulator med ljuset vid kameran. D och G från slät till grov; F för basreflektiviteter ur tabellen.")
 
 ## Cook-Torrances reflektansekvation
 
