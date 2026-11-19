@@ -1,0 +1,81 @@
+/* A scene in a chapter: one slide's visual, without the visualizer's story column, dock and transitions. The stage is
+   laid out at a design size (mount.ts) and scaled to the chapter's width. In the light theme this sheet's colours are
+   turned round with the visualizer's (engine/css.ts). */
+
+.rpv {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-align: left;
+  background:
+    radial-gradient(900px 520px at 72% -12%, #17123a 0%, transparent 62%),
+    radial-gradient(700px 480px at 0% 112%, #071d33 0%, transparent 62%),
+    var(--bg);
+}
+
+.rpv-stage {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+}
+
+.rpv .slide {
+  position: absolute;
+  inset: 0;
+  display: block;
+  will-change: auto;
+}
+
+.rpv .story {
+  display: none;
+}
+
+.rpv .right,
+.rpv.no-panel .right {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.rpv .visual {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+/* Links between slides (the overview's stages) lead nowhere inside a chapter. */
+.rpv .mm-chip,
+.rpv [data-slide] {
+  cursor: default;
+}
+
+/* The code under the scene: the slide's API panel. */
+.rpv.rpv-codebox {
+  position: relative;
+  inset: auto;
+  overflow: visible;
+  background: none;
+}
+
+.rpv-codebox .api-panel {
+  max-height: 340px;
+  box-shadow: none;
+  background: var(--panel-solid);
+}
+
+.rpv-codebox .api-toggle {
+  display: none;
+}
+
+.rpv-codebox .api-panel.collapsed .who,
+.rpv-codebox .api-panel.collapsed .api-tabs,
+.rpv-codebox .api-panel.collapsed .api-body {
+  display: flex;
+}

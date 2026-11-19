@@ -67,6 +67,7 @@
         "ts/apps/gp",
         "ts/packages/gp-course",
         "ts/packages/gp-gpu",
+        "ts/packages/pipeline-viz",
         "build/icons/codestead-gp.*",
         "ts/packages/common",
         "ts/packages/learning",
@@ -86,6 +87,7 @@
         "ts/apps/gp",
         "ts/packages/gp-course",
         "ts/packages/gp-gpu",
+        "ts/packages/pipeline-viz",
         "build/icons/codestead-gp.*"
       ],
       "exclude": [
@@ -95,6 +97,8 @@
         "ts/apps/gp/vitest.e2e.config.ts",
         "ts/packages/gp-course/test",
         "ts/packages/gp-gpu/test",
+        "ts/packages/pipeline-viz/test",
+        "ts/packages/pipeline-viz/visualizer/tests",
         "ts/packages/gp-gpu/PORTING.md",
         "ts/packages/common/test",
         "ts/packages/learning/test",
