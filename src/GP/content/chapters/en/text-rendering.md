@@ -217,6 +217,8 @@ baseline, the *origin*, is where the pen is when the glyph is drawn. From there:
 - the bitmap has a width and a height; for letters like 'p' or 'g' part of it hangs below the baseline;
 - and the pen moves on to the next glyph's origin by the *advance*, which includes the space between the glyphs.
 
+![The glyph metrics](images/glyph-metrics.webp "'X' and 'p' of Inter Bold at 48 pixels, as FreeType renders them, enlarged: each bitmap in its box, its bearings from the origin and the baseline, and the advance to the next origin.")
+
 Each of these properties is in FreeType's glyph:
 
 | Property | FreeType | Meaning |
@@ -363,6 +365,8 @@ the default alignment OpenGL would read 16 bytes per row – every row after the
 glyph sheared into garbage. By setting its unpack alignment to 1, we ensure there are no alignment issues (which could
 cause segmentation faults).
 
+![The unpack alignment](images/unpack-alignment.webp "The 'A' of the course's font is 34 pixels wide. Read with an alignment of 4, every row starts 2 bytes too late, and the glyph is sheared.")
+
 Be sure to clear FreeType's resources once you're finished processing the glyphs – which is why `FT_Done_Face` and
 `FT_Done_FreeType` come after the loop.
 :::
@@ -376,6 +380,8 @@ text. What is more, an image cannot have a width or height of 0 – and the spac
 bitmap of 0 × 0. So Vulkan programs usually put all glyphs into **one image, a glyph atlas**: the classic bitmap font's
 idea, filled from the font by FreeType at run time. Each character's quad then samples its own rectangle of that one
 image, and one descriptor set serves the whole text.
+
+![The glyph atlas](images/glyph-atlas.webp "The project's atlas of 16 × 8 cells of 64 × 64 texels, filled with the course's font at 48 pixels; each glyph sits in the top-left corner of its cell.")
 
 The project's atlas is 1024 × 512 pixels: a grid of 16 × 8 cells of 64 × 64 (`ATLAS_CELL`), glyph `c` in cell
 (c % 16, c / 16). At 48 pixels the largest glyph of Inter Bold is 48 × 58, so every glyph fits into its cell, and the
@@ -425,6 +431,8 @@ some text. What is more, a texture of width or height 0 cannot be created at all
 pixels, has a bitmap of 0 × 0. So Direct3D programs usually put all glyphs into **one texture, a glyph atlas**: the
 classic bitmap font's idea, filled from the font by FreeType at run time. Each character's quad then samples its own
 rectangle of that one texture, one descriptor table serves the whole text, and the glyphs can be drawn together.
+
+![The glyph atlas](images/glyph-atlas.webp "The project's atlas of 16 × 8 cells of 64 × 64 texels, filled with the course's font at 48 pixels; each glyph sits in the top-left corner of its cell.")
 
 The project's atlas is 1024 × 512 texels: a grid of 16 × 8 cells of 64 × 64, character c in cell (c % 16, c / 16).
 At 48 pixels the largest glyph of Inter Bold is 48 × 58, so every glyph fits into its cell, and the empty border of

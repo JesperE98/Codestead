@@ -63,6 +63,8 @@ A green layer and a blue layer, both with alpha 0.5, are blended over black with
 The over operator weighs the new fragment by its alpha and what is already there by 1 − alpha, so the layer blended last counts most. For the right picture that must be the nearest layer – here the blue one.
 ```
 
+![The over operator in two orders](images/over-order.webp "A green and a blue layer with alpha 0.5 blended over black, green first and blue first: the layer blended last dominates.")
+
 There is a second problem that has nothing to do with the formula: the depth buffer. Transparent objects are drawn with
 the depth test on, so that opaque objects in front of them hide them. If they also *write* their depth, a near
 transparent fragment stops every fragment behind it from being drawn at all – the depth test rejects them before they
@@ -268,6 +270,8 @@ Why is the blue quad missing where the green quad covers it?
 ---
 Depth writes on a transparent object make it hide what is behind it, as if it were opaque. With depth writes off, the blue quad would be blended over the green one – the wrong order, giving a bluish (0, 64, 128) instead of the correct (0, 128, 64), since the green quad is nearer.
 ```
+
+![Three ways to draw the two quads](images/oit-order.webp "The program as it is, with depth writes off, and with the quads sorted from far to near; the ring marks the pixel (230, 300). Drawn by the course's simulator.")
 
 The next chapter replaces the transparent pass with weighted blended OIT. The opaque quad keeps its ordinary pass, the
 transparent quads go into two extra render targets, and a composite pass puts them together – after which the picture is

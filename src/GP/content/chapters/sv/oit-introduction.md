@@ -63,6 +63,8 @@ Ett grönt och ett blått lager, båda med alfa 0.5, blendas över svart med ove
 Over-operatorn väger det nya fragmentet med dess alfa och det som redan finns med 1 − alfa, så det lager som blendas sist väger tyngst. För att bilden ska bli rätt måste det vara det närmaste lagret – här det blå.
 ```
 
+![Over-operatorn i två ordningar](images/over-order.webp "Ett grönt och ett blått lager med alfa 0,5 blendade över svart, det gröna först och det blå först: lagret som blendas sist dominerar.")
+
 Det finns ett andra problem som inte har med formeln att göra: djupbuffern. Genomskinliga objekt ritas med djuptestet
 påslaget, så att ogenomskinliga objekt framför dem döljer dem. Om de dessutom *skriver* sitt djup hindrar ett nära
 genomskinligt fragment alla fragment bakom det från att ritas över huvud taget – djuptestet förkastar dem innan de hinner
@@ -271,6 +273,8 @@ Varför saknas den blå fyrhörningen där den gröna täcker den?
 ---
 Djupskrivning på ett genomskinligt objekt gör att det döljer det som ligger bakom, som om det vore ogenomskinligt. Med djupskrivningen avstängd skulle den blå blendas över den gröna – fel ordning, som ger ett blåaktigt (0, 64, 128) i stället för det rätta (0, 128, 64), eftersom den gröna ligger närmare.
 ```
+
+![Tre sätt att rita de två fyrhörningarna](images/oit-order.webp "Programmet som det är, utan djupskrivning, och med fyrhörningarna sorterade bakifrån och framåt; ringen markerar pixeln (230, 300). Ritad av kursens simulator.")
 
 Nästa kapitel ersätter det genomskinliga passet med weighted blended OIT. Den ogenomskinliga fyrhörningen behåller sitt
 vanliga pass, de genomskinliga hamnar i två extra render targets, och ett kompositpass sätter ihop allt – och sedan är

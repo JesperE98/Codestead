@@ -226,6 +226,8 @@ specification's valid usage rules and sends a message for each violation to a *d
 that receives the messages. In a release build (`NDEBUG`) `enableValidationLayers` is false, and the program runs
 without the layer and its cost.
 
+![Where Vulkan reports a mistake](images/debug-messages-vulkan.webp "The calls go through the validation layer, which checks them and sends its messages to debugCallback; the driver itself only returns a VkResult for errors at run time.")
+
 The project's messenger asks for three severities:
 
 ```cpp
@@ -543,6 +545,8 @@ call the callback function the moment an error occurred – inside the call that
 which messages are sent; with `GL_DONT_CARE` for source, type and severity and `GL_TRUE`, it enables all of them
 (including the low-severity ones, which are off by default).
 
+![Where OpenGL reports a mistake](images/debug-messages-opengl.webp "A wrong call is reported in two ways: the error flag, which glGetError reads later, and the debug output, which calls glDebugOutput inside the call itself.")
+
 Now do the task **debug-output**: the 4.3 debug context, the `glDebugOutput` function, and its initialization right
 after GLAD is loaded. Build and run. The picture is the same black cube, but now the driver describes the errors in
 words (these are Mesa's texts; NVIDIA and AMD word them differently and use other ids):
@@ -575,6 +579,8 @@ Now do the task **fix-texture**: upload the image to `GL_TEXTURE_2D`, the target
 ```
 
 Build and run: **the wooden cube**, the boards running up its front face – and nothing is printed any more.
+
+![The cube after each fix](images/debug-steps-opengl.webp "The window at the start, after the task use-program and after the task fix-texture. Drawn by the course's simulator.")
 
 ### Filtering debug output
 
@@ -712,6 +718,8 @@ Now do the task **fix-attribute**: give the array two elements and describe the 
 
 Build and run: **the wooden cube**, the boards running up its front face – and nothing is printed any more.
 
+![The cube before and after the fix](images/debug-steps-vulkan.webp "The window at the start – every fragment samples the same texel – and after the task fix-attribute. Drawn by the course's simulator.")
+
 ### Labels
 
 The extension has more for graphics debuggers: `vkCmdBeginDebugUtilsLabelEXT` / `vkCmdEndDebugUtilsLabelEXT` mark a
@@ -811,6 +819,8 @@ call stack shows the line of your code that made it. That is learnopengl's "back
 without having to set the breakpoint yourself. Without a debugger attached, though, the break raises an exception
 nobody handles and the program ends – hence `IsDebuggerPresent()`.
 
+![Where Direct3D 12 reports a mistake](images/debug-messages-d3d12.webp "The debug layer checks the calls: its messages wait in the info queue until CheckDebugMessages reads them, or reach D3D12DebugOutput at the call; the runtime and driver only return an HRESULT for errors at run time.")
+
 Now do the task **debug-callback**: write `D3D12DebugOutput`, and in `LoadPipeline`, after getting the info queue:
 
 ```cpp
@@ -867,6 +877,8 @@ reads black through it: learnopengl's incomplete texture. Now do the task **fix-
 ```
 
 Run it: **the wooden cube**, the boards running up its front face – and no messages any more.
+
+![The cube after each fix](images/debug-steps-d3d12.webp "The window at the start, after the task descriptor-heaps and after the task fix-texture. Drawn by the course's simulator.")
 
 ### Filtering messages
 

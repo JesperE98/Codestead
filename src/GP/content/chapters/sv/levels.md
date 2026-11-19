@@ -422,6 +422,8 @@ ljust gråbeige toning, färgkoderna färgerna från learnopengls spel. Ett trev
 ljusgrå överallt, med bara lite skuggning vid kanterna: tonad med en färg blir den ett block i den färgen – en textur
 för alla färger.
 
+![Bana ett, från fil till mur](images/level-file.webp "Talen i levels/one.lvl och blocken de blir i de översta 800 × 300 pixlarna: varje block 53,3 pixlar brett och 37,5 högt.")
+
 **En skillnad mot learnopengl.** learnopengl räknar ut höjden som `levelHeight / height`, båda `unsigned int` – en
 heltalsdivision: 300 / 8 = 37, så dess rader är 37 pixlar höga och muren slutar 4 pixlar före ytans nederkant. Kursen
 dividerar som floats, `levelHeight / static_cast<float>(height)`, som koden tydligt avser (bredden divideras som float

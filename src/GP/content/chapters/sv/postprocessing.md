@@ -1218,6 +1218,8 @@ Byt sedan raden mot `Effects.Chaos = true;` och gör uppgiften **chaos**: **kant
 (sin(time), cos(time)) × 0,3**. Där bilden är jämn summeras kärnan till svart; tunna ljusa linjer löper längs blockens och
 spritarnas kanter, och himlens stjärnor är prickar. Eftersom texturen upprepas fyller den förskjutna bilden hela fönstret,
 och den rör sig vidare för varje bildruta.
+
+![Effekterna confuse och chaos](images/postprocessing-effects.webp "Spelet efter 1,45 sekunder med provraderna från uppgifterna confuse och chaos. Ritad av kursens simulator.")
 :::vulkan d3d12
 Den rör sig på samma sätt som OpenGL:s – tack vare minustecknet i vertexshadern.
 :::

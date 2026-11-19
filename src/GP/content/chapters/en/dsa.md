@@ -59,6 +59,8 @@ target. `glVertexAttribPointer` describes attribute 0 of the bound VAO *and* rec
 VAO – which is why learnopengl warns never to unbind the element buffer while the VAO is still bound. None of this is
 visible in the calls themselves; you have to know the context's state to know what a line does.
 
+![Bind to edit and direct state access](images/bind-vs-dsa.webp "glBufferData fills whatever buffer is bound to its target; glNamedBufferStorage names the buffer it fills.")
+
 In a small program that is manageable. In a large one it causes real trouble:
 
 - **State leaks.** A function binds a buffer to change it and doesn't restore the old binding. Later code that relied
@@ -349,6 +351,8 @@ With DSA, the vertices are changed to five floats each (position and texture coo
 ---
 The attribute format holds only the relative offset inside a vertex; the distance between vertices belongs to the buffer binding. That is the split `glVertexAttribPointer` mixed up.
 ```
+
+![Attribute format, binding point and buffer](images/attrib-format.webp "Each attribute's format and offset within a vertex, the binding point it reads, and the buffer with its stride behind the binding point.")
 
 ## Textures
 

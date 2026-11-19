@@ -181,6 +181,8 @@ position = Σ weight[i] · finalBoneMatrix[boneId[i]] · bindPosePosition
 Det här är *linear blend skinning*. Eftersom vikterna summerar till 1 hamnar en vertex mitt emellan två ben som böjer sig
 isär mellan de platser vart och ett av benen skulle ta den till, och meshet böjer sig mjukt vid leden.
 
+![Linear blend skinning](images/skinning.webp "En vertex med vikterna 0,5 för Lower och 0,5 för Upper: varje bens slutliga matris flyttar den för sig, och den viktade summan är dit den hamnar.")
+
 ```quiz
 En vertex ligger i (0, 0.55, 0) i bindposen, och dess enda ben `Lower` (vid y = 0.55 i bindposen) har inte rört sig. Vad gör benets slutliga matris med vertexen?
 - [ ] Den flyttar vertexen till origo, eftersom offsetmatrisen förskjuter med −0.55
@@ -719,6 +721,8 @@ Gör nu den sista uppgiften, **play**. Bygg och kör: tentakeln svajar – en v�
 och guppar, spetsen sväller och krymper – ett varv varannan sekund, och den upprepas utan hopp eftersom den sista
 nyckeln är lika med den första. Det förväntade resultatet visar den vid 1.25 s, 1250 ticks, mellan nycklarna vid 1000
 och 1500: tentakeln lutar åt höger, med spetsen uppe till höger. Vid 0.25 s lutar den åt vänster i spegelposen.
+
+![Svajet vid fyra ögonblick](images/tentacle-sway.webp "Tentakeln vid animationens nycklar vid 0, 500, 1000 och 1500 ticks. Ritad av kursens simulator.")
 
 ```quiz
 Animationen är 2000 ticks lång med 1000 ticks per sekund. Animatorns tid står på 1990 ticks och nästa bildruta tar 1/60 s. Var är animationen efter uppdateringen?

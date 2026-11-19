@@ -268,6 +268,8 @@ per sekund flyttas 500 × 1/60 ≈ 8.3 pixlar i en bildruta på 1/60 sekund, och
 sekund. Det är det `dt` som `ProcessInput` och `Update` får. (Kapitlet Kamera använde samma idé för kamerans
 hastighet.)
 
+![Delta time](images/delta-time.webp "Racketen i 500 pixlar per sekund under den första tiondelen av en sekund: med 60 bildrutor per sekund flyttas den 8,3 pixlar per bildruta, med 120 hälften så långt – och båda når 50 pixlar.")
+
 :::opengl
 ```cpp
     // deltaTime variables
@@ -301,6 +303,8 @@ hastighet.)
         glfwSwapBuffers(window);
     }
 ```
+
+![En bildruta i spelloopen](images/game-loop-opengl.webp "En bildruta: tiden, händelserna (key callback skriver Keys), indata (ProcessInput läser Keys), uppdateringen och ritandet – sedan nästa bildruta.")
 :::
 :::vulkan
 ```cpp
@@ -332,6 +336,8 @@ hastighet.)
 
 `drawFrame()` spelar in command buffern – med `Render(Hedgerow)` inuti render passet, som rensar till svart –, skickar
 iväg den och presenterar bilden.
+
+![En bildruta i spelloopen](images/game-loop-vulkan.webp "En bildruta: tiden, händelserna (key callback skriver Keys), indata (ProcessInput läser Keys), uppdateringen och drawFrame – sedan nästa bildruta.")
 :::
 :::d3d12
 D3D12-exemplens ramverk har en egen loop: meddelandeloopen i `wWinMain` anropar `OnUpdate()` och sedan `OnRender()` när
@@ -360,6 +366,8 @@ void D3D12App::OnUpdate()
 
 Den `static` variabeln initieras vid första anropet, så första bildrutans deltaTime är (nästan) 0. `OnRender` spelar
 sedan in bildrutan (`PopulateCommandList`, med `Render(Hedgerow)`), kör den och presenterar.
+
+![En bildruta i spelloopen](images/game-loop-d3d12.webp "En bildruta: fönstrets meddelanden (OnKeyDown och OnKeyUp skriver Keys), tiden, indata (ProcessInput läser Keys), uppdateringen och OnRender – sedan nästa bildruta.")
 :::
 
 Gör nu uppgiften **delta-time**: mät bildrutans tid överst i loopen och skicka den till `ProcessInput` och `Update`.

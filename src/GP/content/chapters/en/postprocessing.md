@@ -1219,6 +1219,8 @@ Then replace the line with `Effects.Chaos = true;` and do the task **chaos**: **
 (sin(time), cos(time)) × 0.3**. Wherever the picture is flat the kernel adds up to black; thin bright lines run along
 the blocks' and sprites' edges, and the stars of the sky are dots. Because the texture repeats, the shifted picture
 fills the whole window, and it moves on with every frame.
+
+![The confuse and chaos effects](images/postprocessing-effects.webp "The game at 1.45 seconds with the try-out lines of the tasks confuse and chaos. Drawn by the course's simulator.")
 :::vulkan d3d12
 It moves the same way as OpenGL's – thanks to the minus in the vertex shader.
 :::

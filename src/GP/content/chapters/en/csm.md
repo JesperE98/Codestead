@@ -78,6 +78,8 @@ With learnopengl's split distances 10, 20, 50 and 250, which cascade does a frag
 The cascades are numbered from 0: 0.1–10, 10–20, 20–50, 50–250, 250–500. The fragment shader picks the first cascade whose far distance is beyond the fragment's depth – here 50.
 ```
 
+![The five cascades](images/csm-splits.webp "The camera's view from above, split at 10, 20, 50 and 250 units into five cascades, in the colours of the chapter's debug view; the distance is drawn on a square-root scale.")
+
 ### The corners of a cascade
 
 For each cascade we need a light-space matrix – a light view and an orthographic projection – whose box encloses that
@@ -695,6 +697,8 @@ box encloses its slice of the frustum; the course describes it but doesn't build
 Now do the third task, **cascade-layer**. Build and run: the floor is red near the camera, green in the middle and blue
 at the back; the cubes take the colour of their cascade. The floor ends 25 units away, inside the blue cascade 2 – the
 yellow and magenta cascades hold only the empty background, where nothing is drawn.
+
+![Three shadow map layers and the cascades](images/csm-layers.webp "Layers 0, 1 and 2 of the shadow map array as the light sees them, and every fragment tinted with its cascade. Drawn by the course's simulator.")
 
 ## Shadows
 

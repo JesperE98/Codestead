@@ -31,6 +31,8 @@ resources…** in the panel copies them into your folder): `powerup_speed.png`, 
 textures). Similar to the block textures, they are light and almost without colour, so each power-up's colour vector
 tints them: the colour makes each kind recognisable.
 
+![The six power-ups](images/powerup-kinds.webp "Each power-up's pill tinted with its colour, its type, what it does and how long it lasts.")
+
 **A test, because no block breaks.** With the course's fixed input the ball bounces off the solid stone (5, 9) in frame
 86 and is lost in frame 151 (see `collision-resolution`): no block is ever destroyed, so no power-up would ever spawn,
 and nothing of this chapter would show. So the second task puts one power-up of each kind into the game by hand, in

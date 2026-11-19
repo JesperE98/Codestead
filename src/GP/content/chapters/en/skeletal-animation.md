@@ -181,6 +181,8 @@ position = Σ weight[i] · finalBoneMatrix[boneId[i]] · bindPosePosition
 This is *linear blend skinning*. Because the weights sum to 1, a vertex halfway between two bones that bend apart lands
 between where each bone would take it, and the mesh bends smoothly at the joint.
 
+![Linear blend skinning](images/skinning.webp "A vertex with the weights 0.5 for Lower and 0.5 for Upper: each bone's final matrix moves it on its own, and the weighted sum is where it goes.")
+
 ```quiz
 A vertex sits at (0, 0.55, 0) in the bind pose, and its only bone `Lower` (at y = 0.55 in the bind pose) has not moved. What does the bone's final matrix do to the vertex?
 - [ ] It moves the vertex to the origin, because the offset matrix translates by −0.55
@@ -717,6 +719,8 @@ Now do the last task, **play**. Build and run: the tentacle sways – a wave run
 bobs, the tip swells and shrinks – one cycle every two seconds, looping without a jump because the last key equals the
 first. The expected result shows it at 1.25 s, 1250 ticks, between the keys at 1000 and 1500: the tentacle leans to the
 right, its tip at the top right. At 0.25 s it leans to the left in the mirror pose.
+
+![The sway at four moments](images/tentacle-sway.webp "The tentacle at the animation's keys at 0, 500, 1000 and 1500 ticks. Drawn by the course's simulator.")
 
 ```quiz
 The animation has a duration of 2000 ticks at 1000 ticks per second. The animator's time is at 1990 ticks and the next frame takes 1/60 s. Where is the animation after the update?

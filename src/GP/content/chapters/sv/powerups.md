@@ -30,6 +30,8 @@ resursfilerna…** i panelen kopierar dem till din mapp): `powerup_speed.png`, `
 blocktexturerna är de ljusa och nästan utan färg, så varje power-ups färgvektor tonar dem: färgen gör varje sort lätt
 att känna igen.
 
+![De sex power-upsen](images/powerup-kinds.webp "Varje power-ups piller tonat i sin färg, dess typ, vad den gör och hur länge den varar.")
+
 **Ett test, eftersom inget block går sönder.** Med kursens fasta indata studsar bollen mot den solida stenen (5, 9) i
 bildruta 86 och tappas i bildruta 151 (se `collision-resolution`): inget block förstörs någonsin, så ingen power-up
 skulle någonsin skapas, och inget i det här kapitlet skulle synas. Därför lägger den andra uppgiften in en power-up av

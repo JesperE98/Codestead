@@ -377,6 +377,8 @@ Gör nu den tredje uppgiften, **specular**. Bygg och kör: en mjuk, utdragen ref
 ljuset och kameran. Den är suddig och vitaktig vid strävhet 0,5, och dess form följer rektangeln. Den effekten kan ett
 punktljus inte ge.
 
+![Reflexen vid fyra strävheter](images/area-roughness.webp "Ljusets reflex på golvet vid strävhet 0,1, 0,3, 0,5 och 0,8. Ritad av kursens simulator.")
+
 ```quiz
 Vilka två värden väljer den texel i LTC1 och LTC2 som den spekulära delen använder?
 - [ ] Ljusets intensitet och dess avstånd till punkten

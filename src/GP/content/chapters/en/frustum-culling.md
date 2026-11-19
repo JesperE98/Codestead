@@ -718,6 +718,8 @@ Now do the fifth task, **camera-frustum**. Build and run: the picture is the gri
 every planet on screen is drawn – but the title says **37 / 101**. Almost two thirds of the planets lie beside or behind
 the camera, and none of them is drawn any more. Everything you see is still there; only the invisible work is gone.
 
+![The culled grid from above](images/culling-map.webp "The grid at 2.0 seconds seen from above, the planets that pass the sphere test filled; the shaded area is where the frustum meets the ground. Computed with the chapter's planes and spheres.")
+
 ## AABB
 
 A sphere is a loose fit for many shapes. The course's planet is flat: a sphere with a wide ring, about twice as

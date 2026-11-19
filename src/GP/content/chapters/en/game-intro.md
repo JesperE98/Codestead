@@ -35,6 +35,8 @@ ends.
   a sticky paddle that holds the ball, a ball that passes through blocks, a wider paddle – and two that make the game
   harder by distorting the whole picture.
 
+![Hedgerow's parts](images/hedgerow.webp "The game at 1.5 seconds, with the power-ups of the Powerups chapter falling. Drawn by the course's simulator.")
+
 The game ends up with a menu to pick a level, a message when you win, a trail of particles behind the ball, a few
 post-processing effects (the screen shakes when the ball hits a stone), text for the lives and the menu, and – in
 learnopengl's version – sound.

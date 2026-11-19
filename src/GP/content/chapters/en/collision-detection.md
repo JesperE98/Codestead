@@ -219,6 +219,8 @@ outside the brick: B + R is a point on the brick's edge (or inside it, if C is i
 brick closest to C. If C is below the brick, only y is clamped and P lies on the bottom edge right above C; if C is down
 and to the right, both are clamped and P is the brick's bottom-right corner.
 
+![The closest point](images/closest-point.webp "The difference D from the brick's centre B to the ball's centre C, clamped to the brick's half size, gives R – and P = B + R is the brick's point closest to the ball, here its corner.")
+
 A clamp operation clamps a value to a value within a given range. This is often expressed as:
 
 ```cpp
@@ -317,6 +319,8 @@ same ten bricks on its path – only some of them a frame later, because the cor
 circle did. At 1.75 s, for instance, the box version had already destroyed four bricks, the circle version three; the
 fourth follows a frame later. The difference is small at this speed, but it is the difference between a ball that hits a
 brick and one that misses it by a corner – it shows when the ball grazes a brick.
+
+![The box test and the circle test](images/collision-shapes.webp "The ball at 1.75 seconds with the box test and with the circle test: the box's corner has already destroyed the marked brick, which the round ball has not touched yet. Drawn by the course's simulator.")
 
 ```quiz
 The ball's centre C is straight below a brick whose centre is B, a little to the right of B but within the brick's width. Where is the closest point P that the circle test measures the distance to?

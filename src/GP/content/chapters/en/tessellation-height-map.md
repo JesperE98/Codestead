@@ -146,6 +146,8 @@ upload-heap buffer (`StrideInBytes = 3 * sizeof(float)`, input layout `POSITION`
 `bytePerPixel` is the number of channels: for a grey image every pixel is one byte, for RGBA four, and the first byte is
 the height either way. learnopengl's map is RGBA; with `nrChannels` from `stbi_load` the same loop reads both.
 
+![From pixel to vertex](images/heightmap-grid.webp "The course's height map: a pixel's column and row give x and z, its grey value the height.")
+
 For a first look, the task draws the vertices as **points**.
 
 :::opengl
@@ -343,6 +345,8 @@ Why does the program draw each strip separately instead of drawing all 130,560 i
 ---
 In a strip every new index makes a triangle with the two before it – also across the jump from one row pair to the next. Separate draws, or a primitive-restart index between the strips, end each strip where it should.
 ```
+
+![Strips over a grid](images/strip-join.webp "Two strips over three rows of a grid; drawn as one strip, the end of the first and the start of the second would be joined by the dashed triangles.")
 
 Now do the fourth task, **strips**. Build and run: the terrain is a solid white shape – the silhouette of the peaks
 against the dark background, the front edge at the bottom. The fragment shader still writes white, so there is no
