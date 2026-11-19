@@ -4,25 +4,32 @@
     "date": "2026-11-19",
     "changes": {
       "en": [
-        "**The same text on every computer again**: Codestead GP brings its text font, Inter, with it again, so the text looks as it did before 0.2.6 instead of taking whatever font your system has."
+        "**The same text on every computer again**: Codestead GP brings its text font, Inter, with it again, so the text looks as it did before 0.2.6 instead of taking whatever font your system has.",
+        "**Pipeline scenes you can step through**: the Render Pipeline Visualizer's pictures in the chapters are now its live scenes – step forward and back, play a step again, switch model or mode and look at the code, in the graphics API, language and theme you chose. Without 3D graphics the pictures are shown as before."
       ],
       "sv": [
-        "**Samma text på alla datorer igen**: Codestead GP har åter med sig sitt typsnitt Inter, så texten ser ut som före 0.2.6 i stället för att ta det typsnitt som råkar finnas på datorn."
+        "**Samma text på alla datorer igen**: Codestead GP har åter med sig sitt typsnitt Inter, så texten ser ut som före 0.2.6 i stället för att ta det typsnitt som råkar finnas på datorn.",
+        "**Pipelinescener att stega igenom**: Render Pipeline Visualizers bilder i kapitlen är nu dess levande scener – stega fram och tillbaka, spela ett steg igen, byt modell eller läge och titta på koden, i det grafik-API, det språk och det tema du valt. Utan 3D-grafik visas bilderna som förut."
       ],
       "de": [
-        "**Wieder dieselbe Schrift auf jedem Computer**: Codestead GP bringt seine Schriftart Inter wieder selbst mit, sodass der Text wie vor 0.2.6 aussieht, statt die Schrift zu nehmen, die dein System gerade hat."
+        "**Wieder dieselbe Schrift auf jedem Computer**: Codestead GP bringt seine Schriftart Inter wieder selbst mit, sodass der Text wie vor 0.2.6 aussieht, statt die Schrift zu nehmen, die dein System gerade hat.",
+        "**Pipeline-Szenen zum Durchklicken**: Die Bilder des Render Pipeline Visualizers in den Kapiteln sind jetzt seine lebendigen Szenen – Schritt vor und zurück, einen Schritt noch einmal abspielen, Modell oder Modus wechseln und den Code ansehen, in der Grafik-API, Sprache und dem Design, die du gewählt hast. Ohne 3D-Grafik erscheinen die Bilder wie bisher."
       ],
       "fr": [
-        "**Le même texte sur chaque ordinateur** : Codestead GP embarque de nouveau sa police Inter, si bien que le texte s'affiche comme avant la 0.2.6 au lieu d'utiliser la police que votre système a sous la main."
+        "**Le même texte sur chaque ordinateur** : Codestead GP embarque de nouveau sa police Inter, si bien que le texte s'affiche comme avant la 0.2.6 au lieu d'utiliser la police que votre système a sous la main.",
+        "**Des scènes du pipeline à parcourir pas à pas** : les images du Render Pipeline Visualizer dans les chapitres sont désormais ses scènes animées – avancez et reculez d'une étape, rejouez une étape, changez de modèle ou de mode et regardez le code, dans l'API graphique, la langue et le thème que vous avez choisis. Sans graphismes 3D, les images s'affichent comme avant."
       ],
       "es": [
-        "**El mismo texto en todos los ordenadores otra vez**: Codestead GP vuelve a incluir su tipografía, Inter, así que el texto se ve como antes de la 0.2.6 en lugar de usar la fuente que tenga tu sistema."
+        "**El mismo texto en todos los ordenadores otra vez**: Codestead GP vuelve a incluir su tipografía, Inter, así que el texto se ve como antes de la 0.2.6 en lugar de usar la fuente que tenga tu sistema.",
+        "**Escenas del pipeline que puedes recorrer paso a paso**: las imágenes del Render Pipeline Visualizer en los capítulos son ahora sus escenas animadas: avanza y retrocede, repite un paso, cambia de modelo o de modo y mira el código, en la API gráfica, el idioma y el tema que elegiste. Sin gráficos 3D, las imágenes se muestran como antes."
       ],
       "zh": [
-        "**每台电脑上的文字重新一致**：Codestead GP 再次自带其文字字体 Inter，文字显示与 0.2.6 之前相同，不再使用系统碰巧安装的字体。"
+        "**每台电脑上的文字重新一致**：Codestead GP 再次自带其文字字体 Inter，文字显示与 0.2.6 之前相同，不再使用系统碰巧安装的字体。",
+        "**可逐步浏览的管线场景**：章节中 Render Pipeline Visualizer 的图片现在是它的实时场景——前进和后退、重播某一步、切换模型或模式并查看代码，全部使用你选择的图形 API、语言和主题。没有 3D 图形时，仍像以前一样显示图片。"
       ],
       "ja": [
-        "**どのパソコンでも同じ文字表示に**：Codestead GP が再び文字フォント Inter を同梱するようになり、システムにあるフォントではなく、0.2.6 より前と同じ見た目で表示されます。"
+        "**どのパソコンでも同じ文字表示に**：Codestead GP が再び文字フォント Inter を同梱するようになり、システムにあるフォントではなく、0.2.6 より前と同じ見た目で表示されます。",
+        "**ステップごとに進められるパイプラインのシーン**：各章の Render Pipeline Visualizer の画像が、動くシーンになりました。ステップを進めたり戻したり、もう一度再生したり、モデルやモードを切り替えてコードを見たりでき、選んだグラフィックス API・言語・テーマで表示されます。3D グラフィックスが使えない環境では、これまでどおり画像が表示されます。"
       ]
     }
   },
