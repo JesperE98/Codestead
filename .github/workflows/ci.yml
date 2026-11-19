@@ -10,38 +10,39 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  DOTNET_CLI_TELEMETRY_OPTOUT: '1'
-  DOTNET_NOLOGO: '1'
-  AVALONIA_TELEMETRY_OPTOUT: '1'
+  NODE_VERSION: 22
+  # The end-to-end tests drive the apps' Electron window with Playwright, which is not a dependency of the workspace.
+  PLAYWRIGHT_VERSION: 1.63.0
 
 jobs:
-  # Every test on both systems, except Codestead GP's TaskTests (the simulated GPU gives the same pictures on both).
-  dotnet:
-    name: .NET (${{ matrix.os }})
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
+  # The apps (ts/, an npm workspace): type check and every Vitest test except Codestead GP's TaskTests (below).
+  typescript:
+    name: TypeScript
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ts
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-node@v4
         with:
-          global-json-file: global.json
-      - run: dotnet build -c Release
-      - run: dotnet test -c Release --no-build -- --filter-not-class Codestead.GP.Tests.TaskTests
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ts/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
 
-  # Codestead GP's TaskTests – every task of every chapter in every API through the simulated GPU – in parallel jobs by
-  # course part. Every part with lessons must be in one list (CiTests checks it).
+  # Codestead GP's TaskTests (ts/packages/gp-course) – every task and exercise of every chapter in every API through the
+  # simulated GPU – in parallel jobs by course part. Every part with lessons must be in one list, here and in
+  # release.yml (ts/packages/gp-course/test/CiTests.test.ts checks it).
   gp-tasks:
     name: GP tasks (${{ matrix.parts }})
     strategy:
       fail-fast: false
       matrix:
         parts:
-          - 'start,getting-started'
-          - 'lighting,model-loading'
-          - 'advanced-opengl'
+          - 'start,getting-started,lighting,model-loading,advanced-opengl'
           - 'advanced-lighting'
           - 'pbr'
           - 'in-practice'
@@ -49,9 +50,47 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CODESTEAD_GP_PARTS: ${{ matrix.parts }}
+    defaults:
+      run:
+        working-directory: ts
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-node@v4
         with:
-          global-json-file: global.json
-      - run: dotnet test --project tests/GP/Codestead.GP.Tests -c Release -- --filter-class Codestead.GP.Tests.TaskTests
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ts/package-lock.json
+      - run: npm ci
+      - run: npx vitest run packages/gp-course/test/TaskTests.test.ts
+
+  # Each app built and driven in its real Electron window (npm run test:e2e in ts/apps/<app>; the tests start their own
+  # Xvfb). Electron's sandbox needs its setuid helper here: Ubuntu's AppArmor rule stops the user namespaces it would
+  # use otherwise (the native packages make the helper setuid root the same way, packaging/ts/postinstall.sh).
+  e2e:
+    name: End-to-end (${{ matrix.app }})
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [linux, gp, hub]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ts
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ts/package-lock.json
+      - run: npm ci
+      - name: Install Xvfb and Playwright
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq xvfb
+          npm install -g "playwright@$PLAYWRIGHT_VERSION"
+          # Electron fetches its binary on first use, not at npm ci: fetch it now so its sandbox helper exists.
+          node node_modules/electron/install.js
+          sudo chown root:root node_modules/electron/dist/chrome-sandbox
+          sudo chmod 4755 node_modules/electron/dist/chrome-sandbox
+      - run: NODE_PATH="$(npm root -g)" npm run test:e2e
+        working-directory: ts/apps/${{ matrix.app }}

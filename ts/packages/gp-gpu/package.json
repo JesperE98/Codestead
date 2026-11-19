@@ -1,0 +1,9 @@
+{
+  "name": "@codestead/gp-gpu",
+  "private": true,
+  "type": "module",
+  "description": "The simulated GPU: readers, GLSL/HLSL interpreter, rasterizer. (port of Codestead.GP.Gpu).",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

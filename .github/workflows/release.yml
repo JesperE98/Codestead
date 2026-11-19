@@ -1,10 +1,10 @@
 name: Release
 
 # Builds, tests and publishes every Codestead product listed in packaging/products.json
-# (today: Codestead Linux and the hub "Codestead").
+# (Codestead Linux, Codestead GP and the hub "Codestead": the TypeScript/Electron apps in ts/apps).
 #
-# How versions work (packaging/products.json, build/Codestead.props):
-#   build/Codestead.props holds only major.minor per product (CodesteadLinuxVersion = 0.6).
+# How versions work (packaging/products.json):
+#   products.json holds only major.minor per product ("majorMinor": "0.6").
 #   Nothing is published when changes reach main: several pull requests are collected and released
 #   together. To release, run this workflow by hand on main with "publish" ticked (Actions -> "Release"
 #   -> "Run workflow"). Every product whose files (its "paths" minus "exclude" in products.json) changed
@@ -12,8 +12,9 @@ name: Release
 #   to 0.7. A product whose files did not change keeps its last release.
 #   => Windows and Linux artifacts are built for every product, installed and smoke-tested on clean
 #      systems (Windows Server 2022/2025, Ubuntu 22.04/24.04, Fedora, Arch Linux, CachyOS), the hub
-#      installs and starts the tool end to end, and only then the changed products are published in
-#      the public repository JesperE98/codestead-releases:
+#      installs and starts the tool end to end, every product that gets a new version is updated to it
+#      from a user's installation of its last C# release and of its previous release (the upgrade gate),
+#      and only then the changed products are published in the public repository JesperE98/codestead-releases:
 #        <id>-v<version>   the release with all files (e.g. codestead-linux-v0.5.0)
 #        <id>-latest       the same files without version in the name + the Velopack update feed
 #        catalog           catalog.json + catalog.json.sig, read by the hub
@@ -21,9 +22,9 @@ name: Release
 #   how the next run knows what changed. Nothing is published until both secrets below exist.
 #
 # Pull requests and pushes to main only plan (which also checks the changelog), test and build: the
-# install tests need the builds as artifacts, which would fill the repository's artifact storage. A run
-# by hand without "publish" builds, install-tests and stops before publishing (also on a branch, to
-# install-test a pull request).
+# install and upgrade tests need the builds as artifacts, which would fill the repository's artifact
+# storage. A run by hand without "publish" builds, install-tests, upgrade-tests and stops before
+# publishing (also on a branch, to install-test a pull request).
 #
 # Secrets: RELEASES_TOKEN (contents read/write on codestead-releases) and CATALOG_SIGNING_KEY
 # (the ECDSA P-256 private key whose public half is build/catalog-signing.pub.pem).
@@ -37,8 +38,7 @@ on:
       - build/**
       - packaging/**
       - src/**
-      - global.json
-      - Directory.Build.props
+      - ts/**
       - .github/workflows/release.yml
   workflow_dispatch:
     inputs:
@@ -54,12 +54,15 @@ concurrency:
   cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
 
 env:
+  RELEASES_REPO: JesperE98/codestead-releases
+  NODE_VERSION: 22
+  NFPM_VERSION: 2.43.0
+  # vpk (Velopack's packaging tool, a .NET tool) is the same version as the apps' npm package velopack (ts/package.json).
+  VPK_VERSION: 1.2.161
+  # .NET only for vpk and the upgrade test's driver (packaging/upgrade-driver), in the jobs that use them.
+  DOTNET_VERSION: 10.0.x
   DOTNET_CLI_TELEMETRY_OPTOUT: '1'
   DOTNET_NOLOGO: '1'
-  AVALONIA_TELEMETRY_OPTOUT: '1'
-  RELEASES_REPO: JesperE98/codestead-releases
-  NFPM_VERSION: 2.43.0
-  VPK_VERSION: 1.2.161
 
 jobs:
   plan:
@@ -67,13 +70,12 @@ jobs:
     outputs:
       products: ${{ steps.plan.outputs.products }}
       publish: ${{ steps.plan.outputs.publish }}
+      upgrade_linux: ${{ steps.plan.outputs.upgrade_linux }}
+      upgrade_windows: ${{ steps.plan.outputs.upgrade_windows }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0 # the whole history, to see what changed since the last release
-      - uses: actions/setup-dotnet@v4
-        with:
-          global-json-file: global.json
       - id: plan
         env:
           GH_TOKEN: ${{ secrets.RELEASES_TOKEN || github.token }}
@@ -89,15 +91,22 @@ jobs:
           python3 packaging/releases_readme.py --repo "$RELEASES_REPO" --tags "$RUNNER_TEMP/tags.txt" --out "$RUNNER_TEMP/README.md"
 
   # The tests run once; the packaging jobs below only build. Codestead GP's TaskTests run in parallel jobs by course
-  # part (gp-tasks, as in ci.yml; CiTests checks that the lists cover every part).
+  # part (gp-tasks, as in ci.yml; ts/packages/gp-course/test/CiTests.test.ts checks that the lists cover every part).
   test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ts
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-node@v4
         with:
-          global-json-file: global.json
-      - run: dotnet test -c Release -- --filter-not-class Codestead.GP.Tests.TaskTests
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ts/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
 
   gp-tasks:
     name: GP tasks (${{ matrix.parts }})
@@ -105,9 +114,7 @@ jobs:
       fail-fast: false
       matrix:
         parts:
-          - 'start,getting-started'
-          - 'lighting,model-loading'
-          - 'advanced-opengl'
+          - 'start,getting-started,lighting,model-loading,advanced-opengl'
           - 'advanced-lighting'
           - 'pbr'
           - 'in-practice'
@@ -115,12 +122,18 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CODESTEAD_GP_PARTS: ${{ matrix.parts }}
+    defaults:
+      run:
+        working-directory: ts
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-node@v4
         with:
-          global-json-file: global.json
-      - run: dotnet test --project tests/GP/Codestead.GP.Tests -c Release -- --filter-class Codestead.GP.Tests.TaskTests
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ts/package-lock.json
+      - run: npm ci
+      - run: npx vitest run packages/gp-course/test/TaskTests.test.ts
 
   build-linux:
     needs: plan
@@ -131,9 +144,16 @@ jobs:
     name: Build Linux – ${{ matrix.product.name }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ts/package-lock.json
+      - run: npm ci
+        working-directory: ts
       - uses: actions/setup-dotnet@v4
         with:
-          global-json-file: global.json
+          dotnet-version: ${{ env.DOTNET_VERSION }}
       - name: Install packaging tools (nfpm, vpk)
         run: |
           curl -sSfL -o /tmp/nfpm.deb "https://github.com/goreleaser/nfpm/releases/download/v${NFPM_VERSION}/nfpm_${NFPM_VERSION}_amd64.deb"
@@ -143,17 +163,17 @@ jobs:
         env:
           PKG_SUMMARY: ${{ matrix.product.summary }}
           PKG_DESCRIPTION: ${{ matrix.product.name }} - ${{ matrix.product.summary }}.
-        run: packaging/build-linux.sh "${{ matrix.product.project }}" "${{ matrix.product.id }}" "${{ matrix.product.name }}" "${{ matrix.product.version }}" artifacts
+        run: packaging/build-linux.sh "${{ matrix.product.app }}" "${{ matrix.product.id }}" "${{ matrix.product.name }}" "${{ matrix.product.exe }}" "${{ matrix.product.version }}" artifacts
       - uses: actions/upload-artifact@v4
-        # Pull requests and pushes only check that everything builds: a run uploads about 1.6 GB of builds,
+        # Pull requests and pushes only check that everything builds: a run uploads several GB of builds,
         # and the repository's artifact storage must stay free for the runs by hand that install and publish.
         if: github.event_name == 'workflow_dispatch'
         with:
           name: linux-${{ matrix.product.id }}
           path: artifacts/
           if-no-files-found: error
-          # Only the install tests and the publish job of this run use the files; keeping them longer
-          # fills the repository's artifact storage (one run uploads four builds).
+          # Only the install and upgrade tests and the publish job of this run use the files; keeping them
+          # longer fills the repository's artifact storage (one run uploads six builds).
           retention-days: 1
 
   build-windows:
@@ -165,22 +185,29 @@ jobs:
     name: Build Windows – ${{ matrix.product.name }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ts/package-lock.json
+      - run: npm ci
+        working-directory: ts
       - uses: actions/setup-dotnet@v4
         with:
-          global-json-file: global.json
+          dotnet-version: ${{ env.DOTNET_VERSION }}
       - run: dotnet tool install -g vpk --version $env:VPK_VERSION
       - name: Build Windows artifacts
-        run: packaging/build-windows.ps1 -Project "${{ matrix.product.project }}" -PackageName "${{ matrix.product.id }}" -DisplayName "${{ matrix.product.name }}" -Version "${{ matrix.product.version }}" -Out artifacts
+        run: packaging/build-windows.ps1 -App "${{ matrix.product.app }}" -PackageName "${{ matrix.product.id }}" -DisplayName "${{ matrix.product.name }}" -Executable "${{ matrix.product.exe }}" -Version "${{ matrix.product.version }}" -Out artifacts
       - uses: actions/upload-artifact@v4
-        # Pull requests and pushes only check that everything builds: a run uploads about 1.6 GB of builds,
+        # Pull requests and pushes only check that everything builds: a run uploads several GB of builds,
         # and the repository's artifact storage must stay free for the runs by hand that install and publish.
         if: github.event_name == 'workflow_dispatch'
         with:
           name: windows-${{ matrix.product.id }}
           path: artifacts/
           if-no-files-found: error
-          # Only the install tests and the publish job of this run use the files; keeping them longer
-          # fills the repository's artifact storage (one run uploads four builds).
+          # Only the install and upgrade tests and the publish job of this run use the files; keeping them
+          # longer fills the repository's artifact storage (one run uploads six builds).
           retention-days: 1
 
   # Installation tests on clean systems: a fresh container per distribution, installing the package
@@ -270,8 +297,80 @@ jobs:
           packaging/hub-e2e.sh "$hub" "$(get hub exe)" "$tool" "$tool_id" "$(get linux name)" "$(get linux version)" \
             "$(get linux exe)${{ matrix.platform == 'windows' && '.exe' || '' }}" "${{ matrix.rid }}" "$(get linux dir)"
 
+  # The upgrade gate: every product that gets a new version is updated to this build from a user's installation of its
+  # last C# release (packaging/products.json, "lastCSharpRelease": downloaded from the releases repository, not
+  # rebuilt; the installed C# app's own Velopack applies the update; then the new build updates itself once more,
+  # TS -> TS) and, once there is one, of its previous (TypeScript) release – keeping the user's data
+  # (packaging/upgrade-test.sh, upgrade-test-windows.ps1). packaging/plan.py lists the cases.
+  upgrade-linux:
+    needs: [plan, build-linux]
+    # The upgrade tests need the uploaded builds (only runs by hand, see above).
+    if: github.event_name == 'workflow_dispatch' && needs.plan.outputs.upgrade_linux != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        case: ${{ fromJSON(needs.plan.outputs.upgrade_linux) }}
+    name: Upgrade test – ${{ matrix.case.name }} ${{ matrix.case.upgradeFrom }} to ${{ matrix.case.version }} – ${{ matrix.case.targetName }}
+    steps:
+      - uses: actions/checkout@v4
+      # .NET for the C# app's update button (packaging/upgrade-driver) and vpk (TS -> TS repacks the build as the next version).
+      - uses: actions/setup-dotnet@v4
+        if: matrix.case.upgradeKind == 'csharp' || matrix.case.upgradeChain
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      - name: Install vpk
+        if: matrix.case.upgradeChain
+        run: |
+          sudo apt-get install -y squashfs-tools
+          dotnet tool install -g vpk --version "$VPK_VERSION"
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux-${{ matrix.case.id }}
+          path: artifacts
+      - name: Update the released ${{ matrix.case.upgradeFrom }} AppImage to this build in a clean ${{ matrix.case.image }} container
+        env:
+          GH_TOKEN: ${{ github.token }}
+          UPGRADE_FROM: ${{ matrix.case.upgradeFrom }}
+          UPGRADE_TS_CHAIN: ${{ matrix.case.upgradeChain && '1' || '0' }}
+        run: |
+          packaging/upgrade-test.sh "${{ matrix.case.id }}" "${{ matrix.case.exe }}" "${{ matrix.case.name }}" \
+            "${{ matrix.case.dir }}" artifacts "${{ matrix.case.image }}"
+
+  # The same with the released Setup.exe (packaging/upgrade-test-windows.ps1, and a silent uninstall at the end).
+  upgrade-windows:
+    needs: [plan, build-windows]
+    if: github.event_name == 'workflow_dispatch' && needs.plan.outputs.upgrade_windows != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        case: ${{ fromJSON(needs.plan.outputs.upgrade_windows) }}
+    runs-on: ${{ matrix.case.os }}
+    name: Upgrade test – ${{ matrix.case.name }} ${{ matrix.case.upgradeFrom }} to ${{ matrix.case.version }} – ${{ matrix.case.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        if: matrix.case.upgradeKind == 'csharp' || matrix.case.upgradeChain
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      - if: matrix.case.upgradeChain
+        run: dotnet tool install -g vpk --version $env:VPK_VERSION
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-${{ matrix.case.id }}
+          path: artifacts
+      - name: Update the released ${{ matrix.case.upgradeFrom }} installation to this build, then uninstall
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $chain = if ('${{ matrix.case.upgradeChain }}' -eq 'true') { @{} } else { @{ NoChain = $true } }
+          packaging/upgrade-test-windows.ps1 -PackageName "${{ matrix.case.id }}" -Executable "${{ matrix.case.exe }}" `
+            -DisplayName "${{ matrix.case.name }}" -ProductDir "${{ matrix.case.dir }}" -Artifacts artifacts `
+            -From "${{ matrix.case.upgradeFrom }}" @chain
+
   publish:
-    needs: [plan, test, gp-tasks, test-linux, test-windows, test-hub]
+    needs: [plan, test, gp-tasks, test-linux, test-windows, test-hub, upgrade-linux, upgrade-windows]
     if: needs.plan.outputs.publish != '[]'
     runs-on: ubuntu-latest
     strategy:

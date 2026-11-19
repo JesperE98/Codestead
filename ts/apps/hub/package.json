@@ -1,0 +1,16 @@
+{
+  "name": "@codestead/app-hub",
+  "private": true,
+  "type": "module",
+  "description": "Codestead – the hub, Electron app (port of Codestead.Hub and Codestead.Hub.Core).",
+  "main": "dist-electron/main.cjs",
+  "scripts": {
+    "build:electron": "vite build -c vite.electron.config.ts --mode main && vite build -c vite.electron.config.ts --mode preload",
+    "build:renderer": "vite build",
+    "build": "npm run build:renderer && npm run build:electron",
+    "start": "electron .",
+    "dev": "npm run build:electron && node scripts/dev.mjs",
+    "test": "vitest run --root ../.. apps/hub",
+    "test:e2e": "npm run build && vitest run --config vitest.e2e.config.ts"
+  }
+}

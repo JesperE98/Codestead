@@ -1,0 +1,71 @@
+/* Codestead GP's own parts of the window: the "Your project" panel and the solution window (the rest is the shared
+   theme, @codestead/ui/codestead.css). */
+
+.cs-gp-project {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.cs-gp-project-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 14px 16px 16px;
+}
+
+/* The window's task list sits in the panel without a margin of its own (C#: TaskList.Margin = 0). */
+.cs-gp-hosted-tasks .cs-tasks {
+  margin: 0;
+}
+
+.cs-gp-main-file {
+  font-family: var(--cs-mono-font);
+  font-size: 12.5px;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+
+.cs-gp-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+}
+
+.cs-gp-progress {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--cs-control);
+  overflow: hidden;
+}
+
+.cs-gp-progress > div {
+  height: 100%;
+  background: var(--cs-accent);
+}
+
+.cs-root button.cs-gp-expected-frame {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  align-self: flex-start;
+  width: 100%;
+  max-width: 400px;
+  cursor: zoom-in;
+}
+
+/* The solution window: the course's code, file by file. */
+.cs-gp-solution-code {
+  background: #0f1318;
+  border-radius: 8px;
+  padding: 10px 14px;
+  overflow-x: auto;
+}
+
+.cs-gp-solution-code pre {
+  margin: 0;
+  font-family: var(--cs-mono-font);
+  font-size: 13px;
+  line-height: 19px;
+  color: #e6edf3;
+  user-select: text;
+}

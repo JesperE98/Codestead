@@ -4,33 +4,43 @@ Den här filen är för dig som äger projektet. Den följer inte med i appen.
 
 ## Kom igång
 
-Kräver [.NET 10 SDK](https://dotnet.microsoft.com/download). Inget annat.
+Kräver [Node.js 22](https://nodejs.org) och npm. Apparna är TypeScript/React/Electron i npm-workspacet `ts/`
+(`ts/apps/linux`, `ts/apps/gp`, `ts/apps/hub` och paketen i `ts/packages/`).
 
 ```bash
-dotnet build
+cd ts
+npm ci
+npm run typecheck
+npm test
 ```
 
-```bash
-dotnet test
-```
+`npm test` kör alla Vitest-tester utom Codestead GP:s TaskTests (se "Codestead GP" nedan). Starta en app:
 
 ```bash
-dotnet run --project src/Linux/Codestead.Linux
+cd ts/apps/linux        # eller ts/apps/gp, ts/apps/hub
+npm run build
+npm start               # som root (container): npx electron . --no-sandbox
 ```
+
+Under utveckling: `npm run dev` (Vites dev-server med omladdning; se appens `package.json`).
 
 Inställningar och terminaler sparas i `%APPDATA%\Codestead\codestead-linux` (Windows) respektive
 `~/.config/Codestead/codestead-linux` (Linux). Med miljövariabeln `CODESTEAD_DATA_DIR` kan du välja
 en annan mapp, t.ex. för att börja om från noll.
 
-`dotnet run --project src/Linux/Codestead.Linux -- --smoke-test` startar fönstret, går igenom alla kapitel
-på alla språk, löser en uppgift och avslutar med `SMOKE OK`. Det är samma test som körs efter varje
-installation i release-flödet.
+`npm run smoke-test` (efter `build`) startar fönstret, går igenom alla kapitel på alla språk, löser en uppgift och
+avslutar med `SMOKE OK`. Det är samma test som körs efter varje installation i release-flödet (`--smoke-test`).
+
+`npm run test:e2e` i en app bygger den och kör det riktiga fönstret med Playwrights `_electron` (Playwright är inget
+beroende i workspacet: `npm install -g playwright` och `NODE_PATH="$(npm root -g)"`; utan skärm startar testet en
+egen Xvfb). CI kör dem i jobbet `e2e`.
 
 ## Ikoner
 
 Varje produkt har en egen ikon i `build/icons/<id>.svg` (hubben: ett hus med en prompt, Codestead Linux:
 en terminal). PNG- och ICO-filerna bredvid används av appen, paketen och installationsprogrammen, och
-hubben visar verktygens ikoner från `src/Hub/Codestead.Hub/Assets/tools/<id>.png`. Ändrar du en SVG:
+hubben visar verktygens ikoner från `src/Hub/Codestead.Hub/Assets/tools/<id>.png` (apparnas egna kopior ligger i
+`src/<App>/Codestead.<App>/Assets/icon.png`). Ändrar du en SVG:
 
 ```bash
 rsvg-convert -w 1024 -h 1024 build/icons/codestead-linux.svg -o build/icons/codestead-linux.png
@@ -40,27 +50,28 @@ och gör om ICO-filen (16–256 px) och kopiorna under `Assets/`.
 
 ## Namn och version
 
-Produktnamn, id:n och versioner finns **bara** i `build/Codestead.props`. Byt namn där. Ett nytt verktyg lägger
-sina egna i `src/<Verktyg>/Directory.Build.props` (som Codestead GP:s `src/GP/Directory.Build.props`, som först
-importerar repots `Directory.Build.props`): `build/Codestead.props` hör till alla produkters filer i
-`packaging/products.json`, så en rad där för det nya verktyget skulle ge Codestead Linux och hubben nya versioner
-utan något nytt i dem.
+Produktnamn, id:n, körbara filer och versioner finns **bara** i `packaging/products.json`. Byt namn där. Varje
+produkt har `id`, `name`, `title` (release-titeln), `summary`, `majorMinor`, `exe` (den körbara filen, t.ex.
+`Codestead.Linux`: paketen, installationerna och hubbens katalog pekar på den), `app` (appen i `ts/apps/`), `dir`
+(produktens mapp) och `lastCSharpRelease` (den sista versionen som var C#; uppgraderingstestet startar därifrån, och
+från produktens föregående release).
+Release-flödet (`plan.py`), byggskripten och apparna (`@codestead/common`: `Products`) läser filen.
 
-Versionerna anges bara som `major.minor` (`CodesteadLinuxVersion` = `0.6`, `CodesteadHubVersion` = `0.2`).
+Versionerna anges bara som `major.minor` (`"majorMinor": "0.6"` för Codestead Linux, `"0.2"` för GP och hubben).
 Patchnumret sätts av release-flödet när du **släpper en version för hand** (se "Bygga installationsfilerna"):
 varje produkt som ändrats sedan sin senaste release får nästa nummer (0.6.0, 0.6.1, 0.6.2 …). En merge till
-`main` släpper ingenting, så flera PR:er samlas i samma release. Vilka filer som hör till en produkt står i `packaging/products.json`:
+`main` släpper ingenting, så flera PR:er samlas i samma release. Vilka filer som hör till en produkt står i samma fil:
 `paths` (mönster som `build/icons/codestead-hub.*` går bra) minus `exclude`. En produkt får bara en ny
-version när någon av dess filer har ändrats. Hubben undantar de delar av det delade `src/Shared/Codestead.UI`
-som bara Codestead Linux använder (lektionskontrollerna); ett test i `tests/Hub/Codestead.Hub.Tests`
-säger till om hubben börjar använda något av dem. Skript som bara styr flödet (`plan.py`,
-installationstesterna …) hör inte till någon produkt. För nästa större version ändrar du `0.6` till
-`0.7`. Lokala byggen får versionen `x.y.0`.
+version när någon av dess filer har ändrats. Testerna (`test/`, `e2e/`) räknas inte. Hubben undantar de delar av de
+delade paketen `ts/packages/ui` och `ts/packages/learning` som bara lärapparna använder (lärfönstret,
+lektionskontrollerna, spelmotorn); `ts/apps/hub/test/ProductFilesTests.test.ts` följer hubbens importer och säger
+till om hubben börjar använda något av dem. Skript som bara styr flödet (`plan.py`, installationstesterna …) hör inte
+till någon produkt. För nästa större version ändrar du `0.6` till `0.7`. Lokala byggen får versionen `x.y.0`.
 
 ## Hubbens bakgrundsläge
 
 Hubben kan ligga i systemfältet (`HubTray`): när ett verktyg öppnas (inställning, på som standard), när
-stängknappen trycks (av som standard) och när den startar med datorn (`Autostart` i `Codestead.Hub.Core`:
+stängknappen trycks (av som standard) och när den startar med datorn (`Autostart` i `ts/apps/hub/src/core`:
 `HKCU\…\Run` på Windows, `~/.config/autostart/codestead-hub.desktop` på Linux, startar med `--background`).
 Saknas systemfält (`TraySupport`: på Linux krävs en StatusNotifierItem-värd, t.ex. GNOME med AppIndicator)
 minimeras hubben i stället, så den aldrig försvinner. Bara en hubb kör per användare (`SingleInstance`): en andra
@@ -70,7 +81,8 @@ varje koll i katalogen, aldrig medan verktyget körs. Snabbtestet (`--smoke-test
 ## Språk
 
 Alla appar har samma språk, i `build/languages.json` (kod, namn, skrivriktning och `offered`). Listan läses
-av Codestead Linux (`LanguagesLib`), hubben (`HubStrings`), release-flödet (`packaging/plan.py`) och testerna.
+av apparna (`@codestead/common`: `Languages`), release-flödet (`packaging/plan.py`, `packaging/ts/package-app.mjs`:
+Chromiums språkfiler) och testerna.
 
 - **Erbjudna språk** (`"offered": true`) visas i menyerna, och deras texter, kapitel och ändringslogg krävs av
   testerna. I dag: engelska (standard), svenska, spanska, tyska, franska, kinesiska och japanska.
@@ -81,8 +93,8 @@ av Codestead Linux (`LanguagesLib`), hubben (`HubStrings`), release-flödet (`pa
 
 ## Ändringslogg ("Vad är nytt")
 
-Vad som ändrats i varje version står i `src/Linux/changelog.json` och `src/Hub/changelog.json`,
-nyast först:
+Vad som ändrats i varje version står i `src/Linux/changelog.json`, `src/GP/changelog.json` och
+`src/Hub/changelog.json`, nyast först:
 
 ```json
 [
@@ -99,9 +111,9 @@ nyast först:
   release skapar den; **varje följande PR fyller på samma post** med sina rader, tills versionen släpps. Uppdatera
   `date` till dagens datum när du lägger till rader. Posten ska finnas på alla språk med lika många rader på
   varje språk. `packaging/plan.py` stoppar både PR-bygget och releasen om posten saknas eller är ofullständig,
-  och testet `WhatsNewTests` kontrollerar filerna.
+  och testet `WhatsNewTests` (`ts/packages/ui/test`) kontrollerar filerna.
 - Skriv för användaren, inte för utvecklaren: vad man märker, inte vilka filer som ändrats.
-- **Codestead Linux** bäddar in sin fil och visar nyheterna första gången den startar efter en uppdatering
+- **Apparna** bygger in sin fil och visar nyheterna första gången den startar efter en uppdatering
   (och från inställningarna). Vilken version som visats sparas i `whatsnew.json` i appens datamapp.
 - **Hubben** visar sina egna nyheter på samma sätt. När release-flödet skriver katalogen tar det med de tio
   senaste posterna för varje verktyg (`packaging/catalog.py --changelog-file`). Hubben visar dem när den
@@ -110,38 +122,37 @@ nyast först:
 
 ## Färgsystemet
 
-Färgerna har fasta betydelser i båda apparna (och i kommande verktyg). De finns som nycklar i
-`src/Shared/Codestead.UI/Themes/Codestead.axaml`, i både ljust och mörkt tema:
+Färgerna har fasta betydelser i alla appar (och i kommande verktyg). De finns som CSS-variabler i
+`ts/packages/ui/src/Themes/codestead.css`, i både ljust och mörkt tema:
 
-| Nyckel | Betydelse | Används till |
+| Variabel | Betydelse | Används till |
 | --- | --- | --- |
-| `CsAccent`, `CsAccentSoft`, `CsOnAccent` | appens egen färg | primärknappar, valt kapitel, fokus – aldrig "rätt/klart" |
-| `CsSuccess`, `CsSuccessSoft` | klart, rätt, godkänt (grönt) | bockar, framstegsmätare, rätt svar, "kapitlet klart" |
-| `CsWarning`, `CsWarningSoft` | ledtråd, varning (bärnsten) | ledtrådar, "texten finns inte på ditt språk", katalogproblem |
-| `CsDanger`, `CsDangerSoft` | fel, underkänt, farligt (rött) | fel svar, underkänt prov, radera-knappar |
-| `CsInfo`, `CsInfoSoft`, `CsLink` | information, länkar (blått) | länkar, nedladdningsmätare |
-| `CsReward`, `CsRewardSoft`, `CsRewardStrong` | belöningar (guld) | XP, nivåer, utmärkelser, dagar i rad |
+| `--cs-accent`, `--cs-accent-soft`, `--cs-on-accent` | appens egen färg | primärknappar, valt kapitel, fokus – aldrig "rätt/klart" |
+| `--cs-success`, `--cs-success-soft` | klart, rätt, godkänt (grönt) | bockar, framstegsmätare, rätt svar, "kapitlet klart" |
+| `--cs-warning`, `--cs-warning-soft` | ledtråd, varning (bärnsten) | ledtrådar, "texten finns inte på ditt språk", katalogproblem |
+| `--cs-danger`, `--cs-danger-soft` | fel, underkänt, farligt (rött) | fel svar, underkänt prov, radera-knappar |
+| `--cs-info`, `--cs-info-soft`, `--cs-link` | information, länkar (blått) | länkar, nedladdningsmätare |
+| `--cs-reward`, `--cs-reward-soft`, `--cs-reward-strong` | belöningar (guld) | XP, nivåer, utmärkelser, dagar i rad |
 
-- **Accentfärgen är appens varumärke**: `src/Shared/Codestead.UI/Themes/Brand.cs` har en färg per app (Linux
-  blågrön, hubben indigo) och appens `App.axaml.cs` lägger in den med `Brand.<App>.ApplyTo(Resources)`.
-  Ett nytt verktyg lägger till en egen `Brand`.
-- `CsWarnBg`/`CsWarnBorder` finns kvar för äldre kod; använd `CsWarningSoft`/`CsWarning` i ny kod.
-- `ThemeTests` kontrollerar att alla nycklar finns i båda teman och att text går att läsa (kontrast minst 4,5:1
-  mot bakgrunderna och mot den egna "Soft"-färgen, och för knapptext på accentfärgen). Byt en färg → kör testet.
-- Emoji visas i färg genom att fönstrets typsnitt (`CsUiFont`) har emoji-typsnitt som reserv.
+- **Accentfärgen är appens varumärke**: `ts/packages/ui/src/Themes/Brand.ts` har en färg per app (Linux
+  blågrön, hubben indigo, GP sin egen) och appen lägger in den med `Brand.<App>.applyTo()` när den startar
+  (`ts/apps/<app>/src/main.tsx`/`App.tsx`). Ett nytt verktyg lägger till en egen `Brand`.
+- `ThemeTests` kontrollerar att alla färger finns i båda teman och att text går att läsa (kontrast minst 4,5:1
+  mot bakgrunderna och mot den egna "soft"-färgen, och för knapptext på accentfärgen). Byt en färg → kör testet.
+- Emoji visas i färg genom att fönstrets typsnitt (`--cs-ui-font`) har emoji-typsnitt som reserv. Texten visas med
+  Inter om det finns på datorn, annars med systemets typsnitt (C#-apparna hade Inter inbyggt).
 
 ## Spelifiering (XP, nivåer, utmärkelser)
 
-Motorn är gemensam för alla verktyg och vet inget om Linux: `src/Shared/Codestead.Learning/` (`GameRules`,
-`GameState`, `XpRules`, `Levels`, `CommonAchievements`), testad mot en påhittad kurs i
-`tests/Shared/Codestead.Learning.Tests`. Ett verktyg beskriver sin kurs med en `CourseOutline` (delar, lektioner,
-vilka delar som har prov) och skapar `new GameRules(outline, utmärkelser)`. Codestead Linux gör det i
-`src/Linux/Codestead.Content/Game/LinuxGame.cs`, med sina egna utmärkelser i `AchievementsLib.cs` och kommandoanalysen
-i `CommandInfo.cs` (en `CommandFacts` som också räknar pipes, sudo, loopar …); Linux-kursens tester finns i
-`tests/Linux/Codestead.Content.Tests/GameTests.cs`. Vyerna (topprad, notiser, firande, galleri, profilrad) finns i
-`src/Shared/Codestead.UI/Controls/Game/` och tar färdigöversatta texter, så att samma vyer fungerar i alla verktyg och
-i hubben. Codestead Linux kopplar ihop dem i `src/Linux/Codestead.Linux/MainWindow.Game.cs`.
-
+Motorn är gemensam för alla verktyg och vet inget om Linux: `ts/packages/learning/src/Game/` (`GameRules`,
+`GameState`, `XpRules`, `Levels`, `CommonAchievements`), testad mot en påhittad kurs i `ts/packages/learning/test`.
+Ett verktyg beskriver sin kurs med en `CourseOutline` (delar, lektioner, vilka delar som har prov) och skapar
+`new GameRules(outline, utmärkelser)`. Codestead Linux gör det i `ts/packages/linux-content/src/Game/LinuxGame.ts`,
+med sina egna utmärkelser i `AchievementsLib.ts` och kommandoanalysen i `CommandInfo.ts` (en `CommandFacts` som också
+räknar pipes, sudo, loopar …); Linux-kursens tester finns i `ts/packages/linux-content/test/GameTests.test.ts`.
+Codestead GP har sina i `ts/packages/gp-course/src/Game/`. Vyerna (topprad, notiser, firande, galleri, profilrad)
+finns i `ts/packages/ui/src/Controls/Game/` och tar färdigöversatta texter, så att samma vyer fungerar i alla
+verktyg och i hubben; lärfönstret kopplar ihop dem (`ts/packages/ui/src/Learning/LearningWindow.Game.tsx`).
 - **XP räknas fram** ur det som är gjort (`XpRules.Total`), så inget kan ges två gånger: uppgift 10, utan
   ledtråd/lösning +5, fråga i texten 2, kapitel 25, del 50, godkänt prov 100, 100 % +50. Kapitel, delar och
   prov som en gång räknats ligger kvar i `GameState` även om de senare "försvinner" (t.ex. vid byte av distro).
@@ -158,124 +169,130 @@ i hubben. Codestead Linux kopplar ihop dem i `src/Linux/Codestead.Linux/MainWind
   omdirigeringar, loopar, skript och man-sidor.
 - **Gamla sparningar**: `GameRules.Sync` körs vid start och ger tyst XP och utmärkelser för tidigare
   framsteg; användaren får en notis om det en gång.
-- **Profil till hubben**: verktyget skriver `profile.json` (`ToolProfile`, `src/Shared/Codestead.UI/Controls/Game/Profile/ToolProfile.cs`)
+- **Profil till hubben**: verktyget skriver `profile.json` (`ToolProfile`, `ts/packages/ui/src/Controls/Game/Profile/ToolProfile.ts`)
   i sin datamapp när något märkbart ändras och vid start. Filen innehåller alla texter på alla språk, så hubben
   kan visa nivå, dagar i rad och galleriet utan verktygets texter. Ett nytt verktyg skriver samma fil.
 
 ## Projektstruktur
 
-Varje app har en egen mapp under `src/` (och samma under `tests/`); det som flera appar använder ligger i
-`src/Shared/`. En app äger allt i sin mapp: projekten, kapiteltexterna, ändringsloggen, beskrivningen som
-hubben visar och texten på release-sidan. `packaging/products.json` pekar på mappen (`"dir"`).
+Koden är npm-workspacet `ts/`: en app per mapp i `ts/apps/`, det som en app ensam använder i egna paket och det som
+flera appar använder i `ts/packages/common`, `learning` och `ui`. Varje produkt har dessutom en mapp under `src/` med
+det som inte är kod: kapiteltexterna, ändringsloggen, beskrivningen som hubben visar, texten på release-sidan och
+UI-texterna. `packaging/products.json` pekar på båda (`"app"`, `"dir"`).
 
 ```text
-build/Codestead.props            Namn, id:n och version för alla produkter
-src/
-├── Shared/                      Gemensamt för alla appar (beror aldrig på Linux-simulatorn)
-│   ├── Codestead.Common/        Ren .NET: språklistan (build/languages.json), översättning med platshållare,
-│   │                            JSON-inställningar, produktinfo (namn, id, version)
-│   ├── Codestead.Learning/      Lärmotorn utan UI: kursens disposition, XP, nivåer, dagar i rad, utmärkelser,
+packaging/products.json          Namn, id:n, körbara filer och version för alla produkter
+build/                           Ikoner, languages.json, katalogens publika nyckel
+ts/
+├── packages/
+│   ├── common/                  Språklistan (build/languages.json), översättning med platshållare, produkterna
+│   ├── learning/                Lärmotorn utan UI: kursens disposition, XP, nivåer, dagar i rad, utmärkelser,
 │   │                            LearningState (det som sparas i state.json)
-│   ├── Codestead.Learning.UI/   Lärfönstret alla verktyg delar (LearningWindow, en fil per del: Layout, Sidebar,
-│   │                            Lesson, Exam, Tasks, Workbench, Settings, Updates, Game, SmokeTest) och
-│   │                            LearningTool – det verktyget ger fönstret
-│   └── Codestead.UI/            Avalonia-delar: tema och färgsystem, markdown-vy, dialoger, kontrollfrågor
-│                                (med en ISandbox som verktyget ger), spelvyer, lagring, "Vad är nytt",
-│                                självuppdatering, och appskalet i App/ (start, inställningar, nyheter, snabbtest)
-├── Linux/                       Codestead Linux
-│   ├── Codestead.Linux/         Appen: LinuxTool (Linux-kursen och terminalen i lärfönstret), Program, App
-│   ├── Codestead.Terminal/      Terminalen (TerminalView, ANSI-färger) och ShellSandbox för kontrollfrågorna
-│   ├── Codestead.Content/       Linux-kursen: kapitel och uppgifter (Chapters/, ChapterDefinitions.cs, Checks.cs), Linux-spelet
-│   │                            (Game/), språk, UI-texter (i18n/ui/*.json)
-│   ├── Codestead.Shell/         Den simulerade terminalen (bash, zsh, fish, apt, pacman, dnf, git ...)
-│   │   ├── Shell/               Kör kommandorader: pipes, omdirigering, sudo, skript, jobb (en partiell fil per del)
-│   │   ├── Parser/              Bash-parser: Lexer, Parser och syntaxträdet (Ast/, en nod per fil)
-│   │   ├── Vfs/                 Virtuellt filsystem med ägare och rwx-rättigheter
-│   │   ├── InitfsLib.cs         Startfilerna för varje distribution
-│   │   ├── World.cs, world/     Elevens dator på elevens språk (namn, ord, övningsfiler)
-│   │   ├── Packages/            Paketdatabasen (olika paketnamn per familj)
-│   │   ├── ShellI18n.cs, i18n/  Simulatorns egna tips och help-sammanfattningar
-│   │   └── Commands/<Grupp>/    Alla kommandon, en mapp per grupp och en fil per kommando (Users/UsersCmd.Useradd.cs …)
+│   ├── ui/                      React: tema och färgsystem, markdown-vy, dialoger, kontrollfrågor (med en ISandbox
+│   │                            som verktyget ger), spelvyer, lagring, "Vad är nytt", självuppdatering (Velopack,
+│   │                            src/electron/) och lärfönstret alla verktyg delar (src/Learning/: LearningWindow,
+│   │                            LearningTool – det verktyget ger fönstret)
+│   ├── linux-shell/             Den simulerade terminalen (bash, zsh, fish, apt, pacman, dnf, git ...)
+│   │   └── src/                 Shell/ (kommandorader: pipes, omdirigering, sudo, skript, jobb), Parser/ (bash-parsern),
+│   │                            Vfs/ (filsystemet med ägare och rwx), InitfsLib.ts (startfilerna per distribution),
+│   │                            World.ts (elevens dator på elevens språk), Packages/ (paketdatabasen), ShellI18n.ts,
+│   │                            Commands/<Grupp>/ (alla kommandon, en mapp per grupp)
+│   ├── linux-content/           Linux-kursen: kapitel och uppgifter (Chapters/, ChapterDefinitions.ts, Checks.ts),
+│   │                            Linux-spelet (Game/), språk, UI-texterna
+│   ├── gp-gpu/                  Codestead GP:s simulerade GPU (se "Codestead GP")
+│   └── gp-course/               Codestead GP:s kurs
+└── apps/
+    ├── linux/                   Codestead Linux: Electron (electron/: main, preload, lagring) och appens React-del
+    │                            (src/: LinuxTool – Linux-kursen och terminalen i lärfönstret –, terminalvyn)
+    ├── gp/                      Codestead GP (src/: GpTool, YourProject/; electron/: kursens arbetstråd)
+    └── hub/                     Hubben "Codestead" (src/core/: katalog, signatur, nedladdning, installation)
+src/
+├── Linux/
 │   ├── content/
 │   │   ├── chapters/<språk>/    Kapiteltexterna (markdown), ett språk per katalog
 │   │   └── i18n/<språk>/        Översatta titlar och uppgiftstexter
+│   ├── Codestead.Content/i18n/ui/   Appens UI-texter
+│   ├── Codestead.Shell/         Simulatorns texter (i18n/) och elevens dator på varje språk (world/)
+│   ├── Codestead.Linux/Assets/  Appens ikon
 │   ├── changelog.json           "Vad är nytt" (nyast först)
 │   ├── description.json         Beskrivningen i hubben, per språk
 │   └── release-notes.md         Texten på release-sidan
-└── Hub/                         Hubben "Codestead"
-    ├── Codestead.Hub/           Appen (Avalonia), texter i i18n/<språk>.json
-    ├── Codestead.Hub.Core/      Logik utan UI: signerad katalog, nedladdning, installation, uppdatering
-    └── changelog.json, description.json, release-notes.md
-tests/
-├── Shared/Codestead.Learning.Tests/ Lärmotorn mot en påhittad kurs (utan Linux)
-├── Shared/Codestead.UI.Tests/   UI (headless): kontroller, tema och kontrast, spelvyer, ändringsloggar
-├── Linux/Codestead.Shell.Tests/ Simulatorn
-├── Linux/Codestead.Terminal.Tests/ Terminalen och sandlådan med den riktiga simulatorn
-├── Linux/Codestead.Content.Tests/ Alla uppgifter i alla distros och språk, spelmotorn, UI-texter
-└── Hub/Codestead.Hub.Tests/     Katalog, signatur, installation, hubbens texter
-packaging/                       Byggskript, installationstester, products.json (vilka produkter som byggs),
-                                 catalog.py (hubbens katalog) och hub-e2e.sh (hubben installerar Codestead Linux)
+├── GP/                          Codestead GP (se nedan), samma filer
+└── Hub/                         Hubben: Codestead.Hub/i18n/ (texterna), Codestead.Hub/Assets/ (ikonerna),
+                                 changelog.json, description.json, release-notes.md
+packaging/                       Byggskript, installations- och uppgraderingstester, products.json (vilka produkter
+                                 som byggs), plan.py (release-planen), catalog.py (hubbens katalog), hub-e2e.sh
+                                 (hubben installerar Codestead Linux), ts/package-app.mjs (appens mapp)
 ```
 
-En ny app (t.ex. C++) får en egen mapp `src/Cpp/` och `tests/Cpp/`, en post i `packaging/products.json` och
-sina id:n och versioner i `src/Cpp/Directory.Build.props` – se "Så gör du ett nytt verktyg" nedan.
+Mappnamnen under `src/` (`Codestead.Shell`, `Codestead.Content` …) kommer från C#-projekten som datan en gång låg
+bredvid; apparna läser filerna på de sökvägarna. Varje paket har sina tester i `test/` bredvid `src/`.
+
+En ny app (t.ex. C++) får en egen app `ts/apps/cpp/`, gärna ett paket för kursen, en mapp `src/Cpp/` och en post i
+`packaging/products.json` – se "Så gör du ett nytt verktyg" nedan.
 
 ## Så gör du ett nytt verktyg
 
-Allt som inte handlar om Linux finns i `src/Shared/` och används av Codestead Linux i dag. Ett nytt verktyg, t.ex.
-**Codestead C++**, behöver bara det som är unikt för ämnet:
+Allt som inte handlar om Linux finns i de delade paketen och används av Codestead Linux och Codestead GP i dag. Ett
+nytt verktyg, t.ex. **Codestead C++**, behöver bara det som är unikt för ämnet:
 
-1. **Mappar och produkt**: `src/Cpp/Codestead.Cpp/` (appen), gärna `src/Cpp/Codestead.Cpp.Course/` (kursen),
-   `src/Cpp/changelog.json`, `description.json`, `release-notes.md`, ikoner i `build/icons/codestead-cpp.*`,
-   id/namn/version i `src/Cpp/Directory.Build.props` och en post med `"dir": "src/Cpp"` i `packaging/products.json`.
-2. **Appen**: `Program.cs` anropar `AppHost.Run<App>(args, product)`; `App.axaml.cs` lägger in en egen `Brand`
-   (accentfärg) och öppnar `new LearningWindow(new CppTool(), smokeTest)`.
-3. **`CppTool : LearningTool`** (jämför `src/Linux/Codestead.Linux/LinuxTool*.cs`):
-   - kursen: kapitel (`CourseChapter`), titlar, texter per språk, källor, uppgifter som `TaskInfo` (text, ledtråd,
-     lösning) och deras nycklar;
-   - spelet: `new GameRules(outline, utmärkelser)` med `CommonAchievements` plus egna, och en `CommandFacts`-klass
-     om verktyget vill räkna egna saker (t.ex. kompileringar);
+1. **Mappar och produkt**: `ts/apps/cpp/` (appen, som `ts/apps/gp`: `electron/main.ts` med `runVelopackHooks()`
+   först, preload, `src/`), gärna `ts/packages/cpp-course/` (kursen), `src/Cpp/changelog.json`, `description.json`,
+   `release-notes.md`, ikoner i `build/icons/codestead-cpp.*` och en post i `packaging/products.json` med id, namn,
+   körbar fil, `majorMinor`, `"app": "ts/apps/cpp"` och `"dir": "src/Cpp"` (utan `lastCSharpRelease`: den har ingen
+   C#-version; uppgraderingstestet startar då från dess föregående release, när den har en).
+2. **Appen**: `ProductInfo` med `Products.meta("cpp", …)`; `App.tsx` lägger in en egen `Brand` (accentfärg) och
+   öppnar lärfönstret med verktyget (`LearningWindow` från `@codestead/ui`).
+3. **Verktyget implementerar `LearningTool`** (`ts/packages/ui/src/Learning/LearningTool.ts`; jämför
+   `ts/apps/linux/src/LinuxTool.tsx` och `ts/apps/gp/src/GpTool.tsx`):
+   - kursen: kapitel (`CourseChapter`), titlar, texter per språk, källor, uppgifter (text, ledtråd, lösning) och
+     deras nycklar;
+   - spelet: `new GameRules(outline, utmärkelser)` med `CommonAchievements` plus egna, och en `CommandFacts` om
+     verktyget vill räkna egna saker (t.ex. kompileringar);
    - varianter om ämnet har sådana (t.ex. kompilatorer: gcc/clang) – annars en enda;
    - arbetsytan: kontrollen under uppgifterna (t.ex. en kodruta och en körknapp), som säger till efter varje körning
-     (`OnRan`) och avgör vilka uppgifter som löstes (`Evaluate`);
+     och avgör vilka uppgifter som löstes;
    - en `ISandbox` för kontrollfrågornas "prova själv".
 4. **Texter**: verktygets UI-texter med samma nycklar som Codestead Linux använder för fönstret (se
    `src/Linux/Codestead.Content/i18n/ui/en.json`) och de egna, på alla erbjudna språk.
-5. **Tester**: kursens uppgifter ska gå att lösa med sina lösningar (som `ChaptersTests` för Linux), och
-   `CodeLayoutTests`/`ProductFilesTests` gäller även den nya mappen.
+5. **Tester**: kursens uppgifter ska gå att lösa med sina lösningar (som `ChaptersTests` för Linux), en
+   `--smoke-test` för installationstesterna, och `ProductFilesTests`/`SelfUpdateTests` gäller även den nya appen.
 
 Hubben behöver ingen ändring: den läser verktygets `profile.json` och katalogen.
 
 ## Codestead GP (grafikprogrammering)
 
-Codestead GP (`src/GP/`, grenen `GraphicsProgramming`) är byggt som ett nytt verktyg enligt avsnittet ovan. Eleven
+Codestead GP (`ts/apps/gp`, `ts/packages/gp-course`, `ts/packages/gp-gpu` och `src/GP/`) är byggt som ett nytt
+verktyg enligt avsnittet ovan. Eleven
 väljer **grafik-API** högst upp – OpenGL 3.3, Vulkan eller DirectX 12 – och det är verktygets *variant*: varje kapitel,
 uppgift och projekt följer valet. Kursen följer learnopengl.com kapitel för kapitel; OpenGL-koden härmar
 learnopengl.com, Vulkan-koden vulkan-tutorial.com och DirectX 12-koden Microsofts D3D12HelloWorld-exempel.
 
 ```text
+ts/apps/gp/                Appen: GpTool (kursen i lärfönstret), YourProject/ (panelen "Your project", huvudfilen per
+                           kapitel och API i mainfiles.json, bilden av förväntat resultat), electron/ (kursens arbete
+                           – kontrollen, bilderna, filerna – i en arbetstråd i main-processen)
+ts/packages/gp-course/     Kursen: GpCourse (delar och kapitel i ordning, startprojekt, uppgifter), Edits
+                           (edits.txt), CourseText (texter per språk och API), Checks/ (uppgifternas kontroller),
+                           Ide/ (elevens kod: ProjectReader, ProjectChecker, StartFiles, ExpectedResult), Game/
+                           (utmärkelser)
+ts/packages/gp-gpu/        Den simulerade GPU:n (utan UI):
+├── Build/                 Kompileringssteget: klamrar, okända API-namn med "did you mean" (src/GP/Codestead.GP.Gpu/
+│                          symbols/*.txt från de riktiga headerfilerna), shaders som inte går att tolka
+├── Shading/               En tolk för den del av GLSL och HLSL som kursen använder (lexer, parser, körning)
+├── Readers/               Läser vad programmet gör: GlReader följer main() anrop för anrop som en drivrutin,
+│                          VulkanReader och D3D12Reader läser programmen så som tutorials skriver dem
+├── Scene/                 Resultatet: fönster, renderingsloop, rensningsfärg, ritanrop, meddelanden (SimNote)
+└── Raster/                Mjukvaru-rasterisering med perspektivkorrekt interpolering, culling och djuptest
 src/GP/
-├── Codestead.GP/          Appen: GpTool (kursen i lärfönstret; .Project: bocka själv och kontroller, .Files:
-│                          panelens knappar, .SmokeTest), YourProject/ (panelen "Your project", huvudfilen per kapitel
-│                          och API i mainfiles.json, bilden av förväntat resultat), NoSandbox (bara quiz-frågor)
-├── Codestead.GP.Course/   Kursen: GpCourse (delar och kapitel i ordning, startprojekt, uppgifter), Edits
-│                          (edits.txt), CourseText (texter per språk och API), Checks/ (uppgifternas kontroller),
-│                          Ide/ (elevens kod: ProjectReader, ProjectChecker, StartFiles,
-│                          ExpectedResult), Game/ (utmärkelser), UI-texter i i18n/ui/<språk>.json
-├── Codestead.GP.Gpu/      Den simulerade GPU:n (utan UI):
-│   ├── Build/             Kompileringssteget: klamrar, okända API-namn med "did you mean" (symbols/*.txt från de
-│   │                      riktiga headerfilerna), shaders som inte går att tolka
-│   ├── Shading/           En tolk för den del av GLSL och HLSL som kursen använder (lexer, parser, körning)
-│   ├── Readers/           Läser vad programmet gör: GlReader följer main() anrop för anrop som en drivrutin,
-│   │                      VulkanReader och D3D12Reader läser programmen så som tutorials skriver dem
-│   ├── Scene/             Resultatet: fönster, renderingsloop, rensningsfärg, ritanrop, meddelanden (SimNote)
-│   └── Raster/            Mjukvaru-rasterisering med perspektivkorrekt interpolering, culling och djuptest
 ├── content/
 │   ├── chapters/<språk>/  Kapiteltexterna (markdown); engelska är källan, svenska krävs, andra språk faller
 │   │                      tillbaka på engelska
 │   ├── i18n/<språk>/      Titel och uppgiftstexter per kapitel (en sträng, eller en per API)
 │   ├── references/        Källor per kapitel (fältet "api" för en källa som bara gäller ett API)
 │   └── projects/<api>/<kapitel>/  start/ (projektet eleven börjar med), solution/, edits.txt, tasks.md
+├── Codestead.GP.Course/i18n/ui/   UI-texterna
+├── Codestead.GP.Gpu/      symbols/ (API-namnen) och Fonts/ (glyferna simulatorn ritar text med)
 └── verify/                verify.sh och apply_edits.py (se nedan)
 ```
 
@@ -289,18 +306,17 @@ src/GP/
 - `edits.txt` är uppgifterna för ett API, i ordning: varje uppgift är en eller flera kodändringar (`find` → `replace`)
   från `start/`. När eleven klickar på lösningen kopieras koden till urklipp, för att klistras in i IDE:n. Alla ändringar efter varandra ska ge
   exakt `solution/` (`apply_edits.py` och `TaskTests` kontrollerar det).
-- Kontrollerna finns i `Codestead.GP.Course/Checks/TaskChecks.<Kapitel>.cs`, per uppgifts-id. Kontrollera helst
+- Kontrollerna finns i `ts/packages/gp-course/src/Checks/TaskChecks.<Kapitel>.ts`, per uppgifts-id. Kontrollera helst
   **resultatet** (pixlar i den simulerade bilden, rensningsfärgen) så att samma kontroll gäller alla API:er; annars
-  koden (`c.Has(...)`, mellanslag i mönstret matchar valfritt blanksteg). Betyder samma id olika saker i olika API:er,
-  använd `PerApi(opengl: …, vulkan: …, d3d12: …)`. `TaskTests` kräver att varje uppgift löses av sin lösning och
+  koden (`c.has(...)`, mellanslag i mönstret matchar valfritt blanksteg). Betyder samma id olika saker i olika
+  API:er, använd `perApi({ opengl: …, vulkan: …, d3d12: … })`. `TaskTests` kräver att varje uppgift löses av sin lösning och
   **inte** redan är löst före.
-- Lägg till kapitlet i `GpCourse.LessonList` (ordningen där är kursens ordning) och dess kontroller i `TaskChecks.cs`.
-- `TaskTests` tar knappt en timme i ett svep, så CI kör dem bara på Ubuntu, i parallella jobb per kursdel
-  (`gp-tasks` i `.github/workflows/ci.yml` och `release.yml`, med `CODESTEAD_GP_PARTS`), och hoppar över dem i
-  pull requests som inte ändrar `src/GP`, `tests/GP`, `src/Shared`, `build/` eller arbetsflödena. Alla andra tester
-  körs på både Ubuntu och Windows. **En ny kursdel ska in i matrisen i båda arbetsflödena** (`CiTests` kontrollerar
-  det). Lokalt: `CODESTEAD_GP_PARTS=pbr dotnet test --project tests/GP/Codestead.GP.Tests -- --filter-class
-  Codestead.GP.Tests.TaskTests`.
+- Lägg till kapitlet i `lessonList` i `ts/packages/gp-course/src/GpCourse.ts` (ordningen där är kursens ordning) och
+  dess kontroller i `Checks/`.
+- `TaskTests` tar ungefär en timme på en kärna, så `npm test` hoppar över dem; CI kör dem i parallella jobb per
+  kursdel (`gp-tasks` i `.github/workflows/ci.yml` och `release.yml`, med `CODESTEAD_GP_PARTS`). **En ny kursdel ska
+  in i matrisen i båda arbetsflödena** (`CiTests` kontrollerar det). Lokalt, i `ts/`:
+  `CODESTEAD_GP_PARTS=pbr npx vitest run packages/gp-course/test/TaskTests.test.ts`.
 
 **Koden ska vara korrekt.** `src/GP/verify/verify.sh <mappar>` kompilerar projekten med de riktiga verktygen:
 OpenGL och Vulkan med g++ (GLAD genereras med `pip install glad`), DirectX 12 med MinGW-w64 mot Microsofts
@@ -311,7 +327,7 @@ för varje kapitel du ändrar, och `apply_edits.py` på kapitlet.
 
 **Eleven skriver, bygger och kör koden i sin egen IDE** (Visual Studio, CLion, Rider, VS Code), med vilken
 mappstruktur hen vill; appen har ingen editor, ingen Bygg & kör-knapp, ingen förhandsvisning och bevakar ingen mapp.
-Panelen **Your project** (`YourProject/ProjectPanel`) har knapparna *Check my code*, *Change file…* och *Save start
+Panelen **Your project** (`ts/apps/gp/src/YourProject/ProjectPanel.tsx`) har knapparna *Check my code*, *Change file…* och *Save start
 files…*, varje uppgifts läge under uppgiften (låst, inte klar, kontrolleras, inte än – med kontrollens meddelanden –,
 klar) med knappen **Mark as done**, och bilden av **förväntat resultat**: kursens lösning fram till uppgiften
 (`ExpectedResult`), ritad av simulatorn i bakgrunden.
@@ -335,18 +351,18 @@ klar) med knappen **Mark as done**, och bilden av **förväntat resultat**: kurs
 **Övningar.** Efter kapitlets steg (learnopengls genomgång, `edits.txt`) kan ett kapitel ha övningar:
 `projects/<api>/<kapitel>/exercises.txt` i samma format, med id som börjar på `ex-`. Varje övning är en egen ändring av
 kapitlets färdiga program (`GpCourse.SolutionProject`), inte av en annan övning. Texterna ligger bland uppgifterna i
-`i18n/<språk>/<kapitel>.json`, kontrollerna i `Checks/TaskChecks.Exercises*.cs` (en övning utan kontroll bockar eleven
+`i18n/<språk>/<kapitel>.json`, kontrollerna i `Checks/TaskChecks.Exercises*.ts` (en övning utan kontroll bockar eleven
 i själv). Panelen visar stegen under "Follow along" och övningarna under "Exercises" (`TaskInfo.Section`).
-`TaskTests.EachExerciseIsSolvedByItsSolution` kräver att varje övning byggs rent och att en övning med kontroll inte
+`TaskTests` kräver att varje övning byggs rent och att en övning med kontroll inte
 godkänns av kapitlets program men av sin lösning; `CODESTEAD_GP_CHAPTERS=a,b` kör testerna för några kapitel.
 
 **Bilder i kapitlen.** Ett stycke som bara är en bild, `![alt](images/namn.webp "bildtext")`, visas av textvyn
-(`AnimatedImage`: PNG, JPEG, WebP och animerad GIF/WebP; bildrutor på en sekund eller mer är ett bildspel som tonar
+(`AnimatedImage` i `ts/packages/ui`: PNG, JPEG, WebP och animerad GIF/WebP; bildrutor på en sekund eller mer är ett bildspel som tonar
 över; ett klick pausar). Bilderna ligger i `src/GP/content/images/` – `sv/`/`en/` för bilder med text i, annars
 gemensamma – och bäddas in; `PictureTests` kräver att varje bild finns och används. `images/visualizer/` fångar steg ur
 [Render Pipeline Visualizer](https://github.com/jesper-e98/RenderpipelineVisualizer) (`capture.js` med Playwright,
-`make_pictures.py`), och `src/GP/tools/RenderResults` + `images/make_results.py` renderar varje kapitels resultat
-med simulatorn till `images/results/<kapitel>.webp`.
+`make_pictures.py`), och `ts/packages/gp-gpu/test/RenderResults.test.ts` (körs bara med `CODESTEAD_RENDER_RESULTS=<mapp>`)
++ `images/make_results.py` renderar varje kapitels resultat med simulatorn till `images/results/<kapitel>.webp`.
 
 **Simulatorn är inte en riktig GPU.** Den förstår kursens kod och de vanliga misstagen (glömd `glClear`, avstängt
 vertexattribut, ingen pipeline bunden, saknade barriärer …) och säger till med meddelanden som `sim.<nyckel>` i
@@ -388,7 +404,7 @@ det den förstår kan ge en annan bild än en riktig körning. Nya kapitel
      resten som svar (testerna kör kommandot i simulatorn och kontrollerar svaret). Det finns inga
      miniterminaler: en `try`-fråga löses när eleven kör kommandot i den stora terminalen (ett klick på
      kommandot lägger in det där). Första raden är det kommando som visas, och alla rader godtas – liksom
-     ett kommando med samma utskrift som första raden ger på en ny dator (`ISandbox.OutputOf`). Prov
+     ett kommando med samma utskrift som första raden ger på en ny dator (`ISandbox.outputOf`). Prov
      visar också terminalen, eftersom de har `try`-frågor.
      Ett kapitel utan kontrollfrågor låses upp med knappen "Jag har läst kapitlet".
    - **Källor**: `src/Linux/content/references/mitt-kapitel.json` med
@@ -397,14 +413,14 @@ det den förstår kan ge en annan bild än en riktig körning. Nya kapitel
    - **Sammanfattning och prov** för ett huvudkapitel: `<huvudkapitel>-summary.md` och
      `<huvudkapitel>-exam.md` (t.ex. `grunder-exam.md`). De läggs till sist i huvudkapitlet av sig själva.
      Provet består av kontrollfrågor (minst 10), öppnas när alla sub-kapitel är klara och kräver 80 %.
-2. Lägg till kapitlet med uppgifter i en egen fil, `src/Linux/Codestead.Content/Chapters/<huvudkapitel>/<id>.cs`,
-   och anropa det i listan i `ChapterDefinitions.cs` (ordningen där är kursens ordning). Varje uppgift har
-   en `Check` som körs efter varje kommando och en `Solution` (lista med kommandon).
-3. Kör `dotnet test`. Testerna kör alla lösningar i alla distributioner och kontrollerar att
+2. Lägg till kapitlet med uppgifter i en egen fil, `ts/packages/linux-content/src/Chapters/<huvudkapitel>/<id>.ts`,
+   och lägg till det i listan i `ChapterDefinitions.ts` (ordningen där är kursens ordning). Varje uppgift har
+   en kontroll som körs efter varje kommando och en lösning (lista med kommandon).
+3. Kör `npm test` i `ts/`. Testerna kör alla lösningar i alla distributioner och kontrollerar att
    varje kapitel finns på alla språk, och att kontrollfrågorna är likadana på alla språk.
 
-Behövs ett nytt kommando lägger du det i `src/Linux/Codestead.Shell/Commands/`. Ska det installeras med
-pakethanteraren lägger du också till ett paket i `Packages/PackagesLib.Catalog.cs`.
+Behövs ett nytt kommando lägger du det i `ts/packages/linux-shell/src/Commands/`. Ska det installeras med
+pakethanteraren lägger du också till ett paket i `ts/packages/linux-shell/src/Packages/PackagesLib.Catalog.ts`.
 
 ## Elevens dator på elevens språk
 
@@ -423,12 +439,13 @@ språk i `src/Linux/Codestead.Shell/world/<språk>.json`:
 - `names` är det eleven skriver (användare, filer, mappar, grupper, variabler). De är ASCII; språk med
   annan skrift (ru, zh, ja, ar, hi) använder de engelska namnen.
 - `words` är korta texter på språket, `files` innehållet i övningsfilerna.
-- `en.json` är källan: alla språk har samma nycklar (testerna i `WorldTests.cs` kontrollerar det).
+- `en.json` är källan: alla språk har samma nycklar (`ts/packages/linux-shell/test/WorldTests.test.ts` kontrollerar det).
 - Kapiteltexter, uppgiftstexter, lösningar och kontroller skriver namnen som platshållare: `{{documents}}`,
-  `{{user}}`. I kapitlens kontroller fyller hjälpfunktionerna i `Checks.cs` (`Node`, `Re(c, …)`, `Env`, `W(c)`) i dem.
+  `{{user}}`. I kapitlens kontroller fyller hjälpfunktionerna i `ts/packages/linux-content/src/Checks.ts` (`node`,
+  `re(c, …)`, `w(c)` …) i dem.
 - Det program skriver (loggar, konfigurationsfiler, systemfiler) är engelska på alla språk, som på en
   riktig dator. `$LANG` följer språket, och `sort` sorterar därefter.
-- När eleven byter språk översätts terminalen på plats (`WorldMigration.Translate`): övningsfilerna och
+- När eleven byter språk översätts terminalen på plats (`WorldMigration`): övningsfilerna och
   användaren byter namn, och orörda filer får det nya språkets text. Elevens egna filer och git-repon
   lämnas som de är.
 - Testerna löser alla uppgifter med varje språks dator och kör kontrollfrågorna (`predict`, `try`) i
@@ -440,55 +457,63 @@ så att en översättning kan provas utan att bygga om.
 ## Simulatorns egna texter
 
 Tips, anmärkningar och välkomsttexten som simulatorn skriver i terminalen finns i
-`src/Linux/Codestead.Shell/i18n/<språk>.json` (`messages`), och anropas med en nyckel:
-`sh.Msg("pkg.aptListsEmpty")` eller `Dim(sh, "users.noPasswordSet", ("user", name))`. Engelska
-(`en.json`) är källan; lägg till nyckeln i filerna för alla erbjudna språk med samma `{platshållare}`. Utskrifter som
-härmar riktiga program (`ls: cannot access ...`) och manualsidor översätts inte.
+`src/Linux/Codestead.Shell/i18n/<språk>.json` (`messages`) och anropas med en nyckel i
+`ts/packages/linux-shell` (`ShellI18n`). Engelska (`en.json`) är källan; lägg till nyckeln i filerna för alla
+erbjudna språk med samma `{platshållare}`. Utskrifter som härmar riktiga program (`ls: cannot access ...`) och
+manualsidor översätts inte.
 
-Sammanfattningarna som `help` visar (`summaries`) skrivs i koden (`Summary` på svenska,
-`SummaryEn` på engelska) och förs över till `sv.json` och `en.json` med
-`CODESTEAD_UPDATE_SHELL_I18N=1 dotnet test --project tests/Linux/Codestead.Shell.Tests`. Översätt sedan
-ändringen i de andra språken. Testerna i `ShellI18nTests.cs` kontrollerar nycklar, platshållare och
-att inget har glömts.
+Sammanfattningarna som `help` visar (`summaries`) skrivs i koden (kommandots `summary` på svenska och `summaryEn` på
+engelska) och förs över till `sv.json` och `en.json` med
+`CODESTEAD_UPDATE_SHELL_I18N=1 npx vitest run packages/linux-shell` (i `ts/`). Översätt sedan ändringen i de andra
+språken. `ShellI18nTests` kontrollerar nycklar, platshållare och att inget har glömts.
 
 ## Simulatorns filsystem, cron och servern
 
-- **Länkar** (`Vfs/`): en symbolisk länk är en nod med `Type = "link"` och sökvägen i `Content`.
-  `VFS.Lookup` följer länkar (högst 40, sedan `ELOOP`); `Lookup(..., follow: false)` och
-  `TryLookupLink` ger själva länken, som `lstat`. Kommandon som arbetar med namnet (rm, mv, rmdir,
+- **Länkar** (`ts/packages/linux-shell/src/Vfs/`): en symbolisk länk är en nod av typen `"link"` med sökvägen
+  som innehåll. `vfs.lookup` följer länkar (högst 40, sedan `ELOOP`); varianten utan att följa och
+  `tryLookupLink` ger själva länken, som `lstat`. Kommandon som arbetar med namnet (rm, mv, rmdir,
   ls -l, find, tar) använder den varianten. En hård länk är samma nod i flera kataloger, med
-  `Nlink` och ett gemensamt `Ino`; när en sparad terminal läses in fogar `JoinHardLinks` ihop dem
-  igen. `VfsLib.CloneNode` (cp) ger alltid nya filer utan inodnummer.
-- **umask** finns på `VFS` och sparas med terminalen. `WriteFile` och `Mkdir` använder den.
+  länkantal och ett gemensamt inodnummer; när en sparad terminal läses in fogas de ihop
+  igen. `VfsLib.cloneNode` (cp) ger alltid nya filer utan inodnummer.
+- **umask** finns på filsystemet och sparas med terminalen. Att skriva filer och skapa mappar använder den.
 - **cron** (`Commands/Cron/`): användarnas crontab ligger i `/var/spool/cron/crontabs`
-  (Debian/Ubuntu) eller `/var/spool/cron`. `CronCmd.Tick` körs före varje kommandorad och kör de
+  (Debian/Ubuntu) eller `/var/spool/cron`. Cron-kommandots tick körs före varje kommandorad och kör de
   jobb vars minut har passerat sedan förra gången (högst en timme bakåt), men bara medan tjänsten
   cron/crond/cronie är igång. Tiden räknas inte medan appen är stängd, precis som en avstängd dator.
   Systemets egna jobb (`run-parts`) loggas men körs inte.
-- **Servern** `192.168.1.10` (`SshCmd.ServerFor`) är en egen Debian-terminal i minnet. ssh, scp och
+- **Servern** `192.168.1.10` (`serverFor` i `Commands/Ssh/`) är en egen Debian-terminal i minnet. ssh, scp och
   rsync kör mot den, och `~/.ssh/config` (`Host`, `HostName`, `User`, `Port`) läses på samma sätt
   som av OpenSSH. Serverns filer sparas inte när appen stängs.
 
 ## Bygga installationsfilerna
 
 Allt byggs av GitHub Actions (`.github/workflows/release.yml`), för varje produkt i
-`packaging/products.json` (Codestead Linux och hubben):
+`packaging/products.json` (Codestead Linux, Codestead GP och hubben), från dess TypeScript-app
+(`packaging/build-linux.sh` och `build-windows.ps1`: `packaging/ts/package-app.mjs` bygger appen och gör Electrons
+app-mapp, sedan tar nfpm och `vpk` fram paketen):
 
 1. Slå ihop PR:erna till `main`. Det släpper ingenting: pull requests och merges till `main` planerar (och
    kontrollerar ändringsloggen), testar och bygger.
 2. **Släpp en version:** Actions → **Release** → **Run workflow**, välj `main` och kryssa i **publish**.
    Flödet (`packaging/plan.py`) räknar ut nästa patchversion för varje produkt som ändrats sedan dess
    senaste release. Två körningar för hand väntar på varandra, så samma version kan inte tas två gånger.
-   - **Produktens egna filer** (`own` i `products.json`: dess mapp och ikon, för hubben även katalognyckeln)
+   - **Produktens egna filer** (`own` i `products.json`: dess mapp, dess app och paket i `ts/`, ikonen, för hubben
+     även katalognyckeln)
      ändrade: en ny version, och ändringsloggen måste ha en post för den.
-   - **Bara delade filer** ändrade (resten av `paths`: `src/Shared`, bygg- och paketeringsfilerna): en ny
-     version **bara om ändringsloggen redan har en post för den**. Utan post väntar ändringen till produktens
+   - **Bara delade filer** ändrade (resten av `paths`: `ts/packages/common`, `learning`, `ui`, workspacets
+     paketfiler, bygg- och paketeringsfilerna): en ny version **bara om ändringsloggen redan har en post för den**. Utan post väntar ändringen till produktens
      nästa release. Så slipper Codestead Linux en release med "inget ändras" när den delade koden ändras för
      GP:s skull – och en delad buggfix som Linux märker får en rad i `src/Linux/changelog.json` och släpps.
 
 Flödet bygger alla produkter och installerar och startar dem på rena system (Windows Server 2022/2025,
 Ubuntu 22.04/24.04, Fedora, Arch Linux, CachyOS). Hubben får dessutom installera och starta Codestead
-Linux från en signerad katalog. Därefter publiceras de ändrade produkterna i det offentliga repot
+Linux från en signerad katalog. **Uppgraderingsspärren** (`upgrade-linux`, `upgrade-windows`): varje produkt som får
+en ny version uppdateras till bygget från en användares installation av dess sista C#-release (`lastCSharpRelease`,
+hämtad från release-repot; C#-appens egen Velopack tillämpar uppdateringen, sedan uppdaterar bygget sig en gång
+till, TS → TS) och, när det finns en, av dess föregående release – AppImage på Ubuntu och Fedora, Setup.exe på
+Windows Server, med kontroll av att användarens data och framsteg finns kvar (`packaging/upgrade-test.sh`,
+`upgrade-test-windows.ps1`; C#-appens uppdateringsknapp är `packaging/upgrade-driver`, det enda .NET-projektet).
+Därefter publiceras de ändrade produkterna i det offentliga repot
 `JesperE98/codestead-releases` – men bara när båda secrets nedan finns (annars en varning, inget fel):
 
 | Release | Innehåll |
@@ -505,8 +530,9 @@ vad de olika releaserna är). Ändra den i skriptet, inte i repot; plan-jobbet p
 skriptet stoppar om en länk i innehållsförteckningen saknar sin rubrik.
 
 Utan **publish** (eller på en annan gren än `main`) bygger och installationstestar flödet utan att
-publicera – så provar du en PR på riktiga system. Installationstesterna körs bara i körningar för hand. Byggena laddas upp som artefakter (ungefär 1,6 GB per körning, sparas en dag)
-och skulle annars fylla repots lagringsutrymme för artefakter.
+publicera – så provar du en PR på riktiga system. Installations- och uppgraderingstesterna körs bara i körningar för
+hand. Byggena laddas upp som artefakter (några GB per körning, sparas en dag) och skulle annars fylla repots
+lagringsutrymme för artefakter.
 
 GitHub har inga rena Windows 10/11-skrivbordsmaskiner, bara Windows Server. Gå därför igenom
 [RELEASE-CHECKLIST.md](RELEASE-CHECKLIST.md) på en riktig Windows 10/11-dator före en större release.
@@ -536,16 +562,31 @@ openssl ec -in catalog-signing.pem -pubout -out build/catalog-signing.pub.pem
 
 Release-flödet kontrollerar att nyckeln och den publika nyckeln hör ihop innan något publiceras.
 
-### Lokalt
+#### Lokalt
 
-Linux (kräver [nfpm](https://nfpm.goreleaser.com) och `dotnet tool install -g vpk`):
+Linux (kräver Node 22 och `npm ci` i `ts/`, [nfpm](https://nfpm.goreleaser.com), `mksquashfs` och
+`dotnet tool install -g vpk --version 1.2.161`, som behöver .NET):
 
 ```bash
-packaging/build-linux.sh src/Linux/Codestead.Linux/Codestead.Linux.csproj codestead-linux "Codestead Linux" 0.4.0
+packaging/build-linux.sh ts/apps/linux codestead-linux "Codestead Linux" Codestead.Linux 0.6.0
 ```
+
+Installationstestet i en ren container och uppgraderingstestet (från den sista C#-releasen; behöver docker, .NET för
+`packaging/upgrade-driver` och `vpk`):
+
+```bash
+docker run --rm -v "$PWD/artifacts:/artifacts" -v "$PWD/packaging:/packaging:ro" ubuntu:24.04 \
+  bash /packaging/install-test.sh codestead-linux Codestead.Linux deb
+UPGRADE_FROM=0.6.5 packaging/upgrade-test.sh codestead-linux Codestead.Linux "Codestead Linux" src/Linux artifacts ubuntu:24.04
+```
+
+(Bygget måste då ha en högre version än 0.6.5, t.ex. 0.6.6.)
 
 ## Historik
 
 Fram till version 0.3.0 var appen skriven i TypeScript/React/Electron. Den portades rad för rad
 till C#; TypeScript-koden och reglerna för porteringen (`docs/PORTING.md`) finns kvar i git-historiken
-(commit `a0bbdda`). Kommentarer som "Port of src/shell/..." i koden pekar dit.
+(commit `a0bbdda`). I november 2026 flyttades allt tillbaka till TypeScript, med C#-koden och dess tester som grund
+([TYPESCRIPT-MIGRATION.md](TYPESCRIPT-MIGRATION.md)): de sista C#-versionerna är Codestead Linux 0.6.5, Codestead GP
+0.2.5 och hubben 0.2.4, och C#-koden finns kvar i git-historiken (t.ex. commit `a616425`). Kommentarer som
+"Port of Codestead.Shell/…" eller "Port of tests/…" i koden pekar dit.

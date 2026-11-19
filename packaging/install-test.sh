@@ -3,6 +3,8 @@
 # with the release artifacts mounted at /artifacts. Installs the native package exactly as a user would,
 # starts the app with --smoke-test under a virtual display and removes the package again.
 # Usage (in the container): bash install-test.sh <package-name> <executable> <kind: deb|rpm|arch|appimage>
+#   (the native packages bring their own dependencies; for the AppImage, Electron's libraries are installed first, as
+#   a desktop system has them).
 set -euo pipefail
 pkg="$1"
 exe="$2"
@@ -43,18 +45,30 @@ case "$kind" in
     run=("$pkg")
     ;;
   arch)
+    # CachyOS's pacman runs install scripts and hooks without network access, which a container can't set up, so it
+    # refuses to run them at all (and chrome-sandbox would not be made setuid). A real system can; let the container
+    # run them with the network, as Arch's pacman does.
+    if grep -q '^ID=cachyos' /etc/os-release || grep -q 'DisableSandboxNetwork' /etc/pacman.conf; then
+      grep -q '^DisableSandboxNetwork' /etc/pacman.conf || sed -i 's/^\[options\]$/[options]\nDisableSandboxNetwork/' /etc/pacman.conf
+    fi
     pacman -Syu --noconfirm --needed xorg-server-xvfb xorg-xauth which >/dev/null
     pacman -U --noconfirm ./"$pkg"-*-x86_64.pkg.tar.zst
     run=("$pkg")
     ;;
   appimage)
+    # The libraries Electron links against (packaging/ts/nfpm.yaml); a desktop system has them.
     if command -v apt-get >/dev/null; then
-      apt_install xvfb xauth libfontconfig1 libx11-6 libice6 libsm6 libxrandr2 libxi6 libxcursor1
+      # ALSA by its real package (libasound2t64 on Ubuntu 24.04 and later): apt could take another provider of libasound2.
+      apt-get update -qq || true
+      asound=libasound2; apt-cache show libasound2t64 >/dev/null 2>&1 && asound=libasound2t64
+      apt_install xvfb xauth libgtk-3-0 libnss3 libgbm1 "$asound" libcups2 libxkbcommon0 libatk-bridge2.0-0 \
+        libxcomposite1 libxdamage1 libxrandr2 libdrm2 xdg-utils
     elif command -v dnf >/dev/null; then
-      # OpenSSL 3 by its library name (openssl3-libs on Fedora 45 and later): .NET cannot use OpenSSL 4.
-      dnf install -y -q xorg-x11-server-Xvfb xorg-x11-xauth fontconfig libX11 libICE libSM libXrandr libXi libXcursor 'libssl.so.3()(64bit)' >/dev/null
+      dnf install -y -q xorg-x11-server-Xvfb xorg-x11-xauth gtk3 nss mesa-libgbm alsa-lib cups-libs libxkbcommon \
+        at-spi2-atk libXcomposite libXdamage libXrandr libdrm xdg-utils >/dev/null
     else
-      pacman -Syu --noconfirm --needed xorg-server-xvfb xorg-xauth fontconfig libx11 libice libsm libxrandr libxi libxcursor >/dev/null
+      pacman -Syu --noconfirm --needed xorg-server-xvfb xorg-xauth gtk3 nss mesa alsa-lib libcups at-spi2-core \
+        libxcomposite libxdamage libxrandr libxkbcommon xdg-utils >/dev/null
     fi
     app=$(ls ./"$pkg"-*-linux-x86_64.AppImage | head -1)
     chmod +x "$app"
@@ -66,6 +80,12 @@ case "$kind" in
     exit 2
     ;;
 esac
+
+# Electron's sandbox helper must be setuid root in the native packages (packaging/ts/postinstall.sh).
+if [[ "$kind" != appimage ]]; then
+  [[ -u "/opt/$pkg/chrome-sandbox" && "$(stat -c %u "/opt/$pkg/chrome-sandbox")" == 0 ]] \
+    || { ls -l "/opt/$pkg/chrome-sandbox"; echo "chrome-sandbox is not setuid root" >&2; exit 1; }
+fi
 
 echo "--- Starting ${run[*]} --smoke-test"
 export CODESTEAD_DATA_DIR=/tmp/codestead-smoke

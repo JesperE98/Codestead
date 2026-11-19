@@ -60,7 +60,8 @@ The installers are in the public repository
 | **Any Linux** (AppImage) | [.AppImage](https://github.com/JesperE98/codestead-releases/releases/download/codestead-hub-latest/codestead-hub-linux-x86_64.AppImage) | [.AppImage](https://github.com/JesperE98/codestead-releases/releases/download/codestead-linux-latest/codestead-linux-linux-x86_64.AppImage) |
 
 Every release is installed and started automatically on clean systems before it is published:
-Windows Server 2022/2025, Ubuntu 22.04 and 24.04, Fedora, Arch Linux and CachyOS. Installation notes:
+Windows Server 2022/2025, Ubuntu 22.04 and 24.04, Fedora, Arch Linux and CachyOS – and installations of earlier
+versions update themselves to it and keep your progress. Installation notes:
 [src/Linux/release-notes.md](src/Linux/release-notes.md) and [src/Hub/release-notes.md](src/Hub/release-notes.md).
 
 ## Features
@@ -105,66 +106,71 @@ repository, so they can come back with one change in [build/languages.json](buil
 
 ## Repository layout
 
-Each app has its own folder; what several apps use lives in `src/Shared`.
+The apps are written in TypeScript with React and Electron, in the npm workspace `ts/`. Each app has its own folder
+in `ts/apps`; what several apps use lives in `ts/packages`. The courses, texts and product files are in `src/`.
 
 ```text
+ts/
+├── packages/  common         languages, translation, the products (packaging/products.json)
+│              learning       the learning engine: course outline, XP, levels, streak, achievements
+│              ui             React: theme and colours, markdown view, dialogs, game views, the learning window
+│                             every tool shares, self-update (Velopack)
+│              linux-shell    the simulated terminal (bash, zsh, fish, apt, pacman, dnf, git …)
+│              linux-content  the Linux course: chapters, tasks, checks, achievements
+│              gp-gpu         the simulated GPU: compile step, GLSL/HLSL interpreter, rasteriser
+│              gp-course      the GP course: chapters, tasks and checks, the learner's project
+└── apps/      linux          Codestead Linux (Electron: the course and the terminal in the shared window)
+               gp             Codestead GP (the course and the "Your project" panel)
+               hub            the hub (catalog, downloads, installs, updates)
 src/
-├── Shared/   Codestead.Common       languages, translation, JSON settings, product info
-│             Codestead.UI           theme and colours, controls, dialogs, game views, app shell
-│             Codestead.Learning     the learning engine: course outline, XP, levels, streak, achievements
-│             Codestead.Learning.UI  the learning window every tool shares
-├── Linux/    Codestead.Linux        the app (LinuxTool: the Linux course and terminal in the shared window)
-│             Codestead.Content      the Linux course: chapters, tasks, checks, achievements
-│             Codestead.Shell        the simulated terminal (bash, zsh, fish, apt, pacman, dnf, git …)
-│             Codestead.Terminal     the terminal control and the lesson sandbox
-│             content/               chapter texts and translations
-├── GP/       Codestead.GP           the app (GpTool: the course and the project editor in the shared window)
-│             Codestead.GP.Course    the course: chapters, tasks and checks, texts, the game
-│             Codestead.GP.Gpu       the simulated GPU: compile step, GLSL/HLSL interpreter, rasteriser
-│             content/               chapter texts, translations and each chapter's projects per API
-│             verify/                checks the course code with real compilers and drivers
-└── Hub/      Codestead.Hub, Codestead.Hub.Core
-tests/        the same layout as src/
-build/        names, versions, icons, languages.json
-packaging/    build and install-test scripts, products.json, the release plan
-docs/         DEVELOPMENT.md (developer guide, in Swedish), release checklist
+├── Linux/    content/ (chapter texts and translations), UI and shell texts, changelog, release notes
+├── GP/       content/ (chapter texts, translations, each chapter's projects per API), texts, changelog;
+│             verify/ checks the course code with real compilers and drivers
+└── Hub/      texts, icons, changelog, release notes
+build/        icons, languages.json, the catalog's public key
+packaging/    products.json (names, ids, versions), build, install and upgrade tests, the release plan
+docs/         DEVELOPMENT.md (developer guide, in Swedish), release checklist, TYPESCRIPT-MIGRATION.md (history)
 ```
 
 ## For developers
 
-You need the [.NET 10 SDK](https://dotnet.microsoft.com/download).
+You need [Node.js 22](https://nodejs.org) and npm.
 
 ### Build and run
 
 ```bash
-dotnet run --project src/Linux/Codestead.Linux
-```
-
-```bash
-dotnet run --project src/GP/Codestead.GP
-```
-
-```bash
-dotnet run --project src/Hub/Codestead.Hub
+cd ts
+npm ci
+cd apps/linux          # or apps/gp, apps/hub
+npm run build
+npm start              # as root (containers): npx electron . --no-sandbox
 ```
 
 ### Tests
 
 ```bash
-dotnet test
+cd ts
+npm run typecheck
+npm test
 ```
 
-The smoke test opens the real window, renders every chapter in every language and solves a task:
+The smoke test opens the real window, renders every chapter in every language and solves a task; the end-to-end
+tests drive the window with Playwright (installed globally, found through `NODE_PATH`):
 
 ```bash
-dotnet run --project src/Linux/Codestead.Linux -- --smoke-test
+cd ts/apps/linux
+npm run smoke-test
+npm run test:e2e
 ```
+
+Codestead GP's TaskTests (every task of every chapter in every API through the simulated GPU, about an hour) run
+only when asked: `CODESTEAD_GP_PARTS=pbr npx vitest run packages/gp-course/test/TaskTests.test.ts` in `ts/`.
 
 ### Adding a new tool
 
-A new tool (for example C++) gets its own `src/<Tool>/` folder and implements `LearningTool`: its course, texts
-and workbench. The learning window, the game, the settings and the hub come for free. See
-"Så gör du ett nytt verktyg" in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
+A new tool (for example C++) gets its own app in `ts/apps/`, a folder `src/<Tool>/` and an entry in
+`packaging/products.json`, and implements `LearningTool`: its course, texts and workbench. The learning window, the
+game, the settings and the hub come for free. See "Så gör du ett nytt verktyg" in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
 ## Releasing
 
@@ -174,7 +180,8 @@ Merging to `main` does **not** publish anything; changes are collected into bigg
    (`src/<App>/changelog.json`, in every offered language).
 2. To release, run **Actions → Release → Run workflow** on `main` with **publish** ticked.
 3. Every app that changed since its last release gets the next version (0.6.1, 0.6.2 …), is installed and
-   tested on clean systems, and is published to
+   tested on clean systems, is updated to from installations of its last C# release and its previous release,
+   and is published to
    [codestead-releases](https://github.com/JesperE98/codestead-releases). The apps update themselves from there.
 
 ## License

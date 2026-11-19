@@ -1,0 +1,9 @@
+{
+  "name": "@codestead/linux-shell",
+  "private": true,
+  "type": "module",
+  "description": "The simulated Linux shell: parser, file system, commands, terminal. (port of Codestead.Shell, Codestead.Terminal).",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

@@ -8,6 +8,7 @@ set -euo pipefail
 hub_archive="$1"; hub_exe="$2"; tool_archive="$3"; tool_id="$4"; tool_name="$5"; tool_version="$6"; tool_exe="$7"; rid="$8"; tool_dir="$9"
 root="$(cd "$(dirname "$0")/.." && pwd)"
 work="$(mktemp -d)"
+trap 'rm -rf "$work"' EXIT
 native() { if command -v cygpath >/dev/null; then cygpath -w "$1"; else echo "$1"; fi; }
 # Git Bash on Windows: never rewrite arguments that look like paths – they are given as Windows paths.
 export MSYS2_ARG_CONV_EXCL="*"

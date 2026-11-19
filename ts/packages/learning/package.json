@@ -1,0 +1,9 @@
+{
+  "name": "@codestead/learning",
+  "private": true,
+  "type": "module",
+  "description": "The course model, progress and the game (XP, achievements, streaks), quizzes. (port of Codestead.Learning).",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}
