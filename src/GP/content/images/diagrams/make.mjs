@@ -23,7 +23,7 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -40,7 +40,8 @@ const option = (name) => {
   return value;
 };
 const preview = option("--preview");
-const rendersDir = option("--renders") ?? join(tmpdir(), "codestead-gp-renders");
+// Absolute: the render step runs vitest from ts/.
+const rendersDir = resolve(option("--renders") ?? join(tmpdir(), "codestead-gp-renders"));
 const names = args.length > 0 ? args : readdirSync(here).filter((f) => f.endsWith(".mjs") && !f.startsWith("_") && f !== "make.mjs" && f !== "style.mjs").map((f) => f.slice(0, -4)).sort();
 
 const sources = [];
