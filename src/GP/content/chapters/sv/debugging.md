@@ -225,6 +225,8 @@ messenger* – objektet från `VK_EXT_debug_utils` som vulkan-tutorial skapar i 
 `debugCallback` som funktionen som tar emot meddelandena. I en release-build (`NDEBUG`) är `enableValidationLayers`
 false, och programmet körs utan lagret och dess kostnad.
 
+![Var Vulkan rapporterar ett misstag](images/debug-messages-vulkan.webp "Anropen går genom valideringslagret, som kontrollerar dem och skickar sina meddelanden till debugCallback; drivrutinen själv returnerar bara ett VkResult för fel vid körning.")
+
 Projektets messenger ber om tre allvarlighetsgrader:
 
 ```cpp
@@ -540,6 +542,8 @@ anropa callbacken direkt när ett fel uppstår – inuti anropet som orsakade de
 vilka meddelanden som skickas; med `GL_DONT_CARE` för källa, typ och allvarlighetsgrad och `GL_TRUE` slås alla på
 (också de med låg allvarlighetsgrad, som är avslagna från början).
 
+![Var OpenGL rapporterar ett misstag](images/debug-messages-opengl.webp "Ett felaktigt anrop rapporteras på två sätt: felflaggan, som glGetError läser senare, och debug output, som anropar glDebugOutput inuti själva anropet.")
+
 Gör nu uppgiften **debug-output**: 4.3-debugkontexten, funktionen `glDebugOutput` och initieringen direkt efter att GLAD
 har laddats. Bygg och kör. Bilden är samma svarta kub, men nu beskriver drivrutinen felen i ord (det här är Mesas
 texter; NVIDIA och AMD formulerar dem annorlunda och använder andra id:n):
@@ -572,6 +576,8 @@ Gör nu uppgiften **fix-texture**: ladda upp bilden till `GL_TEXTURE_2D`, målet
 ```
 
 Bygg och kör: **träkuben**, med plankorna uppåt längs framsidan – och ingenting skrivs ut längre.
+
+![Kuben efter varje rättelse](images/debug-steps-opengl.webp "Fönstret i början, efter uppgiften use-program och efter uppgiften fix-texture. Ritad av kursens simulator.")
 
 ### Filtrera debugutskriften
 
@@ -708,6 +714,8 @@ Gör nu uppgiften **fix-attribute**: ge arrayen två element och beskriv texturk
 
 Bygg och kör: **träkuben**, med plankorna uppåt längs framsidan – och ingenting skrivs ut längre.
 
+![Kuben före och efter rättelsen](images/debug-steps-vulkan.webp "Fönstret i början – varje fragment läser samma texel – och efter uppgiften fix-attribute. Ritad av kursens simulator.")
+
 ### Etiketter
 
 Utökningen har mer för grafikdebuggers: `vkCmdBeginDebugUtilsLabelEXT` / `vkCmdEndDebugUtilsLabelEXT` märker upp ett
@@ -811,6 +819,8 @@ anropet: anropsstacken visar raden i din kod som gjorde det. Det är learnopengl
 behöver sätta brytpunkten själv. Utan en ansluten debugger utlöser brytningen däremot ett undantag som ingen hanterar,
 och programmet avslutas – därav `IsDebuggerPresent()`.
 
+![Var Direct3D 12 rapporterar ett misstag](images/debug-messages-d3d12.webp "Debuglagret kontrollerar anropen: dess meddelanden väntar i info queue tills CheckDebugMessages läser dem, eller når D3D12DebugOutput vid anropet; runtime och drivrutin returnerar bara ett HRESULT för fel vid körning.")
+
 Gör nu uppgiften **debug-callback**: skriv `D3D12DebugOutput`, och i `LoadPipeline`, efter att info queue har hämtats:
 
 ```cpp
@@ -867,6 +877,8 @@ shadern läser svart genom den: learnopengls ofullständiga textur. Gör nu uppg
 ```
 
 Kör programmet: **träkuben**, med plankorna uppåt längs framsidan – och inga meddelanden längre.
+
+![Kuben efter varje rättelse](images/debug-steps-d3d12.webp "Fönstret i början, efter uppgiften descriptor-heaps och efter uppgiften fix-texture. Ritad av kursens simulator.")
 
 ### Filtrera meddelanden
 

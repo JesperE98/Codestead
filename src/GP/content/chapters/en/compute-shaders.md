@@ -55,6 +55,13 @@ A compute shader with `local_size_x = 10, local_size_y = 10` is dispatched with 
 `gl_GlobalInvocationID = gl_WorkGroupID * gl_WorkGroupSize + gl_LocalInvocationID` – in HLSL `SV_DispatchThreadID = SV_GroupID * numthreads + SV_GroupThreadID`. With one invocation per texel it is the texel's coordinate.
 ```
 
+:::opengl vulkan
+![Work groups and invocations](images/workgroups-opengl-vulkan.webp "Work group (2, 5) of the dispatch and its invocation with the local ID (3, 7): global ID = group ID × group size + local ID.")
+:::
+:::d3d12
+![Thread groups and threads](images/workgroups-d3d12.webp "Thread group (2, 5) of the dispatch and its thread with the group thread ID (3, 7): dispatch thread ID = group ID × group size + group thread ID.")
+:::
+
 :::opengl
 Compute shaders came with OpenGL **4.3**; learnopengl's program asks for 4.3, and so does this chapter's (shaders
 `#version 430 core`). **macOS stops at OpenGL 4.1**, so this chapter's program doesn't run on a Mac – Apple's way to

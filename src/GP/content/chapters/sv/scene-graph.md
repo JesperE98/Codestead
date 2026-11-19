@@ -47,6 +47,8 @@ Roten ligger i origo med skala 1. Dess barn ligger i den lokala positionen (3.5,
 global(barn 2) = global(barn 1) · local(barn 2). Det första barnets globala matris flyttar 3.5 och skalar med 0.6, så det andra barnets förskjutning på 3.5 blir 2.1 i världen, och det hamnar i 3.5 + 2.1 = 5.6. De följande ligger i 6.86, 7.62, 8.07, … – var och en 0.6 gånger närmare och mindre.
 ```
 
+![Kedjan av planeter](images/scene-chain.webp "Varje barn ligger 3,5 enheter vid sidan av sin förälder och är 0,6 gånger så stort i förälderns rum; i världen krymper stegen med skalan.")
+
 ## Ditt program
 
 Utgå från ditt program från *Modell* i en ny mapp – programmet från delen *Modellinläsning* – och banta ned det till
@@ -660,6 +662,8 @@ Med dirty-flaggan sätts rotens rotation varje bildruta, och inget annat ändras
 ---
 En omarkerad entitet under en markerad behöver ändå en ny global matris. Om bara den sista, lilla planeten hade flyttats skulle uppdateringen ha gått ned genom den omarkerade kedjan och räknat om den enda matrisen.
 ```
+
+![Dirty-flaggan](images/dirty-flag.webp "En entitet har ändrats: dess matris och matriserna för allt under den räknas om; de andra besöks bara.")
 
 ## Att flytta grafen
 

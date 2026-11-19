@@ -258,6 +258,8 @@ five overlapping 2 × 2 boxes – the four corner boxes (`a b d e`, `b c e f`, `
 inner box (`j k l m`) 0.5 – and add up to 1, so the downsample keeps the image's energy: summed out, `e` gets 0.125, the
 corners `a c g i` 0.03125 each, the edges `b d f h` 0.0625 each, and `j k l m` 0.125 each.
 
+![The 13-tap downsample filter](images/bloom-taps.webp "The 13 samples in a 6 × 6 texel area of the source and the five boxes they form, with their weights.")
+
 :::opengl vulkan
 ```glsl
     vec3 a = texture(srcTexture, vec2(texCoord.x - 2*x, texCoord.y + 2*y)).rgb;
@@ -552,6 +554,8 @@ Now do the fourth task, **combine**. Build and run: the scene is back, and every
 cubes most, with halos much wider and smoother than the Gaussian bloom's, and even the lit boxes and floor a little,
 which brightens the black background near them. Compare it with the *Bloom* chapter's picture: no hard boundary between
 "glows" and "doesn't glow", and no blocky blur.
+
+![No bloom, the old bloom and the new](images/bloom-compare.webp "The scene without bloom, with the Bloom chapter's threshold and Gaussian blur, and with the physically based bloom. Drawn by the course's simulator.")
 
 ```quiz
 With `mix(hdrColor, bloomColor, 0.04)` and no threshold, why does a light cube glow visibly but a dimly lit wall hardly at all?

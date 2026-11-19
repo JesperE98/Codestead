@@ -86,6 +86,8 @@ With the game's projection, where on the screen does a quad from (0, 580) to (10
 The projection maps the game's pixels one to one onto the window's: (0, 0) top-left, (800, 600) bottom-right. That is where the next chapter puts the paddle, 100 × 20 pixels at (350, 580).
 ```
 
+![The game's coordinates](images/game-coords.webp "The game's units are the window's pixels: (0, 0) at the top left, (800, 600) at the bottom right, y pointing down. The paddle of the next chapter, 100 × 20 at (350, 580), sits on the bottom edge.")
+
 ## Rendering sprites
 
 Rendering an actual sprite shouldn't be too complicated. We create a textured quad that we can transform with a model
@@ -608,6 +610,8 @@ previous translation. Read in the order the transformations happen to a corner o
 4. **translate by +0.5 · size** – back to (0, 0) … size, still turned;
 5. **translate to `position`** – the top-left corner of the unrotated sprite goes to `position`.
 
+![DrawSprite's transformations step by step](images/sprite-steps.webp "The unit quad with the ball's texture through the five steps, numbered in the order they act on a vertex; the axes cross at the origin and y points down.")
+
 :::opengl vulkan
 In the code they are written in the reverse order, because glm multiplies each new matrix onto the right of `model`,
 and the matrix written last is the first one to touch the vertex (`projection * model * vertex`).
@@ -633,6 +637,8 @@ Why does `DrawSprite` translate by half the size, rotate, and translate back, in
 ---
 Without them, a sprite at (200, 200) turned by 45° would swing around its top-left corner and end up half outside its spot. The translations by ±0.5 · size are in pixels because the quad has already been scaled to its size.
 ```
+
+![Turning about the corner or the centre](images/sprite-pivot.webp "The chapter's sprite turned 45° without and with the translations by half the size; the dashed box is the unturned sprite, the dot the point it turns about. Drawn by the course's simulator.")
 
 :::opengl
 ```quiz

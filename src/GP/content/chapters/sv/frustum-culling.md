@@ -718,6 +718,8 @@ Gör nu den femte uppgiften, **camera-frustum**. Bygg och kör: bilden är rutn�
 planet på skärmen ritas – men titeln säger **37 / 101**. Nästan två tredjedelar av planeterna ligger bredvid eller bakom
 kameran, och ingen av dem ritas längre. Allt du ser finns kvar; bara det osynliga arbetet är borta.
 
+![Det cullade rutnätet uppifrån](images/culling-map.webp "Rutnätet efter 2,0 sekunder sett uppifrån, planeterna som klarar sfärtestet ifyllda; det skuggade området är där frustumet möter marken. Beräknat med kapitlets plan och sfärer.")
+
 ## AABB
 
 En sfär sitter löst kring många former. Kursens planet är platt: ett klot med en bred ring, ungefär dubbelt så bred som

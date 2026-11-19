@@ -260,6 +260,8 @@ g - h - i
 rutan (`j k l m`) 0.5 – och summerar till 1, så nedsamplingen behåller bildens energi: summerat får `e` 0.125, hörnen
 `a c g i` 0.03125 var, kanterna `b d f h` 0.0625 var, och `j k l m` 0.125 var.
 
+![Nedsamplingsfiltret med 13 sampel](images/bloom-taps.webp "De 13 samplen i ett område om 6 × 6 texlar i källan och de fem rutorna de bildar, med sina vikter.")
+
 :::opengl vulkan
 ```glsl
     vec3 a = texture(srcTexture, vec2(texCoord.x - 2*x, texCoord.y + 2*y)).rgb;
@@ -554,6 +556,8 @@ Gör nu den fjärde uppgiften, **combine**. Bygg och kör: scenen är tillbaka, 
 med halos som är mycket bredare och mjukare än den gaussiska bloomens, och även de belysta lådorna och golvet lite, vilket
 ljusar upp den svarta bakgrunden nära dem. Jämför med bilden i kapitlet *Bloom*: ingen hård gräns mellan "glöder" och
 "glöder inte", och ingen blockig blur.
+
+![Utan bloom, den gamla och den nya](images/bloom-compare.webp "Scenen utan bloom, med Bloom-kapitlets tröskel och gaussiska oskärpa, och med den fysikaliskt baserade bloomen. Ritad av kursens simulator.")
 
 ```quiz
 Med `mix(hdrColor, bloomColor, 0.04)` och ingen tröskel – varför glöder en ljuskub synligt men en svagt belyst vägg knappt alls?

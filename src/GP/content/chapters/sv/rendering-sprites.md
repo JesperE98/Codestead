@@ -84,6 +84,8 @@ Var på skärmen hamnar en rektangel från (0, 580) till (100, 600) med spelets 
 Projektionen avbildar spelets pixlar ett till ett på fönstrets: (0, 0) uppe till vänster, (800, 600) nere till höger. Det är där nästa kapitel lägger racketen, 100 × 20 pixlar på (350, 580).
 ```
 
+![Spelets koordinater](images/game-coords.webp "Spelets enheter är fönstrets pixlar: (0, 0) uppe till vänster, (800, 600) nere till höger, y pekar nedåt. Nästa kapitels racket, 100 × 20 på (350, 580), står på nederkanten.")
+
 ## Rendera sprites
 
 Att rendera en riktig sprite borde inte vara alltför komplicerat. Vi skapar en texturerad rektangel som vi kan
@@ -603,6 +605,8 @@ ordning transformationerna sker med ett hörn av enhetsrektangeln:
 4. **förflytta med +0.5 · size** – tillbaka till (0, 0) … size, fortfarande vriden;
 5. **förflytta till `position`** – den oroterade spritens övre vänstra hörn hamnar på `position`.
 
+![DrawSprites transformationer steg för steg](images/sprite-steps.webp "Enhetsrektangeln med bollens textur genom de fem stegen, numrerade i den ordning de verkar på en vertex; axlarna korsas i origo och y pekar nedåt.")
+
 :::opengl vulkan
 I koden skrivs de i omvänd ordning, eftersom glm multiplicerar varje ny matris till höger om `model`, och matrisen som
 skrivs sist är den första som berör vertexen (`projection * model * vertex`).
@@ -628,6 +632,8 @@ Varför förflyttar `DrawSprite` med halva storleken, roterar och förflyttar ti
 ---
 Utan dem skulle en sprite på (200, 200) som vrids 45° svänga runt sitt övre vänstra hörn och hamna halvvägs utanför sin plats. Förflyttningarna med ±0.5 · size är i pixlar eftersom rektangeln redan har skalats till sin storlek.
 ```
+
+![Vridning kring hörnet eller mitten](images/sprite-pivot.webp "Kapitlets sprite vriden 45° utan och med förflyttningarna med halva storleken; den streckade rutan är den ovridna spriten, punkten den punkt den vrids kring. Ritad av kursens simulator.")
 
 :::opengl
 ```quiz

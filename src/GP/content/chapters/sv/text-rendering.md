@@ -211,6 +211,8 @@ punkt på baslinjen, *origo* (origin), är där pennan befinner sig när glyfen 
 - har bitmappen en bredd och en höjd; för bokstäver som 'p' och 'g' hänger en del av den under baslinjen;
 - och pennan flyttas vidare till nästa glyfs origo med *advance*, som inkluderar mellanrummet mellan glyferna.
 
+![Glyfernas mått](images/glyph-metrics.webp "'X' och 'p' ur Inter Bold i 48 pixlar, som FreeType renderar dem, förstorade: varje bitmapp i sin ruta, dess bearing från origo och baslinjen, och advance till nästa origo.")
+
 Var och en av dessa egenskaper finns i FreeTypes glyf:
 
 | Egenskap | FreeType | Betydelse |
@@ -355,6 +357,8 @@ bred har rader på 13 byte, och med standardjusteringen skulle OpenGL läsa 16 b
 förskjuten lite mer, glyfen snedvriden till skräp. Genom att sätta unpack-justeringen till 1 ser vi till att det inte
 blir några justeringsproblem (som kan orsaka segmenteringsfel).
 
+![Unpack-justeringen](images/unpack-alignment.webp "Kursens 'A' är 34 pixlar bred. Läst med justeringen 4 börjar varje rad 2 byte för sent, och glyfen blir snedvriden.")
+
 Se till att frigöra FreeTypes resurser när du har bearbetat glyferna – därför kommer `FT_Done_Face` och
 `FT_Done_FreeType` efter loopen.
 :::
@@ -368,6 +372,8 @@ bild inte ha bredden eller höjden 0 – och mellanslaget, som saknar synliga pi
 lägger Vulkan-program oftast alla glyfer i **en enda bild, en glyfatlas**: det klassiska bitmap-typsnittets idé, fylld
 från typsnittet av FreeType under körning. Varje teckens rektangel samplar då sin egen rektangel av den enda bilden, och
 en enda descriptor set räcker för all text.
+
+![Glyfatlasen](images/glyph-atlas.webp "Projektets atlas med 16 × 8 celler om 64 × 64 texlar, fylld med kursens typsnitt i 48 pixlar; varje glyf ligger i sin cells övre vänstra hörn.")
 
 Projektets atlas är 1024 × 512 pixlar: ett rutnät med 16 × 8 rutor på 64 × 64 (`ATLAS_CELL`), glyf `c` i ruta
 (c % 16, c / 16). Med 48 pixlar är Inter Bolds största glyf 48 × 58, så varje glyf ryms i sin ruta, och den tomma kanten
@@ -417,6 +423,8 @@ textur med bredden eller höjden 0 inte skapas alls – och mellanslaget, som sa
 0 × 0. Därför lägger Direct3D-program oftast alla glyfer i **en enda textur, en glyfatlas**: det klassiska
 bitmap-typsnittets idé, fylld från typsnittet av FreeType under körning. Varje teckens rektangel samplar då sin egen
 rektangel av den enda texturen, en enda descriptor-tabell räcker för all text, och glyferna kan ritas tillsammans.
+
+![Glyfatlasen](images/glyph-atlas.webp "Projektets atlas med 16 × 8 celler om 64 × 64 texlar, fylld med kursens typsnitt i 48 pixlar; varje glyf ligger i sin cells övre vänstra hörn.")
 
 Projektets atlas är 1024 × 512 texlar: ett rutnät med 16 × 8 rutor på 64 × 64, tecken c i ruta (c % 16, c / 16). Med
 48 pixlar är Inter Bolds största glyf 48 × 58, så varje glyf ryms i sin ruta, och den tomma kanten runt varje ruta

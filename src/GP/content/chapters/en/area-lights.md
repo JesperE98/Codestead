@@ -374,6 +374,8 @@ Now do the third task, **specular**. Build and run: a soft, stretched reflection
 between the light and the camera. It is blurred and whitish at roughness 0.5, and its shape follows the rectangle.
 That is the effect a point light can't give.
 
+![The reflection at four roughness values](images/area-roughness.webp "The light's reflection on the floor at roughness 0.1, 0.3, 0.5 and 0.8. Drawn by the course's simulator.")
+
 ```quiz
 Which two values select the texel of LTC1 and LTC2 that the specular part uses?
 - [ ] The light's intensity and its distance from the point

@@ -921,6 +921,8 @@ i nästa bildruta. Gör nu uppgiften **win**. Inget block går sönder med de fa
 **ingen synlig förändring**. Och det var allt – spelets sista bit. Prova det: tryck själv på ENTER, A och D och
 mellanslag i ditt program, anpassa det efter din smak och visa det för familj och vänner.
 
+![Spelets tillstånd](images/game-states.webp "Menyn, spelet och vinstskärmen, och vad som tar spelet från det ena till det andra.")
+
 ```quiz
 `RenderText` räknar ut `ypos = y + (Characters['H'].Bearing.y - ch.Bearing.y) * scale`. Vad åstadkommer det?
 - [ ] Det lägger textens baslinje vid y

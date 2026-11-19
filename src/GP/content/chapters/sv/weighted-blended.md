@@ -94,6 +94,8 @@ Bildrutan har då fyra steg, de fyra passen i learnopengls program:
    målet.
 4. **Sista passet**: en fyrhörning över hela skärmen som kopierar det ogenomskinliga målet till fönstret.
 
+![De fyra passen och deras mål](images/wb-passes.webp "Vad varje pass gör med den ogenomskinliga färgen, djupet, ackumuleringsmålet och revealage-målet.")
+
 Du fortsätter i programmet som du förberedde i *OIT: introduktion*: kameran i (0, 0, 5), den röda ogenomskinliga
 fyrhörningen i (0.5, -0.2, 1.0), den gröna (alfa 0.5) i (-0.3, -0.6, 2.0) – närmast – och den blå (alfa 0.5) i (-0.6,
 0.5, 0.0) – längst bort, delvis bakom den röda – ritade röd, grön, blå. learnopengls demo lägger de tre fyrhörningarna
@@ -911,6 +913,8 @@ I överlappet blir resultatet (0, 96, 96), medan rätt sorterad blending (först
 ---
 Med near = 0.1 och far = 100 har en fyrhörning 3 till 5 enheter bort ett fönsterdjup på ungefär 0.97–0.98, och 1e8 · (1 − 0.9z)³ är fortfarande över 100 000 – långt över gränsen. Med lika vikter ger medelvärdet lagren lika stora andelar, där sorterad blending skulle låta det närmare gröna lagret dominera. Det är approximationen.
 ```
+
+![Viktfunktionen](images/wb-weight.webp "learnopengls vikt över fönsterdjupet på en logaritmisk skala, före begränsningen (streckad) och efter den: med alfa 0,5 faller den aldrig under 3000, så nära och avlägsna lager väger lika.")
 
 ## Vad den gör fel
 

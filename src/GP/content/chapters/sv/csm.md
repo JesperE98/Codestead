@@ -78,6 +78,8 @@ Med learnopengls delningsavstånd 10, 20, 50 och 250 – vilken kaskad hör ett 
 Kaskaderna numreras från 0: 0.1–10, 10–20, 20–50, 50–250, 250–500. Fragment shadern väljer den första kaskad vars bortre avstånd ligger bortom fragmentets djup – här 50.
 ```
 
+![De fem kaskaderna](images/csm-splits.webp "Kamerans vy uppifrån, delad vid 10, 20, 50 och 250 enheter i fem kaskader, i färgerna från kapitlets felsökningsvy; avståndet är ritat på en kvadratrotsskala.")
+
 ### En kaskads hörn
 
 För varje kaskad behöver vi en ljusrumsmatris – en ljusvy och en ortografisk projektion – vars låda omsluter just den
@@ -693,6 +695,8 @@ varje låda omsluter sin skiva av frustumet; kursen beskriver den men bygger den
 Gör nu den tredje uppgiften, **cascade-layer**. Bygg och kör: golvet är rött nära kameran, grönt i mitten och blått längst
 bak; lådorna får sin kaskads färg. Golvet slutar 25 enheter bort, inne i den blå kaskaden 2 – den gula och den magenta
 kaskaden innehåller bara den tomma bakgrunden, där inget ritas.
+
+![Tre lager i skuggkartan och kaskaderna](images/csm-layers.webp "Lager 0, 1 och 2 i skuggkartans array som ljuset ser dem, och varje fragment tonat med sin kaskad. Ritad av kursens simulator.")
 
 ## Skuggor
 

@@ -774,6 +774,8 @@ quickly passes 1 and is clamped to white – the bright core of the trail –, w
 a little to the sky behind them. Blending computes `src.rgb × src.a + dst.rgb`: a particle's own alpha still decides how
 much it adds, which is why the fading alpha makes the trail fade.
 
+![Additive and ordinary blending](images/particles-blend.webp "The trail at 2.0 seconds with additive blending, as in the chapter, and with ordinary alpha blending: only the additive one has a white core. Drawn by the course's simulator.")
+
 learnopengl draws every living particle with a draw call of its own – about 120 per frame here. On a real GPU that is
 the slow way: *instancing* (the Instancing chapter) would draw them all with one call, from a buffer of offsets and
 colours. The course keeps learnopengl's loop.

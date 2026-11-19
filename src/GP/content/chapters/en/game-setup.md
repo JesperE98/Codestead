@@ -268,6 +268,8 @@ of 500 pixels per second moves 500 × 1/60 ≈ 8.3 pixels in a frame of 1/60 sec
 second. That is the `dt` that `ProcessInput` and `Update` receive. (The Camera chapter used the same idea for the
 camera's speed.)
 
+![Delta time](images/delta-time.webp "The paddle at 500 pixels per second during the first tenth of a second: at 60 frames per second it moves 8.3 pixels a frame, at 120 half as far – and both reach 50 pixels.")
+
 :::opengl
 ```cpp
     // deltaTime variables
@@ -301,6 +303,8 @@ camera's speed.)
         glfwSwapBuffers(window);
     }
 ```
+
+![One frame of the game loop](images/game-loop-opengl.webp "One frame: the time, the events (the key callback writes Keys), the input (ProcessInput reads Keys), the update and the drawing – then the next frame.")
 :::
 :::vulkan
 ```cpp
@@ -332,6 +336,8 @@ camera's speed.)
 
 `drawFrame()` records the command buffer – with `Render(Hedgerow)` inside the render pass, which clears to black –,
 submits it and presents the image.
+
+![One frame of the game loop](images/game-loop-vulkan.webp "One frame: the time, the events (the key callback writes Keys), the input (ProcessInput reads Keys), the update and drawFrame – then the next frame.")
 :::
 :::d3d12
 The D3D12 samples' framework has its own loop: the message loop in `wWinMain` calls `OnUpdate()` and then `OnRender()`
@@ -360,6 +366,8 @@ void D3D12App::OnUpdate()
 
 The `static` variable is initialised at the first call, so the first frame's deltaTime is (almost) 0. `OnRender` then
 records the frame (`PopulateCommandList`, with `Render(Hedgerow)`), executes it and presents.
+
+![One frame of the game loop](images/game-loop-d3d12.webp "One frame: the window messages (OnKeyDown and OnKeyUp write Keys), the time, the input (ProcessInput reads Keys), the update and OnRender – then the next frame.")
 :::
 
 Now do the task **delta-time**: measure the frame's time at the top of the loop and pass it to `ProcessInput` and

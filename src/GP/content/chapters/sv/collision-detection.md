@@ -217,6 +217,8 @@ utanför blocket: B + R är en punkt på blockets kant (eller inuti det, om C li
 som ligger närmast C. Ligger C under blocket kläms bara y, och P ligger på underkanten rakt ovanför C; ligger C nedanför
 och till höger kläms båda, och P är blockets nedre högra hörn.
 
+![Den närmaste punkten](images/closest-point.webp "Skillnaden D från blockets mittpunkt B till bollens mittpunkt C, begränsad till blockets halva storlek, ger R – och P = B + R är blockets punkt närmast bollen, här dess hörn.")
+
 En clamp-operation klämmer ett värde till ett värde inom ett givet intervall. Det skrivs ofta så här:
 
 ```cpp
@@ -314,6 +316,8 @@ tio block på sin väg – bara några av dem en bildruta senare, eftersom låda
 Vid 1.75 s hade till exempel lådversionen redan förstört fyra block, cirkelversionen tre; det fjärde följer en bildruta
 senare. Skillnaden är liten i den här hastigheten, men det är skillnaden mellan en boll som träffar ett block och en som
 missar det med ett hörn – den syns när bollen snuddar vid ett block.
+
+![Lådtestet och cirkeltestet](images/collision-shapes.webp "Bollen efter 1,75 sekunder med lådtestet och med cirkeltestet: lådans hörn har redan förstört det markerade blocket, som den runda bollen ännu inte har nått. Ritad av kursens simulator.")
 
 ```quiz
 Bollens mittpunkt C ligger rakt under ett block vars mittpunkt är B, lite till höger om B men inom blockets bredd. Var ligger den närmaste punkt P som cirkeltestet mäter avståndet till?
