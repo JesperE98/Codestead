@@ -2,8 +2,9 @@
 // on screen; in Hello Triangle the text's questions answered, a task ticked with Mark as done, the code of the old
 // built-in editor (the chapter's start files) saved into a folder, Check my code on it (no task solved), the course's
 // solution written into the folder and Check my code again (the steps ticked), the solution window opened and closed
-// with ✕ and with Escape, the expected-result picture drawn; everything saved in the C# app's files; --smoke-test and
-// --version.
+// with ✕ and with Escape, the expected-result picture drawn; everything saved in the C# app's files; the Render
+// Pipeline Visualizer's scenes in Hello Triangle (live with WebGL – SwiftShader –, stepped, at most two WebGL contexts
+// while scrolling; the still pictures without WebGL); --smoke-test and --version.
 //
 //   npm run test:e2e            (in ts/apps/gp; set E2E_SKIP_BUILD=1 to use the last build)
 //
@@ -42,8 +43,10 @@ interface Locator {
 
 interface Page extends Locator {
   title(): Promise<string>;
+  evaluate<R, A>(fn: (arg: A) => R, arg: A): Promise<R>;
   screenshot(options: { path: string }): Promise<Buffer>;
   waitForFunction(fn: string): Promise<unknown>;
+  waitForFunction<A>(fn: (arg: A) => unknown, arg: A): Promise<unknown>;
   keyboard: { press(key: string): Promise<void> };
 }
 
@@ -90,9 +93,13 @@ function env(): Record<string, string | undefined> {
   return { ...process.env, DISPLAY: display, CODESTEAD_DATA_DIR: dataDir, ELECTRON_ENABLE_LOGGING: undefined };
 }
 
-async function launch(): Promise<{ app: ElectronApp; page: Page }> {
+/** Chromium's switches (before the app's folder): `webgl` draws with SwiftShader where there is no GPU (Xvfb), `noWebgl` has none. */
+const webgl = ["--use-angle=swiftshader", "--enable-unsafe-swiftshader"];
+const noWebgl = ["--disable-gpu", "--disable-software-rasterizer"];
+
+async function launch(switches: string[] = []): Promise<{ app: ElectronApp; page: Page }> {
   const { _electron } = require("playwright") as { _electron: PlaywrightElectron };
-  const app = await _electron.launch({ executablePath: electronPath, args: [appDir, ...rootArgs], env: env(), timeout: 60_000 });
+  const app = await _electron.launch({ executablePath: electronPath, args: [...switches, appDir, ...rootArgs], env: env(), timeout: 60_000 });
   const page = await app.firstWindow();
   await page.locator(".cs-gp-project").waitFor({ state: "visible", timeout: 60_000 });
   return { app, page };
@@ -223,6 +230,73 @@ describe("Codestead GP (Electron)", () => {
     for (const key of keys.slice(0, steps)) expect(state.progress[key]).toBe(true);
     expect(JSON.parse(fs.readFileSync(data("mainfiles.json"), "utf8"))).toEqual({ files: { [`${api}/${chapter}`]: path.join(projectDir, "main.cpp") }, lastFolder: projectDir });
     expect(fs.existsSync(data("profile.json"))).toBe(true);
+  });
+
+  it("visualiserarens scener i Hello Triangle: live med WebGL, stegas, högst två WebGL-kontexter; utan WebGL stillbilderna", async () => {
+    const scenes = [...CourseText.raw(chapter, lang).matchAll(/!\[[^\]]*\]\(viz:([\w-]+)/g)].map((m) => m[1]!);
+    expect(scenes.length).toBeGreaterThan(2);
+    // In the window (functions, not strings: the page's CSP has no eval).
+    const sceneIs = (page: Page, name: string, key: "state" | "step", value: string) =>
+      page.waitForFunction(([n, k, v]) => document.querySelector<HTMLElement>(`.cs-viz[data-scene="${n}"]`)?.dataset[k] === v, [name, key, value] as const);
+    /** The canvases of running scenes (each its own WebGL context). */
+    const contexts = (page: Page) => page.evaluate(() => [...document.querySelectorAll(".cs-viz-host")].filter((h) => h.shadowRoot?.querySelector("canvas")).length, null);
+    const openChapter = async (page: Page) => {
+      await page.locator(".cs-sidebar button.nav-item").getByText("Hello Triangle", { exact: true }).click();
+      await page.getByRole("heading", { name: "Hello Triangle" }).first().waitFor();
+      if ((await page.getByRole("dialog").count()) > 0) await page.keyboard.press("Escape");
+    };
+    {
+      const { app, page } = await launch(webgl);
+      try {
+        await openChapter(page);
+        const first = page.locator(`.cs-viz[data-scene="${scenes[0]}"]`);
+        await first.scrollIntoViewIfNeeded();
+        await sceneIs(page, scenes[0]!, "state", "live");
+        await page.waitForFunction((n) => !!document.querySelector(`.cs-viz[data-scene="${n}"] .cs-viz-host`)?.shadowRoot?.querySelector("canvas"), scenes[0]!);
+        const before = await first.locator(".cs-viz-step").textContent();
+        await shot(page, "8-scene");
+        // A step forward with the button, and with the keyboard when the scene has the focus.
+        await first.getByRole("button", { name: t("viz.next") }).click();
+        await sceneIs(page, scenes[0]!, "step", "2");
+        expect(await first.locator(".cs-viz-step").textContent()).not.toBe(before);
+        await page.keyboard.press("ArrowRight");
+        await sceneIs(page, scenes[0]!, "step", "3");
+        await shot(page, "9-scene-stepped");
+        // Every scene of the chapter in turn: each runs when it is on screen, and never more than two at once.
+        let most = 0;
+        for (const name of scenes) {
+          await page.locator(`.cs-viz[data-scene="${name}"]`).scrollIntoViewIfNeeded();
+          await sceneIs(page, name, "state", "live").catch(async (err: unknown) => {
+            const states = await page.evaluate(() => [...document.querySelectorAll<HTMLElement>(".cs-viz")].map((e) => `${e.dataset.scene}: ${e.dataset.state}`), null);
+            throw new Error(`${name} did not start (${states.join(", ")}): ${String(err)}`);
+          });
+          most = Math.max(most, await contexts(page));
+        }
+        expect(most).toBeGreaterThan(0);
+        expect(most).toBeLessThanOrEqual(2);
+        // Leaving the chapter frees them all.
+        await page.locator(".cs-sidebar button.nav-item").getByText("Textures", { exact: true }).click();
+        await page.getByRole("heading", { name: "Textures" }).first().waitFor();
+        await page.waitForFunction(() => document.querySelectorAll('.cs-viz[data-state="live"]').length === 0, null);
+        expect(await contexts(page)).toBe(0);
+      } finally {
+        await app.close();
+      }
+    }
+    {
+      const { app, page } = await launch(noWebgl);
+      try {
+        await openChapter(page);
+        const first = page.locator(`.cs-viz[data-scene="${scenes[0]}"]`);
+        await first.scrollIntoViewIfNeeded();
+        await sceneIs(page, scenes[0]!, "state", "fallback");
+        expect(await first.locator("img").getAttribute("src")).toContain(`viz-${scenes[0]}`);
+        expect(await contexts(page)).toBe(0);
+        await shot(page, "10-scene-fallback");
+      } finally {
+        await app.close();
+      }
+    }
   });
 
   it("--smoke-test går igenom alla kapitel och språk, kontrollerar en lösning och avslutar med 0", () => {

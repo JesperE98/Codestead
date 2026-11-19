@@ -64,6 +64,18 @@
   background: none;
 }
 
+.rpv.rpv-codebox {
+  font-size: 13px;
+}
+
+.rpv-codebox .api-note {
+  font-size: 13px;
+}
+
+.rpv-codebox pre.code {
+  font-size: 12px;
+}
+
 .rpv-codebox .api-panel {
   max-height: 340px;
   box-shadow: none;

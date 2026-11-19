@@ -108,7 +108,6 @@ describe("PipelineScene", () => {
     expect(root.getAttribute("data-state")).toBe("live");
     expect(mounted!.options).toEqual({ slide: "input-assembly", api: "opengl", lang: "en", theme: "dark", mode: "data", model: "cube" });
     expect(calls[0]).toBe("mount input-assembly 0 true");
-    expect(screen.getByText("Buffers & upload")).toBeTruthy();
     expect(container.querySelector(".cs-viz-step")!.innerHTML).toBe("The text of <b>step 0</b>");
     expect(screen.getAllByRole("button", { name: /^Step \d of 3$/ }).length).toBe(3);
 
@@ -120,7 +119,9 @@ describe("PipelineScene", () => {
     expect((screen.getByRole("button", { name: "Next step" }) as HTMLButtonElement).disabled).toBe(true);
     fireEvent.keyDown(root, { key: "Home" });
     expect(calls).toContain("show 0 true");
-    fireEvent.keyDown(root, { key: "ArrowRight" });
+    fireEvent.keyDown(screen.getByRole("button", { name: "Next step" }), { key: "ArrowRight" });
+    expect(root.getAttribute("data-step")).toBe("2");
+    fireEvent.keyDown(screen.getByRole("combobox", { name: "Model" }), { key: "ArrowRight" });
     expect(root.getAttribute("data-step")).toBe("2");
     fireEvent.click(screen.getByRole("button", { name: "Play again" }));
     expect(calls.at(-2)).toBe("rebuild opengl en dark cube data 1 true");

@@ -64,7 +64,6 @@ export function PipelineScene(props: PipelineSceneProps) {
   const [near, setNear] = useState(false);
   const [visible, setVisible] = useState(false);
   const [stepHtml, setStepHtml] = useState("");
-  const [title, setTitle] = useState("");
   const [codeOn, setCodeOn] = useState(false);
   const [hasCode, setHasCode] = useState(false);
 
@@ -78,11 +77,10 @@ export function PipelineScene(props: PipelineSceneProps) {
   latest.current = { options, step, visible, codeOn };
   const total = stepCount(spec);
 
-  /** Reads what the scene shows now (the step's text, the title, whether it has code). */
+  /** Reads what the scene shows now (the step's text, whether it has code). */
   const refresh = useCallback(
     (s: MountedScene) => {
       setStepHtml(s.stepHtml(slideStep(spec, latest.current.step)));
-      setTitle(s.title);
       setHasCode(s.showCode(latest.current.codeOn));
     },
     [spec],
@@ -232,7 +230,8 @@ export function PipelineScene(props: PipelineSceneProps) {
   };
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    if (e.target !== e.currentTarget || e.altKey || e.ctrlKey || e.metaKey) return;
+    // The scene or one of its buttons has the focus (the model list keeps its own keys).
+    if ((e.target as HTMLElement).closest("select, input, textarea") || e.altKey || e.ctrlKey || e.metaKey) return;
     const next = stepForKey(spec, step, e.key);
     if (next === null) return;
     e.preventDefault();
@@ -298,7 +297,7 @@ export function PipelineScene(props: PipelineSceneProps) {
         <button type="button" className="cs-viz-btn" onClick={replay} disabled={!live} aria-label={texts.replay} title={texts.replay}>
           ↻
         </button>
-        <span className="cs-viz-title">{title}</span>
+        <span className="cs-viz-gap" />
         <select className="cs-viz-model" aria-label={texts.model} title={texts.model} value={model} onChange={(e) => setModel(e.target.value as VizModel)}>
           {VizModels.map((m) => (
             <option key={m} value={m}>
