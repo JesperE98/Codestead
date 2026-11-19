@@ -65,6 +65,8 @@ class Scene implements MountedScene {
   private destroyed = false;
   /** The tween context of the current slide instance. */
   private tweens: object = {};
+  /** The geometries and textures this scene's renderer drew (see releaseShared). */
+  private readonly drawn = new Set<{ dispatchEvent(e: { type: 'dispose' }): void }>();
 
   constructor(
     private readonly hosts: SceneHosts,
@@ -142,6 +144,7 @@ class Scene implements MountedScene {
           themeScene(view.scene, light);
         });
       themeScene(view.scene, light);
+      this.collect(view);
       attach(host, view);
       // No glow on a light background. The view still goes through the composer, whose output pass gives the colours
       // the slide was made with (the visualizer's shaders write linear colours).
@@ -150,6 +153,45 @@ class Scene implements MountedScene {
         if (bloom) bloom.enabled = false;
       }
     };
+  }
+
+  /**
+   * Remembers the geometries and textures a view draws. Some live on after the slide (the model's geometry and the glow
+   * texture, which the visualizer shares between slides, a slide's cached geometry), and each renderer that draws one
+   * hangs a listener on it; releaseShared takes them off.
+   */
+  private collect(view: StageView): void {
+    const add = (v: unknown) => {
+      const r = v as { isTexture?: boolean; dispatchEvent?: unknown } | null;
+      if (r?.isTexture && typeof r.dispatchEvent === 'function') this.drawn.add(r as never);
+    };
+    const visit = () =>
+      view.scene.traverse((o) => {
+        const m = o as { geometry?: { dispatchEvent(e: { type: 'dispose' }): void }; material?: unknown };
+        if (m.geometry) this.drawn.add(m.geometry);
+        for (const mat of Array.isArray(m.material) ? m.material : m.material ? [m.material] : []) {
+          for (const v of Object.values(mat as Record<string, unknown>)) add(v);
+          const uniforms = (mat as { uniforms?: Record<string, { value: unknown }> }).uniforms;
+          if (uniforms) for (const u of Object.values(uniforms)) add(u?.value);
+        }
+      });
+    const onFrame = view.onFrame;
+    let frames = 0;
+    // The slides add objects as they play: look again now and then.
+    view.onFrame = (t, dt) => {
+      if (frames++ % 60 === 0) visit();
+      onFrame?.(t, dt);
+    };
+  }
+
+  /**
+   * Gives the shared geometries and textures back: a 'dispose' event makes every renderer drop its copy and its
+   * listener (a renderer still running uploads its copy again when it next draws). Without this, every scene that was
+   * closed would stay in memory through the listeners on the shared objects.
+   */
+  private releaseShared(): void {
+    for (const r of this.drawn) r.dispatchEvent({ type: 'dispose' });
+    this.drawn.clear();
   }
 
   private context(): SlideContext {
@@ -233,6 +275,7 @@ class Scene implements MountedScene {
       renderer.setAnimationLoop(null);
       (this.stage as unknown as StageInternals).composer?.dispose();
       renderer.dispose();
+      this.releaseShared();
       renderer.forceContextLoss();
       renderer.domElement.remove();
     }
