@@ -434,6 +434,8 @@ En PSO går inte att ändra. För att rita vissa föremål med en annan djupfunk
 ```
 :::
 
+![Djupfunktionerna LESS och ALWAYS](images/depth-functions.webp "Den vänstra kuben med djupfunktionen LESS och med ALWAYS, ritad av kursens simulator: med ALWAYS täcker golvet, som ritas sist, kubens nedre del, och kubens senare sidor täcker dess framsida.")
+
 Sätt sedan tillbaka djupfunktionen till "mindre än" – ett fragment går igenom när det ligger närmare än det djup som
 hittills lagrats:
 
@@ -527,6 +529,8 @@ Med near = 0.1 och far = 100, hur långt från kameran ligger ett fragment vars 
 ---
 Djupet är proportionellt mot 1/z, inte mot z. Löser man `0.5 = (1/z - 10) / (0.01 - 10)` får man z ≈ 0.2: hälften av djupbufferns värden används mellan 0.1 och 0.2 enheter.
 ```
+
+![Djupvärde mot avstånd](images/depth-curve.webp "Värdet i djupbufferten för ett avstånd framför kameran, med near = 0.1 och far = 100: det icke-linjära djupet är 0.5 vid 0.2 enheter och redan 0.97 vid vänstra kubens framsida, 3.5 enheter bort, medan den linjära ekvationen knappt har börjat.")
 
 ## Visualisera djupbuffern
 
@@ -742,6 +746,8 @@ och föremålen ligger bara några enheter bort – framsidan på den vänstra k
 Golvet blir ljusare bakåt, och bakgrunden (clear-färgen, 0.1) är nu ljusare än allt som ritats. Färgerna är mest svarta
 eftersom djupvärdena går linjärt från near-planet, 0.1, till far-planet, 100 – som fortfarande ligger ganska långt bort.
 Resultatet är att vi befinner oss relativt nära near-planet och därför får låga (mörka) djupvärden.
+
+![Djupbufferten och det linjära djupet som grått](images/depth-visualized.webp "Djupbufferns värden som grått (uppgiften visualize-depth) och det linjära djupet delat med far (uppgiften linear-depth), ritade av kursens simulator.")
 
 ## Z-fighting
 

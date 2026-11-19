@@ -747,6 +747,13 @@ Husets fem vertices ges ut som en triangle strip: 1 nere till vänster, 2 nere t
 I en strip bildar varje vertex en triangel med de två före den: (1,2,3) och (2,3,4) är väggen, (3,4,5) är taket. Därför ges vertices ut i den här sicksackordningen och inte runt konturen.
 ```
 
+:::opengl d3d12
+![Husets triangle strip](images/house-strip-opengl-d3d12.webp "Husets fem vertices som förskjutningar från punkten, i stripens ordning: (1, 2, 3) och (2, 3, 4) är väggen, (3, 4, 5) taket.")
+:::
+:::vulkan
+![Husets triangle strip](images/house-strip-vulkan.webp "Husets fem vertices som förskjutningar från punkten, i stripens ordning: (1, 2, 3) och (2, 3, 4) är väggen, (3, 4, 5) taket. Vulkans y pekar nedåt, så förskjutningarnas y har motsatt tecken.")
+:::
+
 Husen ser lite tråkiga ut med en enda färg, så vi ger varje hus lite extra genom att lägga snö på taket: vi ger den
 sista vertexen – takets topp – en egen färg, vit.
 
@@ -1238,6 +1245,8 @@ geometry shadern arbetar i clip space, och både normalen och förflyttningen ä
 learnopengl. Därför exploderar planeten inte till en prydlig sfär runt sig själv, utan sträcks ut mot betraktaren och
 mot fönstrets kanter. Det betyder också att bilden skiljer sig lite mellan API:erna: OpenGL:s z i clip space går från
 -w till w, Vulkans och Direct3D:s från 0 till w, vilket ger normalerna något olika riktningar.
+
+![Den exploderande planeten](images/explode.webp "Den exploderande planeten vid tre ögonblick av en svängning, ritad av kursens simulator: hel, halvvägs och längst isär.")
 
 :::opengl
 ```quiz

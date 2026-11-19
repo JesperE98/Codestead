@@ -465,6 +465,8 @@ Gör nu uppgiften **discard**: samplern, `PSTransparent`, det andra PSO:t och an
 Bygg och kör: bara grässtråna är kvar. Där de svarta fyrkanterna var ser du kuberna, golvet och bakgrunden igen, och det
 finns ingen tunn linje längs quadarnas överkant.
 
+![Gräs med och utan discard](images/blending-discard.webp "Gräsets quads med alfa oanvänt och med de genomskinliga fragmenten kastade, ritade av kursens simulator.")
+
 ```quiz
 Varför behöver gräs-quadarna ett samplerläge som clampar mot kanten i stället för att upprepa?
 - [ ] Texturer som upprepas kan inte ha en alfakanal
@@ -514,6 +516,8 @@ C_result = (0.0, 1.0, 0.0) * 0.6 + (1.0, 0.0, 0.0) * (1 - 0.6) = (0.4, 0.6, 0.0)
 
 Resultatet är att de kombinerade kvadratfragmenten får en färg som är 60 % grön och 40 % röd: en smutsig, brunaktig
 färg.
+
+![Grönt över rött](images/blend-equation.webp "Kapitlets exempel: den gröna kvadraten med alfa 0.6 ritad över den röda ger (0.4, 0.6, 0) där de överlappar.")
 
 ```quiz
 Med `F_source` = källans alfa och `F_destination` = 1 − källans alfa ritas ett vitt fragment (1.0, 1.0, 1.0) med alfa 0.25 över en svart color buffer (0.0, 0.0, 0.0). Vilken färg hamnar i color buffern?
@@ -937,6 +941,8 @@ föremål löser det tidigare problemet. Från startpositionen blir ordningen (-
 Gör nu den sista uppgiften, **sort**, och bygg och kör sedan. Fönstret bakom det närmaste syns nu genom dess glas: där
 de överlappar tittar du genom två lager glas, och färgen där är ett djupare rött än genom ett lager. Eftersom
 sorteringen körs varje bildruta förblir ordningen rätt när kameran rör sig.
+
+![Osorterade och sorterade fönster](images/blending-order.webp "Det närmaste fönstret med fönstren ritade i listans ordning och sorterade bakifrån, ritat av kursens simulator: sorterade syns fönstret bakom genom glaset.")
 
 ```quiz
 Varför ritar upplägget ovan alla ogenomskinliga föremål före de sorterade genomskinliga?

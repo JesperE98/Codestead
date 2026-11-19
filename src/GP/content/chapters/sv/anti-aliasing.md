@@ -100,6 +100,8 @@ Med 4x MSAA täcker en triangel 2 av en pixels 4 samples. Hur många gånger kö
 Det är MSAA:s knep jämfört med SSAA: täckning (och djup) testas per sample, men fragment shadern körs en gång per pixel och primitiv. Resolven tar medelvärdet av samples, så en kantpixel får en blandning i proportion till sin täckning.
 ```
 
+![En och fyra samples per pixel](images/msaa-samples.webp "En kant över några pixlar med en sample per pixel och med fyra: med fyra får varje pixel triangelns färg i proportion till sina täckta samples efter resolven.")
+
 Det vi gått igenom hittills är en grundläggande översikt av hur multisamplad anti-aliasing fungerar bakom kulisserna.
 Logiken i rastreraren är egentligen lite mer komplicerad, men den här korta beskrivningen räcker för att förstå idén
 bakom multisamplad anti-aliasing; tillräckligt för att gå in på det praktiska.
@@ -446,6 +448,8 @@ Varför måste djupbuffern också vara multisamplad, med lika många samples som
 ---
 Täckning och djup utvärderas i varje subsample, och ett samples färg skrivs bara om det klarar sitt eget djuptest. Det kräver ett djupvärde per sample – och alla attachments i en ritning måste ha samma antal samples.
 ```
+
+![Utan och med MSAA](images/aa-compare.webp "En bit av kubens övre högra kant, förstorad, utan multisampling och med 4× MSAA, ritad av kursens simulator.")
 
 :::opengl
 ## Off-screen MSAA

@@ -380,6 +380,8 @@ The loops run y from -10 upwards and, inside, x from -10 to the right. Which ins
 Instance 0 is the bottom-left quad, the first row (bottom) holds instances 0 to 9 from left to right, and the last row (top) holds 90 to 99 – so the top-right quad is the last one, 99.
 ```
 
+![Instance numbers](images/instance-grid.webp "The hundred quads with some of their instance numbers, drawn by the course's simulator: instance 0 is at the bottom left, 9 at the bottom right and 99 at the top right.")
+
 ## Instanced arrays
 
 While the previous implementation works fine for this specific use case, whenever we are rendering a lot more than 100
@@ -391,6 +393,8 @@ With vertex attributes, at the start of each run of the vertex shader, the GPU w
 attributes that belong to the current vertex. When defining a vertex attribute as an instanced array however, the
 vertex shader only updates the content of the vertex attribute per instance. This allows us to use the standard vertex
 attributes for data per vertex and use the instanced array for storing data that is unique per instance.
+
+![Per vertex and per instance](images/instanced-array.webp "What the vertex shader gets in an instanced draw of the quad: the position advances with every vertex and starts again for each instance, the instanced offset advances once per instance.")
 
 To give you an example of an instanced array we're going to take the previous example and convert the offset uniform
 array to an instanced array. We'll have to update the vertex shader by adding another vertex attribute; we no longer

@@ -30,6 +30,8 @@ En cube map samplas med en riktning i stället för 2D-texturkoordinater. Vad h�
 GPU:n väljer sida utifrån vektorns största komponent och delar de två andra med den, så varje positiv multipel av en riktning hamnar på samma texel. Därför kan skyboxen skicka sina onormaliserade vertexpositioner rakt vidare.
 ```
 
+![Sampla en cube map med en riktning](images/cubemap-direction.webp "En riktning d från kubens mitt och den längre 2d lämnar kuben genom samma punkt på +X-sidan, så de samplar samma texel.")
+
 Som i de andra kapitlen i den här delen finns allt här i alla API:er; texten visar det för {{api}}.
 
 :::opengl
@@ -317,6 +319,8 @@ learnopengls lista över sidor, där `front` är +Z – så när kameran tittar 
 Om du lägger ut de sex sidorna platt som en uppvikt kub får du en korsformad bild: de fyra vågräta sidorna i en rad med
 den övre sidan ovanför och den nedre under. Sedda inifrån kuben ger de illusionen av att befinna sig i en stor
 utomhusmiljö.
+
+![Himlens sex sidor](images/cubemap-faces.webp "Kursens sex himmelsbilder som en uppvikt kub, med -Z (back.png), sidan som standardkameran tittar på, i mitten.")
 
 ### Ladda en skybox
 
@@ -1102,6 +1106,8 @@ blickriktningsvektorn I – vektorn från kameran till fragmentet. Reflektionsve
 {{shaderLanguage}}s inbyggda funktion `reflect`. Den resulterande vektorn R används sedan som riktningsvektor för att
 indexera/sampla cube mapen, vilket ger ett färgvärde från miljön. Effekten blir att föremålet verkar spegla skyboxen.
 
+![Reflektion](images/cubemap-reflect.webp "Reflektion: blickvektorn I speglas kring normalen N, och resultatet R samplar cube mapen.")
+
 Eftersom vi redan har en skybox i scenen är det inte så svårt att skapa reflektioner. Vi ändrar kubernas fragment
 shader så att kuberna får speglande egenskaper. För att räkna ut reflektionsvektorn behöver vi fragmentets position,
 kamerans position och normalen vid fragmentet. Kubens vertexar får alltså normaler i stället för texturkoordinater, och
@@ -1409,6 +1415,8 @@ En lista över de vanligaste brytningsindexen finns i följande tabell:
 Vi använder brytningsindexen för att räkna ut förhållandet mellan de båda material som ljuset passerar. I vårt fall går
 ljuset/blickstrålen från luft till glas (om vi antar att föremålet är av glas), så förhållandet blir
 1.00 / 1.52 = 0.658.
+
+![Refraktion](images/cubemap-refract.webp "Refraktion från luft (1.00) till glas (1.52): blickvektorn I böjs mot normalen, och R samplar cube mapen. Den streckade linjen är I utan brytning.")
 
 Vi har redan bundit cube mapen, gett vertexdatan normaler och satt kamerans position som uniform. Det enda vi behöver
 ändra är fragment shadern:
