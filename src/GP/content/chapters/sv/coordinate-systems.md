@@ -109,7 +109,7 @@ Efter varje uppgift bygger och kör du programmet i din IDE.
 
 ## Helheten
 
-![Rummen en vertex passerar](images/viz-spaces.webp "Rummen en vertex passerar: lokalt rum (objekt), världsrum, vyrum och klipprum.")
+![Rummen en vertex passerar](viz:spaces "Rummen en vertex passerar: lokalt rum (objekt), världsrum, vyrum och klipprum.")
 
 För att transformera koordinaterna från ett rum till nästa använder vi flera transformationsmatriser, där de
 viktigaste är *model*-, *view*- och *projection*-matrisen. Våra vertexkoordinater börjar i *lokalt rum* som *lokala
@@ -208,7 +208,7 @@ I slutet av varje körning av vertex shadern förväntar sig {{api}} att koordin
 och varje koordinat som hamnar utanför det *klipps*. Koordinater som klipps kastas bort, så de återstående
 koordinaterna blir fragment som syns på skärmen. Det är också därifrån *klipprum* (clip space) har fått sitt namn.
 
-![Clipping](images/viz-clipping.webp "Clipping: det som ligger utanför synfrustumet klipps bort före rasteriseringen.")
+![Clipping](viz:clipping "Clipping: det som ligger utanför synfrustumet klipps bort före rasteriseringen.")
 
 Eftersom det inte är särskilt intuitivt att ange alla synliga koordinater inom intervallet `-1.0` till `1.0`,
 anger vi en egen uppsättning koordinater att arbeta i och omvandlar dem tillbaka till NDC så som {{api}} förväntar
@@ -585,7 +585,7 @@ Skalningen av x och y i projektionsmatrisen är densamma för alla vertexar. Ski
 
 ## Allt tillsammans
 
-![Viewport-transformen gör normaliserade enhetskoordinater till pixlar i fönstret.](images/viz-viewport.webp "Viewport-transformen gör normaliserade enhetskoordinater till pixlar i fönstret.")
+![Viewport-transformen gör normaliserade enhetskoordinater till pixlar i fönstret.](viz:viewport "Viewport-transformen gör normaliserade enhetskoordinater till pixlar i fönstret.")
 
 Vi skapar en transformationsmatris för vart och ett av stegen ovan: model-, view- och projection-matrisen. En
 vertexkoordinat transformeras sedan till klippkoordinater så här:

@@ -174,7 +174,7 @@ two before it. Zigzag between two neighbouring rows – one vertex from row `i`,
 column – and each new vertex adds a triangle. A strip over 256 columns has 512 indices and 510 triangles; with a plain
 triangle list the same triangles would need 1530 indices.
 
-![A triangle strip](images/viz-strip.webp "A triangle strip: every new vertex makes a triangle with the two before it.")
+![A triangle strip](viz:strip "A triangle strip: every new vertex makes a triangle with the two before it.")
 
 learnopengl builds one strip per pair of rows with three nested loops:
 

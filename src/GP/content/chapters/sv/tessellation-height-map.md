@@ -174,7 +174,7 @@ två före den. Sicksacka mellan två närliggande rader – en vertex från rad
 kolumn – så lägger varje ny vertex till en triangel. En strip över 256 kolumner har 512 index och 510 trianglar; med en
 vanlig triangellista skulle samma trianglar kräva 1530 index.
 
-![En triangle strip](images/viz-strip.webp "En triangle strip: varje ny vertex bildar en triangel med de två före den.")
+![En triangle strip](viz:strip "En triangle strip: varje ny vertex bildar en triangel med de två före den.")
 
 learnopengl bygger en strip per radpar med tre nästlade loopar:
 

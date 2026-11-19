@@ -56,7 +56,7 @@ bakgrunden. Zooma in på en sned kant i tanken, så ser du trappan.
 För att förstå vad multisampling är och hur det löser aliasingproblemet måste vi först gräva lite djupare i hur
 rastreraren fungerar.
 
-![Multisampling](images/viz-msaa.webp "Multisampling: täckningen testas i flera punkter per pixel, men fragmentshadern körs oftast en gång.")
+![Multisampling](viz:msaa "Multisampling: täckningen testas i flera punkter per pixel, men fragmentshadern körs oftast en gång.")
 
 Rastreraren är alla de algoritmer och processer som sitter mellan dina färdigbehandlade vertices och fragment shadern.
 Rastreraren tar alla vertices som hör till en primitiv och gör om dem till en mängd fragment. Vertexkoordinater kan i

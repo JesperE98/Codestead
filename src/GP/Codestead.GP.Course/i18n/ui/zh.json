@@ -339,5 +339,21 @@
   "yourProject.steps": "跟着做",
   "yourProject.exercises": "练习",
   "yourProject.solutionExercise": "答案 · 练习 {n}",
-  "expected.exercise": "预期结果 · 练习 {n}"
+  "expected.exercise": "预期结果 · 练习 {n}",
+  "viz.prev": "上一步",
+  "viz.next": "下一步",
+  "viz.replay": "重播这一步",
+  "viz.code": "代码",
+  "viz.step": "第 {n} 步，共 {total} 步",
+  "viz.loading": "正在加载场景…",
+  "viz.start": "启动场景",
+  "viz.model": "模型",
+  "viz.modeData": "真实数据",
+  "viz.modeConcept": "概念",
+  "viz.model.triangle": "单个三角形",
+  "viz.model.cube": "立方体",
+  "viz.model.teapot": "犹他茶壶",
+  "viz.model.sphere": "球体",
+  "viz.model.torusknot": "环面纽结",
+  "viz.model.ico": "二十面体"
 }

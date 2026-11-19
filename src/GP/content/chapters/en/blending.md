@@ -483,7 +483,7 @@ While discarding fragments is great and all, it doesn't give us the flexibility 
 we either render the fragment or completely discard it. To render images with different levels of transparency we
 have to enable *blending*.
 
-![Blending](images/viz-blending.webp "Blending: the fragment's colour is mixed with the colour already in the framebuffer, by its alpha.")
+![Blending](viz:blending "Blending: the fragment's colour is mixed with the colour already in the framebuffer, by its alpha.")
 
 Blending happens after the fragment shader: the colour the shader outputs – the *source* colour – is combined with
 the colour that is already in the colour buffer at that position – the *destination* colour. This is done with the

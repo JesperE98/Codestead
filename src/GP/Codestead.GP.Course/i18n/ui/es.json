@@ -339,5 +339,21 @@
   "yourProject.steps": "Paso a paso",
   "yourProject.exercises": "Ejercicios",
   "yourProject.solutionExercise": "Solución · ejercicio {n}",
-  "expected.exercise": "Resultado esperado · ejercicio {n}"
+  "expected.exercise": "Resultado esperado · ejercicio {n}",
+  "viz.prev": "Paso anterior",
+  "viz.next": "Paso siguiente",
+  "viz.replay": "Reproducir el paso otra vez",
+  "viz.code": "Código",
+  "viz.step": "Paso {n} de {total}",
+  "viz.loading": "Cargando la escena…",
+  "viz.start": "Iniciar la escena",
+  "viz.model": "Modelo",
+  "viz.modeData": "Datos reales",
+  "viz.modeConcept": "Concepto",
+  "viz.model.triangle": "Un solo triángulo",
+  "viz.model.cube": "Cubo",
+  "viz.model.teapot": "Tetera de Utah",
+  "viz.model.sphere": "Esfera",
+  "viz.model.torusknot": "Nudo tórico",
+  "viz.model.ico": "Icosaedro"
 }

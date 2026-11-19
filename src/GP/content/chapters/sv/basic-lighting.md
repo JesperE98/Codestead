@@ -125,7 +125,7 @@ objektet. Diffust ljus gör objektet ljusare ju närmare dess fragment är rikta
 Föreställ dig en ljusstråle som träffar ett fragment: ljuset kommer från ljuskällan, fragmentet har en *normalvektor*
 som sticker rakt ut från ytan, och θ är vinkeln mellan normalen och riktningen mot ljuset.
 
-![Ljus per fragment](images/viz-fragment.webp "Ljus per fragment: varje fragment får sin egen interpolerade normal och belyses för sig.")
+![Ljus per fragment](viz:fragment "Ljus per fragment: varje fragment får sin egen interpolerade normal och belyses för sig.")
 
 Om ljusstrålen är vinkelrät mot objektets yta har ljuset störst påverkan. För att mäta vinkeln mellan ljusstrålen och
 fragmentet använder vi en så kallad normalvektor, alltså en vektor som är vinkelrät mot fragmentets yta;

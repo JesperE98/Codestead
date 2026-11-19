@@ -339,5 +339,21 @@
   "yourProject.steps": "Follow along",
   "yourProject.exercises": "Exercises",
   "yourProject.solutionExercise": "Solution · exercise {n}",
-  "expected.exercise": "Expected result · exercise {n}"
+  "expected.exercise": "Expected result · exercise {n}",
+  "viz.prev": "Previous step",
+  "viz.next": "Next step",
+  "viz.replay": "Play the step again",
+  "viz.code": "Code",
+  "viz.step": "Step {n} of {total}",
+  "viz.loading": "Loading the scene…",
+  "viz.start": "Start the scene",
+  "viz.model": "Model",
+  "viz.modeData": "Real data",
+  "viz.modeConcept": "Concept",
+  "viz.model.triangle": "A single triangle",
+  "viz.model.cube": "Cube",
+  "viz.model.teapot": "Utah teapot",
+  "viz.model.sphere": "Sphere",
+  "viz.model.torusknot": "Torus knot",
+  "viz.model.ico": "Icosahedron"
 }

@@ -69,7 +69,7 @@ specialised in one thing, which is why they can easily run in parallel. Because 
 graphics cards have thousands of small processing cores that run small programs for each step of the pipeline on
 the GPU. These small programs are called **shaders**.
 
-![The whole way from a model on disk to pixels on the screen](images/viz-pipeline.webp "The whole way from a model on disk to pixels on the screen: on the CPU, through the API and driver, then on the GPU.")
+![The whole way from a model on disk to pixels on the screen](viz:pipeline "The whole way from a model on disk to pixels on the screen: on the CPU, through the API and driver, then on the GPU.")
 
 Some of the shaders can be written by you. This lets you replace the default behaviour of a stage with your own
 code, which gives you much finer control over specific parts of the pipeline – and because shaders run on the GPU,
@@ -231,7 +231,7 @@ memory, and specifying how to send the data to the graphics card. Sending data f
 relatively slow, so you try to send as much data as possible at once – and keep it there. Once the data is in the
 graphics card's memory, the vertex shader has almost instant access to the vertices.
 
-![A vertex buffer](images/viz-buffers.webp "A vertex buffer: the vertex data is copied from system memory to the GPU's memory once, before it is drawn.")
+![A vertex buffer](viz:buffers "A vertex buffer: the vertex data is copied from system memory to the GPU's memory once, before it is drawn.")
 
 :::opengl
 This memory is managed by a **vertex buffer object** (VBO), which can store a large number of vertices in the GPU's
@@ -971,7 +971,7 @@ flexibility, but it also means you have to specify manually which part of the in
 attribute in the vertex shader. In other words: you have to tell {{api}} how to interpret the vertex data before
 rendering.
 
-![Vertex attributes](images/viz-input-layout.webp "Vertex attributes: a stride steps from vertex to vertex, an offset finds each attribute inside it.")
+![Vertex attributes](viz:input-layout "Vertex attributes: a stride steps from vertex to vertex, an offset finds each attribute inside it.")
 
 The vertex buffer data is formatted like this:
 
@@ -1495,7 +1495,7 @@ The format is fixed when the PSO is created; the buffer can change from one draw
 
 ## The triangle we've all been waiting for
 
-![Rasterization](images/viz-rasterization.webp "Rasterization: the pixels the triangle covers become fragments, with the vertices' colours interpolated.")
+![Rasterization](viz:rasterization "Rasterization: the pixels the triangle covers become fragments, with the vertices' colours interpolated.")
 
 :::opengl
 To draw your objects of choice, OpenGL provides the `glDrawArrays` function, which draws primitives using the
@@ -1653,7 +1653,7 @@ The default rasterizer state culls back faces (`D3D12_CULL_MODE_BACK`) and treat
 
 ## Element Buffer Objects
 
-![Indices](images/viz-indices.webp "Indices: shared vertices are stored once, and the indices say which three make each triangle.")
+![Indices](viz:indices "Indices: shared vertices are stored once, and the indices say which three make each triangle.")
 
 There is one last thing to discuss when rendering vertices: **element buffer objects**, EBO for short (Vulkan and
 Direct3D call them **index buffers**). To explain how they work, an example: suppose you want to draw a rectangle

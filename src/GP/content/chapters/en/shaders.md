@@ -68,7 +68,7 @@ each one, build and run the program to see the result.
 
 ## {{shaderLanguage}}
 
-![From shader source to GPU code](images/viz-shaders.webp "From shader source to GPU code: the driver (or a compiler ahead of time) turns your text into instructions.")
+![From shader source to GPU code](viz:shaders "From shader source to GPU code: the driver (or a compiler ahead of time) turns your text into instructions.")
 
 :::opengl
 Shaders are written in the C-like language GLSL. GLSL is tailored for use with graphics and contains useful
@@ -486,7 +486,7 @@ Outputs and inputs between stages are matched by their semantics; using one stru
 
 ## Uniforms
 
-![Uniforms](images/viz-uniforms.webp "Uniforms: values the program sets that stay the same for every vertex and fragment of a draw.")
+![Uniforms](viz:uniforms "Uniforms: values the program sets that stay the same for every vertex and fragment of a draw.")
 
 :::opengl
 *Uniforms* are another way to pass data from our application on the CPU to the shaders on the GPU. Uniforms are

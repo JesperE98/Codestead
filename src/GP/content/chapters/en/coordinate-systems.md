@@ -110,7 +110,7 @@ After each task, build and run the program in your IDE.
 
 ## The global picture
 
-![The spaces a vertex passes through](images/viz-spaces.webp "The spaces a vertex passes through: local (object), world, view and clip space.")
+![The spaces a vertex passes through](viz:spaces "The spaces a vertex passes through: local (object), world, view and clip space.")
 
 To transform the coordinates from one space to the next coordinate space we'll use several transformation matrices
 of which the most important are the *model*, *view* and *projection* matrix. Our vertex coordinates first start in
@@ -212,7 +212,7 @@ At the end of each vertex shader run, {{api}} expects the coordinates to be with
 coordinate that falls outside this range is *clipped*. Coordinates that are clipped are discarded, so the remaining
 coordinates will end up as fragments visible on your screen. This is also where *clip space* gets its name from.
 
-![Clipping](images/viz-clipping.webp "Clipping: whatever lies outside the view frustum is cut away before rasterization.")
+![Clipping](viz:clipping "Clipping: whatever lies outside the view frustum is cut away before rasterization.")
 
 Because specifying all the visible coordinates to be within the range `-1.0` and `1.0` isn't really intuitive, we
 specify our own coordinate set to work in and convert those back to NDC as {{api}} expects them.
@@ -590,7 +590,7 @@ The x and y scale in the projection matrix is the same for every vertex. The dif
 
 ## Putting it all together
 
-![The viewport transform maps normalized device coordinates to pixels in the window.](images/viz-viewport.webp "The viewport transform maps normalized device coordinates to pixels in the window.")
+![The viewport transform maps normalized device coordinates to pixels in the window.](viz:viewport "The viewport transform maps normalized device coordinates to pixels in the window.")
 
 We create a transformation matrix for each of the aforementioned steps: model, view and projection matrix. A vertex
 coordinate is then transformed to clip coordinates as follows:

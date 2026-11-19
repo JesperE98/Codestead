@@ -126,7 +126,7 @@ fragments are aligned to the light rays from a light source. Picture a light ray
 from the light source, the fragment has a *normal vector* sticking straight out of its surface, and θ is the angle
 between that normal and the direction towards the light.
 
-![Lighting per fragment](images/viz-fragment.webp "Lighting per fragment: every fragment gets its own interpolated normal and is lit on its own.")
+![Lighting per fragment](viz:fragment "Lighting per fragment: every fragment gets its own interpolated normal and is lit on its own.")
 
 If the light ray is perpendicular to the object's surface the light has the greatest impact. To measure the angle
 between the light ray and the fragment we use something called a normal vector, that is a vector perpendicular to the

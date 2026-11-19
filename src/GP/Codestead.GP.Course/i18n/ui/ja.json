@@ -339,5 +339,21 @@
   "yourProject.steps": "手順どおりに",
   "yourProject.exercises": "演習",
   "yourProject.solutionExercise": "解答 · 演習 {n}",
-  "expected.exercise": "期待される結果 · 演習 {n}"
+  "expected.exercise": "期待される結果 · 演習 {n}",
+  "viz.prev": "前のステップ",
+  "viz.next": "次のステップ",
+  "viz.replay": "このステップをもう一度再生",
+  "viz.code": "コード",
+  "viz.step": "ステップ {n}／{total}",
+  "viz.loading": "シーンを読み込んでいます…",
+  "viz.start": "シーンを開始",
+  "viz.model": "モデル",
+  "viz.modeData": "実データ",
+  "viz.modeConcept": "コンセプト",
+  "viz.model.triangle": "三角形 1 つ",
+  "viz.model.cube": "立方体",
+  "viz.model.teapot": "ユタ・ティーポット",
+  "viz.model.sphere": "球",
+  "viz.model.torusknot": "トーラス結び目",
+  "viz.model.ico": "正二十面体"
 }

@@ -163,7 +163,7 @@ D3D12_DEPTH_WRITE_MASK_ZERO` – OpenGL:s `glDepthMask(GL_FALSE)` – i den PSO 
 {{api}} låter oss ändra den jämförelseoperator som används i djuptestet. Det låter oss styra när GPU:n ska släppa
 igenom eller kasta fragment och när djupbuffern ska uppdateras.
 
-![Djuptestet](images/viz-depth.webp "Djuptestet: varje fragments djup jämförs med djupbufferten, och det närmaste vinner.")
+![Djuptestet](viz:depth "Djuptestet: varje fragments djup jämförs med djupbufferten, och det närmaste vinner.")
 
 :::opengl
 Vi sätter jämförelseoperatorn (eller djupfunktionen) med `glDepthFunc`:
