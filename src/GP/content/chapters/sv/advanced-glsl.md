@@ -314,6 +314,13 @@ Direct3D:s render target-koordinater börjar längst upp till vänster, och en p
 ```
 :::
 
+:::opengl
+![Fönsterkoordinater](images/frag-coord-opengl.webp "Uppgiften frag-coord, ritad av kursens simulator: rött där fragmentets x är under 400, grönt annars. OpenGL:s fönsterkoordinater börjar längst ned till vänster.")
+:::
+:::vulkan d3d12
+![Fönsterkoordinater](images/frag-coord-vulkan-d3d12.webp "Uppgiften frag-coord, ritad av kursens simulator: rött där fragmentets x är under 400, grönt annars. Här börjar fönsterkoordinaterna längst upp till vänster.")
+:::
+
 #### gl_FrontFacing
 
 :::opengl
@@ -1113,6 +1120,13 @@ I en `cbuffer` i HLSL följs `float value;` av `float3 vector;`. På vilken byte
 ---
 HLSL flyttar bara en variabel till nästa register om den skulle gränsla en 16-bytesgräns. float3 behöver 12 byte, och 12 finns kvar i det första registret efter floaten – så den börjar på 4, där GLSL:s std140 skulle lägga den på 16.
 ```
+:::
+
+:::opengl vulkan
+![ExampleBlock i std140](images/ubo-layout-opengl-vulkan.webp "ExampleBlock i layouten std140, 16 byte per rad: vector börjar på 16, och varje element i values tar en hel rad.")
+:::
+:::d3d12
+![ExampleBlock som cbuffer](images/ubo-layout-d3d12.webp "ExampleBlock som HLSL-cbuffer, 16 byte per rad: vector ryms i första raden på 4, och varje element i values börjar en ny rad.")
 :::
 
 ## Using uniform buffers

@@ -110,6 +110,8 @@ A triangle's corners are counter-clockwise on the screen as the camera sees it. 
 The order of the corners in the vertex data never changes, but their positions on the screen do. Mirrored by looking from the other side, the order goes round the other way – that's how the rasterizer tells front faces from back faces.
 ```
 
+![Front and back face of the cube](images/winding-cube.webp "The cube seen from the camera: the first triangle of its front face goes round counter-clockwise, the first triangle of its back face, seen through the cube, clockwise – although both are listed counter-clockwise as seen from outside.")
+
 There is one catch: this only works if *every* triangle of the cube was specified counter-clockwise as seen from
 outside. learnopengl's cube, the one we've used since the *Coordinate systems* chapter, wasn't made with culling in
 mind: seen from outside, its front, left and bottom faces are counter-clockwise, but its back, right and top faces are
@@ -180,6 +182,8 @@ You don't have to picture every face to check a triangle. For corners a, b and c
 (b − a) × (c − a) is the triangle's normal by the right-hand rule: it points towards the side from which the corners
 are counter-clockwise. For the old back face that's (1, 0, 0) × (1, 1, 0) = (0, 0, 1) – into the cube, so seen from
 outside it was clockwise. For the new one it's (1, 1, 0) × (1, 0, 0) = (0, 0, -1): out of the cube.
+
+![Culling with the old and the new cube](images/culling-old-cube.webp "Back-face culling switched on for learnopengl's old cube and floor and for the counter-clockwise ones, drawn by the course's simulator: with the old data, the floor and the cube's clockwise faces vanish.")
 
 Now do the first task, **ccw-cube**: rewrite the cube's 36 vertices so that every triangle is counter-clockwise seen
 from outside, keeping each vertex's texture coordinates, then build and run. Nothing changes – not a single pixel –

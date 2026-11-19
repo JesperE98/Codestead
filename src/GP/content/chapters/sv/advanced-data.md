@@ -260,6 +260,8 @@ texturkoordinater bredvid varandra i minnet. Nu när vi vet lite mer om buffrar 
 Vi kan också samla all vektordata i stora block per attributtyp i stället för att blanda dem. I stället för en
 omväxlande layout 123123123123 väljer vi en blockvis (batched) layout 111122223333.
 
+![Omväxlande och blockvis](images/buffer-layout.webp "Kubens vertex buffer omväxlande – varje vertex position och texturkoordinater tillsammans – och blockvis – alla positioner, sedan alla texturkoordinater, som börjar 12 · n byte in för n vertexar.")
+
 När du laddar vertexdata från en fil får du i allmänhet en array med positioner, en array med normaler och/eller en
 array med texturkoordinater. Det kan kosta en del möda att slå ihop dem till en stor array med omväxlande data. Att
 lägga dem blockvis är då en enklare lösning som vi lätt kan genomföra genom att lägga varje array i bufferten efter den

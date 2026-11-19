@@ -128,6 +128,8 @@ anger vi vilken åtgärd som ska utföras:
 - `sfail`: åtgärd om stenciltestet misslyckas.
 - `dpfail`: åtgärd om stenciltestet går igenom men djuptestet misslyckas.
 - `dppass`: åtgärd om både stencil- och djuptestet går igenom.
+
+![Stenciloperationerna](images/stencil-ops-opengl.webp "De tre stenciloperationerna: vilken som används beror på om stenciltestet misslyckas, djuptestet misslyckas eller båda går igenom.")
 :::
 :::vulkan
 Båda finns i pipelinens stenciltillstånd, en `VkStencilOpState` – en för trianglar som ses framifrån
@@ -151,6 +153,8 @@ fält till är till för – OpenGL:s `glStencilOp(sfail, dpfail, dppass)`:
 - `failOp`: åtgärd om stenciltestet misslyckas.
 - `depthFailOp`: åtgärd om stenciltestet går igenom men djuptestet misslyckas.
 - `passOp`: åtgärd om både stencil- och djuptestet går igenom.
+
+![Stenciloperationerna](images/stencil-ops-vulkan.webp "De tre stenciloperationerna: vilken som används beror på om stenciltestet misslyckas, djuptestet misslyckas eller båda går igenom.")
 
 Det sjunde fältet, `writeMask`, är skrivmasken från ovan. Allt det här bestäms när pipelinen skapas – om du inte
 listar det som dynamiskt tillstånd: `VK_DYNAMIC_STATE_STENCIL_REFERENCE` (med `vkCmdSetStencilReference`) samt jämförelse-
@@ -180,6 +184,8 @@ fält till i `D3D12_DEPTH_STENCILOP_DESC` är till för – OpenGL:s `glStencilO
 - `StencilFailOp`: åtgärd om stenciltestet misslyckas.
 - `StencilDepthFailOp`: åtgärd om stenciltestet går igenom men djuptestet misslyckas.
 - `StencilPassOp`: åtgärd om både stencil- och djuptestet går igenom.
+
+![Stenciloperationerna](images/stencil-ops-d3d12.webp "De tre stenciloperationerna: vilken som används beror på om stenciltestet misslyckas, djuptestet misslyckas eller båda går igenom.")
 :::
 
 ```quiz
@@ -799,6 +805,8 @@ De skalade kuberna ritas i sin helhet, men bara en ring runt varje kub syns. Var
 ---
 Stencilbuffern minns originalkubernas siluett. Den 10 % större kuben täcker siluetten plus en marginal runt den; marginalen är allt som klarar testet. Djuptestet spelar ingen roll – det är avslaget för konturerna.
 ```
+
+![Konturen i tre steg](images/stencil-outline.webp "Konturen i tre steg runt den vänstra kuben, ritad av kursens simulator: 1 stencilbufferten efter kuberna (vitt är 1), 2 kuberna skalade med 1.1 i konturfärgen utan stenciltestet, 3 samma ritning med NOT_EQUAL 1 – bara ringen blir kvar.")
 
 Du ser att kanterna överlappar mellan de två lådorna, vilket oftast är den effekt vi vill ha (tänk på strategispel där
 vi vill välja 10 enheter; sammanflytande kanter är i allmänhet att föredra). Om du vill ha en hel kant per föremål

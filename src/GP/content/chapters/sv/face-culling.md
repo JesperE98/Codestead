@@ -106,6 +106,8 @@ En triangels hörn går moturs på skärmen så som kameran ser den. Kameran fly
 Hörnens ordning i vertexdatan ändras aldrig, men deras positioner på skärmen gör det. Speglade av att man tittar från andra sidan går hörnen åt andra hållet – det är så rasterizern skiljer framsidor från baksidor.
 ```
 
+![Kubens fram- och baksida](images/winding-cube.webp "Kuben sedd från kameran: den första triangeln på framsidan går moturs, den första triangeln på baksidan, sedd genom kuben, medurs – fast båda listas moturs sett utifrån.")
+
 Det finns en hake: det här fungerar bara om *varje* triangel i kuben angavs moturs sett utifrån. learnopengls kub, den
 vi har använt sedan kapitlet *Coordinate systems*, gjordes inte med culling i tankarna: sett utifrån går dess fram-,
 vänster- och undersida moturs, men dess bak-, höger- och ovansida medurs. learnopengls kapitel om face culling ger
@@ -175,6 +177,8 @@ Du behöver inte föreställa dig varje sida för att kontrollera en triangel. F
 (b − a) × (c − a) triangelns normal enligt högerhandsregeln: den pekar mot den sida varifrån hörnen går moturs. För den
 gamla baksidan är det (1, 0, 0) × (1, 1, 0) = (0, 0, 1) – in i kuben, så sett utifrån gick den medurs. För den nya är
 det (1, 1, 0) × (1, 0, 0) = (0, 0, -1): ut ur kuben.
+
+![Culling med den gamla och den nya kuben](images/culling-old-cube.webp "Back-face culling påslaget för learnopengls gamla kub och golv och för de moturs, ritat av kursens simulator: med de gamla datan försvinner golvet och kubens medurs sidor.")
 
 Gör nu den första uppgiften, **ccw-cube**: skriv om kubens 36 vertexar så att varje triangel går moturs sett utifrån,
 med varje vertex texturkoordinater bevarade, och bygg och kör sedan. Ingenting ändras – inte en enda pixel – eftersom

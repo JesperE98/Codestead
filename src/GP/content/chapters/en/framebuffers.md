@@ -515,6 +515,16 @@ spans the whole screen. The visual output is then exactly the same as without a 
 printed on top of a single quad. Now why is this useful? In the next section we'll see why.
 
 :::opengl
+![Rendering to a texture](images/framebuffer-passes-opengl.webp "The two passes: the scene is drawn into a texture of our own, then a quad over the whole window samples that texture and is drawn into the window.")
+:::
+:::vulkan
+![Rendering to a texture](images/framebuffer-passes-vulkan.webp "The two passes: the scene is drawn into a texture of our own, then a quad over the whole window samples that texture and is drawn into the window.")
+:::
+:::d3d12
+![Rendering to a texture](images/framebuffer-passes-d3d12.webp "The two passes: the scene is drawn into a texture of our own, then a quad over the whole window samples that texture and is drawn into the window.")
+:::
+
+:::opengl
 First thing to do is to create an actual framebuffer object and bind it, this is all relatively straightforward:
 
 ```cpp
@@ -1384,6 +1394,8 @@ This particular sharpen kernel looks like this:
 Its weights add up to 9 − 8 = 1: where all nine samples have the same colour, the result is that colour. Where the
 centre differs from its neighbours, the difference is amplified eightfold.
 
+![The sharpen kernel at one pixel](images/framebuffer-kernel.webp "The sharpen kernel at one pixel: the nine samples times the kernel's weights, added up. A darker pixel among lighter ones comes out below 0 and is stored as black.")
+
 Do the task **sharpen**, then build and run. The colours are back, and the background and the even parts of the floor
 look as before – but every edge is hard: the dark veins of the marble turn black, light pixels beside them turn almost
 white, the cubes get bright rims, and the floor's pattern looks grainy. This could create some interesting effects of
@@ -1435,6 +1447,8 @@ colour so we have to divide each value of the kernel by `16`. The resulting kern
 By only changing the kernel array in the fragment shader we can completely change the post-processing effect. Do the
 task **blur**, then build and run: the picture looks like the start picture, slightly blurred – the marble's veins are
 softened and the outlines of the cubes are no longer crisp.
+
+![Four post-processing effects](images/framebuffer-effects.webp "The scene after the tasks inversion, grayscale, sharpen and blur, drawn by the course's simulator: the same texture, read by four different screen shaders.")
 
 Such a blur effect creates interesting possibilities. We could vary the blur amount over time to create the effect of
 someone being drunk, or increase the blur whenever the main character is not wearing glasses. Blurring can also be a

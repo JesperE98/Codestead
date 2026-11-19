@@ -132,6 +132,8 @@ which we can specify for each option what action to take:
 - `sfail`: action to take if the stencil test fails.
 - `dpfail`: action to take if the stencil test passes, but the depth test fails.
 - `dppass`: action to take if both the stencil and the depth test pass.
+
+![The stencil operations](images/stencil-ops-opengl.webp "The three stencil operations: which one is applied depends on whether the stencil test fails, the depth test fails or both pass.")
 :::
 :::vulkan
 Both live in the pipeline's stencil state, a `VkStencilOpState` – one for triangles seen from the front
@@ -155,6 +157,8 @@ what three more fields are for – OpenGL's `glStencilOp(sfail, dpfail, dppass)`
 - `failOp`: action to take if the stencil test fails.
 - `depthFailOp`: action to take if the stencil test passes, but the depth test fails.
 - `passOp`: action to take if both the stencil and the depth test pass.
+
+![The stencil operations](images/stencil-ops-vulkan.webp "The three stencil operations: which one is applied depends on whether the stencil test fails, the depth test fails or both pass.")
 
 The seventh field, `writeMask`, is the write mask from above. All of it is fixed when the pipeline is created – unless
 you list it as dynamic state: `VK_DYNAMIC_STATE_STENCIL_REFERENCE` (with `vkCmdSetStencilReference`) and the compare
@@ -185,6 +189,8 @@ three more fields of `D3D12_DEPTH_STENCILOP_DESC` are for – OpenGL's `glStenci
 - `StencilFailOp`: action to take if the stencil test fails.
 - `StencilDepthFailOp`: action to take if the stencil test passes, but the depth test fails.
 - `StencilPassOp`: action to take if both the stencil and the depth test pass.
+
+![The stencil operations](images/stencil-ops-d3d12.webp "The three stencil operations: which one is applied depends on whether the stencil test fails, the depth test fails or both pass.")
 :::
 
 ```quiz
@@ -810,6 +816,8 @@ The scaled cubes are drawn in full, but only a ring around each cube appears. Wh
 ---
 The stencil buffer remembers the original cubes' silhouette. The 10% larger cube covers that silhouette plus a margin around it; the margin is all that passes the test. The depth test plays no part – it is off for the outlines.
 ```
+
+![The outline in three steps](images/stencil-outline.webp "The outline in three steps around the left cube, drawn by the course's simulator: 1 the stencil buffer after the cubes (white is 1), 2 the cubes scaled by 1.1 in the outline colour without the stencil test, 3 the same draw with NOT_EQUAL 1 – only the ring is left.")
 
 You can see that the borders overlap between both containers, which is usually the effect that we want (think of
 strategy games where we want to select 10 units; merging borders is generally preferred). If you want a complete

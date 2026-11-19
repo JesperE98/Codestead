@@ -378,6 +378,8 @@ Looparna låter y gå från -10 och uppåt och, inuti, x från -10 åt höger. V
 Instans 0 är fyrhörningen nere till vänster, den första raden (längst ned) har instanserna 0 till 9 från vänster till höger, och den sista raden (överst) 90 till 99 – så fyrhörningen uppe till höger är den sista, 99.
 ```
 
+![Instansnummer](images/instance-grid.webp "De hundra fyrhörningarna med några av sina instansnummer, ritade av kursens simulator: instans 0 är längst ned till vänster, 9 längst ned till höger och 99 längst upp till höger.")
+
 ## Instansierade arrayer
 
 Den förra lösningen fungerar bra för just det här fallet, men när vi renderar många fler än 100 instanser (vilket är
@@ -389,6 +391,8 @@ Med vertexattribut hämtar GPU:n i början av varje körning av vertex shadern n
 till den aktuella vertexen. När ett vertexattribut definieras som en instansierad array uppdaterar vertex shadern
 däremot attributets innehåll bara per instans. Det låter oss använda vanliga vertexattribut för data per vertex och
 den instansierade arrayen för data som är unik per instans.
+
+![Per vertex och per instans](images/instanced-array.webp "Vad vertex shadern får i en instansierad ritning av fyrhörningen: positionen går vidare för varje vertex och börjar om för varje instans, den instansierade förskjutningen går vidare en gång per instans.")
 
 Som exempel på en instansierad array gör vi om förra exemplets uniform-array med förskjutningar till en instansierad
 array. Vertex shadern får ytterligare ett vertexattribut; vi använder inte längre instansnumret i shadern – attributet
