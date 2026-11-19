@@ -17,6 +17,8 @@ building blocks of the Phong lighting model consist of 3 components: ambient, di
 - **Specular lighting**: simulates the bright spot of a light that appears on shiny objects. Specular highlights are
   more inclined to the color of the light than the color of the object.
 
+![Ambient, diffuse and specular lighting](images/phong-components.webp "The chapter's cube with each part of the Phong lighting model on its own, and all three added up, drawn by the course's simulator.")
+
 To create visually interesting scenes we want to at least simulate these 3 lighting components. We'll start with the
 simplest one: *ambient lighting*.
 
@@ -144,6 +146,8 @@ color.
 
 The resulting dot product thus returns a scalar that we can use to calculate the light's impact on the fragment's
 color, resulting in differently lit fragments based on their orientation towards the light.
+
+![The angle between the normal and the light](images/diffuse-angle.webp "θ is the angle between the normal n and the direction L towards the light. The diffuse term is cos θ, the dot product of the two unit vectors, and 0 when the light is behind the surface.")
 
 So, what do we need to calculate diffuse lighting:
 
@@ -625,6 +629,8 @@ Whenever we apply a non-uniform scale (note: a uniform scale only changes the no
 which is easily fixed by normalizing it) the normal vectors are not perpendicular to the corresponding surface anymore
 which distorts the lighting.
 
+![A normal under a non-uniform scale](images/normal-matrix.webp "The example above: stretched by 2 along y, the surface tilts to (1, 2). The model matrix turns the normal into (1, −2), which is no longer perpendicular; the normal matrix gives (1, −0.5), which is.")
+
 The trick of fixing this behavior is to use a different model matrix specifically tailored for normal vectors. This
 matrix is called the *normal matrix* and uses a few linear algebraic operations to remove the effect of wrongly
 scaling the normal vectors. The normal matrix is defined as "the transpose of the inverse of the upper-left 3x3 part
@@ -927,6 +933,8 @@ Why is `lightDir` negated in `reflect(-lightDir, norm)`?
 ---
 `lightDir` was computed as `lightPos - fragPos`, towards the light. Reflecting its negation around the normal gives the direction in which the light bounces off – which we then compare with the direction to the viewer.
 ```
+
+![The vectors of the specular term](images/specular-vectors.webp "The vectors of the specular term with the shader's names: reflect mirrors the incoming direction -lightDir into reflectDir, and the smaller the angle between reflectDir and viewDir, the brighter the highlight.")
 
 > In the earlier days of lighting shaders, developers used to implement the Phong lighting model in the vertex
 > shader. The advantage of doing lighting in the vertex shader is that it is a lot more efficient since there are

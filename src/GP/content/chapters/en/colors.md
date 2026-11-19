@@ -105,6 +105,8 @@ XMVECTOR result = lightColor * toyColor; // = (0.33f, 0.21f, 0.06f);
 As you can see, we can get interesting colors from objects using different light colors. It's not hard to get
 creative with colors.
 
+![Light colour times object colour](images/light-times-color.webp "The light's colour times the coral object's colour, component by component, gives the colour we see – for a white, a green and a dark olive-green light.")
+
 ```quiz
 A coral object (1.0, 0.5, 0.31) is lit by a pure blue light (0.0, 0.0, 1.0). Which colour do we see?
 - [ ] (1.0, 0.5, 1.0) – the light's blue is added to the object's colour
@@ -336,6 +338,8 @@ Why does the course start the camera at (-3, 0, 3) instead of learnopengl's (0, 
 Seen from (0, 0, 3), the lamp is 1 unit ahead but 1.2 units to the right: about 50° off the line of sight, far outside a 45° field of view. Nothing about the lighting itself depends on where the camera is – this is only about what you get to see.
 ```
 
+![The lamp in and out of view](images/lamp-in-view.webp "The scene from above: with a 45° field of view the camera sees about 29° to each side. From (0, 0, 3) the lamp is outside the view; from (−3, 0, 3) both the cube and the lamp are in it.")
+
 ### The object's colour
 
 Filling a vertex buffer, setting vertex attribute pointers and all that jazz should be familiar for you by now, so we
@@ -518,6 +522,8 @@ Why does `UniformBufferObject` have a `float pad1;` between `objectColor` and `l
 ---
 `objectColor` starts at 128 and ends at 140. The shader expects the next `vec3` at the next multiple of 16, byte 144, while a `glm::vec3` only needs 4-byte alignment. The padding float makes both sides agree.
 ```
+
+![The uniform block in 16-byte rows](images/uniform-colors-vulkan.webp "The uniform block in rows of 16 bytes: lightColor starts at 144, the next multiple of 16, and the C++ struct fills bytes 140–143 with pad1.")
 :::
 :::d3d12
 ```quiz
@@ -528,6 +534,8 @@ Why does `SceneConstantBuffer` in C++ have a `float padding0;` between `objectCo
 ---
 `objectColor` fills bytes 128–139. The 4 bytes left in that row can't hold a 12-byte `float3`, so HLSL starts `lightColor` in the next row. The 256-byte size is a separate rule, handled by `CalculateConstantBufferByteSize`.
 ```
+
+![The constant buffer in 16-byte rows](images/uniform-colors-d3d12.webp "The constant buffer in rows of 16 bytes: lightColor doesn't fit into the 4 bytes left after objectColor, so it starts the next row, at 144, and the C++ struct fills bytes 140–143 with padding0.")
 :::
 
 Now do the first task, **object-color**: give the cube's fragment shader the two colours and output their product, and

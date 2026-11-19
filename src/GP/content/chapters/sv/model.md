@@ -600,6 +600,8 @@ texturkoordinatfärger, eftersom fragment shadern visar dem som rött och grönt
 v (grönt): den färdiga planetens vita nordpol är nu nästan helt röd (v ≈ 0 högst upp i bilden), och till höger på ringen
 ser du en skarp kant i färgerna: ringens söm, där dess texturkoordinater börjar om. Allt är fortfarande ett enda
 `vkCmdDrawIndexed`, nu med alla modellens index.
+
+![Planeten i texturkoordinatfärger](images/uv-colors.webp "Planeten efter uppgiften load-model, ritad av kursens simulator i sina texturkoordinater: u som rött, v som grönt, som i nyckeln till höger. Lägg märke till den röda polen och ringens skarv.")
 :::
 :::d3d12
 ```quiz
@@ -870,6 +872,8 @@ används inte heller: programmet behåller learnopengls högerhänta matematik, 
 ---
 Varje vändning vänder texturen upp och ner, så två vändningar tar ut varandra. learnopengl vänder två gånger för sin ryggsäck bara för att den modellens koordinater redan är lagrade vända; för vår är en vändning rätt.
 ```
+
+![En och två vändningar](images/uv-flip.webp "Den obelysta planeten med en vändning (aiProcess_FlipUVs) och med en andra vändning till (stbi_set_flip_vertically_on_load(true)), ritad av kursens simulator: med två vändningar står texturen på huvudet – jämför haven.")
 
 :::opengl d3d12
 ## Material
@@ -1927,6 +1931,8 @@ När ljussättningen är klar är högdagern vid ljusets reflex bara en svag fl�
 ---
 Den spekulära termen multipliceras med specular mapens färg i det fragmentet. Flytta kameran så att reflexen hamnar på vatten, så lyser högdagern upp.
 ```
+
+![Högdagern på land och på ett hav](images/planet-highlight.webp "Den belysta planeten, ritad av kursens simulator: från kapitlets kamera hamnar ljusets reflex på land, där specular mapen är mörk; från en kamera uppe till vänster hamnar den på ett hav och blir en ljus fläck.")
 
 Visserligen är det här lite flashigare än lådorna vi har använt hittills. Med en modellinläsare kan du läsa in massor
 av modeller som finns på internet: det finns en hel del webbplatser med gratis 3D-modeller i flera filformat. Tänk
