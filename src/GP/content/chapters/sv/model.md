@@ -844,8 +844,8 @@ två ställen att göra den på: vända bilden vid inläsningen (`stbi_set_flip_
 flaggor, så koordinaterna vänds, och projektet anropar **inte** `stbi_set_flip_vertically_on_load(true)`.
 
 learnopengls `model_loading.cpp` gör båda. Det passar dess ryggsäcksmodell, vars texturkoordinater är lagrade åt andra
-hållet, men för en fil som vår tar de två vändningarna ut varandra och planetens textur hamnar upp och ner – isen från
-nordpolen skulle synas vid sydpolen. `main.cpp` har en kommentar om detta där modellen läses in.
+hållet, men för en fil som vår tar de två vändningarna ut varandra och planetens textur hamnar upp och ner –
+kontinenterna blir spegelvända uppifrån och ner (båda polerna är vita, så isen ensam avslöjar det inte). `main.cpp` har en kommentar om detta där modellen läses in.
 :::
 :::vulkan
 I Vulkan är texturkoordinaten v = 0 bildens översta rad, och stb_images data laddas upp som den är, översta raden

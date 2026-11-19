@@ -850,7 +850,7 @@ coordinates are flipped, and the project does **not** call `stbi_set_flip_vertic
 
 learnopengl's `model_loading.cpp` does both. That suits its backpack model, whose texture coordinates are stored the
 other way round, but for a file like ours the two flips cancel out and the planet's texture ends up upside down – the
-ice of the north pole would appear at the south pole. `main.cpp` has a comment about this where the model is loaded.
+continents are mirrored top to bottom (both poles are white, so the ice alone doesn't show it). `main.cpp` has a comment about this where the model is loaded.
 :::
 :::vulkan
 In Vulkan, texture coordinate v = 0 is the top row of the image, and stb_image's data is uploaded as it is, top row

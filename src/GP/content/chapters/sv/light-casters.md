@@ -657,8 +657,8 @@ gränsriktningar (alltså i dess kon), och i så fall lyser vi upp fragmentet. F
 - `SpotDir`: riktningen strålkastaren är riktad åt.
 - `Phi` ϕ: gränsvinkeln som anger strålkastarens radie. Allt utanför den här vinkeln lyses inte upp av
   strålkastaren.
-- `Theta` θ: vinkeln mellan vektorn `LightDir` och vektorn `SpotDir`. θ ska vara mindre än ϕ för att fragmentet ska
-  vara inne i strålkastarens ljus.
+- `Theta` θ: vinkeln mellan vektorn `SpotDir` och riktningen från ljuset till fragmentet (vektorn `LightDir` åt
+  andra hållet). θ ska vara mindre än ϕ för att fragmentet ska vara inne i strålkastarens ljus.
 
 ![En strålkastares kon](images/spotlight-cone.webp "En strålkastare riktas längs SpotDir med gränsvinkeln ϕ. För ett fragment är θ vinkeln mellan SpotDir och riktningen från ljuset till fragmentet (LightDir åt andra hållet): inne i konen är θ < ϕ.")
 

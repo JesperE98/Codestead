@@ -667,8 +667,8 @@ cone with its tip at the light:
 - `SpotDir`: the direction the spotlight is aiming at.
 - `Phi` ϕ: the cutoff angle that specifies the spotlight's radius. Everything outside this angle is not lit by the
   spotlight.
-- `Theta` θ: the angle between the `LightDir` vector and the `SpotDir` vector. The θ value should be smaller than ϕ
-  to be inside the spotlight.
+- `Theta` θ: the angle between the `SpotDir` vector and the direction from the light to the fragment (the reversed
+  `LightDir` vector). The θ value should be smaller than ϕ to be inside the spotlight.
 
 ![A spotlight's cone](images/spotlight-cone.webp "A spotlight aims along SpotDir with the cut-off angle ϕ. For a fragment, θ is the angle between SpotDir and the direction from the light to the fragment (LightDir reversed): inside the cone θ < ϕ.")
 
