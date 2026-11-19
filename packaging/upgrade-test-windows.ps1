@@ -121,6 +121,17 @@ function Restarted {
     Where-Object { $_.ExecutablePath -eq $exe -and $_.CommandLine -match "--smoke-test" }
 }
 
+# The restart as Velopack's log records it: after "Package version <want> applied", the restarted app's own Velopack
+# hook logs that it runs with --smoke-test. A fast smoke test (the hub's) can be over before the process list shows it.
+function Restarted-PerLog([string] $want) {
+  $lines = @(Get-Content (Join-Path $env:LOCALAPPDATA "velopack\velopack_$PackageName.log") -ErrorAction SilentlyContinue)
+  $applied = -1
+  for ($i = 0; $i -lt $lines.Count; $i++) { if ($lines[$i] -match "Package version $([regex]::Escape($want)) applied successfully") { $applied = $i } }
+  if ($applied -lt 0) { return $false }
+  for ($i = $applied + 1; $i -lt $lines.Count; $i++) { if ($lines[$i] -match "lib-nodejs.*Running with args.*--smoke-test") { return $true } }
+  return $false
+}
+
 # Waits until the updater is done, current\ is Velopack version $want and the app it restarted has finished.
 function Wait-Update([string] $want) {
   $deadline = (Get-Date).AddSeconds(300)
@@ -137,7 +148,7 @@ function Wait-Update([string] $want) {
     Start-Sleep -Milliseconds 500
   }
   $deadline = (Get-Date).AddSeconds(60)
-  while (-not $seen -and (Get-Date) -lt $deadline) { if (Restarted) { $seen = $true } else { Start-Sleep -Milliseconds 500 } }
+  while (-not $seen -and (Get-Date) -lt $deadline) { if ((Restarted) -or (Restarted-PerLog $want)) { $seen = $true } else { Start-Sleep -Milliseconds 500 } }
   Get-Content (Join-Path $env:LOCALAPPDATA "velopack\velopack_$PackageName.log") -Tail 30 -ErrorAction SilentlyContinue
   if (-not $seen) { Fail "the updater did not restart the app" }
   $deadline = (Get-Date).AddSeconds(240)
@@ -283,10 +294,21 @@ if ($exam) {
   $state = Get-Content (Join-Path $data "state.json") -Raw | ConvertFrom-Json
   Write-Host "The new app wrote: $((Get-ChildItem $data).Name -join ', '); XP $($tsProfile.xp); state.json: $(Get-Content (Join-Path $data 'state.json') -Raw)"
   if ($tsProfile.xp -ne $csProfile.xp) { Fail "the new app derived XP $($tsProfile.xp) from the $old's data, the $old $($csProfile.xp)" }
-  $unlocked = { param($p) (@($p.achievements | Where-Object unlockedAt | ForEach-Object id) | Sort-Object) -join "," }
-  if ((& $unlocked $tsProfile) -ne (& $unlocked $csProfile)) { Fail "the new app has other achievements than the $old" }
+  # Every achievement the old app had is kept, and the only ones added are achievements the old app did not have at all:
+  # a new version may unlock its new achievements from the data at once (e.g. an exam passed before).
+  $unlocked = { param($p) @($p.achievements | Where-Object unlockedAt | ForEach-Object id) }
+  $newUnlocked = & $unlocked $tsProfile
+  $oldUnlocked = & $unlocked $csProfile
+  $oldKnown = @($csProfile.achievements | ForEach-Object id)
+  $lost = @($oldUnlocked | Where-Object { $newUnlocked -notcontains $_ })
+  $gained = @($newUnlocked | Where-Object { $oldUnlocked -notcontains $_ })
+  $wrong = @($gained | Where-Object { $oldKnown -contains $_ })
+  if ($lost.Count -gt 0 -or $wrong.Count -gt 0) {
+    Fail "the new app has other achievements than the $old (lost: $($lost -join ','); unlocked although the $old knew them locked: $($wrong -join ','))"
+  }
+  Write-Host "Achievements kept; new achievements unlocked from the data: $(if ($gained.Count) { ($gained | Sort-Object) -join ',' } else { 'none' })"
   if ($state.lang -ne "sv" -or $state.theme -ne "dark" -or $state.exams.$examId -ne 100) { Fail "state.json lost the $old's settings or progress" }
-  Write-Host "The new app read the $old's data: XP $($tsProfile.xp), the same achievements; whatsnew.json: $v1"
+  Write-Host "The new app read the $old's data: XP $($tsProfile.xp), the achievements kept; whatsnew.json: $v1"
 } else {
   $out = Run $exe @("--smoke-test"); Write-Host $out
   if ($out -notmatch "SMOKE OK") { Fail "the hub's smoke test with the released hub's settings failed" }

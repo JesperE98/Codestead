@@ -323,10 +323,23 @@ inside() {
     start_until "The new app" ts_wrote
     echo "The new app wrote: $(ls "$DATA"); state.json: $(cat "$DATA/state.json")"
     [[ "$(json "$DATA/profile.json" 'd["xp"]')" == "$(json /tmp/profile-cs.json 'd["xp"]')" ]] || fail "the new app derived other XP from the $old's data"
-    [[ "$(json "$DATA/profile.json" 'sorted(a["id"] for a in d["achievements"] if a.get("unlockedAt"))')" == "$(json /tmp/profile-cs.json 'sorted(a["id"] for a in d["achievements"] if a.get("unlockedAt"))')" ]] \
-      || fail "the new app has other achievements than the $old"
+    # Every achievement the old app had is kept, and the only ones added are achievements the old app did not have at
+    # all: a new version may unlock its new achievements from the data at once (e.g. an exam passed before).
+    gained=$(python3 - "$DATA/profile.json" /tmp/profile-cs.json <<'PY'
+import json, sys
+new, old = (json.load(open(p))["achievements"] for p in sys.argv[1:])
+unlocked = lambda p: {a["id"] for a in p if a.get("unlockedAt")}
+lost = unlocked(old) - unlocked(new)
+wrong = (unlocked(new) - unlocked(old)) & {a["id"] for a in old}
+if lost or wrong:
+    print(f"lost {sorted(lost)}, unlocked although the old app knew them locked {sorted(wrong)}", file=sys.stderr)
+    sys.exit(1)
+print(",".join(sorted(unlocked(new) - unlocked(old))) or "none")
+PY
+) || fail "the new app has other achievements than the $old"
+    echo "Achievements kept; new achievements unlocked from the data: $gained"
     [[ "$(json "$DATA/state.json" '(d["lang"], d["theme"], d["exams"])')" == "('sv', 'dark', {'$exam': 100})" ]] || fail "state.json lost the $old's settings or progress"
-    echo "The new app read the $old's data: XP $(json "$DATA/profile.json" 'd["xp"]'), the same achievements; whatsnew.json: $v1"
+    echo "The new app read the $old's data: XP $(json "$DATA/profile.json" 'd["xp"]'), the achievements kept; whatsnew.json: $v1"
   else
     out=$(run_app --smoke-test) || { echo "$out"; fail "the hub's smoke test with the released hub's settings failed"; }
     grep "SMOKE OK" <<<"$out"
