@@ -82,6 +82,8 @@ som en genomskinlig grön ädelsten, guld har en varm, skarp högdager och plast
 att tabellens shininess-värden ligger mellan 0 och 1; de måste multipliceras med 128 för att ge den exponent som vår
 shader förväntar sig.
 
+![Fem material ur tabellen](images/material-gallery.webp "Kapitlets kub med fem material ur tabellen – smaragd, rubin, guld, silver och cyan plast – i ett vitt ljus med full styrka, ritad av kursens simulator.")
+
 Som du ser verkar rätt angivna materialegenskaper ändra hur vi uppfattar föremålet. Effekterna syns tydligt, men för
 mer realistiska resultat behöver vi byta ut den enkla kuben mot något mer komplicerat; learnopengls kapitel om
 *Model Loading* laddar sådana former.
@@ -97,6 +99,8 @@ Du höjer materialets `shininess` från 32 till 256. Vad händer med den spekul�
 ---
 `spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess)`. Skalärprodukten är högst 1, så en högre exponent trycker alla värden under 1 närmare 0: bara riktningar mycket nära reflektionen behåller en synlig högdager. En blank yta (polerad metall) har en liten, tät högdager; en grov yta en bred, mjuk.
 ```
+
+![Fem värden på shininess](images/shininess.webp "Den korallfärgade kubens framsida med shininess 2, 8, 32, 128 och 256, ritad av kursens simulator med lampan lite flyttad så att högdagern hamnar mitt på: ju högre shininess, desto mindre och skarpare högdager.")
 
 Låt oss försöka implementera ett sådant materialsystem i shadrarna.
 
@@ -394,6 +398,8 @@ C++-structen `Material` har `pad1` efter `ambient` och `pad2` efter `diffuse`, m
 ---
 `glm::vec3` är 12 byte. Utan `pad1` och `pad2` skulle `diffuse` börja på byte 12 i C++ men på byte 16 i shadern. Efter `specular` (byte 32–43) lägger shadern floaten `shininess` på 44, precis där C++-structen lägger den, och structen slutar på 48, en multipel av 16.
 ```
+
+![Material i rader om 16 byte](images/uniform-material-vulkan.webp "Material i rader om 16 byte: varje vec3 börjar en rad, C++-structen fyller de två första raderna med pad1 och pad2, och shininess får plats i de sista 4 byten i raden med specular, på 44.")
 :::
 :::d3d12
 ```quiz
@@ -404,6 +410,8 @@ C++-structen `Material` har `padding0` efter `ambient` och `padding1` efter `dif
 ---
 `XMFLOAT3` är 12 byte. Utan utfyllnadsfloatarna skulle `diffuse` börja på byte 12 i C++ men på andra raden (byte 16) i HLSL. Efter `specular` (byte 32–43) packar HLSL floaten `shininess` på samma rad, på byte 44, precis där C++-structen lägger den.
 ```
+
+![Material i rader om 16 byte](images/uniform-material-d3d12.webp "Material i rader om 16 byte: varje float3 börjar en rad, C++-structen fyller de två första raderna med padding0 och padding1, och shininess får plats i de sista 4 byten i raden med specular, på 44.")
 :::
 
 Gör nu den första uppgiften, **material**: lägg till structen `Material`, använd den i belysningen i stället för

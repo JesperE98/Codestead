@@ -11,6 +11,8 @@ environments.
 We'll first discuss a directional light, then a point light which is an extension of what we had before, and lastly
 we'll discuss spotlights. In the next chapter we'll combine several of these different light types into one scene.
 
+![Three light casters](images/light-types.webp "A directional light, a point light and a spotlight, each above the chapter's ten containers lit by it, drawn by the course's simulator.")
+
 :::opengl
 You continue in your program from *Lighting maps* (without the emission exercise): the same `main.cpp` and
 `shader_m.h`, the container's diffuse map `container2.png` and specular map `container2_specular.png`, and the lamp's
@@ -360,6 +362,8 @@ You can see that the light has the highest intensity when the distance is small,
 intensity is significantly reduced and slowly reaches 0 intensity at around a distance of 50 or more. This is exactly
 what we want.
 
+![Attenuation over the distance](images/attenuation.webp "The attenuation over the distance d for three rows of the table below: lights that cover 13, 50 and 100 units. The dots mark the distances of the table above on the curve for 50.")
+
 ### Choosing the right values
 
 But at what values do we set those 3 terms? Setting the right values depends on many factors: the environment, the
@@ -665,6 +669,8 @@ cone with its tip at the light:
   spotlight.
 - `Theta` θ: the angle between the `LightDir` vector and the `SpotDir` vector. The θ value should be smaller than ϕ
   to be inside the spotlight.
+
+![A spotlight's cone](images/spotlight-cone.webp "A spotlight aims along SpotDir with the cut-off angle ϕ. For a fragment, θ is the angle between SpotDir and the direction from the light to the fragment (LightDir reversed): inside the cone θ < ϕ.")
 
 So what we basically need to do, is calculate the dot product (returns the cosine of the angle between two unit
 vectors) between the `LightDir` vector and the `SpotDir` vector and compare this with the cutoff angle ϕ. Now that you
@@ -1156,6 +1162,8 @@ Here we set the outer cutoff angle at `17.5` degrees, 5 degrees beyond the inner
 build and run it, the spot's edge fades out softly: the corners of container 0, which were in the dark before, now lie
 in the soft zone and are half lit. The containers outside the cone are almost black, because there they now only get
 the *attenuated* ambient light.
+
+![Hard and soft edges](images/soft-edges.webp "Container 0 with the hard edge of the task spotlight and the soft edge of the task soft-edges, drawn by the course's simulator, and the intensity over θ: 1 inside 12.5°, 0 outside 17.5°, and a smooth step in between.")
 
 Ahhh, that's much better. Play around with the inner and outer cutoff angles and try to create a spotlight that better
 suits your needs. In your program you can walk around with the flashlight and look at the containers it hits.

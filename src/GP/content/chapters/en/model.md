@@ -604,6 +604,8 @@ in texture-coordinate colours, because the fragment shader shows them as red and
 its u (red) and v (green): the white-capped pole of the finished planet is now almost pure red (v ≈ 0 at the top of the
 image), and on the right of the ring you can see a sharp edge in the colours: the ring's seam, where its texture
 coordinates wrap around. All of it is still one `vkCmdDrawIndexed`, now with all of the model's indices.
+
+![The planet in texture-coordinate colours](images/uv-colors.webp "The planet after the task load-model, drawn by the course's simulator in its texture coordinates: u as red, v as green, as in the key on the right. Note the red pole and the ring's seam.")
 :::
 :::d3d12
 ```quiz
@@ -874,6 +876,8 @@ learnopengl's right-handed maths, `XMMatrixLookAtRH` and `XMMatrixPerspectiveFov
 ---
 Each flip turns the texture upside down, so two flips cancel out. learnopengl flips twice for its backpack only because that model's coordinates are already stored flipped; for ours, one flip is right.
 ```
+
+![One flip and two flips](images/uv-flip.webp "The unlit planet with one flip (aiProcess_FlipUVs) and with a second flip added (stbi_set_flip_vertically_on_load(true)), drawn by the course's simulator: with two flips the texture is upside down – compare the oceans.")
 
 :::opengl d3d12
 ## Material
@@ -1933,6 +1937,8 @@ With the lighting done, the highlight at the light's reflection is only a faint 
 ---
 The specular term is multiplied by the specular map's colour at that fragment. Move the camera so the reflection lands on water, and the highlight lights up.
 ```
+
+![The highlight on land and on an ocean](images/planet-highlight.webp "The lit planet, drawn by the course's simulator: from the chapter's camera the light's reflection falls on land, where the specular map is dark; from a camera up and to the left it falls on an ocean and becomes a bright spot.")
 
 Admittedly, this is a bit more fancy than the containers we've used so far. With a model loader you can
 load tons of models found on the internet: there are quite a few websites that offer free 3D models in several file

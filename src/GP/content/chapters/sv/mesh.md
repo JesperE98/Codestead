@@ -747,6 +747,8 @@ Gör nu uppgiften **mesh-textures**. Bilden ändras inte.
 ---
 Stride och offset anges i byte. Eftersom structens medlemmar ligger efter varandra är vertex buffern sammanflätad precis som kubens 8 floats per vertex i ljuskapitlen – men `sizeof` och `offsetof` räknar ut talen, och de förblir rätt när structen växer.
 ```
+
+![Structen Vertex i minnet](images/vertex-layout-opengl.webp "Structen Vertex i minnet: Position på 0, Normal på 12, TexCoords på 24 – de offset som offsetof ger – och sizeof(Vertex) = 32, stride till nästa vertex.")
 :::
 :::vulkan
 ```quiz
@@ -757,6 +759,8 @@ Materialnumret är `uint32_t materialIndex`. Vilken attributbeskrivning och vilk
 ---
 Formatet beskriver byten i buffern: ett 32-bitars heltal utan tecken, 32 byte in i vertexen. Dess numeriska typ (UINT) måste stämma med shaderns indatatyp (`uint`). R8 skulle bara läsa den första av de fyra byten.
 ```
+
+![Structen Vertex i minnet](images/vertex-layout-vulkan.webp "Structen Vertex i minnet: pos på 0, normal på 12, texCoord på 24 och materialIndex på 32 – attributbeskrivningarnas offset – och sizeof(Vertex) = 36, bindningens stride.")
 :::
 :::d3d12
 ```quiz
@@ -767,6 +771,8 @@ Projektets input layout lägger `NORMAL` på byte 12 och `TEXCOORD` på byte 24.
 ---
 Semantikerna (`POSITION`, `NORMAL`, `TEXCOORD`) kopplar input layouten till shaderns indata; byteoffseten kopplar den till buffern. Båda måste stämma med structen – offseten är det som `offsetof` skulle räkna ut.
 ```
+
+![Structen Vertex i minnet](images/vertex-layout-d3d12.webp "Structen Vertex i minnet: position på 0, normal på 12, texCoord på 24 – input layoutens offset – och sizeof(Vertex) = 32, vertex buffer-vyns stride.")
 :::
 
 ## Rendering
@@ -942,6 +948,8 @@ En mesh har texturerna (i den här ordningen) diffuse, specular, diffuse. Vilken
 ---
 Textur `i` hamnar på enhet `i`. Talet i namnet räknas per typ och börjar på 1: `diffuseNr++` delar ut 1, sedan 2, och `specularNr++` sin egen 1. Den andra diffuse-texturen är alltså `texture_diffuse2` på enhet 2.
 ```
+
+![Texturer, enheter och samplernamn](images/texture-units.webp "Textur i hamnar på texturenhet i, och dess samplers namn är typen med ett nummer som räknar per typ från 1.")
 :::
 :::vulkan
 ```quiz
@@ -962,6 +970,8 @@ Anta att en meshs material saknar specular map. Vad lägger `SetupMesh` då på 
 ---
 En descriptor-tabell är en fast följd av platser, och en plats som shadern kan läsa måste innehålla en giltig descriptor. `CreateShaderResourceView(nullptr, &srvDesc, …)` skapar en null descriptor; beskrivningen talar om vilken sorts vy platsen är.
 ```
+
+![Platserna i CBV/SRV-heapen](images/heap-slots.webp "CBV/SRV-heapen: CBV:n på plats 0, sedan två platser per mesh, dess diffuse map (t0) och dess specular map (t1). Varje mesh sparar handtaget till sin första plats, m_srvHandle, för root parameter 2.")
 :::
 
 :::opengl
@@ -983,6 +993,8 @@ Sampler-uniforms hör till ett shaderprogram. Meshen känner till sina texturer 
 ---
 Staging buffern är `TRANSFER_SRC` i host-visible, koherent minne; vertex buffern är `TRANSFER_DST | VERTEX_BUFFER` i `DEVICE_LOCAL` minne. När kopieringen är klar (`endSingleTimeCommands` väntar på den) förstörs staging buffern.
 ```
+
+![Från vertexarna till vertex buffern](images/staging-buffer.webp "Vertexarna hamnar i en host-visible staging buffer med memcpy; vkCmdCopyBuffer kopierar dem sedan på GPU:n till vertex buffern i device-local-minne, som ritningen läser.")
 :::
 :::d3d12
 ```quiz

@@ -96,6 +96,8 @@ map_Kd rings.png
 map_Ks rings_specular.png
 ```
 
+![The four textures of planet.mtl](images/planet-maps.webp "The four textures planet.mtl names: the diffuse and the specular map of the planet and of the ring (the ring's maps are thin strips, stretched here).")
+
 Notice that a face corner has *three* indices, one per list, while a GPU vertex – in {{api}} as everywhere – has
 *one* index that selects all its attributes at once. The ring shows why the file does it this way: 98 positions, but
 only one normal. A model loader therefore has to build its own vertices: one for every different combination of
@@ -109,6 +111,8 @@ A corner of a face in the `.obj` file is written `563/563/562`. Why can't the GP
 ---
 The file stores each list without repeats, and every corner picks from each list on its own. The GPU's vertex fetch reads one vertex – position, normal and texture coordinates side by side – per index. So the loader turns every distinct triple into one vertex (OBJ indices also start at 1, the GPU's at 0).
 ```
+
+![Three indices of a face corner](images/obj-corners.webp "The corner 563/563/562 of the ring's first face picks a line from each list: position 563, texture coordinate 563 and normal 562. A vertex for the GPU holds all three, with one index.")
 
 ## A model loading library
 
@@ -181,6 +185,8 @@ Why does `planet.obj` consist of two meshes, `planet` and `rings`, and not one?
 ---
 A mesh is the smallest unit we draw with one set of textures. Everything that needs other textures – here the ring with `rings.png` and `rings_specular.png` – becomes a mesh of its own, and the model is the collection of both.
 ```
+
+![Assimp's structure for the planet](images/assimp-structure.webp "What Assimp makes of planet.obj: the aiScene owns the meshes and the materials; the root node has a child node per object, which only holds the index of its mesh, and each mesh holds the index of its material.")
 
 In the next chapters we'll create our own `Model` and `Mesh` class that load and store imported models using the
 structure we've just described. If we then want to draw a model, we do not render the model as a whole, but we render
