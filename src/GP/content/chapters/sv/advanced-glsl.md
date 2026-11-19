@@ -49,7 +49,7 @@ sista uppgiften ersätter scenen med learnopengls uniform buffer-demo. Dess shad
 
 Efter varje uppgift bygger och kör du programmet i din IDE.
 
-## GLSL's built-in variables
+## GLSL:s inbyggda variabler
 
 Shaders är extremt uppdelade i en pipeline; behöver vi data från någon annan källa utanför den aktuella shadern måste
 vi skicka runt den. Vi har lärt oss att göra det med vertexattribut, uniforms och samplers. Det finns dock några extra
@@ -312,6 +312,13 @@ Vilka är x och y i pixel shaderns `SV_POSITION`-indata för pixeln längst upp 
 ---
 Direct3D:s render target-koordinater börjar längst upp till vänster, och en pixels koordinater är dess mitt. GLSL:s `gl_FragCoord` skulle ge (0.5, 599.5) för samma pixel.
 ```
+:::
+
+:::opengl
+![Fönsterkoordinater](images/frag-coord-opengl.webp "Uppgiften frag-coord, ritad av kursens simulator: rött där fragmentets x är under 400, grönt annars. OpenGL:s fönsterkoordinater börjar längst ned till vänster.")
+:::
+:::vulkan d3d12
+![Fönsterkoordinater](images/frag-coord-vulkan-d3d12.webp "Uppgiften frag-coord, ritad av kursens simulator: rött där fragmentets x är under 400, grönt annars. Här börjar fönsterkoordinaterna längst upp till vänster.")
 :::
 
 #### gl_FrontFacing
@@ -820,7 +827,7 @@ HLSL kopplar ihop det ett steg skriver med det nästa läser via semantiken. Str
 
 ## Uniform buffer objects
 
-![Uniform-data når shaderna genom buffertar som programmet uppdaterar.](images/viz-uniforms.webp "Uniform-data når shaderna genom buffertar som programmet uppdaterar.")
+![Uniform-data når shaderna genom buffertar som programmet uppdaterar.](viz:uniforms "Uniform-data når shaderna genom buffertar som programmet uppdaterar.")
 
 :::opengl
 Vi har använt OpenGL ett bra tag nu och lärt oss en del häftiga knep, men också stött på några irritationsmoment. När
@@ -1115,7 +1122,14 @@ HLSL flyttar bara en variabel till nästa register om den skulle gränsla en 16-
 ```
 :::
 
-## Using uniform buffers
+:::opengl vulkan
+![ExampleBlock i std140](images/ubo-layout-opengl-vulkan.webp "ExampleBlock i layouten std140, 16 byte per rad: vector börjar på 16, och varje element i values tar en hel rad.")
+:::
+:::d3d12
+![ExampleBlock som cbuffer](images/ubo-layout-d3d12.webp "ExampleBlock som HLSL-cbuffer, 16 byte per rad: vector ryms i första raden på 4, och varje element i values börjar en ny rad.")
+:::
+
+## Att använda uniform buffers
 
 :::opengl
 Vi har definierat uniform blocks och angett deras minneslayout, men vi har inte gått igenom hur man faktiskt använder
@@ -1231,7 +1245,7 @@ från kapitlet *Coordinate systems*:
   `glBufferSubData(GL_UNIFORM_BUFFER, 144, 4, &b)`.
 :::
 
-## A simple example
+## Ett enkelt exempel
 
 Låt oss då visa ett riktigt exempel på uniform buffer objects. Om vi ser tillbaka på alla tidigare kodexempel har vi
 hela tiden använt 3 matriser: projektions-, vy- och modellmatrisen. Av dem är det bara modellmatrisen som ändras ofta.
@@ -1478,7 +1492,7 @@ till 64 DWORD totalt, så root constants passar för små data per ritanrop som 
 rymmer upp till 4096 `float4`-register och delas mellan ritanrop.
 :::
 
-## Additional resources
+## Mer att läsa
 
 :::opengl
 - [Interface Block (GLSL)](https://www.khronos.org/opengl/wiki/Interface_Block_(GLSL)): OpenGL-wikin om interface

@@ -25,6 +25,8 @@ använda normaler per fragment i stället för per yta, kallas *normal mapping* 
 är den likadan i alla API:er: bara shadrar och vertexdata ändras. Där API:erna skiljer sig är riktningen på texturens
 v-axel – och det spelar roll här, som du ska se.
 
+![En normal eller en normal per fragment](images/normals-per-fragment.webp "En tegelvägg sedd från sidan. Överst har den platta quaden en normal för alla fragment. Nederst är quaden lika platt, men varje fragment får normalen hos den knöliga yta som normal mapen beskriver.")
+
 :::opengl
 Utgå från ditt program från *Avancerad belysning* i en ny mapp (det har det texturerade, belysta golvet) och gör om
 det till learnopengls scen: en fyrhörning på 2 × 2 som vetter mot +z, byggd av `renderQuad()` av positionerna
@@ -98,6 +100,8 @@ Varför ser en normal map mest blå ut?
 ---
 Varje komponent lagras som `normal * 0.5 + 0.5`. En normal (0, 0, 1) blir (0.5, 0.5, 1.0); normaler som lutar uppåt ger mer grönt, åt höger mer rött.
 ```
+
+![Normal mapens färger](images/normal-map-colours.webp "Kapitlets brickwall_normal.png, en del av den förstorad, och tre texlar avkodade med färg · 2 − 1: en tegelstens platta yta, fasningen vid dess högra kant (röd, +x) och vid dess överkant (grön, +y).")
 
 I fragment shadern samplar vi normal mapen, för tillbaka färgen från [0,1] till [-1,1] och normaliserar den. Sedan gör
 vi belysningsberäkningarna med den samplade normalvektorn i stället för ytans normal.
@@ -230,6 +234,13 @@ Uppåtvektorn känner vi redan: ytans normalvektor. Höger- och framåtvektorn �
 riktningarna på ytan där texturkoordinaterna u och v växer. Tangenten pekar längs texturens u-axel, bitangenten längs
 dess v-axel – så normal mapens x (rött) mäts längs tangenten, dess y (grönt) längs bitangenten och dess z (blått) längs
 normalen.
+
+:::opengl vulkan
+![Tangentrummet på quaden](images/tangent-space-opengl-vulkan.webp "Tangenten T pekar dit u växer, bitangenten B dit v växer: uppför väggen, eftersom bilderna vänds vid inläsningen. Normal mapens rött, grönt och blått mäts längs T, B och N.")
+:::
+:::d3d12
+![Tangentrummet på quaden](images/tangent-space-d3d12.webp "Tangenten T pekar dit u växer, bitangenten B dit v växer: med Direct3D:s texturkoordinater nedför väggen. Normal mapens rött, grönt och blått mäts längs T, B och N.")
+:::
 
 ### Att räkna ut tangenter och bitangenter för hand
 
@@ -612,6 +623,8 @@ vändning: använd som normal i världsrymden var kartans y helt enkelt väggens
 Bygg och kör: teglens **knölar belyses rätt**. Teglens platta ytor ser ut som i början – de är platta i normal mapen
 också – men fasningarna som vetter mot ljuset är ljusa nu, och de som vetter bort ligger i sin egen skugga. Väggen ser
 ut att ha djup, och den är fortfarande bara två trianglar.
+
+![Väggen efter varje uppgift](images/normal-steps.webp "Väggen i början, efter uppgiften normal-map och efter tbn, ritad av kursens simulator: platt, fel belyst med mapens normaler som normaler i världsrummet, rätt belyst i tangentrummet.")
 
 :::opengl
 ```quiz

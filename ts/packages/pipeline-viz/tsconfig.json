@@ -1,0 +1,19 @@
+{
+  // The visualizer's code (visualizer/, as in its own repository, with its own compiler options) and the engine that
+  // embeds it (engine/). The workspace's tsconfig checks src/ and test/; `npm run typecheck` in ts/ runs both.
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "types": ["vite/client"]
+  },
+  "include": ["visualizer", "engine"]
+}

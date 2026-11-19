@@ -48,6 +48,8 @@ The root is at the origin with scale 1. Its child is at local position (3.5, 0, 
 global(child 2) = global(child 1) · local(child 2). The first child's global matrix translates by 3.5 and scales by 0.6, so the second child's offset of 3.5 becomes 2.1 in the world, and it lands at 3.5 + 2.1 = 5.6. The next ones follow at 6.86, 7.62, 8.07, … – each 0.6 times closer and smaller.
 ```
 
+![The chain of planets](images/scene-chain.webp "Every child is 3.5 units to the side of its parent and 0.6 times its size in the parent's space; in the world the steps shrink with the scale.")
+
 ## Your program
 
 Start from your program from *Model* in a new folder – the *Model Loading* part's program – and reduce it to
@@ -663,6 +665,8 @@ With the dirty flag, the root's rotation is set every frame, and nothing else ch
 ---
 A clean entity below a dirty one still needs a new global matrix. Had only the last, tiny planet moved, the update would have walked down the clean chain and recomputed that one matrix alone.
 ```
+
+![The dirty flag](images/dirty-flag.webp "One entity has changed: its matrix and those of everything below it are recomputed; the others are only visited.")
 
 ## Moving the graph
 

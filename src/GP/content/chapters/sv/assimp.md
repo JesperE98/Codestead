@@ -94,6 +94,8 @@ map_Kd rings.png
 map_Ks rings_specular.png
 ```
 
+![De fyra texturerna i planet.mtl](images/planet-maps.webp "De fyra texturer som planet.mtl nämner: planetens och ringens diffuse map och specular map (ringens kartor är smala remsor, här utdragna).")
+
 Lägg märke till att ett hörn av en yta har *tre* index, ett per lista, medan en vertex på GPU:n – i {{api}} som
 överallt – har *ett* index som väljer alla dess attribut på en gång. Ringen visar varför filen gör så: 98 positioner,
 men bara en normal. En modellinläsare måste därför bygga sina egna vertexar: en för varje olik kombination av
@@ -108,6 +110,8 @@ Ett hörn av en yta i `.obj`-filen skrivs `563/563/562`. Varför kan GPU:n inte 
 Filen lagrar varje lista utan upprepningar, och varje hörn väljer ur varje lista för sig. GPU:ns vertexhämtning läser en vertex – position, normal och texturkoordinater sida vid sida – per index. Så inläsaren gör varje olik trippel till en vertex (OBJ-index börjar dessutom på 1, GPU:ns på 0).
 ```
 
+![Tre index i ett hörn](images/obj-corners.webp "Hörnet 563/563/562 i ringens första sida väljer en rad ur varje lista: position 563, texturkoordinat 563 och normal 562. En vertex för GPU:n har alla tre, med ett index.")
+
 ## Ett bibliotek för modellinläsning
 
 Ett mycket populärt bibliotek för att importera modeller heter [Assimp](https://learnopengl.com/Model-Loading/Assimp),
@@ -116,7 +120,7 @@ några också) genom att läsa in all modellens data i Assimps generella datastr
 modellen kan vi hämta all data vi behöver ur Assimps datastruktur. Eftersom Assimps datastruktur är densamma oavsett
 vilket filformat vi importerade, skyddar den oss från alla de olika filformaten därute.
 
-![Att läsa in en modell](images/viz-parse.webp "Att läsa in en modell: filens text blir tal, sedan vertexar, sedan ett mesh som går att rita.")
+![Att läsa in en modell](viz:parse "Att läsa in en modell: filens text blir tal, sedan vertexar, sedan ett mesh som går att rita.")
 
 När en modell importeras via Assimp läser biblioteket in hela modellen i ett *scen*-objekt som innehåller all data i
 den importerade modellen/scenen. Assimp har sedan en samling noder, där varje nod innehåller index till data som
@@ -174,6 +178,8 @@ Varför består `planet.obj` av två meshar, `planet` och `rings`, och inte en?
 ---
 En mesh är den minsta enhet vi ritar med en uppsättning texturer. Allt som behöver andra texturer – här ringen med `rings.png` och `rings_specular.png` – blir en egen mesh, och modellen är samlingen av båda.
 ```
+
+![Assimps struktur för planeten](images/assimp-structure.webp "Vad Assimp gör av planet.obj: aiScene äger meshar och material; rotnoden har en barnnod per objekt, som bara har indexet till sin mesh, och varje mesh har indexet till sitt material.")
 
 I de följande kapitlen skapar vi egna klasser `Model` och `Mesh` som läser in och lagrar importerade modeller med den
 struktur vi just har beskrivit. När vi sedan vill rita en modell renderar vi inte modellen som helhet, utan alla de

@@ -1,0 +1,55 @@
+/* ---------- 04 Buffers ---------- */
+.bf-flags { font-size: 10.5px; color: var(--muted); }
+.bf-buf { display: grid; gap: 3px; transition: opacity 0.4s; }
+.bf-buf-head { display: flex; justify-content: space-between; gap: 8px; font-size: 11.5px; color: var(--muted); }
+.bf-buf-head b { color: var(--text); font-size: 12px; }
+.bf-buf-sub { font-size: 10.5px; color: var(--dim); font-family: var(--mono); }
+.bf-track { position: relative; height: 12px; border-radius: 4px; background: rgba(255, 255, 255, 0.04); overflow: hidden; }
+.bf-track i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; }
+.bf-fill { transform-origin: left; transition: transform 0.01s; }
+.bf-buf.vb .bf-fill { background: linear-gradient(90deg, rgba(56, 225, 255, 0.45), var(--cyan)); box-shadow: 0 0 12px var(--cyan); }
+.bf-buf.ib .bf-fill { background: linear-gradient(90deg, rgba(92, 240, 143, 0.45), var(--green)); box-shadow: 0 0 12px var(--green); }
+.bf-pad { background: repeating-linear-gradient(135deg, rgba(255, 63, 210, 0.28) 0 5px, rgba(255, 63, 210, 0.06) 5px 10px); border: 1px dashed rgba(255, 63, 210, 0.6); transition: opacity 0.4s; }
+.bf-hex-wrap { display: grid; gap: 3px; }
+.bf-hex-k { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--dim); }
+.bf-hex { display: flex; flex-wrap: wrap; gap: 2px; font-family: var(--mono); font-size: 10.5px; }
+.bf-hex .mem-cell { min-width: 19px; }
+.bf-staging { display: grid; gap: 2px; padding: 5px 9px; border-radius: 9px; border: 1px solid color-mix(in srgb, var(--api) 55%, transparent); background: color-mix(in srgb, var(--api) 8%, transparent); transition: opacity 0.4s; }
+.bf-tag { font-size: 11.5px; font-weight: 700; color: var(--api); }
+.bf-track.st { height: 8px; }
+.bf-fill.st { background: linear-gradient(90deg, color-mix(in srgb, var(--api) 30%, transparent), var(--api)); box-shadow: 0 0 10px var(--api); }
+@keyframes bf-flow { to { stroke-dashoffset: -18; } }
+.bf-speed { display: grid; gap: 2px; text-align: center; font-size: 11px; color: var(--muted); }
+.bf-time { font-family: var(--mono); font-size: 20px; font-weight: 800; }
+.bf-rule { font-size: 10.5px; color: var(--muted); line-height: 1.4; }
+.bf-states { display: grid; gap: 4px; margin-top: auto; }
+.bf-state { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; padding: 3px 8px; border-radius: 8px; border: 1px solid rgba(92, 240, 143, 0.5); background: rgba(92, 240, 143, 0.08); box-shadow: 0 0 16px rgba(92, 240, 143, 0.15); transition: opacity 0.4s; }
+.bf-state .mono { font-size: 10.5px; color: var(--green); overflow-wrap: anywhere; }
+.bf-state small { font-size: 10px; color: var(--muted); }
+
+
+/* ModelStage overlay */
+@media (min-width: 901px) { .bf-ms .ms-slot.top { width: min(78%, 680px); } }
+.bf-ms .bf-key .ms-head { padding: 5px 11px; }
+.bf-ms .bf-key .ms-body { padding-bottom: 8px; }
+.bf-ms .bf-key .stat { padding: 4px 9px; flex-basis: 120px; }
+.bf-ms .bf-key .stat .v { font-size: 15px; }
+.bf-ms .bf-key .stat .k { font-size: 9.5px; text-transform: none; letter-spacing: 0.02em; }
+.bf-ms .ms-slot.bottom { flex-wrap: nowrap; gap: 6px; }
+.bf-ms .ms-slot.bottom .bf-detail { flex: 1 1 0; min-width: 0; opacity: 0.65; transition: opacity 0.3s; }
+.bf-ms .ms-slot.bottom .bf-detail.cur { flex: 0 0 50%; opacity: 1; border-color: color-mix(in srgb, var(--cc) 60%, transparent); box-shadow: 0 0 22px color-mix(in srgb, var(--cc) 22%, transparent); }
+.bf-ms .bf-detail .ms-head { color: var(--cc); white-space: nowrap; overflow: hidden; }
+.bf-ms .bf-detail .ms-head span:first-child { overflow: hidden; text-overflow: ellipsis; }
+.bf-ms .bf-detail:not(.collapsed) .ms-body { display: grid; gap: 5px; max-height: 150px; }
+.bf-ms .bf-c-vram:not(.collapsed) .ms-body { max-height: 185px; }
+.bf-c-ram { --cc: var(--cyan); }
+.bf-c-pcie { --cc: var(--amber); }
+.bf-c-vram { --cc: var(--magenta); }
+.bf-c-vram .bf-track { outline: 1px dashed rgba(255, 63, 210, 0.35); }
+.bf-ms .off { opacity: 0.15; }
+.bf-cap { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--text); }
+.glow-green { color: var(--green); text-shadow: 0 0 12px rgba(92, 240, 143, 0.6); }
+@media (max-width: 900px) {
+  .bf-ms .ms-slot.bottom .bf-detail:not(.cur) { display: none; }
+  .bf-ms .ms-slot.top { width: calc(100% - 16px); }
+}

@@ -49,7 +49,7 @@ När vi definierar en uppsättning triangelvertexar definierar vi dem i en viss 
 *medurs* (clockwise) eller *moturs* (counter-clockwise). Varje triangel består av 3 vertexar, och vi anger de 3
 vertexarna i en ordning sedd från triangelns mitt.
 
-![Varvningsordning](images/viz-winding.webp "Varvningsordning: sett från kameran går en framsidas hörn moturs.")
+![Varvningsordning](viz:winding "Varvningsordning: sett från kameran går en framsidas hörn moturs.")
 
 Tänk dig en triangel med hörnet 1 överst, 2 nere till höger och 3 nere till vänster. Går du 1 → 2 → 3 rör du dig
 medurs; går du 1 → 3 → 2 rör du dig moturs. I vertexdatan är ordningen helt enkelt den ordning hörnen räknas upp i:
@@ -105,6 +105,8 @@ En triangels hörn går moturs på skärmen så som kameran ser den. Kameran fly
 ---
 Hörnens ordning i vertexdatan ändras aldrig, men deras positioner på skärmen gör det. Speglade av att man tittar från andra sidan går hörnen åt andra hållet – det är så rasterizern skiljer framsidor från baksidor.
 ```
+
+![Kubens fram- och baksida](images/winding-cube.webp "Kuben sedd från kameran: den första triangeln på framsidan går moturs, den första triangeln på baksidan, sedd genom kuben, medurs – fast båda listas moturs sett utifrån.")
 
 Det finns en hake: det här fungerar bara om *varje* triangel i kuben angavs moturs sett utifrån. learnopengls kub, den
 vi har använt sedan kapitlet *Coordinate systems*, gjordes inte med culling i tankarna: sett utifrån går dess fram-,
@@ -176,6 +178,8 @@ Du behöver inte föreställa dig varje sida för att kontrollera en triangel. F
 gamla baksidan är det (1, 0, 0) × (1, 1, 0) = (0, 0, 1) – in i kuben, så sett utifrån gick den medurs. För den nya är
 det (1, 1, 0) × (1, 0, 0) = (0, 0, -1): ut ur kuben.
 
+![Culling med den gamla och den nya kuben](images/culling-old-cube.webp "Back-face culling påslaget för learnopengls gamla kub och golv och för de moturs, ritat av kursens simulator: med de gamla datan försvinner golvet och kubens medurs sidor.")
+
 Gör nu den första uppgiften, **ccw-cube**: skriv om kubens 36 vertexar så att varje triangel går moturs sett utifrån,
 med varje vertex texturkoordinater bevarade, och bygg och kör sedan. Ingenting ändras – inte en enda pixel – eftersom
 ingenting cullas än. Ordningen på en triangels hörn spelar roll först när culling är påslaget.
@@ -195,7 +199,7 @@ Enligt högerhandsregeln pekar (b − a) × (c − a) mot den betraktare för vi
 I början av kapitlet sa vi att {{api}} kan kasta triangelprimitiver om de ritas som baksidor. Nu när vi vet hur vi
 anger vertexarnas ordning kan vi börja använda face culling.
 
-![Face culling](images/viz-culling.webp "Face culling: trianglar som vänder sig bort från kameran kastas före rasteriseringen.")
+![Face culling](viz:culling "Face culling: trianglar som vänder sig bort från kameran kastas före rasteriseringen.")
 
 :::opengl
 Face culling är avstängt som standard. För att slå på det behöver vi bara slå på OpenGL:s alternativ `GL_CULL_FACE`:

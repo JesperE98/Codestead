@@ -166,6 +166,8 @@ The ball flies upwards and its circle reaches into a brick from below. The vecto
 In screen coordinates y grows downwards, so (0, −8) points up the screen – from the ball to the brick above it. learnopengl calls it DOWN after the compass vector (0, −1); the resolution's "move ball back down" then moves it away from the brick.
 ```
 
+![The direction and the penetration](images/resolve-direction.webp "The vector from the ball's centre to the closest point, (0, −8), is nearest to the compass's DOWN – drawn in the game's coordinates, where y points down. The ball is moved down by the penetration and its vertical velocity reversed.")
+
 ## AABB – Circle collision resolution
 
 To calculate the required values for collision resolution we need a bit more information from the collision
@@ -481,6 +483,8 @@ stronger) if the ball hit the edge of the paddle compared to if the ball would h
 reason, the new velocity vector is normalized and multiplied by the length of the old velocity vector. This way, the
 velocity of the ball is always consistent, regardless of where it hits the paddle.
 
+![Where the ball leaves the paddle](images/paddle-bounce.webp "The new direction for hits at −100 %, −50 %, 0, 50 % and 100 % of the paddle's half width from its centre; every arrow is as long as the old speed.")
+
 **Sticky paddle.** You may or may not have noticed it when you ran the code, but there is still a large issue with
 the player and ball collision resolution. learnopengl calls it the sticky paddle issue. It happens because the player
 paddle moves with a high velocity towards the ball, resulting in the ball's center ending up inside the player paddle.
@@ -669,6 +673,8 @@ collisions only per frame and only for the positions exactly as they are at that
 would have such a velocity that it would pass over another object within a single frame, it would look like it never
 collided with this object. So if there are framedrops, or you reach high enough velocities, this collision detection
 scheme will not hold. This is called *tunnelling*.
+
+![Tunnelling](images/tunnelling.webp "A fast ball before and after a thin brick in two successive frames: neither position overlaps the brick, so no collision is found.")
 
 Several of the things that can still go wrong:
 

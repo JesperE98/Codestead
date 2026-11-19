@@ -109,7 +109,7 @@ Efter varje uppgift bygger och kör du programmet i din IDE.
 
 ## Helheten
 
-![Rummen en vertex passerar](images/viz-spaces.webp "Rummen en vertex passerar: lokalt rum (objekt), världsrum, vyrum och klipprum.")
+![Rummen en vertex passerar](viz:spaces "Rummen en vertex passerar: lokalt rum (objekt), världsrum, vyrum och klipprum.")
 
 För att transformera koordinaterna från ett rum till nästa använder vi flera transformationsmatriser, där de
 viktigaste är *model*-, *view*- och *projection*-matrisen. Våra vertexkoordinater börjar i *lokalt rum* som *lokala
@@ -208,7 +208,7 @@ I slutet av varje körning av vertex shadern förväntar sig {{api}} att koordin
 och varje koordinat som hamnar utanför det *klipps*. Koordinater som klipps kastas bort, så de återstående
 koordinaterna blir fragment som syns på skärmen. Det är också därifrån *klipprum* (clip space) har fått sitt namn.
 
-![Clipping](images/viz-clipping.webp "Clipping: det som ligger utanför synfrustumet klipps bort före rasteriseringen.")
+![Clipping](viz:clipping "Clipping: det som ligger utanför synfrustumet klipps bort före rasteriseringen.")
 
 Eftersom det inte är särskilt intuitivt att ange alla synliga koordinater inom intervallet `-1.0` till `1.0`,
 anger vi en egen uppsättning koordinater att arbeta i och omvandlar dem tillbaka till NDC så som {{api}} förväntar
@@ -499,6 +499,8 @@ med dess höjd. Den tredje och fjärde parametern anger frustumens *nära* och *
 avståndet till `0.1` och det bortre till `100.0`. Alla vertexar mellan det nära och det bortre planet och inuti
 frustumen renderas.
 
+![Tre synfält](images/field-of-view.webp "Kapitlets scen med fov 30°, 45° och 90°, ritad av kursens simulator: ett litet synfält zoomar in, ett stort visar mer och gör allt mindre.")
+
 > När near-värdet i din perspektivmatris är för stort (som `10.0`) klipper {{api}} alla koordinater nära kameran
 > (mellan `0.0` och `10.0`), vilket kan ge ett resultat du kanske har sett i datorspel, där man kan se igenom vissa
 > föremål när man går obekvämt nära dem.
@@ -573,6 +575,8 @@ eller ingenjörstillämpningar där vi helst inte vill att vertexarna förvräng
 mått mer exakt. Sida vid sida visar perspektivprojektionen de avlägsna vertexarna mindre, medan den ortografiska
 ritar varje kub lika stor, oavsett hur långt bort den är.
 
+![Perspektivisk och ortografisk projektion](images/projections.webp "Överst: de två frustumen sedda från sidan, med två lika stora kuber. Nederst: kapitlets tio kuber med perspektivisk och med ortografisk projektion, ritade av kursens simulator.")
+
 ```quiz
 Två likadana kuber står framför en perspektivkamera, den ena 2 enheter bort och den andra 4 enheter bort. Varför ser den bortre hälften så stor ut?
 - [x] Projektionen lägger avståndet i w, och när x och y divideras med w (perspektivdivisionen) halveras den bortre kubens koordinater
@@ -585,7 +589,7 @@ Skalningen av x och y i projektionsmatrisen är densamma för alla vertexar. Ski
 
 ## Allt tillsammans
 
-![Viewport-transformen gör normaliserade enhetskoordinater till pixlar i fönstret.](images/viz-viewport.webp "Viewport-transformen gör normaliserade enhetskoordinater till pixlar i fönstret.")
+![Viewport-transformen gör normaliserade enhetskoordinater till pixlar i fönstret.](viz:viewport "Viewport-transformen gör normaliserade enhetskoordinater till pixlar i fönstret.")
 
 Vi skapar en transformationsmatris för vart och ett av stegen ovan: model-, view- och projection-matrisen. En
 vertexkoordinat transformeras sedan till klippkoordinater så här:

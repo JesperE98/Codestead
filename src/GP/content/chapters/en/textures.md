@@ -75,18 +75,24 @@ In OpenGL, texture coordinates start at (0, 0) for the **lower left** corner of 
 for the upper right corner. OpenGL calls the two axes *s* and *t* (and *r* for 3D textures). To put a texture on a
 triangle we would give its bottom-left corner the texture coordinate (0, 0), its bottom-right corner (1, 0) and its
 top corner (0.5, 1.0): the top of the image, halfway across.
+
+![Texture coordinates in OpenGL](images/texture-coordinates-opengl.webp "OpenGL's texture coordinates start at the bottom left of the image. The example triangle gets the part of the texture its corners' coordinates cut out.")
 :::
 :::vulkan
 In Vulkan, texture coordinates start at (0, 0) for the **upper left** corner of a texture image – the first texel
 in memory – and go to (1, 1) for the lower right corner. The two axes are usually called *u* and *v* (and *w* for
 3D textures). To put a texture on a triangle we would give its bottom-left corner the texture coordinate (0, 1),
 its bottom-right corner (1, 1) and its top corner (0.5, 0.0): the top of the image, halfway across.
+
+![Texture coordinates in Vulkan and Direct3D](images/texture-coordinates-vulkan-d3d12.webp "Vulkan's and Direct3D's texture coordinates start at the top left of the image, the first texel in memory. The example triangle gets the part of the texture its corners' coordinates cut out.")
 :::
 :::d3d12
 In Direct3D, texture coordinates start at (0, 0) for the **upper left** corner of a texture image – the first texel
 in memory – and go to (1, 1) for the lower right corner. The two axes are called *u* and *v* (and *w* for 3D
 textures). To put a texture on a triangle we would give its bottom-left corner the texture coordinate (0, 1), its
 bottom-right corner (1, 1) and its top corner (0.5, 0.0): the top of the image, halfway across.
+
+![Texture coordinates in Vulkan and Direct3D](images/texture-coordinates-vulkan-d3d12.webp "Vulkan's and Direct3D's texture coordinates start at the top left of the image, the first texel in memory. The example triangle gets the part of the texture its corners' coordinates cut out.")
 :::
 
 We only have to pass texture coordinates for the corners to the vertex shader, which then passes them on to the
@@ -188,8 +194,15 @@ A rectangle's texture coordinates go from 0.0 to 2.0 on both axes, and the textu
 - [ ] The image once in one quarter, and the image's edge pixels stretched over the rest
 - [ ] The image once, stretched over the whole rectangle
 ---
-With repeat addressing only the fractional part of a coordinate counts, so 0..1 and 1..2 both cover the whole image: twice across and twice down. The third answer describes clamp-to-edge, which you will use in the exercises.
+With repeat addressing only the fractional part of a coordinate counts, so 0..1 and 1..2 both cover the whole image: twice across and twice down. Stretched edge pixels are what clamp-to-edge gives, which you will use in the exercises.
 ```
+
+:::opengl
+![The four wrap modes](images/texture-wrapping-opengl.webp "Texture coordinates from 0 to 2 read with each wrap mode, drawn by the course's simulator. The dashed square is the texture itself, (0, 0) to (1, 1); the border color here is white.")
+:::
+:::vulkan d3d12
+![The four wrap modes](images/texture-wrapping-vulkan-d3d12.webp "Texture coordinates from 0 to 2 read with each wrap mode, drawn by the course's simulator. The dashed square is the texture itself, (0, 0) to (1, 1); the border color here is white.")
+:::
 
 ## Texture Filtering
 
@@ -209,6 +222,8 @@ What visual effect do these filtering methods produce? Nearest filtering results
 clearly see the pixels that form the texture, while linear filtering produces a smoother pattern where the
 individual pixels are less visible. Linear filtering produces a more realistic output, but some developers prefer
 a more 8-bit look and as a result pick the nearest filter.
+
+![Nearest and linear filtering](images/texture-filtering.webp "A small part of the texture, around the heart, magnified many times and drawn by the course's simulator: nearest filtering shows each texel as a block, linear filtering blends neighboring texels.")
 
 Texture filtering can be set for *magnifying* and *minifying* operations (when scaling up or downwards) so you
 could for example use nearest neighbor filtering when textures are scaled downwards and linear filtering for
@@ -278,6 +293,8 @@ that best suits the distance to the object. Because the object is far away, the 
 noticeable to the user. The GPU is then able to sample the correct texels, and there's less cache memory involved
 when sampling that part of the mipmaps. A full chain of mipmaps costs only about a third more memory than the
 original image (1 + ¼ + 1/16 + … ≈ 4/3).
+
+![A mipmap chain](images/mipmaps.webp "The crate's mipmaps: each level is half as wide and half as high as the one before, down to a single texel.")
 
 Just like normal texture filtering, it is also possible to filter between mipmap levels: when switching between
 mipmap levels you can pick the nearest level, or blend linearly between the two closest levels – and within a

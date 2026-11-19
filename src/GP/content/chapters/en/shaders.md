@@ -68,7 +68,7 @@ each one, build and run the program to see the result.
 
 ## {{shaderLanguage}}
 
-![From shader source to GPU code](images/viz-shaders.webp "From shader source to GPU code: the driver (or a compiler ahead of time) turns your text into instructions.")
+![From shader source to GPU code](viz:shaders "From shader source to GPU code: the driver (or a compiler ahead of time) turns your text into instructions.")
 
 :::opengl
 Shaders are written in the C-like language GLSL. GLSL is tailored for use with graphics and contains useful
@@ -342,6 +342,8 @@ You can see we declared a `vertexColor` variable as a `vec4` output that we set 
 a similar `vertexColor` input in the fragment shader. Since they both have the same type and name, the
 `vertexColor` in the fragment shader is linked to the `vertexColor` in the vertex shader. Because we set the color
 to a dark-red color in the vertex shader, the resulting fragments should be dark-red as well.
+
+![How the shader stages are connected](images/shader-interface-opengl.webp "The vertex shader's out and the fragment shader's in are connected by their name and type; the rasterizer interpolates the value between the vertices.")
 :::
 :::vulkan
 GLSL defines the `in` and `out` keywords for this. Each shader can specify inputs and outputs using those keywords,
@@ -398,6 +400,8 @@ void main() {
 Note that the vertex shader's input and its output both use location 0: inputs and outputs are separate
 interfaces, each with its own locations. Because we set the color to dark red in the vertex shader, the resulting
 fragments should be dark red as well.
+
+![How the shader stages are connected](images/shader-interface-vulkan.webp "The vertex shader's output and the fragment shader's input are connected by their location (and type); the names don't matter.")
 :::
 :::d3d12
 In HLSL, a shader's inputs are its function parameters and its outputs are its return value. Each of them carries a
@@ -446,6 +450,8 @@ float4 PSMain(PSInput input) : SV_TARGET
 ```
 
 Because we set the color to dark red in the vertex shader, the resulting pixels should be dark red as well.
+
+![How the shader stages are connected](images/shader-interface-d3d12.webp "The vertex shader's output and the pixel shader's input are connected by their semantic, COLOR; SV_POSITION and SV_TARGET are system values.")
 :::
 
 Now do the first task, **in-out**: make the change above and build. You should see the same triangle, now dark red
@@ -486,7 +492,7 @@ Outputs and inputs between stages are matched by their semantics; using one stru
 
 ## Uniforms
 
-![Uniforms](images/viz-uniforms.webp "Uniforms: values the program sets that stay the same for every vertex and fragment of a draw.")
+![Uniforms](viz:uniforms "Uniforms: values the program sets that stay the same for every vertex and fragment of a draw.")
 
 :::opengl
 *Uniforms* are another way to pass data from our application on the CPU to the shaders on the GPU. Uniforms are

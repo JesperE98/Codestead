@@ -165,6 +165,8 @@ Bollen flyger uppåt och dess cirkel når in i ett block underifrån. Vektorn fr
 I skärmkoordinater växer y nedåt, så (0, −8) pekar uppåt på skärmen – från bollen till blocket ovanför den. learnopengl kallar det DOWN efter kompassvektorn (0, −1); hanteringens "move ball back down" flyttar den sedan bort från blocket.
 ```
 
+![Riktningen och inträngningen](images/resolve-direction.webp "Vektorn från bollens mittpunkt till den närmaste punkten, (0, −8), ligger närmast kompassens DOWN – ritad i spelets koordinater, där y pekar nedåt. Bollen flyttas ned med inträngningen och dess lodräta hastighet vänds.")
+
 ## AABB – cirkel-kollisionshantering
 
 För att räkna ut värdena som kollisionshanteringen behöver måste kollisionsfunktionerna ge oss lite mer information än
@@ -477,6 +479,8 @@ med följden att bollens hastighetsvektor blir mycket längre (och alltså stark
 den träffar mitten. Därför normeras den nya hastighetsvektorn och multipliceras med den gamla vektorns längd. På så sätt
 är bollens fart alltid densamma, oavsett var den träffar racketen.
 
+![Var bollen lämnar racketen](images/paddle-bounce.webp "Den nya riktningen för träffar på −100 %, −50 %, 0, 50 % och 100 % av racketens halva bredd från dess mitt; varje pil är lika lång som den gamla farten.")
+
 **Klistrig racket.** Du kanske har märkt det, kanske inte, när du körde koden, men det finns fortfarande ett stort
 problem med kollisionshanteringen mellan spelaren och bollen. learnopengl kallar det problemet med den klistriga
 racketen (sticky paddle). Det uppstår eftersom racketen rör sig snabbt mot bollen, så att bollens mittpunkt hamnar inuti
@@ -666,6 +670,8 @@ kollisioner bara per bildruta och bara för positionerna precis som de är vid d
 med så hög hastighet att det passerar ett annat objekt inom en enda bildruta ser ut att aldrig ha krockat med det. Om
 bildrutor tappas, eller hastigheterna blir tillräckligt höga, håller alltså inte det här systemet. Det kallas
 *tunnling* (tunnelling).
+
+![Tunnling](images/tunnelling.webp "En snabb boll före och efter ett tunt block i två bildrutor efter varandra: ingen av positionerna överlappar blocket, så ingen kollision hittas.")
 
 Några av de saker som fortfarande kan gå fel:
 

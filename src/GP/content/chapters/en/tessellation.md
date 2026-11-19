@@ -33,6 +33,13 @@ The vertex shader before them now just passes the control points through, and th
 triangles. The control/hull stage decides *how much* detail; the evaluation/domain stage decides *where* each new vertex
 goes.
 
+:::opengl vulkan
+![The tessellation stages](images/tess-stages-opengl-vulkan.webp "The stages between the vertex shader and the rasterizer and what passes between them.")
+:::
+:::d3d12
+![The tessellation stages](images/tess-stages-d3d12.webp "The stages between the vertex shader and the rasterizer and what passes between them.")
+:::
+
 :::opengl
 Tessellation shaders are core since OpenGL 4.0. learnopengl's program asks for **4.1**, and so does this chapter's: 4.1 is
 also the highest version macOS offers, and it includes tessellation, so the chapter runs there. The shaders start with
@@ -511,6 +518,13 @@ All six levels of a quad patch are 8, with `fractional_odd_spacing`. What does t
 With `equal_spacing` it would be 8 × 8. The tessellator only produces the (u, v) points and the triangles that connect them; the evaluation (domain) shader reads a height for each point.
 ```
 
+:::opengl vulkan
+![Equal and fractional odd spacing](images/tess-spacing-opengl-vulkan.webp "A quad patch with all levels at 8: equal spacing cuts it into 8 × 8, fractional odd spacing into 9 × 9 with two shorter parts on each side.")
+:::
+:::d3d12
+![Integer and fractional odd partitioning](images/tess-spacing-d3d12.webp "A quad patch with all levels at 8: integer partitioning cuts it into 8 × 8, fractional odd partitioning into 9 × 9 with two shorter parts on each side.")
+:::
+
 ## Wireframe
 
 To see what the tessellator does, the next task draws only the triangles' edges.
@@ -654,6 +668,8 @@ Now do the last task, **distance-levels**. Build and run: the front of the terra
 back the wireframe opens up into large triangles – a level near 2 gives three segments per edge instead of nine. The terrain's shape
 is unchanged at a glance: the far patches cover so few pixels that the extra triangles were invisible anyway. Move the
 camera (in your own project) and the levels follow it every frame.
+
+![Fixed and distance-based levels](images/tess-lod.webp "The back of the terrain with level 8 on every patch and with the levels from the distance. Drawn by the course's simulator.")
 
 ## Going further
 

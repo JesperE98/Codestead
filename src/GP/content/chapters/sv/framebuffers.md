@@ -510,6 +510,16 @@ skärmen. Det som syns blir då exakt detsamma som utan framebuffer, men den hä
 quad. Varför är det användbart? Det ser vi i nästa avsnitt.
 
 :::opengl
+![Rendera till en textur](images/framebuffer-passes-opengl.webp "De två passen: scenen ritas till en egen textur, sedan samplar en quad över hela fönstret den texturen och ritas till fönstret.")
+:::
+:::vulkan
+![Rendera till en textur](images/framebuffer-passes-vulkan.webp "De två passen: scenen ritas till en egen textur, sedan samplar en quad över hela fönstret den texturen och ritas till fönstret.")
+:::
+:::d3d12
+![Rendera till en textur](images/framebuffer-passes-d3d12.webp "De två passen: scenen ritas till en egen textur, sedan samplar en quad över hela fönstret den texturen och ritas till fönstret.")
+:::
+
+:::opengl
 Det första vi gör är att skapa ett riktigt framebuffer object och binda det, vilket är ganska okomplicerat:
 
 ```cpp
@@ -1372,6 +1382,8 @@ Just den här skärpekerneln ser ut så här:
 Dess vikter summerar till 9 − 8 = 1: där alla nio samples har samma färg blir resultatet den färgen. Där mitten skiljer
 sig från sina grannar förstärks skillnaden åttafalt.
 
+![Skärpekerneln vid en pixel](images/framebuffer-kernel.webp "Skärpekerneln vid en pixel: de nio samplen gånger kernelns vikter, summerade. En mörkare pixel bland ljusare hamnar under 0 och lagras som svart.")
+
 Gör uppgiften **sharpen** och bygg och kör sedan. Färgerna är tillbaka, och bakgrunden och golvets jämna partier ser ut
 som förut – men varje kant är hård: marmorns mörka ådror blir svarta, ljusa pixlar bredvid dem blir nästan vita, kuberna
 får ljusa kanter, och golvets mönster ser kornigt ut. Det kan ge intressanta effekter om din spelare är ute på ett
@@ -1423,6 +1435,8 @@ direkt, så vi måste dela varje värde i kerneln med `16`. Den resulterande ker
 Genom att bara ändra kernel-arrayen i fragment shadern kan vi helt ändra post-processing-effekten. Gör uppgiften
 **blur** och bygg och kör sedan: bilden ser ut som startbilden, lätt suddig – marmorns ådror har mjukats upp och
 kubernas konturer är inte längre skarpa.
+
+![Fyra post-processing-effekter](images/framebuffer-effects.webp "Scenen efter uppgifterna inversion, grayscale, sharpen och blur, ritad av kursens simulator: samma textur, läst av fyra olika skärmshaders.")
 
 En sådan oskärpeeffekt ger intressanta möjligheter. Vi kan variera mängden oskärpa över tid för att skapa effekten av
 att någon är berusad, eller öka oskärpan när huvudpersonen inte har på sig sina glasögon. Oskärpa kan också vara ett

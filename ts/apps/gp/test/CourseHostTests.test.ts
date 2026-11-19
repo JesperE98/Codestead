@@ -26,6 +26,15 @@ describe("CourseHostTests", () => {
     expect(report.facts!.succeeded).toBe(true);
     expect(report.facts!.names).toContain("glBindVertexArray");
     expect(report.facts!.firstWords).toEqual(["build"]);
+    // Every fact the achievements look at crosses over (the worker's BuildFacts and the window's are the same).
+    const { names, firstWords, ...init } = data.facts!;
+    expect(report.facts!.init).toEqual(init);
+    expect([...report.facts!.names]).toEqual(names);
+    expect([...report.facts!.firstWords]).toEqual(firstWords);
+    expect(report.facts!.windowTitle).toBe("LearnOpenGL");
+    expect([report.facts!.windowWidth, report.facts!.windowHeight]).toEqual([800, 600]);
+    expect(report.facts!.triangles).toBe(2);
+    expect(report.facts!.drawnPixels).toBeGreaterThan(0);
   });
 
   it("en kontroll av en fil som saknas säger vilka filer som inte hittades", () => {

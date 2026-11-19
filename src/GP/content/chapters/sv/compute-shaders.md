@@ -55,6 +55,13 @@ En compute shader med `local_size_x = 10, local_size_y = 10` startas med 80 × 6
 `gl_GlobalInvocationID = gl_WorkGroupID * gl_WorkGroupSize + gl_LocalInvocationID` – i HLSL `SV_DispatchThreadID = SV_GroupID * numthreads + SV_GroupThreadID`. Med ett anrop per texel är det texelns koordinat.
 ```
 
+:::opengl vulkan
+![Arbetsgrupper och anrop](images/workgroups-opengl-vulkan.webp "Arbetsgrupp (2, 5) i dispatchen och dess anrop med det lokala id:t (3, 7): globalt id = grupp-id × gruppstorlek + lokalt id.")
+:::
+:::d3d12
+![Trådgrupper och trådar](images/workgroups-d3d12.webp "Trådgrupp (2, 5) i dispatchen och dess tråd med grupptråd-id:t (3, 7): dispatch-trådens id = grupp-id × gruppstorlek + grupptråd-id.")
+:::
+
 :::opengl
 Compute shaders kom med OpenGL **4.3**; learnopengls program begär 4.3, och det gör även det här kapitlets (shaders med
 `#version 430 core`). **macOS stannar vid OpenGL 4.1**, så programmet går inte att köra på en Mac – där räknar man på

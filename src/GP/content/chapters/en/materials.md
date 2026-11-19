@@ -83,6 +83,8 @@ from a page by Frédéric Devernay), and renders a cube with each of them: emera
 gold has a warm, sharp highlight, and the plastics have a dull grey-white sheen. Note that the table's shininess
 values are between 0 and 1; they have to be multiplied by 128 to get the exponent our shader expects.
 
+![Five materials from the table](images/material-gallery.webp "The chapter's cube with five materials from the table – emerald, ruby, gold, silver and cyan plastic – under a white light at full strength, drawn by the course's simulator.")
+
 As you can see, by correctly specifying the material properties of a surface it seems to change the perception we
 have of the object. The effects are clearly noticeable, but for the more realistic results we'll need to replace the
 simple cube with something more complicated; learnopengl's *Model Loading* chapters load such shapes.
@@ -99,6 +101,8 @@ You raise the material's `shininess` from 32 to 256. What happens to the specula
 ---
 `spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess)`. The dot product is at most 1, so a higher exponent pushes every value below 1 closer to 0: only directions very close to the reflection keep a visible highlight. A shiny surface (polished metal) has a small, tight highlight; a rough one a wide, soft one.
 ```
+
+![Five shininess values](images/shininess.webp "The coral cube's front face with a shininess of 2, 8, 32, 128 and 256, drawn by the course's simulator with the lamp moved a little so that the highlight lands in the middle: the higher the shininess, the smaller and sharper the highlight.")
 
 Let's try implementing such a material system in the shaders.
 
@@ -397,6 +401,8 @@ The C++ `Material` has `pad1` after `ambient` and `pad2` after `diffuse`, but no
 ---
 `glm::vec3` is 12 bytes. Without `pad1` and `pad2`, `diffuse` would start at byte 12 in C++ but at byte 16 in the shader. After `specular` (bytes 32–43) the shader puts the float `shininess` at 44, exactly where the C++ struct puts it, and the struct ends at 48, a multiple of 16.
 ```
+
+![Material in 16-byte rows](images/uniform-material-vulkan.webp "Material in rows of 16 bytes: each vec3 starts a row, the C++ struct fills the first two rows with pad1 and pad2, and shininess fits into the last 4 bytes of the row of specular, at 44.")
 :::
 :::d3d12
 ```quiz
@@ -407,6 +413,8 @@ The C++ `Material` has `padding0` after `ambient` and `padding1` after `diffuse`
 ---
 `XMFLOAT3` is 12 bytes. Without the padding floats, `diffuse` would start at byte 12 in C++ but at the second row (byte 16) in HLSL. After `specular` (bytes 32–43) HLSL packs the float `shininess` into the same row, at byte 44, exactly where the C++ struct puts it.
 ```
+
+![Material in 16-byte rows](images/uniform-material-d3d12.webp "Material in rows of 16 bytes: each float3 starts a row, the C++ struct fills the first two rows with padding0 and padding1, and shininess fits into the last 4 bytes of the row of specular, at 44.")
 :::
 
 Now do the first task, **material**: add the `Material` struct, use it in the lighting instead of `objectColor`, the two

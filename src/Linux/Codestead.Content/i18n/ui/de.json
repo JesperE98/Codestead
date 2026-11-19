@@ -235,5 +235,7 @@
   "ach.answer-42.title": "Die Antwort",
   "ach.answer-42.desc": "Ein Befehl hat 42 geantwortet – die Antwort auf die Frage nach dem Leben, dem Universum und dem ganzen Rest.",
   "ach.night-owl.title": "Nachteule",
-  "ach.night-owl.desc": "Du hast zwischen Mitternacht und vier Uhr morgens eine Aufgabe gelöst."
+  "ach.night-owl.desc": "Du hast zwischen Mitternacht und vier Uhr morgens eine Aufgabe gelöst.",
+  "picture.enlarge": "Zum Vergrößern klicken",
+  "picture.pause": "Zum Anhalten oder Abspielen klicken"
 }

@@ -11,6 +11,8 @@ Först går vi igenom ett riktat ljus (directional light), sedan ett punktljus (
 vi hade tidigare, och sist strålkastare (spotlights). I nästa kapitel kombinerar vi flera av de här ljustyperna i en
 och samma scen.
 
+![Tre sorters ljuskällor](images/light-types.webp "Ett riktat ljus, ett punktljus och en strålkastare, var och en ovanför kapitlets tio behållare upplysta av den, ritade av kursens simulator.")
+
 :::opengl
 Du fortsätter i ditt program från *Ljuskartor* (utan emissionsövningen): samma `main.cpp` och `shader_m.h`,
 behållarens diffuse map `container2.png` och specular map `container2_specular.png`, och lampans shaders
@@ -354,6 +356,8 @@ Med värdena vi använder nedan (konstant 1.0, linjär 0.09, kvadratisk 0.032) b
 Du ser att ljuset har högst intensitet när avståndet är litet, men så snart avståndet växer minskar intensiteten
 avsevärt, och den når långsamt 0 vid ett avstånd på omkring 50 eller mer. Det är precis vad vi vill ha.
 
+![Dämpning över avståndet](images/attenuation.webp "Dämpningen över avståndet d för tre rader i tabellen nedan: ljus som täcker 13, 50 och 100 enheter. Punkterna markerar avstånden i tabellen ovan på kurvan för 50.")
+
 ### Att välja rätt värden
 
 Men vilka värden ska de 3 termerna ha? Rätt värden beror på många faktorer: miljön, avståndet du vill att ett ljus
@@ -653,8 +657,10 @@ gränsriktningar (alltså i dess kon), och i så fall lyser vi upp fragmentet. F
 - `SpotDir`: riktningen strålkastaren är riktad åt.
 - `Phi` ϕ: gränsvinkeln som anger strålkastarens radie. Allt utanför den här vinkeln lyses inte upp av
   strålkastaren.
-- `Theta` θ: vinkeln mellan vektorn `LightDir` och vektorn `SpotDir`. θ ska vara mindre än ϕ för att fragmentet ska
-  vara inne i strålkastarens ljus.
+- `Theta` θ: vinkeln mellan vektorn `SpotDir` och riktningen från ljuset till fragmentet (vektorn `LightDir` åt
+  andra hållet). θ ska vara mindre än ϕ för att fragmentet ska vara inne i strålkastarens ljus.
+
+![En strålkastares kon](images/spotlight-cone.webp "En strålkastare riktas längs SpotDir med gränsvinkeln ϕ. För ett fragment är θ vinkeln mellan SpotDir och riktningen från ljuset till fragmentet (LightDir åt andra hållet): inne i konen är θ < ϕ.")
 
 Det vi i grunden behöver göra är alltså att räkna ut skalärprodukten (som ger cosinus för vinkeln mellan två
 enhetsvektorer) mellan vektorn `LightDir` och vektorn `SpotDir`, och jämföra den med gränsvinkeln ϕ. Nu när du
@@ -1142,6 +1148,8 @@ Här sätter vi den yttre gränsvinkeln till `17.5` grader, 5 grader utanför de
 bygger och kör den tonar fläckens kant ut mjukt: hörnen på behållare 0, som låg i mörker förut, ligger nu i den mjuka
 zonen och är halvt upplysta. Behållarna utanför konen är nästan svarta, eftersom de där nu bara får det *dämpade*
 omgivande ljuset.
+
+![Hårda och mjuka kanter](images/soft-edges.webp "Behållare 0 med den hårda kanten från uppgiften spotlight och den mjuka kanten från uppgiften soft-edges, ritad av kursens simulator, och intensiteten över θ: 1 innanför 12.5°, 0 utanför 17.5° och däremellan en mjuk övergång.")
 
 Ahhh, det där är mycket bättre. Lek med den inre och den yttre gränsvinkeln och försök skapa en strålkastare som passar
 dina behov bättre. I ditt program kan du gå runt med ficklampan och titta på behållarna den träffar.

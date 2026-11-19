@@ -49,7 +49,7 @@ When we define a set of triangle vertices we're defining them in a certain windi
 or *counter-clockwise*. Each triangle consists of 3 vertices and we specify those 3 vertices in a winding order as
 seen from the center of the triangle.
 
-![Winding order](images/viz-winding.webp "Winding order: seen from the camera, a front-facing triangle's corners go round counter-clockwise.")
+![Winding order](viz:winding "Winding order: seen from the camera, a front-facing triangle's corners go round counter-clockwise.")
 
 Imagine a triangle with the corners 1 at the top, 2 at the bottom right and 3 at the bottom left. Going 1 → 2 → 3
 you move clockwise; going 1 → 3 → 2 you move counter-clockwise. In the vertex data, the order is simply the order in
@@ -109,6 +109,8 @@ A triangle's corners are counter-clockwise on the screen as the camera sees it. 
 ---
 The order of the corners in the vertex data never changes, but their positions on the screen do. Mirrored by looking from the other side, the order goes round the other way – that's how the rasterizer tells front faces from back faces.
 ```
+
+![Front and back face of the cube](images/winding-cube.webp "The cube seen from the camera: the first triangle of its front face goes round counter-clockwise, the first triangle of its back face, seen through the cube, clockwise – although both are listed counter-clockwise as seen from outside.")
 
 There is one catch: this only works if *every* triangle of the cube was specified counter-clockwise as seen from
 outside. learnopengl's cube, the one we've used since the *Coordinate systems* chapter, wasn't made with culling in
@@ -181,6 +183,8 @@ You don't have to picture every face to check a triangle. For corners a, b and c
 are counter-clockwise. For the old back face that's (1, 0, 0) × (1, 1, 0) = (0, 0, 1) – into the cube, so seen from
 outside it was clockwise. For the new one it's (1, 1, 0) × (1, 0, 0) = (0, 0, -1): out of the cube.
 
+![Culling with the old and the new cube](images/culling-old-cube.webp "Back-face culling switched on for learnopengl's old cube and floor and for the counter-clockwise ones, drawn by the course's simulator: with the old data, the floor and the cube's clockwise faces vanish.")
+
 Now do the first task, **ccw-cube**: rewrite the cube's 36 vertices so that every triangle is counter-clockwise seen
 from outside, keeping each vertex's texture coordinates, then build and run. Nothing changes – not a single pixel –
 because nothing is culled yet. The order of a triangle's corners only matters once culling is on.
@@ -201,7 +205,7 @@ At the start of the chapter we said that {{api}} is able to discard triangle pri
 back-facing triangles. Now that we know how to set the winding order of the vertices we can start using face
 culling.
 
-![Face culling](images/viz-culling.webp "Face culling: the triangles that face away from the camera are thrown away before rasterization.")
+![Face culling](viz:culling "Face culling: the triangles that face away from the camera are thrown away before rasterization.")
 
 :::opengl
 Face culling is disabled by default. To enable it we only have to enable OpenGL's `GL_CULL_FACE` option:

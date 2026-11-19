@@ -34,6 +34,7 @@ Codestead.Shell/…" eller "Port of tests/…" i TypeScript-koden pekar på C#-k
 | `ts/packages/linux-content` | `Codestead.Content` | Linux-kursens laddning och kontroller |
 | `ts/packages/gp-gpu` | `Codestead.GP.Gpu` | den simulerade GPU:n: läsare, GLSL/HLSL-tolk, rasterizer |
 | `ts/packages/gp-course` | `Codestead.GP.Course` | GP-kursen: uppgifter, övningar, kontroller, "Kontrollera min kod" |
+| `ts/packages/pipeline-viz` | (ny, Render Pipeline Visualizer) | visualiserarens scener, interaktiva i GP:s kapitel (`viz:`) |
 | `ts/apps/linux`, `ts/apps/gp`, `ts/apps/hub` | apparna | Electron (main + preload) och appens React-del |
 
 ## Faser
@@ -83,7 +84,8 @@ Electron-appen: samma lärfönster (`@codestead/ui`) med Linux-verktyget och den
 - Fönstret: `contextIsolation`, ingen `nodeIntegration`, `sandbox`; preload ger `window.codestead` (`electron/api.ts`):
   lagring (synkron, som i C#), webblänkar (bara http/https), fil- och mappväljare, version, avsluta.
 - Uppdateringar och paketering: se "Paketering och uppdateringar" nedan (`LinuxTool` får preloadens `selfUpdate`).
-- Kvar: typsnittet Inter följer inte med än (C# bäddar in det), så systemets typsnitt används.
+- Typsnittet Inter följer med apparna (`@fontsource-variable/inter` i `codestead.css`), som i C#. Det saknades i de
+  första TypeScript-versionerna (0.6.6 / 0.2.6 / 0.2.5), som visade systemets typsnitt.
 
 ### `ts/apps/gp` – Codestead GP
 Electron-appen: samma lärfönster (`@codestead/ui`) med GP-verktyget – kursen (`@codestead/gp-course`), API:erna som

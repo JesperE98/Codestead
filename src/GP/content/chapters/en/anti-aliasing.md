@@ -57,7 +57,7 @@ exactly the background. Zoom in on a slanted edge in your mind's eye and you see
 To understand what multisampling is and how it works into solving the aliasing problem we first need to delve a bit
 further into the inner workings of the rasterizer.
 
-![Multisampling](images/viz-msaa.webp "Multisampling: coverage is tested at several points per pixel, but the fragment shader usually runs once.")
+![Multisampling](viz:msaa "Multisampling: coverage is tested at several points per pixel, but the fragment shader usually runs once.")
 
 The rasterizer is the combination of all algorithms and processes that sit between your final processed vertices and
 the fragment shader. The rasterizer takes all vertices belonging to a single primitive and transforms this to a set of
@@ -102,6 +102,8 @@ With 4x MSAA, a triangle covers 2 of a pixel's 4 samples. How often does the fra
 ---
 That's the trick of MSAA compared to SSAA: coverage (and depth) is tested per sample, but the fragment shader runs once per pixel and primitive. The resolve averages the samples, so an edge pixel gets a mix in proportion to its coverage.
 ```
+
+![One and four samples per pixel](images/msaa-samples.webp "An edge over a few pixels with one sample per pixel and with four: with four, each pixel gets the triangle's colour in proportion to its covered samples after the resolve.")
 
 What we've discussed so far is a basic overview of how multisampled anti-aliasing works behind the scenes. The actual
 logic behind the rasterizer is a bit more complicated, but this brief description should be enough to understand the
@@ -451,6 +453,8 @@ Why does the depth buffer have to be multisampled too, with the same number of s
 ---
 Coverage and depth are evaluated at every subsample, and a sample's colour is only written if it passes its own depth test. That needs a depth value per sample – and all attachments of one draw must have the same sample count.
 ```
+
+![Without and with MSAA](images/aa-compare.webp "A piece of the cube's upper right edge, magnified, without multisampling and with 4× MSAA, drawn by the course's simulator.")
 
 :::opengl
 ## Off-screen MSAA

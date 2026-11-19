@@ -8,6 +8,8 @@ interface OpenDialog {
   onClose: () => void;
   width: number;
   scroll: boolean;
+  /** An extra class on the dialog (e.g. "picture": as tall as the window allows). */
+  className: string;
 }
 
 interface Toast {
@@ -44,9 +46,10 @@ export class Overlay extends Store {
    * `onClose`, which must close the dialog: {@link closeDialog} or something that calls it).
    * @param scroll True: the whole panel scrolls when it is taller than the dialog. False: the panel scrolls by itself
    * (it gets the dialog's height), so that it can keep e.g. its buttons in view.
+   * @param className An extra class on the dialog ("picture": as tall as the window allows).
    */
-  showDialog(panel: ReactNode, onClose: () => void, width = 480, scroll = true): void {
-    this.open = { id: this.nextId++, panel, onClose, width, scroll };
+  showDialog(panel: ReactNode, onClose: () => void, width = 480, scroll = true, className = ""): void {
+    this.open = { id: this.nextId++, panel, onClose, width, scroll, className };
     this.changed();
   }
 
@@ -164,7 +167,7 @@ export function OverlayHost({ overlay, children, layers, closeLabel = "Close" }:
       {dialog && (
         <div className="cs-dialog-layer">
           <div className="cs-dialog-backdrop" onPointerDown={(e) => e.target === e.currentTarget && dialog.onClose()} />
-          <div className="cs-dialog" role="dialog" aria-modal="true" style={{ width: dialog.width }}>
+          <div className={"cs-dialog" + (dialog.className ? " " + dialog.className : "")} role="dialog" aria-modal="true" style={{ width: dialog.width }}>
             {/* Every dialog can be closed, whatever its own buttons are. */}
             <button ref={closeButton} type="button" className="flat dialog-close" aria-label={closeLabel} onClick={() => dialog.onClose()}>
               ✕

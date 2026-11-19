@@ -140,7 +140,8 @@ Färgerna har fasta betydelser i alla appar (och i kommande verktyg). De finns s
 - `ThemeTests` kontrollerar att alla färger finns i båda teman och att text går att läsa (kontrast minst 4,5:1
   mot bakgrunderna och mot den egna "soft"-färgen, och för knapptext på accentfärgen). Byt en färg → kör testet.
 - Emoji visas i färg genom att fönstrets typsnitt (`--cs-ui-font`) har emoji-typsnitt som reserv. Texten visas med
-  Inter om det finns på datorn, annars med systemets typsnitt (C#-apparna hade Inter inbyggt).
+  Inter, som följer med apparna (`@fontsource-variable/inter`, importerat överst i `codestead.css`, OFL-1.1), så den ser
+  likadan ut på alla datorer. Tecken Inter saknar (kinesiska, japanska) tas från systemets typsnitt.
 
 ## Spelifiering (XP, nivåer, utmärkelser)
 
@@ -150,7 +151,10 @@ Ett verktyg beskriver sin kurs med en `CourseOutline` (delar, lektioner, vilka d
 `new GameRules(outline, utmärkelser)`. Codestead Linux gör det i `ts/packages/linux-content/src/Game/LinuxGame.ts`,
 med sina egna utmärkelser i `AchievementsLib.ts` och kommandoanalysen i `CommandInfo.ts` (en `CommandFacts` som också
 räknar pipes, sudo, loopar …); Linux-kursens tester finns i `ts/packages/linux-content/test/GameTests.test.ts`.
-Codestead GP har sina i `ts/packages/gp-course/src/Game/`. Vyerna (topprad, notiser, firande, galleri, profilrad)
+Codestead GP har sina i `ts/packages/gp-course/src/Game/` (`GpAchievements.ts`; det en "Kontrollera min kod" såg –
+API, bygge, fönster, clear-färg, texturer, djuptest, trådmodell, trianglar, fönstrets storlek och titel, utskrifter –
+finns i `BuildFacts.ts`, som räknas fram i appens worker och bara får ta det kontrollerna redan räknat ut eller det som
+är billigt), testade i `ts/packages/gp-course/test/GameTests.test.ts`. Vyerna (topprad, notiser, firande, galleri, profilrad)
 finns i `ts/packages/ui/src/Controls/Game/` och tar färdigöversatta texter, så att samma vyer fungerar i alla
 verktyg och i hubben; lärfönstret kopplar ihop dem (`ts/packages/ui/src/Learning/LearningWindow.Game.tsx`).
 - **XP räknas fram** ur det som är gjort (`XpRules.Total`), så inget kan ges två gånger: uppgift 10, utan
@@ -160,10 +164,12 @@ verktyg och i hubben; lärfönstret kopplar ihop dem (`ts/packages/ui/src/Learni
   ser till att hela kursen alltid räcker till högsta nivån.
 - **Dagar i rad**: en lokal kalenderdag räknas när man löser en uppgift eller svarar rätt på en fråga. En
   missad dag startar om räkningen, men inget dras av.
-- **Ny utmärkelse**: lägg till en rad i verktygets lista (Linux: `AchievementsLib.All`; allmänna finns färdiga i
-  `CommonAchievements`) (id, emoji, kategori, villkor och gärna en
+- **Ny utmärkelse**: lägg till en rad i verktygets lista (Linux: `AchievementsLib.All`, GP: `GpAchievements.all`;
+  allmänna finns färdiga i `CommonAchievements`) (id, emoji, kategori, villkor och gärna en
   räknare för "x / y"), texterna `ach.<id>.title` och `ach.<id>.desc` på alla erbjudna språk, och ett "vittne" i
-  `GameTests.Witnesses` (testet kräver ett för varje utmärkelse). Kategori `Hidden` = dold: titeln visas som
+  verktygets `GameTests` (`witnesses`; testet kräver ett för varje utmärkelse, GP:s test också unika emoji). En dold
+  utmärkelse ska inte gå att få genom kursen själv: GP:s dolda villkor är valda så att inget kapitels lösning eller
+  övning uppfyller dem. Id:n sparas i användarens framsteg och byter aldrig namn. Kategori `Hidden` = dold: titeln visas som
   "???" tills den hittats och skrivs inte heller till profilfilen. Använd emoji från Unicode 11 eller äldre.
 - **Kommandon** analyseras med skalets parser (`CommandInfo`): namn (även genom sudo, time, xargs …), pipes,
   omdirigeringar, loopar, skript och man-sidor.
@@ -200,7 +206,8 @@ ts/
 │   ├── linux-content/           Linux-kursen: kapitel och uppgifter (Chapters/, ChapterDefinitions.ts, Checks.ts),
 │   │                            Linux-spelet (Game/), språk, UI-texterna
 │   ├── gp-gpu/                  Codestead GP:s simulerade GPU (se "Codestead GP")
-│   └── gp-course/               Codestead GP:s kurs
+│   ├── gp-course/               Codestead GP:s kurs
+│   └── pipeline-viz/            Render Pipeline Visualizers scener i GP:s kapitel (se "Scener ur visualiseraren")
 └── apps/
     ├── linux/                   Codestead Linux: Electron (electron/: main, preload, lagring) och appens React-del
     │                            (src/: LinuxTool – Linux-kursen och terminalen i lärfönstret –, terminalvyn)
@@ -358,11 +365,125 @@ godkänns av kapitlets program men av sin lösning; `CODESTEAD_GP_CHAPTERS=a,b` 
 
 **Bilder i kapitlen.** Ett stycke som bara är en bild, `![alt](images/namn.webp "bildtext")`, visas av textvyn
 (`AnimatedImage` i `ts/packages/ui`: PNG, JPEG, WebP och animerad GIF/WebP; bildrutor på en sekund eller mer är ett bildspel som tonar
-över; ett klick pausar). Bilderna ligger i `src/GP/content/images/` – `sv/`/`en/` för bilder med text i, annars
-gemensamma – och bäddas in; `PictureTests` kräver att varje bild finns och används. `images/visualizer/` fångar steg ur
-[Render Pipeline Visualizer](https://github.com/jesper-e98/RenderpipelineVisualizer) (`capture.js` med Playwright,
-`make_pictures.py`), och `ts/packages/gp-gpu/test/RenderResults.test.ts` (körs bara med `CODESTEAD_RENDER_RESULTS=<mapp>`)
-+ `images/make_results.py` renderar varje kapitels resultat med simulatorn till `images/results/<kapitel>.webp`.
+över). Ett klick (eller Enter) visar bilden större i fönstrets dialog (`onPictureEnlarge` i
+`MarkdownView`, `Lesson.tsx`); där pausar ett klick en animation. Bilderna ligger i `src/GP/content/images/` – `sv/`/`en/` för bilder med text i, annars
+gemensamma – och bäddas in; `PictureTests` kräver att varje bild finns och används. `ts/packages/gp-gpu/test/RenderResults.test.ts`
+(körs bara med `CODESTEAD_RENDER_RESULTS=<mapp>`) + `images/make_results.py` renderar varje kapitels resultat med
+simulatorn till `images/results/<kapitel>.webp`.
+
+**Scener ur visualiseraren.** [Render Pipeline Visualizer](https://github.com/jesper-e98/RenderpipelineVisualizer)s
+slides visas levande i kapitlen: eleven stegar fram och tillbaka genom en slides steg (knappar, prickar, ← → Home End när
+scenen har fokus), spelar ett steg igen, byter modell (triangel, kub, tekanna …) och läge (verklig data/koncept) och kan
+visa API:ts kod för steget – i det API eleven valt, på svenska eller engelska (andra språk får engelska; knapparnas texter
+är `viz.*` i UI-texterna) och i fönstrets ljusa eller mörka tema, och de följer med när något av dem ändras.
+
+- **I texten** är en scen en bild vars källa är `viz:<scen>`, ensam i sitt stycke, med alt-text och bildtext som en bild:
+  `![Vertexattribut](viz:input-layout "Vertexattribut: en stride stegar …")`. Scenens namn finns i
+  `ts/packages/pipeline-viz/src/Scenes.ts`: vilken slide, vilka av dess steg (`first`–`last`) och vilken modell och vilket
+  läge som passar kapitlet; `viz:buffers?model=teapot&mode=concept` väljer något annat i ett enskilt kapitel. En ny scen
+  får en rad i `Scenes.ts` och en stillbild (nedan). `PictureTests` kräver att varje `viz:`-scen finns och har sin bild.
+- **Stillbilden** `images/[sv|en/]viz-<scen>.webp` visas där scenen inte kan köra: utan WebGL 2 (t.ex. en dator utan
+  grafikdrivrutin – Chromium ritar inte WebGL i mjukvara som standard), när scenen inte startar eller när WebGL-kontexten
+  försvinner. Den räknas som använd av scenen. `images/visualizer/` fångar bilderna ur visualiseraren (`capture.js` med
+  Playwright, `steps.txt`, `make_pictures.py`: bild → slidens steg); ta om dem när slidesen ändras.
+- **Prestanda**: paketet `ts/packages/pipeline-viz` och three.js laddas först när en scen närmar sig skärmen (en egen chunk,
+  `mount-*.js`, ungefär 1,3 MB, och visualiserarens worker). En scen kör bara nära skärmen, pausar (ritning och
+  animationer) utom synhåll och stängs några sekunder efter att den lämnat närheten; högst två scener kör samtidigt
+  (`SceneBudget`: varje scen har en egen WebGL-kontext, som ges tillbaka direkt när den stängs). Med
+  `prefers-reduced-motion` spelas inga övergångar upp; stegen fungerar som vanligt.
+- **Hur det är byggt** (`ts/packages/pipeline-viz/README.md`): `visualizer/` är visualiserarens kod (slides, mjukvarupipeline,
+  vyer, modeller, worker, stilar – inte WebXR-labbet), typkontrollerad med visualiserarens egna inställningar (`npm run
+  typecheck` kör båda); `engine/` kör en slide i en ruta (shadow root, egen renderare, ljust tema för stilarna och
+  3D-materialen, `tween.ts` i stället för GSAP, vars licens inte är öppen); `src/` är React-delen (`PipelineScene`).
+  GP lägger in scenerna med `pictureView` (`ts/apps/gp/src/VizScene.tsx`), som textvyns `pictureRenderer` anropar.
+- **Uppdatera från visualiseraren**: `node scripts/sync-visualizer.mjs <visualiserarens klon>` i `ts/packages/pipeline-viz`
+  kopierar koden på nytt (och ändrar bara importerna av GSAP och stilarna samt testernas sökvägar); skriv in commiten i
+  paketets README, kör `npm run typecheck` och testerna och titta på scenerna i appen. Visualiserarens egna tester av den
+  kopierade koden (`visualizer/tests/`) körs med `npm test`.
+- **Testerna**: `ts/packages/pipeline-viz/test/` (stegen, `viz:`-källorna, budgeten, stilarnas ljusa version,
+  tween-motorn, komponenten med en låtsasmotor i jsdom), `GpToolTests` (scenerna står där bilderna stod, stillbilderna
+  utan WebGL) och e2e-testet (`ts/apps/gp/e2e`): med SwiftShader (`--use-angle=swiftshader --enable-unsafe-swiftshader`)
+  körs Hello Triangles scener, stegas och är aldrig fler än två; med `--disable-gpu --disable-software-rasterizer` visas
+  stillbilderna.
+
+**Diagram och simulatorbilder** (`src/GP/content/images/diagrams/`). Bilderna som förklarar kapitlen (inte
+visualiserarens) ritas från källkod i repot: en fil `<namn>.mjs` per bild, som `make.mjs` gör till `images/<variant>.webp`. Hjälpmoduler för en kursdels bilder
+heter `_<namn>.mjs` och ritas inte själva.
+Kursdelen Getting started (*Setting up your IDE* … *Camera*) har sådana bilder och är förlagan för de andra delarna.
+
+```sh
+cd ts && npm ci        # Inter (appens typsnitt) och vitest
+cd .. && node src/GP/content/images/diagrams/make.mjs [namn …] [--preview <mapp>] [--renders <mapp>]
+```
+
+Det behövs Node med Playwright och dess Chromium (`require("playwright")`, ingen `playwright install`), python3 med
+Pillow och typsnittet JetBrains Mono (Inter tas från `ts/node_modules/@fontsource-variable/inter`). Utan namn ritas alla.
+`make.mjs` varnar (och avslutar med fel) för text som är bredare än sitt `fit`, text utanför bilden och ett saknat
+JetBrains Mono. `--preview <mapp>` skriver dessutom varje bild som PNG på appens ljusa och mörka textbakgrund: titta
+på alla innan du checkar in.
+
+En källfil exporterar:
+
+- `variants`: `[{ out: "en/x.webp", lang: "en", api?: … }]` – `perLanguage("x")` ger `en/x.webp` och `sv/x.webp`,
+  `perApi("x", ["opengl", "vulkan", "d3d12"], true)` ger `en/x-opengl.webp` …, med `false` språklösa `x-opengl.webp`.
+  En bild utan ord har en variant `x.webp` (`lang: "en"`). Egna fält (t.ex. `origin`, `highlight`) går också bra.
+- `height` (px; bredden är alltid 720) eller `height(v)`, och `draw(v, R, frame)` som returnerar SVG – `svg(höjd, innehåll)`
+  ur `style.mjs`; `t(v, "engelska", "svenska")` väljer språk.
+- `renders` (eller `renders(v)`): simulatorbilder, `{ id: { api, chapter, from?, edits?, width, times? } }`. `from` är
+  `solution` (standard), `start`, `task:<id>` (start + stegen till och med uppgiften) eller `exercise:<id>`; `edits` är
+  extra ändringar `{ file, find, replace }` (find måste finnas). `R[id][i]` är `{ href, width, height }` för `times[i]`
+  (sekunder sedan programmet startade; utan `times` en bild vid 1.0). `make.mjs` låter
+  `ts/packages/gp-gpu/test/RenderPictures.test.ts` rita dem (körs bara med `CODESTEAD_RENDER_PICTURES=<mapp>`, så vanliga
+  testkörningar påverkas inte) och sparar dem i `--renders` (standard: `codestead-gp-renders` i systemets temp-mapp)
+  efter en hash av beskrivningen – de ritas om bara när beskrivningen ändras. Rita i 2× visningsbredden (`width: PW * 2`).
+- `frames` och `frameMs` för en animation (`draw` anropas för varje bildruta), `lossy: true` (WebP kvalitet 85, `quality`
+  ändrar) för bilder med simulatorbilder i – ritade diagram blir förlustfria – och `scale = 1` för att spara i 720 px i
+  stället för 1440.
+
+`style.mjs` har färgerna (`C`), måtten och hjälpfunktionerna: `text` (`*kursiv*`, `` `kod` ``, `_{nedsänkt}`,
+`^{upphöjd}`, `fit`), `line`, `arrow`, `arrowPath`, `arcArrow`, `box` (stil `plain`, `accent`, `accent2`, `muted`, `x`,
+`y`, `z`), `pill` (etikett på vit bakgrund), `badge` (numrerat steg), `dot`, `image` (simulatorbild eller textur med
+rundade hörn), `grid`, `title`, `oblique` (3D-vy) och `asset("opengl/textures/solution/container.png")` (en fil ur ett
+kursprojekt). Börja från en liknande bild: `texture-wrapping.mjs` (simulatorbilder i rad), `transform-order.mjs`
+(animation), `frame.mjs` (steg per API), `objects-vulkan.mjs` (samma bild med olika delar markerade), `camera-axes.mjs`
+(3D), `vectors.mjs` (matematik på rutnät).
+
+**Stilguide för bilderna**
+
+- *Format*: bilden ritas på en 720 px bred yta (höjden efter innehållet, oftast 200–500 px) och sparas i 2×, 1440 px,
+  så att den är skarp även på HiDPI-skärmar. Textvyn visar den i textkolumnens bredd: ca 530 px i appens
+  standardfönster (1440 × 900), högst 760 px – alltså oftast i ca 0,75 ×. Därför ingen text under 12 px (11 px bara
+  för långa kodrader); blir det trångt, ställ hellre saker under varandra än gör texten mindre. Under 150 KB per bild
+  och några MB för en hel kursdel. Animerat bara när rörelsen är poängen (en loop utan hopp: t.ex. 24 bildrutor à
+  125 ms över ett helt varv), och då sparat i 720 px (`scale = 1`) för storlekens skull; bildspel (bildrutor ≥ 1 s)
+  för steg i följd.
+- *Kortet*: hela bilden är ett ljust kort, `C.card` (#f7f8fa) med 1 px kant (#d9dee6) och 8 px hörn som `.cs-picture`;
+  det ser ut som en tryckt figur även i appens mörka tema. Paneler och rutor i kortet är vita med kant `C.boxStroke`
+  (#c3cad5) och 6 px hörn. 20 px marginal (`PAD`), 14–20 px mellan paneler.
+- *Färger*: text `C.ink` (#1f2430), förklarande text `C.muted` (#5b6370), hjälplinjer `C.line`, rutnät `C.grid`.
+  **x röd** (#d63c3c), **y grön** (#24944a), **z blå** (#2d67d6) – alltid för axlar och komponenter. `C.accent`
+  (orange #e0731f) är det bilden handlar om, `C.accent2` (lila #7a4fd0) det andra: det man jämför med, det som läses.
+  `C.good`/`C.bad` för rätt/fel, `C.clear` (#334c4c, kursens rensningsfärg) för "skärmen". Fyllningar med `…Soft`.
+- *Typsnitt*: Inter för all text, JetBrains Mono (`mono`) för kod, identifierare, filnamn och koordinater i kod.
+  Paneltitlar 15 px vikt 650–700, etiketter 13–14 px vikt 600, små etiketter och kod 11–12 px. Matematik med kursiva
+  variabler (`*v*`) och riktiga tecken: − × · ≈ √ θ ‖ ‖. Inga ligaturer (`!=` och `->` ska se ut som i koden).
+- *Linjer och pilar*: 1.5 px (`LINE`) normalt, 2.5 px (`BOLD`) för vektorer och det bilden handlar om, 1 px rutnät;
+  streckat (4 3 eller 5 4) för hjälplinjer och samband ("läser", "jämför"). Bara `arrow`/`arrowPath`/`arcArrow`
+  (fylld spets som växer med linjen). Numrerade steg med `badge`, inte ①②③. 3D med `oblique` (x höger, y upp, z mot
+  betraktaren snett nedåt vänster) eller en egen vriden vy när axlar annars hamnar ovanpå varandra.
+- *Text i bilden*: så lite som möjligt. Bara kod, matematik och koordinater → en gemensam bild. Ord → en bild per
+  språk; svenskan ska vara riktig svenska men med kursens termer som i kapiteltexten (frame, swap chain, render target,
+  shader står kvar). Knappar heter som i appen (*Mark as done* / *Markera som klar*). Använd kapitlets egna exempel och
+  tal (samma hörn, samma matriser, samma filnamn).
+- *API*: en bild som skiljer sig mellan API:erna görs per API och läggs i kapitlet i `:::opengl` … `:::`-block (två
+  API:er med samma bild: ett namn `x-vulkan-d3d12.webp` i `:::vulkan d3d12`). En bild utanför block ska stämma för alla
+  tre.
+- *Simulatorbilder* ritas från kursens egna projekt (oftast OpenGL-lösningen med några `edits`) och visas med `image`;
+  bildtexten säger "ritad av kursens simulator".
+- *Bildtext och alt*: bildtexten (title) är en eller två meningar om vad bilden visar, alt några ord; ingen markdown.
+  Samma bilder i `en/` och `sv/`, bildtexten översatt. Lägg bilden direkt efter stycket som förklarar saken – men efter
+  kontrollfrågan om bilden visar svaret på den.
+- *Allt är vårt eget*: ritat här eller ritat av simulatorn; inget kopieras eller ritas av från andra webbplatser.
 
 **Simulatorn är inte en riktig GPU.** Den förstår kursens kod och de vanliga misstagen (glömd `glClear`, avstängt
 vertexattribut, ingen pipeline bunden, saknade barriärer …) och säger till med meddelanden som `sim.<nyckel>` i

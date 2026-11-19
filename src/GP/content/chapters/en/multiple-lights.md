@@ -696,6 +696,8 @@ Each light type adds its contribution to the resulting output color until all li
 resulting color contains the color impact of all the light sources in the scene combined. We leave the
 `CalcSpotLight` function as an exercise for the reader – or rather, for the third task below.
 
+![The three phases](images/light-sum.webp "The three phases on their own – the directional light, the four point lights and the flashlight – drawn by the course's simulator. Added up, they give the picture at the top of the chapter.")
+
 > There are lot of duplicated calculations in this approach spread out over the light type functions (e.g.
 > calculating the reflect vector, diffuse and specular terms, and sampling the material textures) so there's room
 > for optimization here.
@@ -1185,12 +1187,16 @@ and specular strength, the attenuation for a distance of 50, and a tighter soft 
 With the spotlight the uniform block is complete: 160 bytes for the matrices, `viewPos` and the material, 64 for
 `dirLight`, 4 × 80 for `pointLights` and 96 for `spotLight` – 640 bytes, every member at the same offset in the
 shader and in `UniformBufferObject`.
+
+![The whole uniform block](images/uniform-lights-vulkan.webp "The whole uniform block: every member with its offset and size, 640 bytes. Each PointLight ends at byte 76, and the next element of the array starts 80 bytes on – the hatched 4 bytes are padding.")
 :::
 :::d3d12
 With the spotlight the constant buffer is complete: 160 bytes for the matrices, `viewPos` and the material, 64 for
 `dirLight`, 4 × 80 for `pointLights` and 96 for `spotLight` – 640 bytes, every field at the same offset in HLSL and
 C++. A constant buffer view must be a multiple of 256 bytes, so `CalculateConstantBufferByteSize` rounds the buffer
 and its view up to 768; your program already uses it, so nothing else changes.
+
+![The whole constant buffer](images/uniform-lights-d3d12.webp "The whole constant buffer: every field with its offset and size, 640 bytes. Each PointLight ends at byte 76, and the next element of the array starts 80 bytes on – the hatched 4 bytes are padding.")
 :::
 
 Now do the task **spot-light**. When you build and run it, a bright disc appears on container 0, where the flashlight
@@ -1298,6 +1304,8 @@ After the task **lamps** you only see a thin white sliver at the right border. W
 ---
 All four lamps are drawn every frame. The camera just isn't placed to see them: lamp 2 is out of view, lamps 3 and 4 fail the depth test behind closer containers, and lamp 1 is mostly beside the view.
 ```
+
+![The four lamps from further back](images/lamps-overview.webp "The finished scene from further back and above, drawn by the course's simulator with only the camera moved: the numbers mark the four lamps, the eye the chapter's camera at (0, 0, 3).")
 
 As you can see, there appears to be some form of a global light (like a sun) somewhere in the sky, we have 4 lights
 scattered throughout the scene and a flashlight is visible from the player's perspective. Looks pretty neat doesn't

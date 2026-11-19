@@ -758,6 +758,13 @@ The five vertices of the house are emitted as one triangle strip: 1 bottom-left,
 In a strip every vertex makes a triangle with the two before it: (1,2,3) and (2,3,4) are the wall, (3,4,5) is the roof. That's why the vertices are emitted in this zig-zag order and not around the outline.
 ```
 
+:::opengl d3d12
+![The house's triangle strip](images/house-strip-opengl-d3d12.webp "The house's five vertices as offsets from the point, in the strip's order: (1, 2, 3) and (2, 3, 4) are the wall, (3, 4, 5) the roof.")
+:::
+:::vulkan
+![The house's triangle strip](images/house-strip-vulkan.webp "The house's five vertices as offsets from the point, in the strip's order: (1, 2, 3) and (2, 3, 4) are the wall, (3, 4, 5) the roof. Vulkan's y points down, so the offsets' y has the other sign.")
+:::
+
 The houses look a bit boring with a single colour, so let's give each house a little extra by putting snow on its roof:
 we give the last vertex – the top of the roof – its own colour, white.
 
@@ -1257,6 +1264,8 @@ geometry shader works in clip space, and both the normal and the movement are cl
 That's why the planet doesn't explode into a neat sphere around itself but stretches towards the viewer and the window's
 edges. It also means the picture differs a little between the APIs: OpenGL's clip-space z runs from -w to w, Vulkan's
 and Direct3D's from 0 to w, which gives the normals slightly different directions.
+
+![The exploding planet](images/explode.webp "The exploding planet at three moments of one swing, drawn by the course's simulator: whole, halfway and furthest apart.")
 
 :::opengl
 ```quiz

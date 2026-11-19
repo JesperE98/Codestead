@@ -425,6 +425,8 @@ light grey-beige tint, the colour codes the colours of learnopengl's game. A nic
 texture is light grey all over, with only a little shading on its edges: tinted with a colour, it becomes a block of
 that colour – one texture for every colour.
 
+![Level one, from file to wall](images/level-file.webp "The numbers of levels/one.lvl and the bricks they become in the upper 800 × 300 pixels: each brick 53.3 pixels wide and 37.5 high.")
+
 **One difference from learnopengl.** learnopengl computes the height as `levelHeight / height`, both `unsigned int` – an
 integer division: 300 / 8 = 37, so its rows are 37 pixels high and the wall ends 4 pixels short of the area's bottom.
 The course divides as floats, `levelHeight / static_cast<float>(height)`, as the code clearly intends (the width is

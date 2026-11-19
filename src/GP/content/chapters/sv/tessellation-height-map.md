@@ -145,6 +145,8 @@ en upload-heap (`StrideInBytes = 3 * sizeof(float)`, input layouten `POSITION` s
 `bytePerPixel` är antalet kanaler: i en gråskalebild är varje pixel en byte, i RGBA fyra, och den första byten är höjden i
 båda fallen. learnopengls karta är RGBA; med `nrChannels` från `stbi_load` läser samma loop båda.
 
+![Från pixel till vertex](images/heightmap-grid.webp "Kursens höjdkarta: en pixels kolumn och rad ger x och z, dess gråvärde höjden.")
+
 För en första titt ritar uppgiften vertexarna som **punkter**.
 
 :::opengl
@@ -174,7 +176,7 @@ två före den. Sicksacka mellan två närliggande rader – en vertex från rad
 kolumn – så lägger varje ny vertex till en triangel. En strip över 256 kolumner har 512 index och 510 trianglar; med en
 vanlig triangellista skulle samma trianglar kräva 1530 index.
 
-![En triangle strip](images/viz-strip.webp "En triangle strip: varje ny vertex bildar en triangel med de två före den.")
+![En triangle strip](viz:strip "En triangle strip: varje ny vertex bildar en triangel med de två före den.")
 
 learnopengl bygger en strip per radpar med tre nästlade loopar:
 
@@ -344,6 +346,8 @@ Varför ritar programmet varje strip för sig i stället för att rita alla 130 
 ---
 I en strip bildar varje nytt index en triangel med de två före det – även över hoppet från ett radpar till nästa. Separata ritningar, eller ett primitive restart-index mellan stripsen, avslutar varje strip där den ska sluta.
 ```
+
+![Strips över ett rutnät](images/strip-join.webp "Två strips över tre rader i ett rutnät; ritade som en enda strip skulle slutet på den första och början på den andra förenas av de streckade trianglarna.")
 
 Gör nu den fjärde uppgiften, **strips**. Bygg och kör: terrängen är en helvit form – topparnas siluett mot den mörka
 bakgrunden, framkanten längst ned. Fragment shadern skriver fortfarande vitt, så det finns ingen skuggning att se kullarna

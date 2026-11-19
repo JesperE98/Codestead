@@ -749,6 +749,8 @@ Now do the task **mesh-textures**. The picture doesn't change.
 ---
 The stride and the offset are in bytes. Because the struct's members lie one after the other, the vertex buffer is interleaved exactly like the cube's 8 floats per vertex in the lighting chapters – but `sizeof` and `offsetof` compute the numbers, and they stay right when the struct grows.
 ```
+
+![The Vertex struct in memory](images/vertex-layout-opengl.webp "The Vertex struct in memory: Position at 0, Normal at 12, TexCoords at 24 – the offsets offsetof gives – and sizeof(Vertex) = 32, the stride to the next vertex.")
 :::
 :::vulkan
 ```quiz
@@ -759,6 +761,8 @@ The material number is `uint32_t materialIndex`. Which attribute description and
 ---
 The format describes the bytes in the buffer: one 32-bit unsigned integer, 32 bytes into the vertex. Its numeric type (UINT) must match the shader's input type (`uint`). R8 would read only the first byte of the four.
 ```
+
+![The Vertex struct in memory](images/vertex-layout-vulkan.webp "The Vertex struct in memory: pos at 0, normal at 12, texCoord at 24 and materialIndex at 32 – the offsets of the attribute descriptions – and sizeof(Vertex) = 36, the binding's stride.")
 :::
 :::d3d12
 ```quiz
@@ -769,6 +773,8 @@ Your program's input layout puts `NORMAL` at byte 12 and `TEXCOORD` at byte 24. 
 ---
 The semantics (`POSITION`, `NORMAL`, `TEXCOORD`) connect the input layout to the shader's inputs; the byte offsets connect it to the buffer. Both must match the struct – the offsets are what `offsetof` would compute.
 ```
+
+![The Vertex struct in memory](images/vertex-layout-d3d12.webp "The Vertex struct in memory: position at 0, normal at 12, texCoord at 24 – the input layout's offsets – and sizeof(Vertex) = 32, the vertex buffer view's stride.")
 :::
 
 ## Rendering
@@ -944,6 +950,8 @@ A mesh has the textures (in this order) diffuse, specular, diffuse. Which sample
 ---
 Texture `i` goes to unit `i`. The number in the name counts per type and starts at 1: `diffuseNr++` hands out 1, then 2, and `specularNr++` its own 1. So the second diffuse texture is `texture_diffuse2` on unit 2.
 ```
+
+![Textures, units and sampler names](images/texture-units.webp "Texture i goes to texture unit i, and its sampler's name is its type with a number that counts per type from 1.")
 :::
 :::vulkan
 ```quiz
@@ -964,6 +972,8 @@ Suppose a mesh's material has no specular map. What does `SetupMesh` put into th
 ---
 A descriptor table is a fixed run of slots, and a slot the shader may read must hold a valid descriptor. `CreateShaderResourceView(nullptr, &srvDesc, …)` makes a null descriptor; the description says what kind of view the slot is.
 ```
+
+![The slots of the CBV/SRV heap](images/heap-slots.webp "The CBV/SRV heap: the CBV in slot 0, then two slots per mesh, its diffuse map (t0) and its specular map (t1). Each mesh keeps the handle of its first slot, m_srvHandle, for root parameter 2.")
 :::
 
 :::opengl
@@ -985,6 +995,8 @@ The sampler uniforms belong to a shader program. The mesh knows its textures and
 ---
 The staging buffer is `TRANSFER_SRC` in host-visible, coherent memory; the vertex buffer is `TRANSFER_DST | VERTEX_BUFFER` in `DEVICE_LOCAL` memory. After the copy has finished (`endSingleTimeCommands` waits for it), the staging buffer is destroyed.
 ```
+
+![From the vertices to the vertex buffer](images/staging-buffer.webp "The vertices go into a host-visible staging buffer with memcpy; vkCmdCopyBuffer then copies them on the GPU into the vertex buffer in device-local memory, which the draw reads.")
 :::
 :::d3d12
 ```quiz

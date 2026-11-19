@@ -33,6 +33,8 @@ av grå sten. Längst ned står spelarens racket, en träbit med mässingsändar
   klistrig racket som håller fast bollen, en boll som går igenom blocken, en bredare racket – och två som gör spelet
   svårare genom att förvränga hela bilden.
 
+![Hedgerows delar](images/hedgerow.webp "Spelet efter 1,5 sekunder, med power-upsen från kapitlet Powerups på väg ned. Ritad av kursens simulator.")
+
 Till slut får spelet en meny där man väljer bana, ett meddelande när man vinner, ett spår av partiklar efter bollen,
 några efterbehandlingseffekter (skärmen skakar när bollen träffar en sten), text för liven och menyn, och – i
 learnopengls version – ljud.

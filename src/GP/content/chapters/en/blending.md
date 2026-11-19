@@ -468,6 +468,8 @@ Now do the task **discard**: the sampler, `PSTransparent`, the second PSO and th
 Build and run: only the grass blades are left. Where the black squares were, you see the cubes, the floor and the
 background again, and there's no thin line along the top of the quads.
 
+![Grass with and without discard](images/blending-discard.webp "The grass quads with their alpha ignored and with the transparent fragments discarded, drawn by the course's simulator.")
+
 ```quiz
 Why do the grass quads need a sampler mode that clamps to the edge instead of repeating?
 - [ ] Repeating textures cannot have an alpha channel
@@ -483,7 +485,7 @@ While discarding fragments is great and all, it doesn't give us the flexibility 
 we either render the fragment or completely discard it. To render images with different levels of transparency we
 have to enable *blending*.
 
-![Blending](images/viz-blending.webp "Blending: the fragment's colour is mixed with the colour already in the framebuffer, by its alpha.")
+![Blending](viz:blending "Blending: the fragment's colour is mixed with the colour already in the framebuffer, by its alpha.")
 
 Blending happens after the fragment shader: the colour the shader outputs – the *source* colour – is combined with
 the colour that is already in the colour buffer at that position – the *destination* colour. This is done with the
@@ -521,6 +523,8 @@ C_result = (0.0, 1.0, 0.0) * 0.6 + (1.0, 0.0, 0.0) * (1 - 0.6) = (0.4, 0.6, 0.0)
 
 The result is that the combined square fragments contain a colour that is 60% green and 40% red: a dirty, brownish
 colour.
+
+![Green over red](images/blend-equation.webp "The chapter's example: the green square with alpha 0.6 drawn over the red one gives (0.4, 0.6, 0) where they overlap.")
 
 ```quiz
 With `F_source` = source alpha and `F_destination` = 1 − source alpha, a white fragment (1.0, 1.0, 1.0) with alpha 0.25 is drawn over a black colour buffer (0.0, 0.0, 0.0). What colour ends up in the colour buffer?
@@ -945,6 +949,8 @@ fixes the previous problem. From the starting position the order is (-0.3, 0, -2
 Now do the last task, **sort**, then build and run. The window behind the nearest one now shows through its glass: where
 they overlap you look through two layers of glass, and the colour there is a deeper red than through one layer. Because
 the sort runs every frame, the order stays right when the camera moves.
+
+![Unsorted and sorted windows](images/blending-order.webp "The nearest window with the windows drawn in the list's order and sorted from far to near, drawn by the course's simulator: sorted, the window behind it shows through its glass.")
 
 ```quiz
 Why does the outline above draw all opaque objects before the sorted transparent ones?

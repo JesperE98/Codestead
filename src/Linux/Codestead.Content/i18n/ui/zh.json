@@ -235,5 +235,7 @@
   "ach.answer-42.title": "答案",
   "ach.answer-42.desc": "某个命令回答了 42——生命、宇宙以及一切的终极答案。",
   "ach.night-owl.title": "夜猫子",
-  "ach.night-owl.desc": "你在午夜到凌晨四点之间完成了一个任务。"
+  "ach.night-owl.desc": "你在午夜到凌晨四点之间完成了一个任务。",
+  "picture.enlarge": "点击放大",
+  "picture.pause": "点击暂停或播放"
 }

@@ -695,6 +695,8 @@ Varje ljustyp lägger till sitt bidrag till den resulterande utfärgen tills all
 resulterande färgen innehåller färgbidraget från alla ljuskällor i scenen tillsammans. Funktionen `CalcSpotLight`
 lämnar vi som en övning åt läsaren – eller snarare åt den tredje uppgiften nedan.
 
+![De tre faserna](images/light-sum.webp "De tre faserna var för sig – det riktade ljuset, de fyra punktljusen och ficklampan – ritade av kursens simulator. Tillsammans ger de bilden högst upp i kapitlet.")
+
 > Det finns många duplicerade beräkningar i det här angreppssättet, utspridda över ljustypernas funktioner (till
 > exempel uträkningen av reflektionsvektorn, diffuse- och specular-termerna och samplingen av materialets texturer),
 > så här finns utrymme för optimering.
@@ -1185,12 +1187,16 @@ och specular, dämpningen för ett avstånd på 50, och en snävare mjuk kant ä
 Med strålkastaren är uniform-blocket komplett: 160 byte för matriserna, `viewPos` och materialet, 64 för `dirLight`,
 4 × 80 för `pointLights` och 96 för `spotLight` – 640 byte, med varje medlem på samma offset i shadern och i
 `UniformBufferObject`.
+
+![Hela uniform-blocket](images/uniform-lights-vulkan.webp "Hela uniform-blocket: varje medlem med sin offset och storlek, 640 byte. Varje PointLight slutar på byte 76, och nästa element i arrayen börjar 80 byte längre fram – de streckade 4 byten är utfyllnad.")
 :::
 :::d3d12
 Med strålkastaren är constant buffern komplett: 160 byte för matriserna, `viewPos` och materialet, 64 för `dirLight`,
 4 × 80 för `pointLights` och 96 för `spotLight` – 640 byte, med varje fält på samma offset i HLSL och C++. En
 constant buffer view måste vara en multipel av 256 byte, så `CalculateConstantBufferByteSize` avrundar buffern och dess
 vy uppåt till 768; projektet använder den redan, så inget annat ändras.
+
+![Hela constant buffern](images/uniform-lights-d3d12.webp "Hela constant buffern: varje fält med sin offset och storlek, 640 byte. Varje PointLight slutar på byte 76, och nästa element i arrayen börjar 80 byte längre fram – de streckade 4 byten är utfyllnad.")
 :::
 
 Gör nu uppgiften **spot-light**. När du bygger och kör den dyker en ljus skiva upp på behållare 0, där ficklampan
@@ -1298,6 +1304,8 @@ Efter uppgiften **lamps** ser du bara en smal vit strimma vid högra kanten. Var
 ---
 Alla fyra lamporna ritas varje bildruta. Kameran står bara inte så att den ser dem: lampa 2 är utanför vyn, lamporna 3 och 4 klarar inte djuptestet bakom närmare behållare, och lampa 1 ligger mest bredvid vyn.
 ```
+
+![De fyra lamporna längre bakifrån](images/lamps-overview.webp "Den färdiga scenen längre bakifrån och ovanifrån, ritad av kursens simulator med bara kameran flyttad: siffrorna markerar de fyra lamporna, ögat kapitlets kamera i (0, 0, 3).")
 
 Som du ser verkar det finnas någon form av globalt ljus (som en sol) någonstans på himlen, vi har 4 ljus utspridda i
 scenen, och en ficklampa syns ur spelarens perspektiv. Ser ganska snyggt ut, eller hur?

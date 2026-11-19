@@ -262,6 +262,8 @@ each vertex next to each other in memory. Now that we know a bit more about buff
 What we could also do is batch all the vector data into large chunks per attribute type instead of interleaving them.
 Instead of an interleaved layout 123123123123 we take a batched approach 111122223333.
 
+![Interleaved and batched](images/buffer-layout.webp "The cube's vertex buffer interleaved – the position and texture coordinates of each vertex together – and batched – all positions, then all texture coordinates, which start 12 · n bytes in for n vertices.")
+
 When loading vertex data from file you generally retrieve an array of positions, an array of normals and/or an array
 of texture coordinates. It may cost some effort to combine these arrays into one large array of interleaved data.
 Taking the batching approach is then an easier solution that we can easily implement by putting each array into the

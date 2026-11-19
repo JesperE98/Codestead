@@ -27,6 +27,8 @@ of the original HDR scene image. Step by step:
 2. Blur that second buffer – a Gaussian blur, done in several passes.
 3. Add the blurred image to the scene's HDR colours, then tone-map and gamma-correct the sum onto the window.
 
+![The three steps of bloom](images/bloom-steps.webp "The buffers after each task, drawn by the course's simulator: one pass draws the scene and its bright parts into two colour buffers, the bright parts are blurred, and the blur is added to the scene before the tone mapping.")
+
 None of this is a new mechanism: it is the last chapter's floating point target plus two things – drawing into two
 colour buffers at once, and passes that take turns drawing into one buffer and reading another. Every API has both;
 this chapter shows how {{api}} does it.
@@ -408,6 +410,8 @@ brightness. (They are the binomial coefficients 924, 792, 495, 220 and 66 of the
 by their sum of 4070 – binomial coefficients are a good approximation of a Gaussian.) One texel is `1.0` divided by the
 texture's size in texels.
 
+![The blur kernel](images/bloom-kernel.webp "The nine weights of the kernel, 0.227 in the middle, and the two passes: a horizontal and then a vertical one give the same blur as the 9 × 9 kernel.")
+
 ```quiz
 Why does the blur run as separate horizontal and vertical passes?
 - [ ] A shader can only read texels in one direction per pass
@@ -437,6 +441,8 @@ every later pass reads the buffer the previous one wrote. The two-element arrays
 horizontal`: a horizontal pass draws into buffer 1 (`horizontal` = true = 1) and reads buffer 0 (`!horizontal`), and
 then `horizontal` flips. After the 10th pass – a vertical one into buffer 0 – `horizontal` is true again, so the last
 result is in buffer `[!horizontal]`, buffer 0.
+
+![The ten ping-pong passes](images/bloom-pingpong.webp "The first pass reads the bright buffer; each horizontal pass (H) draws into pingpong[1] and each vertical one (V) into pingpong[0], reading the other. The tenth leaves the result in pingpong[0].")
 
 ```quiz
 Why does the blur need two ping-pong buffers instead of blurring the bright buffer in place?

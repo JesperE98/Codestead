@@ -76,18 +76,24 @@ I OpenGL börjar texturkoordinaterna på (0, 0) i texturbildens **nedre vänstra
 högra hörnet. OpenGL kallar de två axlarna *s* och *t* (och *r* för 3D-texturer). För att lägga en textur på en
 triangel skulle vi ge dess nedre vänstra hörn texturkoordinaten (0, 0), dess nedre högra hörn (1, 0) och dess
 översta hörn (0.5, 1.0): bildens överkant, halvvägs över.
+
+![Texturkoordinater i OpenGL](images/texture-coordinates-opengl.webp "OpenGL:s texturkoordinater börjar i bildens nedre vänstra hörn. Exempeltriangeln får den del av texturen som hörnens koordinater skär ut.")
 :::
 :::vulkan
 I Vulkan börjar texturkoordinaterna på (0, 0) i texturbildens **övre vänstra** hörn – den första texeln i minnet –
 och går till (1, 1) i det nedre högra hörnet. De två axlarna brukar kallas *u* och *v* (och *w* för 3D-texturer). För
 att lägga en textur på en triangel skulle vi ge dess nedre vänstra hörn texturkoordinaten (0, 1), dess nedre högra
 hörn (1, 1) och dess översta hörn (0.5, 0.0): bildens överkant, halvvägs över.
+
+![Texturkoordinater i Vulkan och Direct3D](images/texture-coordinates-vulkan-d3d12.webp "Vulkans och Direct3D:s texturkoordinater börjar i bildens övre vänstra hörn, den första texeln i minnet. Exempeltriangeln får den del av texturen som hörnens koordinater skär ut.")
 :::
 :::d3d12
 I Direct3D börjar texturkoordinaterna på (0, 0) i texturbildens **övre vänstra** hörn – den första texeln i minnet –
 och går till (1, 1) i det nedre högra hörnet. De två axlarna kallas *u* och *v* (och *w* för 3D-texturer). För att
 lägga en textur på en triangel skulle vi ge dess nedre vänstra hörn texturkoordinaten (0, 1), dess nedre högra hörn
 (1, 1) och dess översta hörn (0.5, 0.0): bildens överkant, halvvägs över.
+
+![Texturkoordinater i Vulkan och Direct3D](images/texture-coordinates-vulkan-d3d12.webp "Vulkans och Direct3D:s texturkoordinater börjar i bildens övre vänstra hörn, den första texeln i minnet. Exempeltriangeln får den del av texturen som hörnens koordinater skär ut.")
 :::
 
 Vi behöver bara skicka texturkoordinater för hörnen till vertex shadern, som skickar dem vidare till fragment
@@ -187,8 +193,15 @@ En rektangels texturkoordinater går från 0.0 till 2.0 längs båda axlarna, oc
 - [ ] Bilden en gång i en fjärdedel, och bildens kantpixlar utdragna över resten
 - [ ] Bilden en gång, utsträckt över hela rektangeln
 ---
-Med repeat räknas bara koordinatens decimaldel, så både 0..1 och 1..2 täcker hela bilden: två gånger på bredden och två på höjden. Det tredje svaret beskriver clamp-to-edge, som du använder i övningarna.
+Med repeat räknas bara koordinatens decimaldel, så både 0..1 och 1..2 täcker hela bilden: två gånger på bredden och två på höjden. Utdragna kantpixlar är det clamp-to-edge ger, som du använder i övningarna.
 ```
+
+:::opengl
+![De fyra wrapping-lägena](images/texture-wrapping-opengl.webp "Texturkoordinater från 0 till 2 lästa med vart och ett av wrapping-lägena, ritade av kursens simulator. Den streckade kvadraten är själva texturen, (0, 0) till (1, 1); kantfärgen är här vit.")
+:::
+:::vulkan d3d12
+![De fyra wrapping-lägena](images/texture-wrapping-vulkan-d3d12.webp "Texturkoordinater från 0 till 2 lästa med vart och ett av wrapping-lägena, ritade av kursens simulator. Den streckade kvadraten är själva texturen, (0, 0) till (1, 1); kantfärgen är här vit.")
+:::
 
 ## Texturfiltrering
 
@@ -207,6 +220,8 @@ Vilken visuell effekt ger de här filtreringsmetoderna? Nearest-filtrering ger b
 pixlarna som bygger upp texturen, medan linjär filtrering ger ett mjukare mönster där de enskilda pixlarna syns
 mindre. Linjär filtrering ger ett mer realistiskt resultat, men en del utvecklare föredrar en mer 8-bitarsaktig look
 och väljer därför nearest.
+
+![Nearest- och linjär filtrering](images/texture-filtering.webp "En liten del av texturen, kring hjärtat, förstorad många gånger och ritad av kursens simulator: nearest-filtrering visar varje texel som ett block, linjär filtrering blandar närliggande texlar.")
 
 Texturfiltrering kan ställas in separat för *förstoring* och *förminskning* (när texturen skalas upp eller ned), så
 du kan till exempel använda nearest neighbor-filtrering när texturer skalas ned och linjär filtrering när de skalas
@@ -273,6 +288,8 @@ avstånd från betraktaren använder GPU:n en annan mipmapnivå, den som passar 
 Eftersom objektet är långt bort märker användaren inte den lägre upplösningen. GPU:n kan då sampla rätt texlar, och
 mindre cacheminne går åt när den delen av mipmapsen samplas. En hel kedja av mipmaps kostar bara ungefär en tredjedel
 mer minne än originalbilden (1 + ¼ + 1/16 + … ≈ 4/3).
+
+![En kedja av mipmaps](images/mipmaps.webp "Lådans mipmaps: varje nivå är hälften så bred och hälften så hög som den före, ned till en enda texel.")
 
 Precis som vid vanlig texturfiltrering går det också att filtrera mellan mipmapnivåer: vid byte mellan nivåer kan du
 välja den närmaste nivån, eller blanda linjärt mellan de två närmaste – och inom en nivå sampla med nearest- eller

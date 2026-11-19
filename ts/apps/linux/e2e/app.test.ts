@@ -43,6 +43,7 @@ interface Page extends Locator {
   title(): Promise<string>;
   screenshot(options: { path: string }): Promise<Buffer>;
   waitForFunction(fn: string): Promise<unknown>;
+  evaluate<T>(fn: () => T | Promise<T>): Promise<T>;
   keyboard: { press(key: string): Promise<void> };
 }
 
@@ -128,6 +129,12 @@ describe("Codestead Linux (Electron)", () => {
       // The first chapter, in the default language, with the terminal next to it.
       const title = I18nLib.chapterTitle(firstChapter, lang);
       expect(await page.title()).toBe(`${title} – Codestead Linux`);
+      // The text is drawn with the Inter that comes with the app (from its own files), whatever fonts the system has.
+      const inter = await page.evaluate(async () => {
+        await document.fonts.ready;
+        return [...document.fonts].some((f) => f.family.replace(/["']/g, "") === "Inter Variable" && f.status === "loaded");
+      });
+      expect(inter).toBe(true);
       await page.getByRole("heading", { name: "Welcome to the Linux shell" }).first().waitFor();
       const user = World.get(lang).user;
       await page.getByText(`${user}@${ubuntu.hostname} — ${ubuntu.name}`, { exact: true }).waitFor();

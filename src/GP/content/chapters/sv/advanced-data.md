@@ -33,7 +33,7 @@ uppgifterna kontrollerar din kod, och den oförändrade bilden bevisar att datan
 
 Efter varje uppgift bygger och kör du programmet i din IDE.
 
-## Filling buffers
+## Fylla buffertar
 
 :::opengl
 Hittills har vi fyllt bufferns minne genom att anropa `glBufferData`, som allokerar en bit GPU-minne och lägger in
@@ -241,7 +241,7 @@ Ett tomt read range är ett löfte om att inte läsa. Minne i en upload heap är
 ```
 :::
 
-## Batching vertex attributes
+## Vertexattribut i block
 
 :::opengl
 Med `glVertexAttribPointer` kunde vi ange attributlayouten för innehållet i vertex array buffern.
@@ -259,6 +259,8 @@ texturkoordinater bredvid varandra i minnet. Nu när vi vet lite mer om buffrar 
 
 Vi kan också samla all vektordata i stora block per attributtyp i stället för att blanda dem. I stället för en
 omväxlande layout 123123123123 väljer vi en blockvis (batched) layout 111122223333.
+
+![Omväxlande och blockvis](images/buffer-layout.webp "Kubens vertex buffer omväxlande – varje vertex position och texturkoordinater tillsammans – och blockvis – alla positioner, sedan alla texturkoordinater, som börjar 12 · n byte in för n vertexar.")
 
 När du laddar vertexdata från en fil får du i allmänhet en array med positioner, en array med normaler och/eller en
 array med texturkoordinater. Det kan kosta en del möda att slå ihop dem till en stor array med omväxlande data. Att
@@ -467,7 +469,7 @@ I en slot ligger varje vertex `StrideInBytes` efter den föregående. Positioner
 ```
 :::
 
-## Copying buffers
+## Kopiera buffertar
 
 När dina buffrar är fyllda med data kanske du vill dela den datan med andra buffrar, eller kopiera bufferns innehåll
 till en annan buffer.
@@ -683,7 +685,7 @@ delar, skriv genom en pekare, lägg attributen blockvis när det passar din käl
 CPU:n inte når. Du kommer att se de här teknikerna igen så fort data är för stor, för statisk eller för dynamisk för
 den enkla uppladdningen med ett enda anrop.
 
-## Additional resources
+## Mer att läsa
 
 :::opengl
 - [glBufferSubData](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glBufferSubData.xhtml),

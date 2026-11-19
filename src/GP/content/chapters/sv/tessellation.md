@@ -31,6 +31,13 @@ antal *kontrollpunkter*. Här är en patch en kvadrat med sina fyra hörn. Tre s
 Vertex shadern före dem skickar nu bara vidare kontrollpunkterna, och rastreraren efter dem får vanliga trianglar.
 Control-/hull-steget bestämmer *hur mycket* detalj; evaluation-/domain-steget bestämmer *var* varje ny vertex hamnar.
 
+:::opengl vulkan
+![Tessellationsstegen](images/tess-stages-opengl-vulkan.webp "Stegen mellan vertex shadern och rasteriseraren och vad som går mellan dem.")
+:::
+:::d3d12
+![Tessellationsstegen](images/tess-stages-d3d12.webp "Stegen mellan vertex shadern och rasteriseraren och vad som går mellan dem.")
+:::
+
 :::opengl
 Tessellation shaders är core sedan OpenGL 4.0. learnopengls program begär **4.1**, och det gör även det här kapitlets:
 4.1 är också den högsta version macOS erbjuder, och den har tessellering, så kapitlet fungerar där. Shaderna börjar med
@@ -512,6 +519,13 @@ Alla sex nivåerna i en patch av typen quad är 8, med `fractional_odd_spacing`.
 Med `equal_spacing` hade det blivit 8 × 8. Tessellatorn ger bara (u, v)-punkterna och trianglarna som binder ihop dem; evaluation- (domain-) shadern läser en höjd för varje punkt.
 ```
 
+:::opengl vulkan
+![Jämn och udda bråkdelsindelning](images/tess-spacing-opengl-vulkan.webp "En quad-patch med alla nivåer 8: jämn indelning delar den i 8 × 8, udda bråkdelsindelning i 9 × 9 med två kortare delar på varje sida.")
+:::
+:::d3d12
+![Heltals- och udda bråkdelsindelning](images/tess-spacing-d3d12.webp "En quad-patch med alla nivåer 8: heltalsindelning delar den i 8 × 8, udda bråkdelsindelning i 9 × 9 med två kortare delar på varje sida.")
+:::
+
 ## Trådmodell
 
 För att se vad tessellatorn gör ritar nästa uppgift bara trianglarnas kanter.
@@ -653,6 +667,8 @@ Gör nu den sista uppgiften, **distance-levels**. Bygg och kör: terrängens fra
 trådmodellen längst bak öppnar sig i stora trianglar – en nivå nära 2 ger tre segment per kant i stället för nio.
 Terrängens form är oförändrad vid en hastig blick: de avlägsna patcharna täcker så få pixlar att de extra trianglarna ändå
 var osynliga. Flytta kameran (i ditt eget projekt) så följer nivåerna med varje bildruta.
+
+![Fasta och avståndsberoende nivåer](images/tess-lod.webp "Terrängens bakre del med nivå 8 på varje patch och med nivåerna efter avståndet. Ritad av kursens simulator.")
 
 ## Att gå vidare
 

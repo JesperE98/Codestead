@@ -1,0 +1,16 @@
+{
+  "name": "@codestead/pipeline-viz",
+  "private": true,
+  "type": "module",
+  "description": "The Render Pipeline Visualizer's scenes, interactive inside Codestead GP's chapters (see README.md).",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "highlight.js": "^11.12.0",
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "@types/three": "^0.186.0"
+  }
+}

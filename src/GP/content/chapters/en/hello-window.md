@@ -19,6 +19,8 @@ command buffer that records the clear, and the synchronisation that ties acquiri
 together. That is vulkan-tutorial.com's "Presentation" and "Drawing" chapters – everything except the graphics
 pipeline and the shaders, which clearing does not need and which come in the next chapter.
 
+![The objects of this chapter](images/objects-vulkan-window.webp "This chapter's objects (highlighted): everything from the window surface to the command buffer and the synchronisation objects.")
+
 You continue in your program from *Creating a window* (instance, validation layers, physical and logical device).
 First give it this chapter's shape. Add eight empty functions to the class – `createSurface()`, `createSwapChain()`,
 `createImageViews()`, `createRenderPass()`, `createFramebuffers()`, `createCommandPool()`, `createCommandBuffer()`
@@ -62,6 +64,8 @@ creates everything needed to show a cleared window: a swap chain with two back b
 render target view for each of them, a command allocator and a command list, and a fence to wait for the GPU. Then
 every frame it records a few commands – "make the back buffer a render target, clear it, make it presentable
 again" – executes them and presents the result.
+
+![The objects of this chapter](images/objects-d3d12-window.webp "This chapter's objects (highlighted): the swap chain and its back buffers, the descriptor heap for their render target views, the command allocator and list, and the fence.")
 
 You continue in your program from *Creating a window* (factory, adapter, device, command queue). First give it the
 sample's shape: the class `D3D12App` declares every member of the sample and five new functions,
@@ -218,7 +222,7 @@ the rendering commands draw to the *back* buffer. As soon as all the rendering c
 the back buffer to the front buffer so the image can be displayed without still being rendered to, removing all
 the aforementioned artifacts.
 
-![Double buffering](images/viz-present.webp "Double buffering: the program draws into the back buffer while the screen shows the front buffer; then they swap.")
+![Double buffering](viz:present "Double buffering: the program draws into the back buffer while the screen shows the front buffer; then they swap.")
 
 ```quiz
 Why do windowing applications render into a back buffer instead of directly into the image that is on screen?
@@ -950,7 +954,7 @@ commands each iteration or frame of the loop. At the start of each frame we want
 we would still see the results from the previous frame (this could be the effect you're looking for, but usually
 you don't).
 
-![Commands](images/viz-commands.webp "Commands: the program records them in a command buffer, the GPU runs them later – while the CPU prepares the next frame.")
+![Commands](viz:commands "Commands: the program records them in a command buffer, the GPU runs them later – while the CPU prepares the next frame.")
 
 :::opengl
 We can clear the screen's colour buffer using `glClear`, where we pass in buffer bits to specify which buffer we
@@ -1644,3 +1648,13 @@ In every API, one frame of this chapter's program follows the same order. Which 
 Events first (input, close button), then render into the buffer that is not on screen, then show it:
 `glfwSwapBuffers`, `vkQueuePresentKHR` or `Present`.
 ```
+
+:::opengl
+![One frame of the program](images/frame-opengl.webp "One frame: input, clear the back buffer, swap it to the front, process the events – then the loop starts the next frame.")
+:::
+:::vulkan
+![One frame of the program](images/frame-vulkan.webp "One frame: events, wait for the previous frame, acquire an image, record and submit the commands, present the image – then the next frame.")
+:::
+:::d3d12
+![One frame of the program](images/frame-d3d12.webp "One frame: messages, record the commands, execute them, present the back buffer, wait for the GPU – then the next frame.")
+:::

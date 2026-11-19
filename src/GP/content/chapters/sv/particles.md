@@ -769,6 +769,8 @@ Med additiv blending adderas färgerna för överlappande partiklar: där flera 
 himlen bakom dem. Blendingen räknar `src.rgb × src.a + dst.rgb`: en partikels eget alfa avgör fortfarande hur mycket den
 lägger till, och därför tonar spåret ut när alfa tonar ut.
 
+![Additiv och vanlig blending](images/particles-blend.webp "Spåret efter 2,0 sekunder med additiv blending, som i kapitlet, och med vanlig alfablending: bara den additiva har en vit kärna. Ritad av kursens simulator.")
+
 learnopengl ritar varje levande partikel med ett eget ritanrop – ungefär 120 per bildruta här. På en riktig GPU är det
 det långsamma sättet: *instancing* (kapitlet Instancing) skulle rita alla med ett anrop, från en buffer med
 förskjutningar och färger. Kursen behåller learnopengls loop.

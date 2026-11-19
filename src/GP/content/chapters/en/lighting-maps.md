@@ -607,6 +607,8 @@ We can also use a texture map just for specular highlights. This means we need t
 colors if you feel like it) texture that defines the specular intensities of each part of the object. The course's
 `container2_specular.png` is such a specular map: the steel frame is bright, the wooden planks are almost black.
 
+![The diffuse map and the specular map](images/lighting-maps-textures.webp "The crate's two maps: the diffuse map gives the colours, the specular map how strongly each part shines – the steel frame bright, the wood black.")
+
 The intensity of the specular highlight comes from the brightness of each pixel in the image. Each pixel of the
 specular map can be displayed as a color vector where black represents the color vector (0, 0, 0) and gray the color
 vector (0.5, 0.5, 0.5) for example. In the fragment shader we then sample the corresponding color value and multiply
@@ -830,6 +832,8 @@ A descriptor table is a starting handle plus a run of consecutive descriptors. T
 Now do the task **specular-map**, then build and run. Only the steel shines now: the highlight on the frame in the
 upper-left corner is bright white, while the wooden planks right next to it lost their sheen and only show their diffuse
 colour.
+
+![Without and with the specular map](images/specular-map-effect.webp "The crate's front face with the diffuse map only and with the specular map, drawn by the course's simulator with the lamp moved so that the highlight lands in the middle: with the specular map only the steel shines.")
 
 By using a specular map we can specify with enormous detail what parts of an object have shiny properties and we can
 even control the corresponding intensity. Specular maps give us an added layer of control over lighting on top of the

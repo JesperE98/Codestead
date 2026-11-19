@@ -20,6 +20,7 @@ import {
   type ChangelogEntry,
   type ISandbox,
   type LearningTool,
+  type MarkdownPicture,
   type LearningWindow,
   loadJson,
   RanEvent,
@@ -42,6 +43,7 @@ import { SolutionView } from "./GpTool.Solution.js";
 import { NoUpdates } from "./NoUpdates.js";
 import { ProductInfo } from "./ProductInfo.js";
 import { resources } from "./ProjectResources.js";
+import { vizScene } from "./VizScene.js";
 import { Large } from "./YourProject/ExpectedPicture.js";
 import type { PanelModel } from "./YourProject/PanelModel.js";
 import { ProjectPanel } from "./YourProject/ProjectPanel.js";
@@ -203,6 +205,11 @@ export class GpTool implements LearningTool {
       if (own !== undefined) return own;
     }
     return pictureUrls.get(path) ?? null;
+  }
+
+  /** A scene of the Render Pipeline Visualizer (`![alt](viz:buffers "caption")`), live in the chosen API. */
+  pictureView(picture: MarkdownPicture, lang: string): ReactNode | null {
+    return vizScene({ api: this.api, lang, t: (key, args) => this.w.t(key, args), picture: (path, l) => this.picture(path, l) }, picture);
   }
 
   references(chapterId: string): readonly Reference[] {

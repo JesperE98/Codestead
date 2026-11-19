@@ -107,17 +107,27 @@ export interface AnimatedImageProps {
   alt?: string;
   /** Tooltip on animations (a click pauses them). */
   hint?: string;
+  /**
+   * Makes the picture a button that shows it larger (a chapter's pictures): a click, Enter or Space calls it with the
+   * picture's natural width (0 when unknown). Without it a click pauses an animation.
+   */
+  onEnlarge?: (naturalWidth: number) => void;
+  /** Tooltip and accessible name of the enlarge button. */
+  enlargeHint?: string;
+  /** Fills its box, also beyond its natural size (the enlarged picture); otherwise never wider than its natural size. */
+  fill?: boolean;
 }
 
 /**
  * A picture in a text: a still image (PNG, JPEG, WebP) or an animation (animated GIF or WebP), played in a loop by
- * the browser's own decoder. A click pauses and resumes the animation (the frame on screen is drawn on a canvas while
- * paused). The picture is never wider than its natural size.
+ * the browser's own decoder. With `onEnlarge` a click shows it larger; otherwise (e.g. the enlarged picture) a click
+ * pauses and resumes the animation (the frame on screen is drawn on a canvas while paused). The picture is never wider
+ * than its natural size.
  *
  * Not yet as in C#: there, frames shown for a second or more are a slideshow and the next one fades in; here every
  * frame is simply shown for its time.
  */
-export function AnimatedImage({ source, alt, hint }: AnimatedImageProps) {
+export function AnimatedImage({ source, alt, hint, onEnlarge, enlargeHint, fill }: AnimatedImageProps) {
   const info = useMemo(() => (typeof source === "string" ? null : imageInfo(source)), [source]);
   const src = useMemo(() => (typeof source === "string" ? source : info && info.frames > 0 ? dataUrl(source, info.mime) : null), [source, info]);
   const [failed, setFailed] = useState(false);
@@ -143,13 +153,36 @@ export function AnimatedImage({ source, alt, hint }: AnimatedImageProps) {
     setPaused(!paused);
   };
 
+  if (onEnlarge) {
+    const enlarge = () => onEnlarge(info?.width || img.current?.naturalWidth || 0);
+    return (
+      <div
+        className="cs-picture zoomable"
+        role="button"
+        tabIndex={0}
+        title={enlargeHint}
+        aria-label={enlargeHint ? (alt ? `${alt} – ${enlargeHint}` : enlargeHint) : alt}
+        onClick={enlarge}
+        onKeyDown={(e) => {
+          if (e.key !== "Enter" && e.key !== " ") return;
+          e.preventDefault();
+          enlarge();
+        }}
+        data-frames={info?.frames}
+        style={info?.width ? { maxWidth: `min(100%, ${info.width}px)` } : undefined}
+      >
+        <img ref={img} src={src} alt={alt ?? ""} draggable={false} onError={() => setFailed(true)} />
+      </div>
+    );
+  }
+
   return (
     <div
-      className={"cs-picture" + (animated ? " animated" : "")}
+      className={"cs-picture" + (animated ? " animated" : "") + (fill ? " fill" : "")}
       title={animated && hint ? hint : undefined}
       onPointerDown={animated ? (e) => e.button === 0 && toggle() : undefined}
       data-frames={info?.frames}
-      style={info?.width ? { maxWidth: `min(100%, ${info.width}px)` } : undefined}
+      style={info?.width && !fill ? { maxWidth: `min(100%, ${info.width}px)` } : undefined}
     >
       <img ref={img} src={src} alt={alt ?? ""} draggable={false} onError={() => setFailed(true)} style={paused ? { visibility: "hidden" } : undefined} />
       {animated && <canvas ref={canvas} hidden={!paused} aria-hidden="true" />}

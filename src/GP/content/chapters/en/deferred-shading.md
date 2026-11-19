@@ -204,6 +204,8 @@ otherwise.
 The geometry pass also needs a depth buffer of its own: the depth test is what makes the G-buffer hold, for every pixel,
 the nearest surface.
 
+![The G-buffer](images/g-buffer.webp "What the G-buffer holds for the nine boxes, drawn by the course's simulator: positions and normals mapped to colours, the albedo and the specular intensity.")
+
 ```quiz
 Why are gPosition and gNormal 16-bit floating point targets, while albedo and specular share an 8-bit target?
 - [x] A position like (-3.75, -1.25, 2.4) or a normal with negative components doesn't fit into 0..1, and positions need more than 256 steps; a colour and an intensity between 0 and 1 are fine with 8 bits
@@ -944,7 +946,8 @@ G-buffer as the read framebuffer and the window's (0) as the draw framebuffer, a
 learnopengl's comment says what can go wrong: blitting depth requires the same depth format on both sides, and the
 window's is chosen by the system. Here the G-buffer's `GL_DEPTH_COMPONENT` renderbuffer and GLFW's default 24-bit depth
 buffer match. Without the copy, the window's depth buffer holds only the screen quad's flat depth (0.5 everywhere: NDC z
-= 0), so the cubes would not be hidden behind the boxes correctly. The cubes themselves – learnopengl's
+= 0). That is nearer than every cube, so the cubes would fail the depth test everywhere and disappear, instead of being
+hidden only where a box is in front of them. The cubes themselves – learnopengl's
 `// 3. render lights on top of scene` – use `Shader shaderLightBox("deferred_light_box.vs", "deferred_light_box.fs");`:
 
 ```cpp
@@ -1087,13 +1090,15 @@ depth test back on:
 :::opengl
 ```quiz
 Why must the G-buffer's depth be copied into the window's depth buffer before the light cubes are drawn?
-- [x] The window's depth buffer holds only the screen quad's flat depth: without the boxes' depths the cubes behind a box would be drawn over it
+- [x] The window's depth buffer holds only the screen quad's flat depth: without the boxes' depths the cubes would be tested against that instead – and as it is nearer than all of them, they would disappear
 - [ ] `glBlitFramebuffer` also copies the lighting into the window
 - [ ] The light cubes are drawn into the G-buffer and need its depth there
 - [ ] Without it, the depth test would discard the screen quad
 ---
 The blit copies only `GL_DEPTH_BUFFER_BIT`, and only works if both depth buffers have the same format – learnopengl's comment in the code warns about that.
 ```
+
+![Light cubes without and with the depth copy](images/depth-copy-opengl.webp "The light cubes, drawn by the course's simulator, without and with glBlitFramebuffer: without the copy the window's depth buffer holds only the screen quad's flat depth, which hides almost all of them.")
 :::
 :::vulkan
 ```quiz
@@ -1172,6 +1177,8 @@ d = (-Kl + sqrt(Kl² - 4 * Kq * (Kc - Imax * 256/5))) / (2 * Kq)
 With Kc = 1, Kl = 0.7 and Kq = 1.8, a light whose brightest channel is 0.5 reaches about 3.5 units, a light with a
 channel of 1.0 about 5.1. Every light's radius is computed once per light on the CPU and sent with it; the shader skips
 the light wherever the fragment is farther away:
+
+![A light's radius](images/light-radius.webp "A light's brightest channel times its attenuation over the distance, for 1.0 and 0.5. Where a curve falls below 5/256 is the light's radius: about 5.1 and 3.5 units.")
 
 ```text
 for(int i = 0; i < NR_LIGHTS; ++i)

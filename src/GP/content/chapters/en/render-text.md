@@ -922,6 +922,8 @@ in the next frame. Now do the task **win**. No block breaks with the fixed input
 visible change**. And that is it – the final piece of the game. Try it out: press ENTER, A and D and SPACE yourself in
 your program, customize it to your liking, and show it to your family and friends.
 
+![The game's states](images/game-states.webp "The menu, the game and the win screen, and what takes the game from one to another.")
+
 ```quiz
 `RenderText` computes `ypos = y + (Characters['H'].Bearing.y - ch.Bearing.y) * scale`. What does it achieve?
 - [ ] It puts the baseline of the text at y

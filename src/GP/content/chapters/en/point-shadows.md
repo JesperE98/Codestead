@@ -313,6 +313,8 @@ Why does the light's projection use a field of view of exactly 90° and an aspec
 With less than 90° there would be directions no face covers, with more the faces would overlap and their edges would not meet. The aspect ratio is 1 because each face is square.
 ```
 
+![The six views around the light](images/point-shadow-faces.webp "The room seen from above. The light looks along +X, −X, +Z and −Z (and ±Y) with 90° each, which fills all directions. The wall fragment behind the cube finds the cube's distance in the direction fragToLight: it is farther away, in shadow.")
+
 As the projection matrix does not change per direction we can re-use it for each of the 6 transformation matrices. We
 do need a different view matrix per direction. With a lookAt function we create 6 view directions, each looking at one
 face direction of the cubemap in the order: right, left, top, bottom, near and far – +X, -X, +Y, -Y, +Z, -Z, the order
@@ -1150,6 +1152,8 @@ Now do the last task, **pcf**: these lines replace the single sample and compari
 Build and run: the shadow's **edges become soft** – its inside stays as dark as before, the lit wall around it
 unchanged, but along the edges the brightness now changes gradually: where 5 of the 20 samples are in shadow, the
 fragment is a quarter in shadow. Only the pixels at the shadow's edges change.
+
+![The room from a wide camera](images/point-shadow-views.webp "The room from a camera near its front wall with a field of view of 100°, drawn by the course's simulator: the depth cube map, and the shadows of all five cubes with PCF.")
 
 The PCF algorithm here is still quite simple; there is much more to soft shadows, and to point shadows in general: a
 geometry shader that emits every triangle six times isn't free, and some renderers draw the six faces in six passes, or

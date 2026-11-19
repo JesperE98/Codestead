@@ -235,5 +235,7 @@
   "ach.answer-42.title": "A resposta",
   "ach.answer-42.desc": "Um comando respondeu 42 – a resposta para a vida, o universo e tudo mais.",
   "ach.night-owl.title": "Coruja noturna",
-  "ach.night-owl.desc": "Você resolveu uma tarefa entre a meia-noite e as quatro da manhã."
+  "ach.night-owl.desc": "Você resolveu uma tarefa entre a meia-noite e as quatro da manhã.",
+  "picture.enlarge": "Clique para ampliar",
+  "picture.pause": "Clique para pausar ou reproduzir"
 }

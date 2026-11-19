@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
-import { cleanup, render } from "@testing-library/react";
+import { cleanup, fireEvent, render } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { afterEach, describe, expect, it } from "vitest";
 import { imageInfo, MarkdownView } from "../src/index.js";
 
@@ -43,5 +44,32 @@ describe("MarkdownPictureTests", () => {
     // Bytes that are no picture are left out too.
     const broken = render(<MarkdownView markdown={"![x](images/x.png)"} imageSource={() => new Uint8Array([1, 2, 3])} />);
     expect(broken.container.querySelectorAll(".cs-picture").length).toBe(0);
+  });
+  it("ett klick på en bild visar den större med sin bildtext; Enter också; animationen pausas först i den stora", () => {
+    const shown: { view: ReactNode; width: number }[] = [];
+    const { container } = render(
+      <MarkdownView
+        markdown={'![En animation](images/a.webp "Bildtext")'}
+        imageSource={() => bytes(webp)}
+        enlargeHint="Klicka för att förstora"
+        onPictureEnlarge={(view, width) => shown.push({ view, width })}
+      />,
+    );
+    const picture = container.querySelector<HTMLElement>(".cs-picture")!;
+    expect(picture.classList.contains("zoomable")).toBe(true);
+    expect(picture.getAttribute("role")).toBe("button");
+    expect(picture.getAttribute("title")).toBe("Klicka för att förstora");
+    fireEvent.click(picture);
+    fireEvent.keyDown(picture, { key: "Enter" });
+    expect(shown.map((s) => s.width)).toEqual([4, 4]);
+    // The enlarged view: the same picture (an animation that a click pauses) and its caption.
+    const large = render(<>{shown[0]!.view}</>).container;
+    const big = large.querySelector(".cs-picture-large .cs-picture")!;
+    expect(big.classList.contains("animated")).toBe(true);
+    expect(big.classList.contains("zoomable")).toBe(false);
+    expect(large.querySelector(".cs-md-caption")!.textContent).toBe("Bildtext");
+    // Without a place to show it larger, a picture is not a button.
+    const plain = render(<MarkdownView markdown={"![x](images/a.png)"} imageSource={() => bytes(png)} />).container;
+    expect(plain.querySelector(".cs-picture")!.classList.contains("zoomable")).toBe(false);
   });
 });

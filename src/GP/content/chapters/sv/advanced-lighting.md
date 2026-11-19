@@ -58,11 +58,12 @@ grader blir skalärprodukten negativ, och det ger ett spekulärt bidrag på 0.0.
 problem, eftersom vi ändå inte borde få något ljus vid vinklar över 90 grader?
 
 Fel – det gäller bara den diffusa komponenten, där en vinkel över 90 grader mellan normalen och ljuskällan betyder att
-ljuskällan ligger under den belysta ytan, så att ljusets diffusa bidrag ska vara 0.0. Med spekulärt ljus mäter vi däremot
-inte vinkeln mellan ljuskällan och normalen, utan mellan view-vektorn och reflektionsvektorn. Föreställ dig ljuset och
-kameran tätt ovanför ett plant golv, båda riktade mot en punkt mellan sig i flack vinkel: reflektionsvektorn pekar bort
-från betraktaren, mer än 90 grader från blickriktningen – och därför kläms den spekulära termen till exakt 0.0, fast
-fragmentet är belyst och en grov yta fortfarande skulle visa en del reflekterat ljus där.
+ljuskällan ligger under den belysta ytan, så att ljusets diffusa bidrag ska vara 0.0. Med spekulärt ljus mäter vi
+däremot inte vinkeln mellan ljuskällan och normalen, utan mellan view-vektorn och reflektionsvektorn. Föreställ dig
+ljuset och kameran tätt ovanför ett plant golv, och en punkt på golvet längre bort, bortom ljuset, som båda ser i flack
+vinkel: reflektionsvektorn pekar bort från betraktaren, mer än 90 grader från blickriktningen – och därför kläms den
+spekulära termen till exakt 0.0, fast fragmentet är belyst och en grov yta fortfarande skulle visa en del reflekterat
+ljus där.
 
 Det blir ett problem när den spekulära exponenten är låg: högdagern breder då ut sig över en stor yta, bred nog att nå
 ställena där vinkeln passerar 90 grader, och där tar den tvärt slut. Med en hög exponent är högdagern redan noll långt
@@ -88,6 +89,8 @@ normal, desto större blir det spekulära bidraget.
 När blickriktningen sammanfaller exakt med den (nu tänkta) reflektionsvektorn sammanfaller halvvägsvektorn exakt med
 normalen. Ju närmare blickriktningen är den ursprungliga reflektionsriktningen, desto starkare blir den spekulära
 högdagern.
+
+![Phongs och Blinn-Phongs vektorer](images/blinn-phong-vectors.webp "Ljuset L och betraktaren V lågt ovanför ett golv, på samma sida om punkten. Phong: reflektionsvektorn R ligger mer än 90° från V, så den spekulära termen klipps av. Blinn-Phong: halvvägsvektorn H håller sig inom 90° från normalen N.")
 
 Här ser du att vinkeln mellan halvvägsvektorn och ytans normal aldrig överstiger 90 grader, oavsett vilken riktning
 betraktaren tittar från (om inte ljuset ligger långt under ytan, förstås). Resultatet skiljer sig något från Phongs
@@ -420,6 +423,8 @@ Phong och Blinn-Phong används båda med ett ljus och en betraktare ovanför ett
 ---
 När L och V båda ligger på normalens sida pekar även deras summa åt den sidan, så dot(N, H) blir aldrig negativ. Därför tonar Blinn-Phong ut mjukt där Phong klipps av.
 ```
+
+![Phong och Blinn-Phong på golvet](images/blinn-phong-floor.webp "Kapitlets golv ritat av kursens simulator. Överst bara den spekulära termen med exponenten 1: Phongs högdager slutar i en skarp kant, Blinn-Phongs tonar ut. Nederst hela belysningen med kapitlets exponenter.")
 
 Skillnaden kan se liten ut på ett trägolv, men Blinn-Phong är den mer trovärdiga modellen, särskilt för grova ytor med låga
 exponenter, och det är den som resten av den här delen använder – nästa kapitels fyra ljus är redan Blinn-Phong-ljus.

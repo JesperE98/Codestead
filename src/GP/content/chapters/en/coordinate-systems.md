@@ -110,7 +110,7 @@ After each task, build and run the program in your IDE.
 
 ## The global picture
 
-![The spaces a vertex passes through](images/viz-spaces.webp "The spaces a vertex passes through: local (object), world, view and clip space.")
+![The spaces a vertex passes through](viz:spaces "The spaces a vertex passes through: local (object), world, view and clip space.")
 
 To transform the coordinates from one space to the next coordinate space we'll use several transformation matrices
 of which the most important are the *model*, *view* and *projection* matrix. Our vertex coordinates first start in
@@ -212,7 +212,7 @@ At the end of each vertex shader run, {{api}} expects the coordinates to be with
 coordinate that falls outside this range is *clipped*. Coordinates that are clipped are discarded, so the remaining
 coordinates will end up as fragments visible on your screen. This is also where *clip space* gets its name from.
 
-![Clipping](images/viz-clipping.webp "Clipping: whatever lies outside the view frustum is cut away before rasterization.")
+![Clipping](viz:clipping "Clipping: whatever lies outside the view frustum is cut away before rasterization.")
 
 Because specifying all the visible coordinates to be within the range `-1.0` and `1.0` isn't really intuitive, we
 specify our own coordinate set to work in and convert those back to NDC as {{api}} expects them.
@@ -505,6 +505,8 @@ The third and fourth parameter set the *near* and *far* plane of the frustum. We
 `0.1` and the far distance to `100.0`. All the vertices between the near and far plane and inside the frustum will be
 rendered.
 
+![Three fields of view](images/field-of-view.webp "The chapter's scene with a fov of 30°, 45° and 90°, drawn by the course's simulator: a small field of view zooms in, a large one shows more and makes everything smaller.")
+
 > Whenever the near value of your perspective matrix is set too high (like `10.0`), {{api}} will clip all
 > coordinates close to the camera (between `0.0` and `10.0`), which can give a visual result you maybe have seen
 > before in videogames where you could see through certain objects when moving uncomfortably close to them.
@@ -578,6 +580,8 @@ projection for modeling, because it more accurately depicts each object's dimens
 perspective projection shows the far vertices smaller, while the orthographic one draws every cube the same size, no
 matter how far away it is.
 
+![Perspective and orthographic projection](images/projections.webp "Above: the two frustums seen from the side, with two equal cubes. Below: the chapter's ten cubes with a perspective and with an orthographic projection, drawn by the course's simulator.")
+
 ```quiz
 Two identical cubes stand in front of a perspective camera, one 2 units away and one 4 units away. Why does the far one look half as big?
 - [x] The projection puts the distance into w, and dividing x and y by w (perspective division) halves the far cube's coordinates
@@ -590,7 +594,7 @@ The x and y scale in the projection matrix is the same for every vertex. The dif
 
 ## Putting it all together
 
-![The viewport transform maps normalized device coordinates to pixels in the window.](images/viz-viewport.webp "The viewport transform maps normalized device coordinates to pixels in the window.")
+![The viewport transform maps normalized device coordinates to pixels in the window.](viz:viewport "The viewport transform maps normalized device coordinates to pixels in the window.")
 
 We create a transformation matrix for each of the aforementioned steps: model, view and projection matrix. A vertex
 coordinate is then transformed to clip coordinates as follows:

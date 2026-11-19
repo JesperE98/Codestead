@@ -235,5 +235,7 @@
   "ach.answer-42.title": "La réponse",
   "ach.answer-42.desc": "Une commande a répondu 42 – la réponse à la grande question sur la vie, l’univers et le reste.",
   "ach.night-owl.title": "Oiseau de nuit",
-  "ach.night-owl.desc": "Vous avez résolu une tâche entre minuit et quatre heures du matin."
+  "ach.night-owl.desc": "Vous avez résolu une tâche entre minuit et quatre heures du matin.",
+  "picture.enlarge": "Cliquer pour agrandir",
+  "picture.pause": "Cliquer pour mettre en pause ou lire"
 }

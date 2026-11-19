@@ -56,7 +56,7 @@ bakgrunden. Zooma in på en sned kant i tanken, så ser du trappan.
 För att förstå vad multisampling är och hur det löser aliasingproblemet måste vi först gräva lite djupare i hur
 rastreraren fungerar.
 
-![Multisampling](images/viz-msaa.webp "Multisampling: täckningen testas i flera punkter per pixel, men fragmentshadern körs oftast en gång.")
+![Multisampling](viz:msaa "Multisampling: täckningen testas i flera punkter per pixel, men fragmentshadern körs oftast en gång.")
 
 Rastreraren är alla de algoritmer och processer som sitter mellan dina färdigbehandlade vertices och fragment shadern.
 Rastreraren tar alla vertices som hör till en primitiv och gör om dem till en mängd fragment. Vertexkoordinater kan i
@@ -99,6 +99,8 @@ Med 4x MSAA täcker en triangel 2 av en pixels 4 samples. Hur många gånger kö
 ---
 Det är MSAA:s knep jämfört med SSAA: täckning (och djup) testas per sample, men fragment shadern körs en gång per pixel och primitiv. Resolven tar medelvärdet av samples, så en kantpixel får en blandning i proportion till sin täckning.
 ```
+
+![En och fyra samples per pixel](images/msaa-samples.webp "En kant över några pixlar med en sample per pixel och med fyra: med fyra får varje pixel triangelns färg i proportion till sina täckta samples efter resolven.")
 
 Det vi gått igenom hittills är en grundläggande översikt av hur multisamplad anti-aliasing fungerar bakom kulisserna.
 Logiken i rastreraren är egentligen lite mer komplicerad, men den här korta beskrivningen räcker för att förstå idén
@@ -446,6 +448,8 @@ Varför måste djupbuffern också vara multisamplad, med lika många samples som
 ---
 Täckning och djup utvärderas i varje subsample, och ett samples färg skrivs bara om det klarar sitt eget djuptest. Det kräver ett djupvärde per sample – och alla attachments i en ritning måste ha samma antal samples.
 ```
+
+![Utan och med MSAA](images/aa-compare.webp "En bit av kubens övre högra kant, förstorad, utan multisampling och med 4× MSAA, ritad av kursens simulator.")
 
 :::opengl
 ## Off-screen MSAA

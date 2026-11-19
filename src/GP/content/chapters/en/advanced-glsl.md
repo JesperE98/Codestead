@@ -322,6 +322,13 @@ Direct3D's render target coordinates start at the top-left, and a pixel's coordi
 ```
 :::
 
+:::opengl
+![Window coordinates](images/frag-coord-opengl.webp "The task frag-coord, drawn by the course's simulator: red where the fragment's x is below 400, green elsewhere. OpenGL's window coordinates start at the bottom left.")
+:::
+:::vulkan d3d12
+![Window coordinates](images/frag-coord-vulkan-d3d12.webp "The task frag-coord, drawn by the course's simulator: red where the fragment's x is below 400, green elsewhere. Here the window coordinates start at the top left.")
+:::
+
 #### gl_FrontFacing
 
 :::opengl
@@ -835,7 +842,7 @@ HLSL matches what one stage writes with what the next reads by semantic. The str
 
 ## Uniform buffer objects
 
-![Uniform data reaches the shaders through buffers the program updates.](images/viz-uniforms.webp "Uniform data reaches the shaders through buffers the program updates.")
+![Uniform data reaches the shaders through buffers the program updates.](viz:uniforms "Uniform data reaches the shaders through buffers the program updates.")
 
 :::opengl
 We've been using OpenGL for quite a while now and learned some pretty cool tricks, but also a few annoyances. For
@@ -1129,6 +1136,13 @@ In an HLSL `cbuffer`, `float value;` is followed by `float3 vector;`. At which b
 ---
 HLSL only moves a variable to the next 16-byte register if it would straddle a boundary. The float3 needs 12 bytes, and 12 are left in the first register after the float – so it starts at 4, where GLSL's std140 would put it at 16.
 ```
+:::
+
+:::opengl vulkan
+![ExampleBlock in std140](images/ubo-layout-opengl-vulkan.webp "ExampleBlock in the std140 layout, 16 bytes per row: vector starts at 16, and every element of values takes a whole row.")
+:::
+:::d3d12
+![ExampleBlock as a cbuffer](images/ubo-layout-d3d12.webp "ExampleBlock as an HLSL cbuffer, 16 bytes per row: vector fits into the first row at 4, and every element of values starts a new row.")
 :::
 
 ## Using uniform buffers

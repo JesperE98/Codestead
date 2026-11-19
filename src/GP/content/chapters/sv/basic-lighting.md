@@ -17,6 +17,8 @@ viktigaste byggstenar är 3 komponenter: ambient, diffust och spekulärt ljus.
 - **Spekulärt ljus**: simulerar den ljusa fläck som uppstår på blanka objekt. Spekulära högdagrar tenderar att ha
   ljusets färg snarare än objektets.
 
+![Ambient, diffust och spekulärt ljus](images/phong-components.webp "Kapitlets kub med varje del av Phongs belysningsmodell för sig och alla tre adderade, ritad av kursens simulator.")
+
 För att skapa visuellt intressanta scener vill vi åtminstone simulera de här 3 komponenterna. Vi börjar med den
 enklaste: *ambient ljus*.
 
@@ -125,7 +127,7 @@ objektet. Diffust ljus gör objektet ljusare ju närmare dess fragment är rikta
 Föreställ dig en ljusstråle som träffar ett fragment: ljuset kommer från ljuskällan, fragmentet har en *normalvektor*
 som sticker rakt ut från ytan, och θ är vinkeln mellan normalen och riktningen mot ljuset.
 
-![Ljus per fragment](images/viz-fragment.webp "Ljus per fragment: varje fragment får sin egen interpolerade normal och belyses för sig.")
+![Ljus per fragment](viz:fragment "Ljus per fragment: varje fragment får sin egen interpolerade normal och belyses för sig.")
 
 Om ljusstrålen är vinkelrät mot objektets yta har ljuset störst påverkan. För att mäta vinkeln mellan ljusstrålen och
 fragmentet använder vi en så kallad normalvektor, alltså en vektor som är vinkelrät mot fragmentets yta;
@@ -142,6 +144,8 @@ större θ blir, desto mindre påverkan ska ljuset ha på fragmentets färg.
 
 Skalärprodukten ger alltså en skalär som vi kan använda för att räkna ut ljusets påverkan på fragmentets färg, vilket
 ger olika belysta fragment beroende på hur de är riktade mot ljuset.
+
+![Vinkeln mellan normalen och ljuset](images/diffuse-angle.webp "θ är vinkeln mellan normalen n och riktningen L mot ljuset. Den diffusa termen är cos θ, skalärprodukten av de två enhetsvektorerna, och 0 när ljuset är bakom ytan.")
 
 Så vad behöver vi för att räkna ut diffust ljus?
 
@@ -616,6 +620,8 @@ Varje gång vi gör en olikformig skalning (obs: en likformig skalning ändrar b
 vilket lätt åtgärdas genom att normalisera den) är normalvektorerna inte längre vinkelräta mot motsvarande yta, vilket
 förvränger belysningen.
 
+![En normal vid icke-likformig skalning](images/normal-matrix.webp "Exemplet ovan: utdragen 2 gånger längs y lutar ytan till (1, 2). Modellmatrisen gör normalen till (1, −2), som inte längre är vinkelrät; normalmatrisen ger (1, −0.5), som är det.")
+
 Tricket för att rätta till det är att använda en annan modellmatris, skräddarsydd för normalvektorer. Den kallas
 *normalmatrisen* (normal matrix) och använder några linjäralgebraiska operationer för att ta bort effekten av den
 felaktiga skalningen av normalvektorerna. Normalmatrisen definieras som "transponatet av inversen av den övre vänstra
@@ -915,6 +921,8 @@ Varför negeras `lightDir` i `reflect(-lightDir, norm)`?
 ---
 `lightDir` räknades ut som `lightPos - fragPos`, mot ljuset. Att spegla dess negation kring normalen ger riktningen som ljuset studsar åt – och den jämför vi sedan med riktningen mot betraktaren.
 ```
+
+![Vektorerna i den spekulära termen](images/specular-vectors.webp "Vektorerna i den spekulära termen med shaderns namn: reflect speglar den inkommande riktningen -lightDir till reflectDir, och ju mindre vinkeln mellan reflectDir och viewDir är, desto ljusare blir högdagern.")
 
 > I belysningsshadernas tidiga dagar implementerade utvecklare Phongs belysningsmodell i vertex shadern. Fördelen med
 > att räkna belysning i vertex shadern är att det är mycket effektivare, eftersom det i allmänhet finns mycket färre

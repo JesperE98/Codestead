@@ -2,6 +2,7 @@ import type { ProductMeta } from "@codestead/common";
 import type { CommandFacts, CourseChapter, GameRules, Reference } from "@codestead/learning";
 import type { ReactNode } from "react";
 import type { ChangelogEntry } from "../ChangelogEntry.js";
+import type { MarkdownPicture } from "../Controls/MarkdownView.js";
 import type { ISandbox } from "../Controls/Sandbox/ISandbox.js";
 import type { SandboxRun } from "../Controls/Sandbox/SandboxRun.js";
 import type { SelfUpdate } from "../SelfUpdate.js";
@@ -203,6 +204,12 @@ export interface LearningTool {
    * bytes (or a URL), or null (the picture is left out). Codestead Linux has none.
    */
   picture?(path: string, lang: string): Uint8Array | string | null;
+
+  /**
+   * A picture of the chapters' texts that is something else than a picture file (Codestead GP: `viz:` scenes of the
+   * Render Pipeline Visualizer), or null to show it with {@link picture}. The window puts the caption under it.
+   */
+  pictureView?(picture: MarkdownPicture, lang: string): ReactNode | null;
 
   /**
    * A task's solution as a window of its own, which the learner closes again; null (Codestead Linux): the solution

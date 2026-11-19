@@ -59,6 +59,8 @@ dess mål. `glVertexAttribPointer` beskriver attribut 0 i den bundna VAO:n *och*
 VAO:n – därför varnar learnopengl för att någonsin avbinda element buffern medan VAO:n fortfarande är bunden. Inget av
 detta syns i själva anropen; du måste känna till kontextens tillstånd för att veta vad en rad gör.
 
+![Bind för att ändra och direct state access](images/bind-vs-dsa.webp "glBufferData fyller den buffer som är bunden till dess target; glNamedBufferStorage anger själv bufferten den fyller.")
+
 I ett litet program går det att hålla reda på. I ett stort ställer det till verkliga problem:
 
 - **Tillstånd som läcker.** En funktion binder en buffer för att ändra den och återställer inte den gamla bindningen.
@@ -348,6 +350,8 @@ Med DSA ändras vertexarna till fem flyttal var (position och texturkoordinater)
 ---
 Attributformatet innehåller bara den relativa förskjutningen inuti en vertex; avståndet mellan vertexarna hör till bufferbindningen. Det är den uppdelning som `glVertexAttribPointer` blandade ihop.
 ```
+
+![Attributformat, bindningspunkt och buffer](images/attrib-format.webp "Varje attributs format och offset inom en vertex, bindningspunkten det läser och bufferten med dess stride bakom bindningspunkten.")
 
 ## Texturer
 

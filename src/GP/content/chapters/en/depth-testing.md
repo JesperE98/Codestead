@@ -169,7 +169,7 @@ objects with.
 {{api}} allows us to modify the comparison operators it uses for the depth test. This allows us to control when the
 GPU should pass or discard fragments and when to update the depth buffer.
 
-![The depth test](images/viz-depth.webp "The depth test: each fragment's depth is compared with the depth buffer, and the nearest one wins.")
+![The depth test](viz:depth "The depth test: each fragment's depth is compared with the depth buffer, and the nearest one wins.")
 
 :::opengl
 We can set the comparison operator (or depth function) by calling `glDepthFunc`:
@@ -440,6 +440,8 @@ A PSO is immutable. To draw some objects with another depth function you create 
 ```
 :::
 
+![The depth functions LESS and ALWAYS](images/depth-functions.webp "The left cube with the depth function LESS and with ALWAYS, drawn by the course's simulator: with ALWAYS the floor, drawn last, covers the cube's lower part, and the cube's later faces cover its front.")
+
 Then set the depth function back to "less" – a fragment passes when it is nearer than the depth stored so far:
 
 :::opengl
@@ -532,6 +534,8 @@ With near = 0.1 and far = 100, how far from the camera is a fragment whose depth
 ---
 The depth is proportional to 1/z, not to z. Solving `0.5 = (1/z - 10) / (0.01 - 10)` gives z ≈ 0.2: half of the depth buffer's values are used between 0.1 and 0.2 units.
 ```
+
+![Depth value against distance](images/depth-curve.webp "The value in the depth buffer for a distance in front of the camera, with near = 0.1 and far = 100: the non-linear depth is 0.5 at 0.2 units and already 0.97 at the front of the left cube, 3.5 units away, while the linear equation has hardly begun.")
 
 ## Visualizing the depth buffer
 
@@ -750,6 +754,8 @@ The floor grows lighter towards the back, and the background (the clear colour, 
 was drawn. The colors are mostly black because the depth values range linearly from the near plane, which is 0.1, to the
 far plane, which is 100 – still quite far away from us. The result is that we're relatively close to the near plane and
 therefore get lower (darker) depth values.
+
+![The depth buffer and the linear depth as grey](images/depth-visualized.webp "The depth buffer's values as grey (the task visualize-depth) and the linear depth divided by far (the task linear-depth), drawn by the course's simulator.")
 
 ## Z-fighting
 

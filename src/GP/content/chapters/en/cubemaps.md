@@ -32,6 +32,8 @@ A cube map is sampled with a direction instead of 2D texture coordinates. What h
 The GPU picks the face from the largest component of the vector and divides the other two by it, so any positive multiple of a direction lands on the same texel. That's why the skybox can pass its unnormalized vertex positions straight on.
 ```
 
+![Sampling a cube map with a direction](images/cubemap-direction.webp "A direction d from the cube's centre and the longer 2d leave the cube through the same point of the +X face, so they sample the same texel.")
+
 As in the other chapters of this part, everything here exists in every API; the text shows it for {{api}}.
 
 :::opengl
@@ -319,6 +321,8 @@ which `front` is +Z – so with the camera looking down -z you look at `back.png
 If you lay the six faces out flat as an unfolded cube, you get a cross-shaped image: the four horizontal faces in a
 row with the top face above and the bottom face below. Seen from inside the cube, they give you the illusion of being
 in a large outdoor scene.
+
+![The six faces of the sky](images/cubemap-faces.webp "The course's six sky images as an unfolded cube, with -Z (back.png), the face the default camera looks at, in the middle.")
 
 ### Loading a skybox
 
@@ -1108,6 +1112,8 @@ vector using {{shaderLanguage}}'s built-in `reflect` function. The resulting vec
 vector to index/sample the cube map, returning a colour value of the environment. The resulting effect is that the
 object seems to reflect the skybox.
 
+![Reflection](images/cubemap-reflect.webp "Reflection: the view vector I is mirrored about the normal N, and the result R samples the cube map.")
+
 Since we already have a skybox setup in our scene, creating reflections isn't too difficult. We'll change the fragment
 shader used by the cubes to give the cubes reflective properties. To calculate the reflection vector we need the
 fragment's position, the camera's position and the normal at the fragment. So the cube's vertices get normals instead
@@ -1418,6 +1424,8 @@ refractive index. A list of the most common refractive indices are given in the 
 We use these refractive indices to calculate the ratio between both materials the light passes through. In our case,
 the light/view ray goes from air to glass (if we assume the object is made of glass) so the ratio becomes
 1.00 / 1.52 = 0.658.
+
+![Refraction](images/cubemap-refract.webp "Refraction from air (1.00) into glass (1.52): the view vector I bends towards the normal, and R samples the cube map. The dashed line is I without bending.")
 
 We already have the cube map bound, supplied the vertex data with normals, and set the camera position as a uniform.
 The only thing we have to change is the fragment shader:

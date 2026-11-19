@@ -603,6 +603,8 @@ Vi kan använda en texturkarta även för spekulära högdagrar. Det betyder att
 färgad, om du känner för det) textur som anger den spekulära intensiteten för varje del av föremålet. Kursens
 `container2_specular.png` är en sådan specular map: stålramen är ljus, träplankorna nästan svarta.
 
+![Diffuse map och specular map](images/lighting-maps-textures.webp "Lådans två kartor: diffuse mapen ger färgerna, specular mapen hur starkt varje del glänser – stålramen ljus, träet svart.")
+
 Intensiteten hos den spekulära högdagern kommer från ljusstyrkan hos varje pixel i bilden. Varje pixel i specular
 mapen kan ses som en färgvektor där svart representerar färgvektorn (0, 0, 0) och grått till exempel färgvektorn
 (0.5, 0.5, 0.5). I fragment shadern läser vi sedan motsvarande färgvärde och multiplicerar det med ljusets spekulära
@@ -822,6 +824,8 @@ En descriptor table är ett starthandtag plus en följd av intilliggande descrip
 
 Gör nu uppgiften **specular-map** och bygg och kör sedan. Nu glänser bara stålet: högdagern på ramen i det övre vänstra
 hörnet är klart vit, medan träplankorna precis bredvid har förlorat sin glans och bara visar sin diffusa färg.
+
+![Utan och med specular map](images/specular-map-effect.webp "Lådans framsida med bara diffuse map och med specular map, ritad av kursens simulator med lampan flyttad så att högdagern hamnar mitt på: med specular mapen glänser bara stålet.")
 
 Med en specular map kan vi ange in i minsta detalj vilka delar av ett föremål som är blanka, och till och med styra
 intensiteten. Specular maps ger oss ett extra lager av kontroll över belysningen ovanpå diffuse mapen.

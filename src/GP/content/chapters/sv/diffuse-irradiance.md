@@ -985,6 +985,8 @@ halvsfären. Observera att (på grund av en sfärs allmänna egenskaper) halvsf�
 högre zenitvinkeln θ är, eftersom områdena konvergerar mot toppen. För att kompensera för de mindre områdena viktar vi
 deras bidrag genom att skala med sin θ.
 
+![Sampel på halvsfären](images/irradiance-samples.webp "Konvolutionens sampel i lika steg av φ och θ, glesare än kursens. Varje ring har lika många sampel, men ringarna nära N är korta, så varje sampel där vägs med sin θ, och med cos θ för ljusets vinkel.")
+
 Att sampla halvsfären diskret utifrån integralens sfäriska koordinater blir följande fragmentkod:
 
 :::opengl vulkan
@@ -1149,6 +1151,8 @@ Bygg och kör: bakgrunden är **en mycket mjuk oskärpa** utan detaljer – kull
 gråviolett ton överallt, lite blåare upptill och varmare nedtill. Den är ljus även under horisonten: varje riktnings
 halvsfär når en del av himlen eller solen. Det här är det ljus som en matt yta riktad åt det hållet får från hela
 omgivningen.
+
+![Miljön och irradiance map](images/irradiance-map.webp "Miljön och irradiance mapen som konvolverats fram ur den, var och en ritad som bakgrund av kursens simulator, utan sfärerna.")
 
 ```quiz
 I konvolutionens loop multipliceras varje sample med `cos(theta) * sin(theta)`. Vad är `sin(theta)` till för?

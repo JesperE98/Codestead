@@ -94,6 +94,8 @@ The frame then has four steps, the four passes of learnopengl's program:
 3. **Composite pass**: a full-screen quad that blends the transparent result over the opaque target.
 4. **Final pass**: a full-screen quad that copies the opaque target to the window.
 
+![The four passes and their targets](images/wb-passes.webp "What each pass does with the opaque colour, the depth, the accumulation and the revealage target.")
+
 You continue in the program you prepared in *OIT: Introduction*: the camera at (0, 0, 5), the red opaque quad at (0.5,
 -0.2, 1.0), the green quad (alpha 0.5) at (-0.3, -0.6, 2.0) – the nearest – and the blue quad (alpha 0.5) at (-0.6,
 0.5, 0.0) – the farthest, partly behind the red one – drawn red, green, blue. learnopengl's demo puts the three quads
@@ -914,6 +916,8 @@ In the overlap the result is (0, 96, 96), while correctly sorted blending (blue 
 ---
 With near = 0.1 and far = 100, a quad 3 to 5 units away has a window depth of about 0.97–0.98, and 1e8 · (1 − 0.9z)³ is still over 100 000 – far above the clamp. With equal weights, the average gives the layers equal shares, where sorted blending would let the nearer green layer dominate. That is the approximation.
 ```
+
+![The weight function](images/wb-weight.webp "learnopengl's weight over the window depth on a logarithmic scale, before the clamp (dashed) and after it: with alpha 0.5 it never falls below 3000, so near and far layers count the same.")
 
 ## What it gets wrong
 

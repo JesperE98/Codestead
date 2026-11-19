@@ -10,6 +10,7 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import { CourseText, ExpectedResult, GpCourse, Ides, nodeFileSystem, StartFiles, UiStrings } from "@codestead/gp-course";
+import { parseVizSource, VizEnvironment } from "@codestead/pipeline-viz";
 import { LearningWindow, LearningWindowView, MemoryStorage, Motion } from "@codestead/ui";
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
@@ -172,6 +173,36 @@ describe("GpToolTests", () => {
     expect(tool.picture("images/../chapters/en/introduction.md", "en")).toBeNull();
     expect(tool.picture("chapters/en/introduction.md", "en")).toBeNull();
     expect(tool.picture("images/no-such-picture.webp", "en")).toBeNull();
+  });
+
+  it("scener ur visualiseraren (viz:) står i texten där bilderna stod, med bildtext, i valt API; utan WebGL stillbilden", () => {
+    const { tool, w } = open();
+    render(<LearningWindowView window={w} />);
+    act(() => w.navigate("hello-triangle"));
+    const sources = [...CourseText.raw("hello-triangle", "en").matchAll(/!\[[^\]]*\]\((viz:[^ )]+) "([^"]*)"\)/g)];
+    expect(sources.map((m) => m[1])).toEqual(["viz:pipeline", "viz:buffers", "viz:input-layout", "viz:rasterization", "viz:indices"]);
+    const scenes = [...document.querySelectorAll(".cs-viz")];
+    expect(scenes.map((e) => e.getAttribute("data-scene"))).toEqual(sources.map((m) => parseVizSource(m[1]!)!.name));
+    // The caption under each, as under a picture; the controls in the window's language.
+    for (const [i, m] of sources.entries()) expect(scenes[i]!.parentElement!.querySelector(".cs-md-caption")!.textContent).toBe(m[2]);
+    expect(within(scenes[1] as HTMLElement).getByRole("button", { name: t("viz.next") })).toBeTruthy();
+    expect(within(scenes[1] as HTMLElement).getAllByRole("button", { name: /^Step \d of 5$/ }).length).toBe(5);
+    // An ordinary picture is still a picture.
+    expect(tool.pictureView({ href: "images/results/hello-triangle.webp", alt: "", title: "" }, "en")).toBeNull();
+    cleanup();
+
+    // Without WebGL: the still pictures, in the language.
+    const saved = { ...VizEnvironment };
+    VizEnvironment.canObserve = () => true;
+    VizEnvironment.webgl = () => false;
+    try {
+      render(<LearningWindowView window={w} />);
+      const still = document.querySelector('.cs-viz[data-scene="buffers"] img')!;
+      expect(still.getAttribute("src")).toBe(tool.picture("images/viz-buffers.webp", "en"));
+      expect(document.querySelectorAll('.cs-viz[data-state="fallback"]').length).toBe(5);
+    } finally {
+      Object.assign(VizEnvironment, saved);
+    }
   });
 
   it("Mark as done bockar av en uppgift först när texten är genomgången; det sparas i state.json", () => {
@@ -343,7 +374,7 @@ describe("GpToolTests", () => {
     act(() => (w.tool as GpTool).selectTask(steps));
     expect(screen.getByText(t("expected.exercise", { n: 1 }))).toBeTruthy();
     // Clicking shows it larger, in a dialog.
-    await act(async () => void fireEvent.click(screen.getByTitle(t("expected.enlarge"))));
+    await act(async () => void fireEvent.click(within(found<HTMLElement>(".cs-gp-expected")).getByTitle(t("expected.enlarge"))));
     const dialog = await waitFor(() => screen.getByRole("dialog"), { timeout: 5000 });
     expect(dialog.querySelector("img")!.src.startsWith("data:image/bmp;base64,")).toBe(true);
     // A task whose program opens no window has no picture, and says why.
