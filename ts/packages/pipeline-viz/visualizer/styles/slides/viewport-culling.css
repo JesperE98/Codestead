@@ -1,0 +1,27 @@
+/* ---------- Viewport & culling: panels ---------- */
+.ms-panel .vc-note .r, .vcc-cap .r { color: var(--red); }
+.vc-formula { margin-top: 8px; font-family: var(--mono); font-size: 11px; color: var(--text); padding: 5px 8px; border-radius: 8px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--line); line-height: 1.6; }
+.vc-formula .hint { font-size: 10.5px; }
+.ms-panel .vc-sub { font-size: 12px; color: var(--muted); margin: 8px 0 2px; }
+.ms-panel .vc-note { margin-top: 7px; font-size: 12px; color: var(--muted); line-height: 1.45; }
+.vc-note code, .vcc-cap code { color: var(--amber); }
+.ms-panel .stat .k { font-size: 10px; letter-spacing: 0.06em; line-height: 1.3; }
+.vc-table { border-collapse: collapse; font-size: 11px; width: 100%; }
+.vc-table th { font-family: var(--mono); font-weight: 600; font-size: 10px; color: var(--dim); text-align: left; padding: 2px 6px 2px 0; border-bottom: 1px solid var(--line); }
+.vc-table td { padding: 2px 6px 2px 0; white-space: nowrap; }
+.vc-table td.hot { color: var(--amber); }
+.vc-v { font-family: var(--mono); font-weight: 700; }
+.vc-conv { display: grid; gap: 4px; margin-top: 8px; }
+.vc-conv-row { display: grid; grid-template-columns: 58px 1fr; gap: 8px; align-items: center; padding: 3px 8px; border-radius: 8px; border: 1px solid var(--line); opacity: 0.55; }
+.vc-conv-row code { font-size: 10.5px; color: var(--cyan); white-space: normal; }
+.vc-conv-row.cur { opacity: 1; border-color: var(--api); background: color-mix(in srgb, var(--api) 12%, transparent); box-shadow: 0 0 16px color-mix(in srgb, var(--api) 30%, transparent); }
+.vc-conv-name { font-weight: 700; font-size: 12px; }
+.three-label.vc-tag { font-size: 11px; color: var(--muted); }
+.three-label.vc-tag.green { color: var(--green); border-color: rgba(92, 240, 143, 0.5); }
+.three-label.vc-tag.amber { color: var(--amber); border-color: rgba(255, 181, 71, 0.5); }
+
+/* ---------- Viewport & culling: concept ---------- */
+.vcc-cap { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.5; }
+
+/* CSS2D labels sort themselves with z-index; keep them under the glass panels. */
+.slide[data-id='viewport-culling'] .three-labels { z-index: 1; }

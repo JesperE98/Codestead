@@ -1,0 +1,26 @@
+/* ---------- 01 Overview ---------- */
+@media (min-width: 901px) { .ov-ms .ms-slot.right { width: min(36%, 330px); } }
+.ov-ms .ov-info { border-color: color-mix(in srgb, var(--lane, #9b7bff) 55%, transparent); box-shadow: 0 0 26px color-mix(in srgb, var(--lane, #9b7bff) 22%, transparent), 0 8px 30px rgba(0, 0, 0, 0.4); }
+.ov-ms .ov-info .ms-head { color: var(--lane, var(--muted)); }
+.ov-ms .ov-info .stat { flex-basis: 80px; }
+.ov-ms .ov-info .stat .v { font-size: 15px; }
+.ov-ms .ov-info .stat .k { font-size: 9.5px; }
+.ov-hint { margin-top: 7px; font-size: 11.5px; color: var(--muted); line-height: 1.4; }
+.ov-cap { margin: 0; font-size: 13px; line-height: 1.5; color: var(--text); }
+
+.ov-ms .ms-slot.bottom { gap: 6px; flex-wrap: nowrap; }
+.ov-ms .ms-slot.bottom .ov-lane-panel { flex: 1 1 0; min-width: 0; opacity: 0.6; transition: opacity 0.3s, flex-grow 0.3s, border-color 0.3s, box-shadow 0.3s; border-color: color-mix(in srgb, var(--lane) 30%, transparent); }
+.ov-ms .ov-lane-panel .ms-head { color: var(--lane); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 10px; padding: 6px 10px; }
+.ov-ms .ov-lane-panel .ms-head span:first-child { overflow: hidden; text-overflow: ellipsis; }
+.ov-ms .ov-lane-panel.done { opacity: 0.8; }
+.ov-ms .ms-slot.bottom .ov-lane-panel.cur { flex: 0 0 47%; opacity: 1; border-color: color-mix(in srgb, var(--lane) 65%, transparent); box-shadow: 0 0 24px color-mix(in srgb, var(--lane) 25%, transparent); }
+.ov-ms .ov-lane-panel .ms-body { padding: 0 8px 8px; }
+.ov-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.ov-chip { display: inline-flex; align-items: baseline; gap: 5px; border: 1px solid color-mix(in srgb, currentColor 35%, transparent); background: color-mix(in srgb, currentColor 8%, rgba(5, 6, 13, 0.6)); border-radius: 8px; padding: 2px 7px; font-size: 11.5px; font-weight: 600; white-space: nowrap; transition: background 0.2s, box-shadow 0.2s; }
+.ov-chip small { font-family: var(--mono); font-size: 10.5px; font-weight: 500; color: var(--muted); }
+.ov-chip:hover { background: color-mix(in srgb, currentColor 22%, rgba(5, 6, 13, 0.6)); box-shadow: 0 0 14px color-mix(in srgb, currentColor 40%, transparent); }
+@media (max-width: 900px) {
+  .ov-ms .ms-slot.right { top: 8px; bottom: auto; max-height: 40%; }
+  .ov-ms .ms-slot.bottom { flex-wrap: wrap; }
+  .ov-ms .ov-lane-panel:not(.cur) { display: none; }
+}

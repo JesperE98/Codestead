@@ -1,0 +1,69 @@
+/* ---------- 08 Uniforms & descriptors – panels over the 3D model ---------- */
+.m-model { --mc: var(--cyan); }
+.m-view { --mc: var(--violet); }
+.m-proj { --mc: var(--amber); }
+.m-mvp { --mc: var(--magenta); }
+
+.ds-ms .ms-slot.right { width: min(38%, 350px); }
+.ds-ms .glow-green { color: var(--green); text-shadow: 0 0 12px rgba(92, 240, 143, 0.6); }
+.ds-p .ms-body > div { display: flex; flex-direction: column; gap: 8px; }
+.ds-p .stat .v { font-size: 14px; white-space: nowrap; }
+.ds-p .stat .k { font-size: 9.5px; text-transform: none; letter-spacing: 0.02em; }
+
+/* live matrices */
+.ds-mats { display: flex; flex-direction: column; gap: 6px; }
+.ds-mcard { padding: 4px 8px 6px; border-radius: 9px; border: 1px solid color-mix(in srgb, var(--mc) 22%, transparent); opacity: 0.62; transition: opacity 0.35s, border-color 0.35s, box-shadow 0.35s, background 0.35s; }
+.ds-mcard.on { opacity: 1; border-color: var(--mc); background: color-mix(in srgb, var(--mc) 8%, transparent); box-shadow: 0 0 16px color-mix(in srgb, var(--mc) 30%, transparent); }
+.ds-mh { display: flex; align-items: baseline; gap: 6px; font-size: 11px; color: var(--muted); margin-bottom: 2px; min-width: 0; }
+.ds-mh b { color: var(--mc); font-size: 12.5px; text-shadow: 0 0 10px var(--mc); }
+.ds-msub { margin-left: auto; font-family: var(--mono); font-size: 9.5px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.ds-mcard .matrix { display: grid; font-size: 10.5px; gap: 0 10px; padding: 2px 8px; border-color: color-mix(in srgb, var(--mc) 55%, transparent); font-variant-numeric: tabular-nums; }
+.ds-mcard .matrix span { border-radius: 3px; transition: color 0.3s, text-shadow 0.3s, background 0.3s; }
+.ds-mcard .matrix span.hl { color: var(--amber); background: rgba(255, 181, 71, 0.16); text-shadow: 0 0 10px var(--amber); }
+.ds-mcard .matrix span.flip { color: var(--magenta); background: rgba(255, 63, 210, 0.18); text-shadow: 0 0 10px var(--magenta); }
+
+.ds-check { display: grid; grid-template-columns: max-content auto; gap: 3px 10px; align-items: center; justify-content: start; font-size: 11px; }
+.ds-check .k { color: var(--muted); font-family: var(--mono); font-size: 10.5px; }
+.ds-cmp { border-collapse: collapse; width: 100%; font-size: 11px; }
+.ds-cmp th { text-align: left; color: var(--dim); font-weight: 600; padding: 2px 8px 3px 0; border-bottom: 1px solid var(--line); font-family: var(--mono); font-size: 10px; }
+.ds-cmp td { padding: 3px 8px 3px 0; color: var(--muted); white-space: nowrap; }
+.ds-cmp tr.me td { color: #fff; background: color-mix(in srgb, var(--api) 14%, transparent); }
+.ds-cmp tr.me td:first-child { box-shadow: inset 3px 0 0 var(--api); padding-left: 6px; }
+.ds-cmp td.neg { color: var(--magenta); text-shadow: 0 0 8px rgba(255, 63, 210, 0.6); }
+
+/* bytes */
+.ds-dump { max-height: 290px; }
+.ds-dump .mem-addr { width: 38px; }
+.ds-b { min-width: 14px; font-size: 9.5px; color: var(--mc); background: color-mix(in srgb, var(--mc) 13%, transparent); }
+.ds-b.w { margin-right: 2px; }
+.ds-rl { margin-left: 6px; font-family: var(--mono); font-size: 10px; color: var(--mc); white-space: nowrap; }
+.ds-dec { font-size: 11px; color: var(--dim); }
+.ds-dec code { font-size: 10.5px; }
+.ds-note { margin: 0; font-size: 11.5px; color: var(--muted); line-height: 1.45; }
+.ds-note code { color: var(--cyan); }
+
+/* binding chain, vertical */
+.ds-chain { display: flex; flex-direction: column; gap: 14px; position: relative; }
+.ds-node { position: relative; padding: 6px 10px; border-radius: 9px; border: 1px solid color-mix(in srgb, var(--api) 45%, transparent); background: color-mix(in srgb, var(--api) 9%, rgba(8, 10, 24, 0.75)); box-shadow: 0 0 14px color-mix(in srgb, var(--api) 18%, transparent); }
+.ds-node + .ds-node::before { content: ''; position: absolute; left: 22px; top: -15px; width: 2px; height: 14px; background: var(--api); box-shadow: 0 0 8px var(--api); }
+.ds-node .t { font-family: var(--mono); font-size: 11.5px; font-weight: 700; color: #fff; overflow-wrap: anywhere; }
+.ds-node .s { font-family: var(--mono); font-size: 10.5px; margin-top: 1px; color: var(--muted); overflow-wrap: anywhere; }
+.ds-node:last-child { border-color: var(--magenta); box-shadow: 0 0 16px rgba(255, 63, 210, 0.3); }
+.ds-node.slot { border-color: var(--green); box-shadow: 0 0 20px rgba(92, 240, 143, 0.4), inset 0 0 14px rgba(92, 240, 143, 0.12); }
+.ds-node.slot .t { color: var(--green); text-shadow: 0 0 10px var(--green); }
+
+/* concept */
+.ds-cap { flex: 2 1 300px !important; }
+.ds-var { flex: 1 1 260px !important; }
+.ds-caption { margin: 0; font-size: 13px; line-height: 1.45; color: var(--muted); }
+.ds-caption b { color: var(--text); }
+.dsc-variants { display: grid; gap: 6px; }
+.dsc-var { display: grid; grid-template-columns: 76px 1fr 52px 30px; gap: 8px; align-items: center; font-size: 11.5px; color: var(--muted); }
+.dsc-var.me { color: #fff; }
+.dsc-var .n { font-weight: 600; }
+.dsc-var .bar { position: relative; height: 8px; border-radius: 99px; background: rgba(255, 255, 255, 0.06); border: 1px solid var(--line); }
+.dsc-var .fill { position: absolute; top: 0; bottom: 0; border-radius: 99px; background: var(--amber); box-shadow: 0 0 10px var(--amber); }
+.dsc-var .r, .dsc-var .y { font-family: var(--mono); font-size: 11px; }
+.ds-segs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; }
+.ds-seg { padding: 2px 5px; border-radius: 5px; font-size: 9.5px; font-family: var(--mono); color: var(--muted); border: 1px solid color-mix(in srgb, var(--mc) 50%, transparent); background: color-mix(in srgb, var(--mc) 12%, transparent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ds-seg b { color: var(--mc); }
