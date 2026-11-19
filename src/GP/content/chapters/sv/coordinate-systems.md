@@ -499,6 +499,8 @@ med dess höjd. Den tredje och fjärde parametern anger frustumens *nära* och *
 avståndet till `0.1` och det bortre till `100.0`. Alla vertexar mellan det nära och det bortre planet och inuti
 frustumen renderas.
 
+![Tre synfält](images/field-of-view.webp "Kapitlets scen med fov 30°, 45° och 90°, ritad av kursens simulator: ett litet synfält zoomar in, ett stort visar mer och gör allt mindre.")
+
 > När near-värdet i din perspektivmatris är för stort (som `10.0`) klipper {{api}} alla koordinater nära kameran
 > (mellan `0.0` och `10.0`), vilket kan ge ett resultat du kanske har sett i datorspel, där man kan se igenom vissa
 > föremål när man går obekvämt nära dem.
@@ -572,6 +574,8 @@ eller ingenjörstillämpningar där vi helst inte vill att vertexarna förvräng
 3D-modellering som Blender använder ibland ortografisk projektion vid modellering, eftersom den återger varje objekts
 mått mer exakt. Sida vid sida visar perspektivprojektionen de avlägsna vertexarna mindre, medan den ortografiska
 ritar varje kub lika stor, oavsett hur långt bort den är.
+
+![Perspektivisk och ortografisk projektion](images/projections.webp "Överst: de två frustumen sedda från sidan, med två lika stora kuber. Nederst: kapitlets tio kuber med perspektivisk och med ortografisk projektion, ritade av kursens simulator.")
 
 ```quiz
 Två likadana kuber står framför en perspektivkamera, den ena 2 enheter bort och den andra 4 enheter bort. Varför ser den bortre hälften så stor ut?

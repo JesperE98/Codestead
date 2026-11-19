@@ -505,6 +505,8 @@ The third and fourth parameter set the *near* and *far* plane of the frustum. We
 `0.1` and the far distance to `100.0`. All the vertices between the near and far plane and inside the frustum will be
 rendered.
 
+![Three fields of view](images/field-of-view.webp "The chapter's scene with a fov of 30°, 45° and 90°, drawn by the course's simulator: a small field of view zooms in, a large one shows more and makes everything smaller.")
+
 > Whenever the near value of your perspective matrix is set too high (like `10.0`), {{api}} will clip all
 > coordinates close to the camera (between `0.0` and `10.0`), which can give a visual result you maybe have seen
 > before in videogames where you could see through certain objects when moving uncomfortably close to them.
@@ -577,6 +579,8 @@ vertices distorted by perspective. Applications like Blender that are used for 3
 projection for modeling, because it more accurately depicts each object's dimensions. Seen side by side, the
 perspective projection shows the far vertices smaller, while the orthographic one draws every cube the same size, no
 matter how far away it is.
+
+![Perspective and orthographic projection](images/projections.webp "Above: the two frustums seen from the side, with two equal cubes. Below: the chapter's ten cubes with a perspective and with an orthographic projection, drawn by the course's simulator.")
 
 ```quiz
 Two identical cubes stand in front of a perspective camera, one 2 units away and one 4 units away. Why does the far one look half as big?

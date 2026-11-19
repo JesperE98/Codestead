@@ -4,25 +4,32 @@
     "date": "2026-11-19",
     "changes": {
       "en": [
-        "**The same text on every computer again**: Codestead GP brings its text font, Inter, with it again, so the text looks as it did before 0.2.6 instead of taking whatever font your system has."
+        "**The same text on every computer again**: Codestead GP brings its text font, Inter, with it again, so the text looks as it did before 0.2.6 instead of taking whatever font your system has.",
+        "**More pictures in Getting started**: every chapter from *Setting up your IDE* to *Camera* now has diagrams and pictures of the hard parts – the frame loop, normalized device coordinates, how shaders are connected, texture coordinates, wrapping and filtering, the order of transformations, projections and the camera's axes – most of them drawn by the course's own simulator from the code you write, and made for the API you have chosen."
       ],
       "sv": [
-        "**Samma text på alla datorer igen**: Codestead GP har åter med sig sitt typsnitt Inter, så texten ser ut som före 0.2.6 i stället för att ta det typsnitt som råkar finnas på datorn."
+        "**Samma text på alla datorer igen**: Codestead GP har åter med sig sitt typsnitt Inter, så texten ser ut som före 0.2.6 i stället för att ta det typsnitt som råkar finnas på datorn.",
+        "**Fler bilder i Kom igång**: varje kapitel från *Sätt upp din IDE* till *Kamera* har nu diagram och bilder över de svåra delarna – en frame i programmet, normalized device coordinates, hur shaders kopplas ihop, texturkoordinater, wrapping och filtrering, transformationernas ordning, projektioner och kamerans axlar – många av dem ritade av kursens egen simulator från koden du skriver, och gjorda för det API du har valt."
       ],
       "de": [
-        "**Wieder dieselbe Schrift auf jedem Computer**: Codestead GP bringt seine Schriftart Inter wieder selbst mit, sodass der Text wie vor 0.2.6 aussieht, statt die Schrift zu nehmen, die dein System gerade hat."
+        "**Wieder dieselbe Schrift auf jedem Computer**: Codestead GP bringt seine Schriftart Inter wieder selbst mit, sodass der Text wie vor 0.2.6 aussieht, statt die Schrift zu nehmen, die dein System gerade hat.",
+        "**Mehr Bilder in „Erste Schritte“**: Jedes Kapitel von *Setting up your IDE* bis *Camera* hat jetzt Diagramme und Bilder zu den schwierigen Stellen – der Frame, normalisierte Gerätekoordinaten, wie Shader verbunden sind, Texturkoordinaten, Wrapping und Filterung, die Reihenfolge der Transformationen, Projektionen und die Achsen der Kamera –, viele davon vom kurseigenen Simulator aus dem Code gezeichnet, den du schreibst, und passend zur gewählten API."
       ],
       "fr": [
-        "**Le même texte sur chaque ordinateur** : Codestead GP embarque de nouveau sa police Inter, si bien que le texte s'affiche comme avant la 0.2.6 au lieu d'utiliser la police que votre système a sous la main."
+        "**Le même texte sur chaque ordinateur** : Codestead GP embarque de nouveau sa police Inter, si bien que le texte s'affiche comme avant la 0.2.6 au lieu d'utiliser la police que votre système a sous la main.",
+        "**Plus d'images dans Pour commencer** : chaque chapitre, de *Setting up your IDE* à *Camera*, a maintenant des schémas et des images des passages difficiles – une frame du programme, les coordonnées normalisées, la liaison des shaders, les coordonnées de texture, le wrapping et le filtrage, l'ordre des transformations, les projections et les axes de la caméra –, dont beaucoup sont dessinées par le simulateur du cours à partir du code que vous écrivez, et adaptées à l'API choisie."
       ],
       "es": [
-        "**El mismo texto en todos los ordenadores otra vez**: Codestead GP vuelve a incluir su tipografía, Inter, así que el texto se ve como antes de la 0.2.6 en lugar de usar la fuente que tenga tu sistema."
+        "**El mismo texto en todos los ordenadores otra vez**: Codestead GP vuelve a incluir su tipografía, Inter, así que el texto se ve como antes de la 0.2.6 en lugar de usar la fuente que tenga tu sistema.",
+        "**Más imágenes en Primeros pasos**: cada capítulo, de *Setting up your IDE* a *Camera*, tiene ahora diagramas e imágenes de las partes difíciles – un frame del programa, las coordenadas normalizadas, cómo se conectan los shaders, las coordenadas de textura, el wrapping y el filtrado, el orden de las transformaciones, las proyecciones y los ejes de la cámara –, muchas dibujadas por el propio simulador del curso a partir del código que escribes y hechas para la API que has elegido."
       ],
       "zh": [
-        "**每台电脑上的文字重新一致**：Codestead GP 再次自带其文字字体 Inter，文字显示与 0.2.6 之前相同，不再使用系统碰巧安装的字体。"
+        "**每台电脑上的文字重新一致**：Codestead GP 再次自带其文字字体 Inter，文字显示与 0.2.6 之前相同，不再使用系统碰巧安装的字体。",
+        "**“入门”部分有了更多图片**：从 *Setting up your IDE* 到 *Camera*，每一章都为难点配上了示意图和图片——一帧的流程、标准化设备坐标、着色器之间如何连接、纹理坐标、环绕和过滤、变换的顺序、投影以及摄像机的坐标轴——其中许多由课程自己的模拟器根据你编写的代码绘制，并按你选择的 API 显示。"
       ],
       "ja": [
-        "**どのパソコンでも同じ文字表示に**：Codestead GP が再び文字フォント Inter を同梱するようになり、システムにあるフォントではなく、0.2.6 より前と同じ見た目で表示されます。"
+        "**どのパソコンでも同じ文字表示に**：Codestead GP が再び文字フォント Inter を同梱するようになり、システムにあるフォントではなく、0.2.6 より前と同じ見た目で表示されます。",
+        "**「はじめに」に図を追加**：*Setting up your IDE* から *Camera* までの各章に、難しいところの図や画像が加わりました。1 フレームの流れ、正規化デバイス座標、シェーダーのつながり方、テクスチャ座標、ラッピングとフィルタリング、変換の順序、投影、カメラの軸などで、その多くはあなたが書くコードからコース自身のシミュレーターが描いたもので、選んだ API に合わせて表示されます。"
       ]
     }
   },

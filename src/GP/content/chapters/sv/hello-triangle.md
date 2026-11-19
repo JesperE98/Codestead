@@ -213,6 +213,16 @@ täcker hela fönstret, så triangelns hörn hamnar på pixlarna (400, 150), (60
 fönstrets övre vänstra hörn. Skärmkoordinaterna omvandlas sedan till fragment som blir indata till din fragment
 shader.
 
+:::opengl
+![Triangeln i NDC och i fönstret](images/ndc-triangle-opengl.webp "De tre hörnen i normalized device coordinates (y uppåt), i buffertens ordning – moturs – och var viewporten placerar dem i fönstret på 800 × 600.")
+:::
+:::vulkan
+![Triangeln i NDC och i fönstret](images/ndc-triangle-vulkan.webp "De tre hörnen i normalized device coordinates (y nedåt), i buffertens ordning – medurs – och var viewporten placerar dem i fönstret på 800 × 600.")
+:::
+:::d3d12
+![Triangeln i NDC och i fönstret](images/ndc-triangle-d3d12.webp "De tre hörnen i normalized device coordinates (y uppåt), i buffertens ordning – medurs – och var viewporten placerar dem i fönstret på 800 × 600.")
+:::
+
 ```quiz
 Fönstret är 800×600 och viewporten täcker hela det. Vilken av de här vertexpositionerna ligger utanför det synliga området?
 - [ ] (0.9, -0.9, 0.0)

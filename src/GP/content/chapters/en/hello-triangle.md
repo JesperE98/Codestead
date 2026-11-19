@@ -214,6 +214,16 @@ covers all of it, so the triangle's corners end up at the pixels (400, 150), (60
 the top left corner of the window. These screen-space coordinates are then turned into fragments as input to your
 fragment shader.
 
+:::opengl
+![The triangle in NDC and in the window](images/ndc-triangle-opengl.webp "The three vertices in normalized device coordinates (y up), in the order of the buffer – counter-clockwise – and where the viewport puts them in the 800 × 600 window.")
+:::
+:::vulkan
+![The triangle in NDC and in the window](images/ndc-triangle-vulkan.webp "The three vertices in normalized device coordinates (y down), in the order of the buffer – clockwise – and where the viewport puts them in the 800 × 600 window.")
+:::
+:::d3d12
+![The triangle in NDC and in the window](images/ndc-triangle-d3d12.webp "The three vertices in normalized device coordinates (y up), in the order of the buffer – clockwise – and where the viewport puts them in the 800 × 600 window.")
+:::
+
 ```quiz
 The window is 800×600 and the viewport covers all of it. Which of these vertex positions lies outside the visible region?
 - [ ] (0.9, -0.9, 0.0)

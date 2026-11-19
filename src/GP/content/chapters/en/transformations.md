@@ -131,6 +131,8 @@ We call this *normalizing* a vector. Unit vectors are displayed with a little ro
 easier to work with, especially when we only care about their directions (the direction does not change if we change
 a vector's length). Normalizing v = (4, 2) gives about (0.894, 0.447): the same direction, length 1.
 
+![Adding and subtracting vectors, and the length of a vector](images/vectors.webp "v + k: the second arrow starts at the tip of the first. q − p: the vector from the point p to the point q. The length of v = (4, 2): the hypotenuse of its components.")
+
 ### Vector-vector multiplication
 
 Multiplying two vectors is a bit of a weird case. Normal multiplication isn't really defined on vectors since it has
@@ -208,6 +210,8 @@ vector that is orthogonal to your input vectors. Try it with the x axis and the 
 ```
 
 The result is the z axis. The order matters: y × x gives (0, 0, −1), the z axis pointing the other way.
+
+![Dot product and cross product](images/dot-cross.webp "For unit vectors the dot product is cos θ: 1 in the same direction, 0 at a right angle, −1 in opposite directions. The cross product of x and y is z – and y × x is −z.")
 
 ## Matrices
 
@@ -554,6 +558,8 @@ Running the final transformation matrix on our vector results in the following v
 
 Great! The vector is first scaled by two and then translated by (1, 2, 3). In general a model's matrix is put
 together as M = T · R · S: the vertices are scaled, then rotated, then translated.
+
+![M = T · R · S, step by step](images/transform-steps.webp "M = T · R · S applied to the container: the matrix next to the vertex acts first – scale by 0.5, rotate a quarter turn, then move by (0.5, −0.5).")
 
 ```quiz
 M = Trans · Scale, where Scale scales by 2 and Trans translates by (1, 2, 3). What is M · (1, 1, 1, 1)?
@@ -1308,6 +1314,8 @@ The container now circles around the centre of the window, counter-clockwise, an
 the same corner always touches the window's centre. A rotation always
 turns about the origin; only if the object's centre sits at the origin does the object spin in place. That's why
 "scale, then rotate, then translate" is the usual order.
+
+![Rotated then moved, and moved then rotated](images/transform-order.webp "Left: rotated about the origin, then moved – the container spins in place. Right: moved, then rotated about the origin – it circles the centre of the window. Drawn by the course's simulator.")
 
 ### A second container
 

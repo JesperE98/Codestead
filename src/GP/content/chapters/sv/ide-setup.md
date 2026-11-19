@@ -36,6 +36,8 @@ kursen, den IDE du gillar. Panelen **Ditt projekt** kopplar ihop kapitlet med di
    ovanför, och kontrollerar dem med kursens egna kontroller. Den bockar av varje uppgift som klarar kontrollen och
    talar om vad som fortfarande saknas för de andra. **Byt fil…** väljer en annan fil.
 
+![Så arbetar du i kursen](images/course-workflow.webp "Läs uppgiften, skriv koden i din IDE, bygg och kör, jämför ditt fönster med det förväntade resultatet – bocka sedan av uppgiften, eller låt Kontrollera min kod läsa dina filer.")
+
 **Kontrollera min kod** läser bara dina källfiler: ingenting behöver byggas eller köras för den. Bygg och kör ändå ditt
 program – en kontroll kan se att rätt anrop finns där, men bara ditt fönster visar vad de ritar.
 
@@ -372,6 +374,16 @@ directory), mappen som ett program körs i: `"shaders/vert.spv"`, `"container.pn
 bredvid `main.cpp`, i kapitelmappen – dina shaderfiler, och kursens texturer och modeller där **Spara
 resursfilerna…** lägger dem när du väljer kapitelmappen – så programmet måste köras med kapitelmappen som
 arbetskatalog. Stegen här nedan visar hur.
+
+:::opengl
+![Kapitelmappen som arbetskatalog](images/working-directory-opengl.webp "En relativ sökväg letas upp i arbetskatalogen: kör programmet i kapitelmappen, inte i byggmappen.")
+:::
+:::vulkan
+![Kapitelmappen som arbetskatalog](images/working-directory-vulkan.webp "En relativ sökväg letas upp i arbetskatalogen: kör programmet i kapitelmappen, inte i byggmappen.")
+:::
+:::d3d12
+![Kapitelmappen som arbetskatalog](images/working-directory-d3d12.webp "En relativ sökväg letas upp i arbetskatalogen: kör programmet i kapitelmappen, inte i byggmappen.")
+:::
 
 ```quiz
 Ditt program byggs, men när det startar avbryts det med ett fel om att det inte kan öppna en av sina shaderfiler. Filen ligger i kapitelmappen. Vad är den troligaste orsaken?
