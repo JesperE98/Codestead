@@ -41,7 +41,7 @@ const option = (name) => {
 };
 const preview = option("--preview");
 const rendersDir = option("--renders") ?? join(tmpdir(), "codestead-gp-renders");
-const names = args.length > 0 ? args : readdirSync(here).filter((f) => f.endsWith(".mjs") && f !== "make.mjs" && f !== "style.mjs").map((f) => f.slice(0, -4)).sort();
+const names = args.length > 0 ? args : readdirSync(here).filter((f) => f.endsWith(".mjs") && !f.startsWith("_") && f !== "make.mjs" && f !== "style.mjs").map((f) => f.slice(0, -4)).sort();
 
 const sources = [];
 for (const name of names) {

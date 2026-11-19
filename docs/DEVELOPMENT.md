@@ -407,7 +407,8 @@ visa API:ts kod för steget – i det API eleven valt, på svenska eller engelsk
   stillbilderna.
 
 **Diagram och simulatorbilder** (`src/GP/content/images/diagrams/`). Bilderna som förklarar kapitlen (inte
-visualiserarens) ritas från källkod i repot: en fil `<namn>.mjs` per bild, som `make.mjs` gör till `images/<variant>.webp`.
+visualiserarens) ritas från källkod i repot: en fil `<namn>.mjs` per bild, som `make.mjs` gör till `images/<variant>.webp`. Hjälpmoduler för en kursdels bilder
+heter `_<namn>.mjs` och ritas inte själva.
 Kursdelen Getting started (*Setting up your IDE* … *Camera*) har sådana bilder och är förlagan för de andra delarna.
 
 ```sh
