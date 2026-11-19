@@ -938,8 +938,9 @@ och fönstrets (0) som draw framebuffer, och kopierar bara djupet:
 
 learnopengls kommentar säger vad som kan gå fel: att blitta djup kräver samma djupformat på båda sidor, och fönstrets
 väljs av systemet. Här stämmer G-bufferns `GL_DEPTH_COMPONENT`-renderbuffer och GLFW:s förvalda djupbuffer på 24 bitar
-överens. Utan kopian håller fönstrets djupbuffer bara skärmfyrhörningens platta djup (0.5 överallt: NDC z = 0), så
-kuberna skulle inte döljas rätt bakom lådorna. Själva kuberna – learnopengls `// 3. render lights on top of scene` –
+överens. Utan kopian håller fönstrets djupbuffer bara skärmfyrhörningens platta djup (0.5 överallt: NDC z = 0). Det
+är närmare än alla kuber, så kuberna skulle klara djuptestet ingenstans och försvinna, i stället för att döljas bara där
+en låda står framför dem. Själva kuberna – learnopengls `// 3. render lights on top of scene` –
 använder `Shader shaderLightBox("deferred_light_box.vs", "deferred_light_box.fs");`:
 
 ```cpp
@@ -1081,7 +1082,7 @@ igen:
 :::opengl
 ```quiz
 Varför måste G-bufferns djup kopieras till fönstrets djupbuffer innan ljuskuberna ritas?
-- [x] Fönstrets djupbuffer håller bara skärmfyrhörningens platta djup: utan lådornas djup skulle kuberna bakom en låda ritas över den
+- [x] Fönstrets djupbuffer håller bara skärmfyrhörningens platta djup: utan lådornas djup skulle kuberna testas mot det i stället – och eftersom det är närmare än alla kuber skulle de försvinna
 - [ ] `glBlitFramebuffer` kopierar också belysningen till fönstret
 - [ ] Ljuskuberna ritas i G-buffern och behöver dess djup där
 - [ ] Utan den skulle djuptestet kasta bort skärmfyrhörningen

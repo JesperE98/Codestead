@@ -946,7 +946,8 @@ G-buffer as the read framebuffer and the window's (0) as the draw framebuffer, a
 learnopengl's comment says what can go wrong: blitting depth requires the same depth format on both sides, and the
 window's is chosen by the system. Here the G-buffer's `GL_DEPTH_COMPONENT` renderbuffer and GLFW's default 24-bit depth
 buffer match. Without the copy, the window's depth buffer holds only the screen quad's flat depth (0.5 everywhere: NDC z
-= 0), so the cubes would not be hidden behind the boxes correctly. The cubes themselves – learnopengl's
+= 0). That is nearer than every cube, so the cubes would fail the depth test everywhere and disappear, instead of being
+hidden only where a box is in front of them. The cubes themselves – learnopengl's
 `// 3. render lights on top of scene` – use `Shader shaderLightBox("deferred_light_box.vs", "deferred_light_box.fs");`:
 
 ```cpp
@@ -1089,7 +1090,7 @@ depth test back on:
 :::opengl
 ```quiz
 Why must the G-buffer's depth be copied into the window's depth buffer before the light cubes are drawn?
-- [x] The window's depth buffer holds only the screen quad's flat depth: without the boxes' depths the cubes behind a box would be drawn over it
+- [x] The window's depth buffer holds only the screen quad's flat depth: without the boxes' depths the cubes would be tested against that instead – and as it is nearer than all of them, they would disappear
 - [ ] `glBlitFramebuffer` also copies the lighting into the window
 - [ ] The light cubes are drawn into the G-buffer and need its depth there
 - [ ] Without it, the depth test would discard the screen quad
