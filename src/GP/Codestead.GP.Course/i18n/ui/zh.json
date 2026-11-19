@@ -385,5 +385,7 @@
   "viz.model.teapot": "犹他茶壶",
   "viz.model.sphere": "球体",
   "viz.model.torusknot": "环面纽结",
-  "viz.model.ico": "二十面体"
+  "viz.model.ico": "二十面体",
+  "picture.enlarge": "点击放大",
+  "picture.pause": "点击暂停或播放"
 }

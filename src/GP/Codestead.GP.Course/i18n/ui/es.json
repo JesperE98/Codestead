@@ -385,5 +385,7 @@
   "viz.model.teapot": "Tetera de Utah",
   "viz.model.sphere": "Esfera",
   "viz.model.torusknot": "Nudo tórico",
-  "viz.model.ico": "Icosaedro"
+  "viz.model.ico": "Icosaedro",
+  "picture.enlarge": "Haz clic para ampliar",
+  "picture.pause": "Haz clic para pausar o reproducir"
 }

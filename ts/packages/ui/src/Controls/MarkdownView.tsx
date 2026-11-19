@@ -44,6 +44,13 @@ export interface MarkdownViewProps {
   pictureRenderer?: (picture: MarkdownPicture) => ReactNode | null | undefined;
   /** Tooltip on animations (a click pauses them). */
   animationHint?: string;
+  /**
+   * Shows a picture larger (e.g. in a dialog): with it a click on a picture of the text calls it with the enlarged
+   * view (the picture at up to its natural size and its caption) and the picture's natural width.
+   */
+  onPictureEnlarge?: (view: ReactNode, naturalWidth: number) => void;
+  /** Tooltip of a picture that can be enlarged ("Click to enlarge"). */
+  enlargeHint?: string;
   /** Writing direction of the text ("ltr" or "rtl"); code is always left to right. */
   dir?: "ltr" | "rtl";
   className?: string;
@@ -250,7 +257,24 @@ class Renderer {
     if (source == null || (typeof source !== "string" && source.length === 0)) return null;
     return (
       <div className="cs-md-picture">
-        <AnimatedImage source={source} alt={alt} hint={this.p.animationHint} />
+        <AnimatedImage
+          source={source}
+          alt={alt}
+          hint={this.p.animationHint}
+          enlargeHint={this.p.enlargeHint}
+          onEnlarge={
+            this.p.onPictureEnlarge
+              ? (width) =>
+                  this.p.onPictureEnlarge!(
+                    <div className="cs-picture-large">
+                      <AnimatedImage source={source} alt={alt} hint={this.p.animationHint} fill />
+                      {link.title ? <span className="cs-md-caption">{link.title}</span> : null}
+                    </div>,
+                    width,
+                  )
+              : undefined
+          }
+        />
         {link.title ? <span className="cs-md-caption">{link.title}</span> : null}
       </div>
     );

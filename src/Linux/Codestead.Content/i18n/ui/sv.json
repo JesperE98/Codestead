@@ -236,5 +236,7 @@
   "ach.answer-42.title": "Svaret",
   "ach.answer-42.desc": "Ett kommando svarade 42 – svaret på livet, universum och allting.",
   "ach.night-owl.title": "Nattuggla",
-  "ach.night-owl.desc": "Du löste en uppgift mellan midnatt och klockan fyra."
+  "ach.night-owl.desc": "Du löste en uppgift mellan midnatt och klockan fyra.",
+  "picture.enlarge": "Klicka för att förstora",
+  "picture.pause": "Klicka för att pausa eller spela"
 }

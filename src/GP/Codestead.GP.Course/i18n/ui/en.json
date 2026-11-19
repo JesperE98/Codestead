@@ -385,5 +385,7 @@
   "viz.model.teapot": "Utah teapot",
   "viz.model.sphere": "Sphere",
   "viz.model.torusknot": "Torus knot",
-  "viz.model.ico": "Icosahedron"
+  "viz.model.ico": "Icosahedron",
+  "picture.enlarge": "Click to enlarge",
+  "picture.pause": "Click to pause or play"
 }

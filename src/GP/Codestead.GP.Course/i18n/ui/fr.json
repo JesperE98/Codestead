@@ -385,5 +385,7 @@
   "viz.model.teapot": "Théière de l’Utah",
   "viz.model.sphere": "Sphère",
   "viz.model.torusknot": "Nœud torique",
-  "viz.model.ico": "Icosaèdre"
+  "viz.model.ico": "Icosaèdre",
+  "picture.enlarge": "Cliquer pour agrandir",
+  "picture.pause": "Cliquer pour mettre en pause ou lire"
 }

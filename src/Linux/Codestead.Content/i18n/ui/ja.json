@@ -235,5 +235,7 @@
   "ach.answer-42.title": "答え",
   "ach.answer-42.desc": "コマンドが 42 と答えました – 生命、宇宙、そして万物についての究極の答えです。",
   "ach.night-owl.title": "夜ふかし",
-  "ach.night-owl.desc": "深夜 0 時から午前 4 時までの間に課題を解きました。"
+  "ach.night-owl.desc": "深夜 0 時から午前 4 時までの間に課題を解きました。",
+  "picture.enlarge": "クリックで拡大",
+  "picture.pause": "クリックで一時停止・再生"
 }

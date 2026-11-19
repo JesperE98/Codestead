@@ -385,5 +385,7 @@
   "viz.model.teapot": "Utah-tekanna",
   "viz.model.sphere": "Sfär",
   "viz.model.torusknot": "Torusknut",
-  "viz.model.ico": "Ikosaeder"
+  "viz.model.ico": "Ikosaeder",
+  "picture.enlarge": "Klicka för att förstora",
+  "picture.pause": "Klicka för att pausa eller spela"
 }

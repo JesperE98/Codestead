@@ -365,7 +365,8 @@ godkänns av kapitlets program men av sin lösning; `CODESTEAD_GP_CHAPTERS=a,b` 
 
 **Bilder i kapitlen.** Ett stycke som bara är en bild, `![alt](images/namn.webp "bildtext")`, visas av textvyn
 (`AnimatedImage` i `ts/packages/ui`: PNG, JPEG, WebP och animerad GIF/WebP; bildrutor på en sekund eller mer är ett bildspel som tonar
-över; ett klick pausar). Bilderna ligger i `src/GP/content/images/` – `sv/`/`en/` för bilder med text i, annars
+över). Ett klick (eller Enter) visar bilden större i fönstrets dialog (`onPictureEnlarge` i
+`MarkdownView`, `Lesson.tsx`); där pausar ett klick en animation. Bilderna ligger i `src/GP/content/images/` – `sv/`/`en/` för bilder med text i, annars
 gemensamma – och bäddas in; `PictureTests` kräver att varje bild finns och används. `ts/packages/gp-gpu/test/RenderResults.test.ts`
 (körs bara med `CODESTEAD_RENDER_RESULTS=<mapp>`) + `images/make_results.py` renderar varje kapitels resultat med
 simulatorn till `images/results/<kapitel>.webp`.

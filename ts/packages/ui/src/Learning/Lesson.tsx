@@ -73,6 +73,13 @@ function LessonContent({ window: w }: { window: LearningWindow }) {
       onLinkClicked={(url) => w.openLink(url)}
       customBlockRenderer={checkpointRenderer(w, chapter, exam)}
       imageSource={(path) => tool.picture?.(path, w.lang) ?? null}
+      animationHint={w.t("picture.pause")}
+      enlargeHint={w.t("picture.enlarge")}
+      onPictureEnlarge={(view, width) =>
+        // Clearly larger than in the text column: 800–1200 px wide (most pictures are saved at twice the size the column
+        // shows them at, so they stay sharp), and never taller than the window (the dialog shrinks to fit it).
+        w.overlay.showDialog(view, () => w.overlay.closeDialog(), Math.max(800, Math.min(1200, (width || 1200) + 48)), true, "picture")
+      }
       pictureRenderer={(picture) => tool.pictureView?.(picture, w.lang) ?? null}
     />
   );

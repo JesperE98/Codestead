@@ -235,5 +235,7 @@
   "ach.answer-42.title": "The answer",
   "ach.answer-42.desc": "A command answered 42 – the answer to life, the universe and everything.",
   "ach.night-owl.title": "Night owl",
-  "ach.night-owl.desc": "You solved a task between midnight and four in the morning."
+  "ach.night-owl.desc": "You solved a task between midnight and four in the morning.",
+  "picture.enlarge": "Click to enlarge",
+  "picture.pause": "Click to pause or play"
 }

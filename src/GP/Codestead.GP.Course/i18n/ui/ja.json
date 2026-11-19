@@ -385,5 +385,7 @@
   "viz.model.teapot": "ユタ・ティーポット",
   "viz.model.sphere": "球",
   "viz.model.torusknot": "トーラス結び目",
-  "viz.model.ico": "正二十面体"
+  "viz.model.ico": "正二十面体",
+  "picture.enlarge": "クリックで拡大",
+  "picture.pause": "クリックで一時停止・再生"
 }

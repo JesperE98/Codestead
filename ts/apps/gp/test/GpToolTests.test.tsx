@@ -374,7 +374,7 @@ describe("GpToolTests", () => {
     act(() => (w.tool as GpTool).selectTask(steps));
     expect(screen.getByText(t("expected.exercise", { n: 1 }))).toBeTruthy();
     // Clicking shows it larger, in a dialog.
-    await act(async () => void fireEvent.click(screen.getByTitle(t("expected.enlarge"))));
+    await act(async () => void fireEvent.click(within(found<HTMLElement>(".cs-gp-expected")).getByTitle(t("expected.enlarge"))));
     const dialog = await waitFor(() => screen.getByRole("dialog"), { timeout: 5000 });
     expect(dialog.querySelector("img")!.src.startsWith("data:image/bmp;base64,")).toBe(true);
     // A task whose program opens no window has no picture, and says why.

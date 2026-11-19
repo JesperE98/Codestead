@@ -385,5 +385,7 @@
   "viz.model.teapot": "Utah-Teekanne",
   "viz.model.sphere": "Kugel",
   "viz.model.torusknot": "Torusknoten",
-  "viz.model.ico": "Ikosaeder"
+  "viz.model.ico": "Ikosaeder",
+  "picture.enlarge": "Zum Vergrößern klicken",
+  "picture.pause": "Zum Anhalten oder Abspielen klicken"
 }

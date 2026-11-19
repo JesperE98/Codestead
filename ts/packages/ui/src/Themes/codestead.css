@@ -636,6 +636,42 @@ body,
   cursor: pointer;
 }
 
+/* A chapter's picture that shows larger when clicked (in a dialog of class "picture"). */
+.cs-picture.zoomable {
+  cursor: zoom-in;
+}
+
+.cs-picture.zoomable:focus-visible {
+  outline: 2px solid var(--cs-accent);
+  outline-offset: 2px;
+}
+
+.cs-dialog.picture {
+  max-height: calc(100% - 32px);
+}
+
+.cs-picture-large {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  /* Room for the dialog's ✕ above the picture. */
+  padding-top: 18px;
+}
+
+.cs-picture-large .cs-picture.fill {
+  width: 100%;
+}
+
+/* The whole width of the dialog, but never taller than the window: the picture keeps its proportions inside its box. */
+.cs-picture-large .cs-picture.fill img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: calc(100vh - 170px);
+  object-fit: contain;
+}
+
 .cs-picture canvas {
   position: absolute;
   inset: 0;
