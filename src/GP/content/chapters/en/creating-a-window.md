@@ -21,6 +21,8 @@ connects your program to the Vulkan library, the *physical device* (the graphics
 vulkan-tutorial.com's "Development environment" briefly and the whole "Setup" section: base code, instance,
 validation layers, physical devices and queue families, logical device and queues.
 
+![The objects of this chapter](images/objects-vulkan-setup.webp "This chapter's objects (highlighted): the instance, the validation layers' debug messenger, the physical device, and the logical device with its queue.")
+
 For the window itself we use **GLFW**, like vulkan-tutorial.com: it opens windows on Windows, Linux and macOS, and it
 also takes care of some platform-specific Vulkan details for us (which extensions the window system needs, and
 later the window surface).
@@ -31,6 +33,8 @@ samples, we create the window directly with the **Win32 API**. You write that pa
 and walks through it so you know what it does. Then we start Direct3D 12 itself: the debug layer, the DXGI factory, the
 adapter (graphics card), the **device** and the **command queue**. That is the beginning of `LoadPipeline()` in
 the D3D12HelloWindow sample.
+
+![The objects of this chapter](images/objects-d3d12-setup.webp "This chapter's objects (highlighted): the debug layer, the DXGI factory, the adapter, the device and the command queue.")
 :::
 
 You write this chapter's program from the first line: start in the chapter folder you made at the end of *Setting up
@@ -123,6 +127,8 @@ many different versions of OpenGL drivers, the location of most of its functions
 needs to be queried at run time. It is then the task of the developer to retrieve the location of each function
 they need and store it in a function pointer for later use. Doing that by hand, function by function, is
 cumbersome – and that is what GLAD does for us.
+
+![What GLFW and GLAD do](images/glfw-glad.webp "GLFW gets the window, the OpenGL context and the input from the operating system; GLAD looks up the addresses of the OpenGL functions in the driver.")
 
 ### Setting up GLAD
 

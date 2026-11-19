@@ -142,6 +142,8 @@ With the help of the cross product and a few tricks we were able to create all t
 space. For the more mathematically inclined readers, this process is known as the *Gram-Schmidt* process in linear
 algebra. Using these camera vectors we can now create a **LookAt** matrix that proves very useful for creating a camera.
 
+![The camera's axes](images/camera-axes.webp "The axes of a camera up and to the left of its target: the direction points away from the target, right and up follow with cross products.")
+
 For our camera at (0, 0, 3) looking at the origin the results are simple: the direction is (0, 0, 1), the right
 vector (1, 0, 0) and the up vector (0, 1, 0) – the camera's axes are exactly the world's axes. Keep that in mind for
 the first task.
@@ -651,6 +653,8 @@ direction.x = cos(yaw) * cos(pitch)
 direction.y = sin(pitch)
 direction.z = sin(yaw) * cos(pitch)
 ```
+
+![Yaw and pitch](images/yaw-pitch.webp "From above, the yaw turns the direction in the xz-plane: x = cos(yaw), z = sin(yaw). From the side, the pitch tilts it up: y = sin(pitch), and the part in the plane shrinks to cos(pitch).")
 
 :::opengl vulkan
 The angles are kept in degrees, but `sin` and `cos` expect radians, so the code converts them first with

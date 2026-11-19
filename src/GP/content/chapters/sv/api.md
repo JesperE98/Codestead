@@ -121,6 +121,8 @@ glClear(GL_COLOR_BUFFER_BIT);
 *använder* sedan det tillståndet och fyller fönstret med den färg som är inställd. Behåll bilden av en enda stor
 tillståndsmaskin i huvudet, så blir mycket av OpenGL:s uppbyggnad begriplig.
 
+![OpenGL-kontexten som en tillståndsmaskin](images/opengl-state.webp "Tillståndsändrande funktioner skriver inställningar i kontexten; tillståndsanvändande funktioner som glClear och glDrawArrays läser dem när de körs.")
+
 ```quiz
 I render loopen följs `glClearColor(0.2f, 0.3f, 0.3f, 1.0f);` av `glClear(GL_COLOR_BUFFER_BIT);`. Vilket påstående stämmer?
 - [ ] Båda anropen fyller fönstret, så ett av dem kunde tas bort
@@ -298,6 +300,8 @@ void initVulkan() {
 
 Till och med minnet för vertex buffern är explicit: programmet skapar `VkBuffer`, frågar vilka minnestyper den kan
 ligga i, allokerar själv ett `VkDeviceMemory` och binder ihop de två.
+
+![Vulkan-objekten i triangelprogrammet](images/objects-vulkan.webp "Triangelprogrammets objekt: instansen och det som kommer från den, den logiska enheten och det som skapas från den. Du möter dem ett i taget i de kommande kapitlen.")
 
 ```quiz
 Vad är skillnaden mellan en `VkPhysicalDevice` och en `VkDevice`?
@@ -699,6 +703,8 @@ devicen, kön, swap chainen, descriptor heapen, root signaturen, PSO:n, vertex b
 Direct3D 11 eller OpenGL till stor del gjorde åt dig. Det lönar sig: inget händer bakom din rygg, så prestandan är
 förutsägbar, arbetet kan fördelas över trådar, och du lär dig hur moderna GPU:er verkligen fungerar. Det mesta är
 engångsuppsättning: när triangeln väl syns på skärmen kräver nya funktioner ungefär lika mycket kod som i OpenGL.
+
+![Direct3D 12-objekten i triangelprogrammet](images/objects-d3d12.webp "Triangelprogrammets objekt: debug-lagret, DXGI:s fabrik, adapter och swap chain, och enheten med allt som skapas från den. Du möter dem ett i taget i de kommande kapitlen.")
 :::
 
 ## Nu sätter vi igång

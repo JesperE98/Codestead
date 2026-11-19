@@ -18,6 +18,8 @@ rensningen och synkroniseringen som binder ihop att hämta, rendera och presente
 kapitel "Presentation" och "Drawing" – allt utom grafikpipelinen och shaders, som rensningen inte behöver och som
 kommer i nästa kapitel.
 
+![Kapitlets objekt](images/objects-vulkan-window.webp "Kapitlets objekt (markerade): allt från fönstrets surface till command buffern och synkroniseringsobjekten.")
+
 Du fortsätter i ditt program från *Skapa ett fönster* (instans, valideringslager, fysisk och logisk enhet). Ge det
 först det här kapitlets form. Lägg till åtta tomma funktioner i klassen – `createSurface()`, `createSwapChain()`,
 `createImageViews()`, `createRenderPass()`, `createFramebuffers()`, `createCommandPool()`, `createCommandBuffer()` och
@@ -61,6 +63,8 @@ som behövs för att visa ett rensat fönster: en swap chain med två back buffe
 target view för var och en av dem, en command allocator och en command list samt en fence för att vänta på GPU:n.
 Sedan spelar det varje frame in några kommandon – "gör back buffern till render target, rensa den, gör den
 presenterbar igen" – kör dem och presenterar resultatet.
+
+![Kapitlets objekt](images/objects-d3d12-window.webp "Kapitlets objekt (markerade): swap chain och dess bakre buffrar, descriptor heapen för deras render target views, command allocatorn och command listen, och fencen.")
 
 Du fortsätter i ditt program från *Skapa ett fönster* (factory, adapter, device, command queue). Ge det först
 exemplets form: klassen `D3D12App` deklarerar alla medlemmar från exemplet och fem nya funktioner,
@@ -1624,3 +1628,13 @@ I alla API:er följer en frame i det här kapitlets program samma ordning. Vilke
 Först händelser (indata, stängknappen), sedan rendering i bufferten som inte syns, sedan visas den:
 `glfwSwapBuffers`, `vkQueuePresentKHR` eller `Present`.
 ```
+
+:::opengl
+![En frame i programmet](images/frame-opengl.webp "En frame: indata, rensa den bakre bufferten, byt fram den, behandla händelserna – sedan börjar loopen nästa frame.")
+:::
+:::vulkan
+![En frame i programmet](images/frame-vulkan.webp "En frame: händelser, vänta på förra framen, hämta en bild, spela in och skicka kommandona, visa bilden – sedan nästa frame.")
+:::
+:::d3d12
+![En frame i programmet](images/frame-d3d12.webp "En frame: meddelanden, spela in kommandona, kör dem, visa den bakre bufferten, vänta på GPU:n – sedan nästa frame.")
+:::

@@ -36,6 +36,8 @@ one for the whole course, the IDE you like. The **Your project** panel connects 
    above it, and checks them with the course's own checks. It ticks every task that passes and tells you, for the
    others, what is still missing. **Change file…** picks another file.
 
+![How you work in this course](images/course-workflow.webp "Read the task, write the code in your IDE, build and run, compare your window with the expected result – then tick the task, or let Check my code read your files.")
+
 **Check my code** reads your sources only: nothing has to be built or run for it. Build and run your program all the
 same – a check can tell you that the right calls are there, but only your window shows you what they draw.
 
@@ -371,6 +373,16 @@ program runs in: `"shaders/vert.spv"`, `"container.png"`, `L"shaders.hlsl"`. Kee
 the chapter folder – your shader files, and the course's textures and models where **Save resources…** puts them when
 you pick the chapter folder – so the program has to run with the chapter folder as its working directory. The steps
 below say how.
+
+:::opengl
+![The chapter folder as the working directory](images/working-directory-opengl.webp "A relative path is looked up in the working directory: run the program in the chapter folder, not in the build folder.")
+:::
+:::vulkan
+![The chapter folder as the working directory](images/working-directory-vulkan.webp "A relative path is looked up in the working directory: run the program in the chapter folder, not in the build folder.")
+:::
+:::d3d12
+![The chapter folder as the working directory](images/working-directory-d3d12.webp "A relative path is looked up in the working directory: run the program in the chapter folder, not in the build folder.")
+:::
 
 ```quiz
 Your program builds, but when it starts it stops with an error that it can't open one of its shader files. The file is in the chapter folder. What is the most likely cause?

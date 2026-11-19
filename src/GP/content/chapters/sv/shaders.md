@@ -337,6 +337,8 @@ Du ser att vi deklarerade en variabel `vertexColor` som en utdata av typen `vec4
 och att vi deklarerar en motsvarande indata `vertexColor` i fragment shadern. Eftersom båda har samma typ och samma
 namn kopplas `vertexColor` i fragment shadern till `vertexColor` i vertex shadern. Eftersom vi sätter färgen till
 mörkrött i vertex shadern bör de resulterande fragmenten också bli mörkröda.
+
+![Hur shaderstegen kopplas ihop](images/shader-interface-opengl.webp "Vertex shaderns out och fragment shaderns in kopplas ihop genom namn och typ; rasteriseraren interpolerar värdet mellan hörnen.")
 :::
 :::vulkan
 GLSL har nyckelorden `in` och `out` för det här. Varje shader kan ange indata och utdata med de nyckelorden, och där
@@ -391,6 +393,8 @@ void main() {
 Lägg märke till att vertex shaderns indata och dess utdata båda använder location 0: indata och utdata är separata
 gränssnitt med var sina locations. Eftersom vi sätter färgen till mörkrött i vertex shadern bör de resulterande
 fragmenten också bli mörkröda.
+
+![Hur shaderstegen kopplas ihop](images/shader-interface-vulkan.webp "Vertex shaderns utdata och fragment shaderns indata kopplas ihop genom sin location (och typ); namnen spelar ingen roll.")
 :::
 :::d3d12
 I HLSL är en shaders indata dess funktionsparametrar och dess utdata dess returvärde. Var och en av dem har en
@@ -438,6 +442,8 @@ float4 PSMain(PSInput input) : SV_TARGET
 ```
 
 Eftersom vi sätter färgen till mörkrött i vertex shadern bör de resulterande pixlarna också bli mörkröda.
+
+![Hur shaderstegen kopplas ihop](images/shader-interface-d3d12.webp "Vertex shaderns utdata och pixel shaderns indata kopplas ihop genom sin semantik, COLOR; SV_POSITION och SV_TARGET är systemvärden.")
 :::
 
 Gör nu den första uppgiften, **in-out**: gör ändringen ovan och bygg. Du bör se samma triangel, nu mörkröd

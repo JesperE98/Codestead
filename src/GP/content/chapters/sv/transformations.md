@@ -131,6 +131,8 @@ Det kallas att *normalisera* en vektor. Enhetsvektorer skrivs med ett litet tak 
 att arbeta med, särskilt när vi bara bryr oss om deras riktning (riktningen ändras inte om vi ändrar en vektors
 längd). Normaliseras v = (4, 2) blir det ungefär (0.894, 0.447): samma riktning, längd 1.
 
+![Addition och subtraktion av vektorer, och en vektors längd](images/vectors.webp "v + k: den andra pilen börjar vid den förstas spets. q − p: vektorn från punkten p till punkten q. Längden av v = (4, 2): hypotenusan till dess komponenter.")
+
 ### Multiplikation av vektorer
 
 Att multiplicera två vektorer är lite speciellt. Vanlig multiplikation är egentligen inte definierad för vektorer
@@ -207,6 +209,8 @@ ortogonal mot dina indatavektorer. Prova med x-axeln och y-axeln:
 ```
 
 Resultatet är z-axeln. Ordningen spelar roll: y × x ger (0, 0, −1), z-axeln åt andra hållet.
+
+![Skalärprodukt och kryssprodukt](images/dot-cross.webp "För enhetsvektorer är skalärprodukten cos θ: 1 i samma riktning, 0 i rät vinkel, −1 i motsatta riktningar. Kryssprodukten av x och y är z – och y × x är −z.")
 
 ## Matriser
 
@@ -550,6 +554,8 @@ Om vi tillämpar den slutliga transformationsmatrisen på vår vektor får vi f�
 
 Utmärkt! Vektorn skalas först med två och translateras sedan med (1, 2, 3). I allmänhet sätts en modells matris
 samman som M = T · R · S: vertices skalas, roteras och translateras sedan.
+
+![M = T · R · S, steg för steg](images/transform-steps.webp "M = T · R · S tillämpad på lådan: matrisen närmast vertexen verkar först – skala med 0.5, rotera ett kvarts varv, flytta sedan med (0.5, −0.5).")
 
 ```quiz
 M = Trans · Scale, där Scale skalar med 2 och Trans translaterar med (1, 2, 3). Vad är M · (1, 1, 1, 1)?
@@ -1300,6 +1306,8 @@ Gör nu uppgiften **rotate-first**.
 Lådan cirklar nu runt fönstrets mitt, moturs, och vrider sig med under färden, så att samma hörn hela tiden rör vid
 fönstrets mitt. En rotation sker alltid kring origo; bara om objektets mitt ligger i origo snurrar objektet på
 stället. Därför är "skala, rotera, translatera" den vanliga ordningen.
+
+![Roterad och sedan flyttad, och flyttad och sedan roterad](images/transform-order.webp "Vänster: roterad kring origo, sedan flyttad – lådan snurrar på stället. Höger: flyttad, sedan roterad kring origo – den kretsar kring fönstrets mitt. Ritat av kursens simulator.")
 
 ### En andra låda
 

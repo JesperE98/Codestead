@@ -138,6 +138,8 @@ Med hjälp av kryssprodukten och några knep har vi kunnat skapa alla vektorer s
 matematiskt lagda läsarna: processen kallas *Gram-Schmidt* inom linjär algebra. Med de här kameravektorerna kan vi nu
 skapa en **LookAt**-matris, som visar sig vara mycket användbar när man skapar en kamera.
 
+![Kamerans axlar](images/camera-axes.webp "Axlarna för en kamera ovanför och till vänster om sitt mål: riktningen pekar bort från målet, höger och upp följer med kryssprodukter.")
+
 För vår kamera i (0, 0, 3) som tittar mot origo blir resultaten enkla: riktningen är (0, 0, 1), högervektorn
 (1, 0, 0) och uppåtvektorn (0, 1, 0) – kamerans axlar är exakt världens axlar. Kom ihåg det till första uppgiften.
 
@@ -643,6 +645,8 @@ direction.x = cos(yaw) * cos(pitch)
 direction.y = sin(pitch)
 direction.z = sin(yaw) * cos(pitch)
 ```
+
+![Yaw och pitch](images/yaw-pitch.webp "Ovanifrån vrider yaw riktningen i xz-planet: x = cos(yaw), z = sin(yaw). Från sidan lutar pitch den uppåt: y = sin(pitch), och delen i planet krymper till cos(pitch).")
 
 :::opengl vulkan
 Vinklarna lagras i grader, men `sin` och `cos` förväntar sig radianer, så koden omvandlar dem först med

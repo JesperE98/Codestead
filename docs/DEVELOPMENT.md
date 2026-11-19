@@ -370,6 +370,84 @@ gemensamma – och bäddas in; `PictureTests` kräver att varje bild finns och a
 `make_pictures.py`), och `ts/packages/gp-gpu/test/RenderResults.test.ts` (körs bara med `CODESTEAD_RENDER_RESULTS=<mapp>`)
 + `images/make_results.py` renderar varje kapitels resultat med simulatorn till `images/results/<kapitel>.webp`.
 
+**Diagram och simulatorbilder** (`src/GP/content/images/diagrams/`). Bilderna som förklarar kapitlen (inte
+visualiserarens) ritas från källkod i repot: en fil `<namn>.mjs` per bild, som `make.mjs` gör till `images/<variant>.webp`.
+Kursdelen Getting started (*Setting up your IDE* … *Camera*) har sådana bilder och är förlagan för de andra delarna.
+
+```sh
+cd ts && npm ci        # Inter (appens typsnitt) och vitest
+cd .. && node src/GP/content/images/diagrams/make.mjs [namn …] [--preview <mapp>] [--renders <mapp>]
+```
+
+Det behövs Node med Playwright och dess Chromium (`require("playwright")`, ingen `playwright install`), python3 med
+Pillow och typsnittet JetBrains Mono (Inter tas från `ts/node_modules/@fontsource-variable/inter`). Utan namn ritas alla.
+`make.mjs` varnar (och avslutar med fel) för text som är bredare än sitt `fit`, text utanför bilden och ett saknat
+JetBrains Mono. `--preview <mapp>` skriver dessutom varje bild som PNG på appens ljusa och mörka textbakgrund: titta
+på alla innan du checkar in.
+
+En källfil exporterar:
+
+- `variants`: `[{ out: "en/x.webp", lang: "en", api?: … }]` – `perLanguage("x")` ger `en/x.webp` och `sv/x.webp`,
+  `perApi("x", ["opengl", "vulkan", "d3d12"], true)` ger `en/x-opengl.webp` …, med `false` språklösa `x-opengl.webp`.
+  En bild utan ord har en variant `x.webp` (`lang: "en"`). Egna fält (t.ex. `origin`, `highlight`) går också bra.
+- `height` (px; bredden är alltid 720) eller `height(v)`, och `draw(v, R, frame)` som returnerar SVG – `svg(höjd, innehåll)`
+  ur `style.mjs`; `t(v, "engelska", "svenska")` väljer språk.
+- `renders` (eller `renders(v)`): simulatorbilder, `{ id: { api, chapter, from?, edits?, width, times? } }`. `from` är
+  `solution` (standard), `start`, `task:<id>` (start + stegen till och med uppgiften) eller `exercise:<id>`; `edits` är
+  extra ändringar `{ file, find, replace }` (find måste finnas). `R[id][i]` är `{ href, width, height }` för `times[i]`
+  (sekunder sedan programmet startade; utan `times` en bild vid 1.0). `make.mjs` låter
+  `ts/packages/gp-gpu/test/RenderPictures.test.ts` rita dem (körs bara med `CODESTEAD_RENDER_PICTURES=<mapp>`, så vanliga
+  testkörningar påverkas inte) och sparar dem i `--renders` (standard: `codestead-gp-renders` i systemets temp-mapp)
+  efter en hash av beskrivningen – de ritas om bara när beskrivningen ändras. Rita i 2× visningsbredden (`width: PW * 2`).
+- `frames` och `frameMs` för en animation (`draw` anropas för varje bildruta), `lossy: true` (WebP kvalitet 85, `quality`
+  ändrar) för bilder med simulatorbilder i – ritade diagram blir förlustfria – och `scale = 1` för att spara i 720 px i
+  stället för 1440.
+
+`style.mjs` har färgerna (`C`), måtten och hjälpfunktionerna: `text` (`*kursiv*`, `` `kod` ``, `_{nedsänkt}`,
+`^{upphöjd}`, `fit`), `line`, `arrow`, `arrowPath`, `arcArrow`, `box` (stil `plain`, `accent`, `accent2`, `muted`, `x`,
+`y`, `z`), `pill` (etikett på vit bakgrund), `badge` (numrerat steg), `dot`, `image` (simulatorbild eller textur med
+rundade hörn), `grid`, `title`, `oblique` (3D-vy) och `asset("opengl/textures/solution/container.png")` (en fil ur ett
+kursprojekt). Börja från en liknande bild: `texture-wrapping.mjs` (simulatorbilder i rad), `transform-order.mjs`
+(animation), `frame.mjs` (steg per API), `objects-vulkan.mjs` (samma bild med olika delar markerade), `camera-axes.mjs`
+(3D), `vectors.mjs` (matematik på rutnät).
+
+**Stilguide för bilderna**
+
+- *Format*: bilden ritas på en 720 px bred yta (höjden efter innehållet, oftast 200–500 px) och sparas i 2×, 1440 px,
+  så att den är skarp även på HiDPI-skärmar. Textvyn visar den i textkolumnens bredd: ca 530 px i appens
+  standardfönster (1440 × 900), högst 760 px – alltså oftast i ca 0,75 ×. Därför ingen text under 12 px (11 px bara
+  för långa kodrader); blir det trångt, ställ hellre saker under varandra än gör texten mindre. Under 150 KB per bild
+  och några MB för en hel kursdel. Animerat bara när rörelsen är poängen (en loop utan hopp: t.ex. 24 bildrutor à
+  125 ms över ett helt varv), och då sparat i 720 px (`scale = 1`) för storlekens skull; bildspel (bildrutor ≥ 1 s)
+  för steg i följd.
+- *Kortet*: hela bilden är ett ljust kort, `C.card` (#f7f8fa) med 1 px kant (#d9dee6) och 8 px hörn som `.cs-picture`;
+  det ser ut som en tryckt figur även i appens mörka tema. Paneler och rutor i kortet är vita med kant `C.boxStroke`
+  (#c3cad5) och 6 px hörn. 20 px marginal (`PAD`), 14–20 px mellan paneler.
+- *Färger*: text `C.ink` (#1f2430), förklarande text `C.muted` (#5b6370), hjälplinjer `C.line`, rutnät `C.grid`.
+  **x röd** (#d63c3c), **y grön** (#24944a), **z blå** (#2d67d6) – alltid för axlar och komponenter. `C.accent`
+  (orange #e0731f) är det bilden handlar om, `C.accent2` (lila #7a4fd0) det andra: det man jämför med, det som läses.
+  `C.good`/`C.bad` för rätt/fel, `C.clear` (#334c4c, kursens rensningsfärg) för "skärmen". Fyllningar med `…Soft`.
+- *Typsnitt*: Inter för all text, JetBrains Mono (`mono`) för kod, identifierare, filnamn och koordinater i kod.
+  Paneltitlar 15 px vikt 650–700, etiketter 13–14 px vikt 600, små etiketter och kod 11–12 px. Matematik med kursiva
+  variabler (`*v*`) och riktiga tecken: − × · ≈ √ θ ‖ ‖. Inga ligaturer (`!=` och `->` ska se ut som i koden).
+- *Linjer och pilar*: 1.5 px (`LINE`) normalt, 2.5 px (`BOLD`) för vektorer och det bilden handlar om, 1 px rutnät;
+  streckat (4 3 eller 5 4) för hjälplinjer och samband ("läser", "jämför"). Bara `arrow`/`arrowPath`/`arcArrow`
+  (fylld spets som växer med linjen). Numrerade steg med `badge`, inte ①②③. 3D med `oblique` (x höger, y upp, z mot
+  betraktaren snett nedåt vänster) eller en egen vriden vy när axlar annars hamnar ovanpå varandra.
+- *Text i bilden*: så lite som möjligt. Bara kod, matematik och koordinater → en gemensam bild. Ord → en bild per
+  språk; svenskan ska vara riktig svenska men med kursens termer som i kapiteltexten (frame, swap chain, render target,
+  shader står kvar). Knappar heter som i appen (*Mark as done* / *Markera som klar*). Använd kapitlets egna exempel och
+  tal (samma hörn, samma matriser, samma filnamn).
+- *API*: en bild som skiljer sig mellan API:erna görs per API och läggs i kapitlet i `:::opengl` … `:::`-block (två
+  API:er med samma bild: ett namn `x-vulkan-d3d12.webp` i `:::vulkan d3d12`). En bild utanför block ska stämma för alla
+  tre.
+- *Simulatorbilder* ritas från kursens egna projekt (oftast OpenGL-lösningen med några `edits`) och visas med `image`;
+  bildtexten säger "ritad av kursens simulator".
+- *Bildtext och alt*: bildtexten (title) är en eller två meningar om vad bilden visar, alt några ord; ingen markdown.
+  Samma bilder i `en/` och `sv/`, bildtexten översatt. Lägg bilden direkt efter stycket som förklarar saken – men efter
+  kontrollfrågan om bilden visar svaret på den.
+- *Allt är vårt eget*: ritat här eller ritat av simulatorn; inget kopieras eller ritas av från andra webbplatser.
+
 **Simulatorn är inte en riktig GPU.** Den förstår kursens kod och de vanliga misstagen (glömd `glClear`, avstängt
 vertexattribut, ingen pipeline bunden, saknade barriärer …) och säger till med meddelanden som `sim.<nyckel>` i
 UI-texterna. Den är numera osynlig för eleven: den kontrollerar elevens kod och ritar förväntat resultat. Kod utanför

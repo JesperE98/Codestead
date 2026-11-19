@@ -21,6 +21,8 @@ enhet* med de *köer* (queues) du skickar arbete till. Det är vad det här kapi
 vulkan-tutorial.coms "Development environment" och hela avsnittet "Setup": baskod, instans, valideringslager,
 fysiska enheter och köfamiljer, logisk enhet och köer.
 
+![Kapitlets objekt](images/objects-vulkan-setup.webp "Kapitlets objekt (markerade): instansen, valideringslagrens debug messenger, den fysiska enheten och den logiska enheten med dess kö.")
+
 För själva fönstret använder vi **GLFW**, som vulkan-tutorial.com: det öppnar fönster på Windows, Linux och macOS, och
 tar dessutom hand om en del plattformsspecifika Vulkan-detaljer åt oss (vilka extensions fönstersystemet behöver, och
 senare fönstrets surface).
@@ -31,6 +33,8 @@ D3D12HelloWorld-exempel skapar vi fönstret direkt med **Win32-API:et**. Den del
 den och går igenom den så att du vet vad den gör. Sedan startar vi själva Direct3D 12: debug-lagret, DXGI-fabriken,
 adaptern (grafikkortet), **enheten** (device) och **kommandokön** (command queue). Det är början av `LoadPipeline()` i
 exemplet D3D12HelloWindow.
+
+![Kapitlets objekt](images/objects-d3d12-setup.webp "Kapitlets objekt (markerade): debug-lagret, DXGI-fabriken, adaptern, enheten och kommandokön.")
 :::
 
 Det här kapitlets program skriver du från första raden: börja i kapitelmappen som du skapade i slutet av *Sätt upp
@@ -122,6 +126,8 @@ många olika versioner av OpenGL-drivrutiner är adressen till de flesta av dess
 kompileras, utan måste hämtas när det körs. Det är då utvecklarens uppgift att hämta adressen till varje funktion hen
 behöver och spara den i en funktionspekare för senare bruk. Att göra det för hand, funktion för funktion, är omständligt
 – och det är det GLAD gör åt oss.
+
+![Vad GLFW och GLAD gör](images/glfw-glad.webp "GLFW hämtar fönstret, OpenGL-kontexten och indata från operativsystemet; GLAD slår upp adresserna till OpenGL-funktionerna i drivrutinen.")
 
 ### Sätta upp GLAD
 

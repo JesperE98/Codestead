@@ -121,6 +121,8 @@ glClear(GL_COLOR_BUFFER_BIT);
 fills the window with the colour that is currently set. Keep this picture of one large state machine in mind, and
 much of OpenGL's design will make sense.
 
+![The OpenGL context as a state machine](images/opengl-state.webp "State-changing functions write settings into the context; state-using functions such as glClear and glDrawArrays read them when they run.")
+
 ```quiz
 In the render loop, `glClearColor(0.2f, 0.3f, 0.3f, 1.0f);` is followed by `glClear(GL_COLOR_BUFFER_BIT);`. Which statement is right?
 - [ ] Both calls fill the window, so one of them could be removed
@@ -298,6 +300,8 @@ void initVulkan() {
 
 Even the memory of the vertex buffer is explicit: the program creates the `VkBuffer`, asks which memory types it
 can live in, allocates a `VkDeviceMemory` itself and binds the two together.
+
+![The Vulkan objects of the triangle program](images/objects-vulkan.webp "The objects of the triangle program: the instance and what comes from it, the logical device and what is made from it. You meet them one by one in the next chapters.")
 
 ```quiz
 What is the difference between a `VkPhysicalDevice` and a `VkDevice`?
@@ -700,6 +704,8 @@ buffer and the fence, all of which Direct3D 11 or OpenGL largely did for you. It
 your back, so performance is predictable, the work can be spread over threads, and you learn how modern GPUs really
 work. Most of it is one-time setup: once the triangle is on the screen, new features take about as much code as in
 OpenGL.
+
+![The Direct3D 12 objects of the triangle program](images/objects-d3d12.webp "The objects of the triangle program: the debug layer, DXGI's factory, adapter and swap chain, and the device with everything made from it. You meet them one by one in the next chapters.")
 :::
 
 ## Let's get started
