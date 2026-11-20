@@ -13,6 +13,8 @@ export class HubState {
   autoCheckUpdates = true;
   /** Install tool updates by itself (never while the tool runs). */
   autoInstallUpdates = false;
+  /** "Not now" on the offer to turn on Chromium's sandbox for the tools (Linux): it is not shown again. */
+  sandboxOfferDismissed = false;
 
   /** The saved state, or null when there is none (Storage.Load&lt;HubState&gt;). Missing values keep their defaults. */
   static fromJson(v: unknown): HubState | null {
@@ -26,6 +28,7 @@ export class HubState {
     s.closeToTray = bool(v.closeToTray, s.closeToTray);
     s.autoCheckUpdates = bool(v.autoCheckUpdates, s.autoCheckUpdates);
     s.autoInstallUpdates = bool(v.autoInstallUpdates, s.autoInstallUpdates);
+    s.sandboxOfferDismissed = bool(v.sandboxOfferDismissed, s.sandboxOfferDismissed);
     return s;
   }
 }

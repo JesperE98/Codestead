@@ -1,5 +1,5 @@
 import { type ChildProcess } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { appSelfUpdate, detectNativeInstall, electronGet, launcherOf, type NativeInstall, runVelopackHooks, serveSelfUpdate } from "@codestead/ui/electron-main";
 import { app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, net, shell } from "electron";
@@ -12,6 +12,7 @@ import { messageOf } from "../src/core/Errors.js";
 import { fetchHttpClient } from "../src/core/Http.js";
 import { Platform } from "../src/core/Platform.js";
 import { isSafeId } from "../src/core/SafeId.js";
+import { enableSandbox, processSandboxEnvironment, sandboxStatus } from "../src/core/SandboxProfile.js";
 import { SingleInstance } from "../src/core/SingleInstance.js";
 import { ToolStore } from "../src/core/ToolStore.js";
 import { TraySupport } from "../src/core/TraySupport.js";
@@ -328,6 +329,12 @@ function registerIpc(): void {
       autostart.enable(HubInfo.name, executable, app.isPackaged || process.env.APPIMAGE ? "--background" : `"${app.getAppPath()}" --background`);
     } else autostart.disable();
   });
+
+  // Chromium's sandbox for the tools where AppArmor restricts user namespaces (core/SandboxProfile.ts).
+  ipcMain.handle(Ipc.sandboxStatus, () => sandboxStatus(processSandboxEnvironment(), store.root));
+  ipcMain.handle(Ipc.enableSandbox, () =>
+    outcome(() => enableSandbox(store.root, { makeFolder: (path) => mkdirSync(path, { recursive: true }) })),
+  );
 
   ipcMain.handle(Ipc.openExternal, (_e, url: string) => openExternal(url));
   ipcMain.handle(Ipc.pickFile, async () => {

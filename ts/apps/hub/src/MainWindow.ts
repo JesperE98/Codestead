@@ -5,6 +5,7 @@ import { Catalog } from "./core/Catalog.js";
 import type { CatalogAsset } from "./core/CatalogAsset.js";
 import type { CatalogTool } from "./core/CatalogTool.js";
 import type { InstalledTool } from "./core/InstalledTool.js";
+import type { SandboxState } from "./core/SandboxProfile.js";
 import { SemVer } from "./core/SemVer.js";
 import type { HubApi, HubStartInfo } from "./HubApi.js";
 import { HubInfo } from "./HubInfo.js";
@@ -59,6 +60,13 @@ export class MainWindow extends Store {
   private timer: ReturnType<typeof setInterval> | null = null;
   /** The last update installed by itself (the tray's tooltip in C#). */
   autoUpdated: string | null = null;
+
+  /** Chromium's sandbox for the tools (Linux, where AppArmor restricts user namespaces); null until asked. */
+  sandbox: SandboxState | null = null;
+  /** The profile is being installed (pkexec asks for the password). */
+  sandboxBusy = false;
+  /** Why it was not turned on. */
+  sandboxError: string | null = null;
 
   constructor(
     readonly api: HubApi,
@@ -135,6 +143,10 @@ export class MainWindow extends Store {
       setTimeout(() => void runSmokeTest(this), 0);
       return;
     }
+    this.sandbox = await this.api.sandboxStatus().then(
+      (s) => s.state,
+      () => null,
+    );
     // After the hub updated itself: what changed.
     const news = Changelog.newsAtStart(this.storage, Changelog.parse(hubChangelog), HubInfo.version, this.existingUser);
     if (news.length > 0) this.showNews(HubInfo.name, news);
@@ -253,6 +265,40 @@ export class MainWindow extends Store {
 
   openSettings(): void {
     openSettings(this);
+  }
+
+  // ---------- Chromium's sandbox for the tools (core/SandboxProfile.ts) ----------
+
+  /** The offer on the page: the sandbox can be turned on, a tool is installed, and "Not now" was not chosen. */
+  get offersSandbox(): boolean {
+    return this.sandbox === "off" && !this.state.sandboxOfferDismissed && this.installedTools.length > 0;
+  }
+
+  /** Installs the AppArmor profile for the user's tools (the system asks for the password). */
+  async enableSandbox(): Promise<void> {
+    if (this.sandboxBusy) return;
+    this.sandboxBusy = true;
+    this.sandboxError = null;
+    this.render();
+    try {
+      const result = await this.api.enableSandbox();
+      if ("error" in result) this.sandboxError = result.error;
+      else {
+        this.sandbox = result.value.state;
+        this.overlay.toast(this.t("sandbox.done"));
+      }
+    } finally {
+      this.sandboxBusy = false;
+      this.render();
+    }
+  }
+
+  /** "Not now": the offer is not shown on the page again (the settings still have it). */
+  dismissSandboxOffer(): void {
+    this.state.sandboxOfferDismissed = true;
+    this.sandboxError = null;
+    this.saveState();
+    this.render();
   }
 
   // ---------- In the background (MainWindow.Background.cs) ----------

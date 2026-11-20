@@ -1,5 +1,32 @@
 [
   {
+    "version": "0.6.9",
+    "date": "2026-11-20",
+    "changes": {
+      "en": [
+        "**Chromium's sandbox on Ubuntu**: Ubuntu 23.10 and later restrict the user namespaces Chromium's sandbox needs, so Codestead Linux ran without it there. Installed as a .deb, .rpm or Arch package, it now brings an AppArmor profile that turns the sandbox back on; installed by the hub, it uses the sandbox when the hub runs as a package or you have turned it on in the hub."
+      ],
+      "sv": [
+        "**Chromiums sandlåda i Ubuntu**: Ubuntu 23.10 och senare begränsar de användarnamnrymder som Chromiums sandlåda behöver, så Codestead Linux kördes utan den där. Installerad som .deb-, .rpm- eller Arch-paket har den nu med sig en AppArmor-profil som slår på sandlådan igen; installerad av hubben använder den sandlådan när hubben är installerad som paket eller när du har slagit på den i hubben."
+      ],
+      "de": [
+        "**Chromiums Sandbox unter Ubuntu**: Ubuntu 23.10 und neuer schränken die User-Namespaces ein, die Chromiums Sandbox braucht, deshalb lief Codestead Linux dort ohne sie. Als .deb-, .rpm- oder Arch-Paket installiert, bringt es jetzt ein AppArmor-Profil mit, das die Sandbox wieder einschaltet; vom Hub installiert, nutzt es die Sandbox, wenn der Hub als Paket installiert ist oder du sie im Hub eingeschaltet hast."
+      ],
+      "fr": [
+        "**Le bac à sable de Chromium sous Ubuntu** : Ubuntu 23.10 et les versions suivantes restreignent les espaces de noms utilisateur dont le bac à sable de Chromium a besoin ; Codestead Linux y fonctionnait donc sans lui. Installé en paquet .deb, .rpm ou Arch, il apporte désormais un profil AppArmor qui réactive le bac à sable ; installé par le hub, il utilise le bac à sable quand le hub est installé en paquet ou que vous l'avez activé dans le hub."
+      ],
+      "es": [
+        "**El sandbox de Chromium en Ubuntu**: Ubuntu 23.10 y posteriores limitan los espacios de nombres de usuario que necesita el sandbox de Chromium, así que Codestead Linux funcionaba allí sin él. Instalado como paquete .deb, .rpm o de Arch, ahora trae un perfil de AppArmor que vuelve a activar el sandbox; instalado por el hub, usa el sandbox cuando el hub está instalado como paquete o lo has activado en el hub."
+      ],
+      "zh": [
+        "**Ubuntu 上的 Chromium 沙箱**：Ubuntu 23.10 及更高版本限制了 Chromium 沙箱所需的用户命名空间，因此 Codestead Linux 在那里一直没有沙箱。以 .deb、.rpm 或 Arch 软件包安装时，它现在自带一个 AppArmor 配置文件，重新开启沙箱；由 Hub 安装时，只要 Hub 以软件包安装，或你在 Hub 中开启了沙箱，它就会使用沙箱。"
+      ],
+      "ja": [
+        "**Ubuntu での Chromium のサンドボックス**：Ubuntu 23.10 以降は Chromium のサンドボックスに必要なユーザー名前空間を制限しているため、Codestead Linux はサンドボックスなしで動いていました。.deb、.rpm、Arch のパッケージとしてインストールした場合は、サンドボックスを再び有効にする AppArmor プロファイルを備えるようになりました。ハブからインストールした場合は、ハブがパッケージとしてインストールされているか、ハブでサンドボックスを有効にしたときに使用します。"
+      ]
+    }
+  },
+  {
     "version": "0.6.8",
     "date": "2026-11-20",
     "changes": {

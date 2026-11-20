@@ -34,6 +34,8 @@ fill() { sed -e "s|\${PKG_NAME}|$PKG_NAME|g" -e "s|\${PKG_DISPLAY_NAME}|$PKG_DIS
 fill packaging/linux/launcher.sh > "$GEN_DIR/launcher.sh"
 fill packaging/linux/app.desktop > "$GEN_DIR/app.desktop"
 fill packaging/ts/postinstall.sh > "$GEN_DIR/postinstall.sh"
+fill packaging/ts/postremove.sh > "$GEN_DIR/postremove.sh"
+fill packaging/ts/apparmor-profile > "$GEN_DIR/apparmor-profile"
 
 # Portable archive (used by the Codestead hub).
 tar -C "$PUBLISH_DIR" -czf "$out/$PKG_NAME-$VERSION-linux-x64.tar.gz" .

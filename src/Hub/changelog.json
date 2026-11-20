@@ -1,5 +1,32 @@
 [
   {
+    "version": "0.2.8",
+    "date": "2026-11-20",
+    "changes": {
+      "en": [
+        "**Chromium's sandbox on Ubuntu**: Ubuntu 23.10 and later restrict the user namespaces Chromium's sandbox needs, so the hub and your tools ran without it there. Installed as a .deb, .rpm or Arch package, the hub now brings an AppArmor profile that turns the sandbox back on – also for the tools it opens. Installed as an AppImage, the hub offers to add such a profile for your tools (your system asks for your password)."
+      ],
+      "sv": [
+        "**Chromiums sandlåda i Ubuntu**: Ubuntu 23.10 och senare begränsar de användarnamnrymder som Chromiums sandlåda behöver, så hubben och dina verktyg kördes utan den där. Installerad som .deb-, .rpm- eller Arch-paket har hubben nu med sig en AppArmor-profil som slår på sandlådan igen – även för verktygen den öppnar. Installerad som AppImage erbjuder hubben att lägga till en sådan profil för dina verktyg (systemet frågar efter ditt lösenord)."
+      ],
+      "de": [
+        "**Chromiums Sandbox unter Ubuntu**: Ubuntu 23.10 und neuer schränken die User-Namespaces ein, die Chromiums Sandbox braucht, deshalb liefen der Hub und deine Werkzeuge dort ohne sie. Als .deb-, .rpm- oder Arch-Paket installiert, bringt der Hub jetzt ein AppArmor-Profil mit, das die Sandbox wieder einschaltet – auch für die Werkzeuge, die er öffnet. Als AppImage installiert, bietet der Hub an, ein solches Profil für deine Werkzeuge hinzuzufügen (dein System fragt nach deinem Passwort)."
+      ],
+      "fr": [
+        "**Le bac à sable de Chromium sous Ubuntu** : Ubuntu 23.10 et les versions suivantes restreignent les espaces de noms utilisateur dont le bac à sable de Chromium a besoin ; le hub et vos outils y fonctionnaient donc sans lui. Installé en paquet .deb, .rpm ou Arch, le hub apporte désormais un profil AppArmor qui réactive le bac à sable – aussi pour les outils qu'il ouvre. Installé en AppImage, le hub propose d'ajouter un tel profil pour vos outils (votre système vous demande votre mot de passe)."
+      ],
+      "es": [
+        "**El sandbox de Chromium en Ubuntu**: Ubuntu 23.10 y posteriores limitan los espacios de nombres de usuario que necesita el sandbox de Chromium, así que el hub y tus herramientas funcionaban allí sin él. Instalado como paquete .deb, .rpm o de Arch, el hub trae ahora un perfil de AppArmor que vuelve a activar el sandbox, también para las herramientas que abre. Instalado como AppImage, el hub ofrece añadir un perfil así para tus herramientas (tu sistema te pide la contraseña)."
+      ],
+      "zh": [
+        "**Ubuntu 上的 Chromium 沙箱**：Ubuntu 23.10 及更高版本限制了 Chromium 沙箱所需的用户命名空间，因此 Hub 和你的工具在那里一直没有沙箱。以 .deb、.rpm 或 Arch 软件包安装时，Hub 现在自带一个 AppArmor 配置文件，重新开启沙箱——它打开的工具也同样受益。以 AppImage 安装时，Hub 会提出为你的工具添加这样的配置文件（系统会要求输入你的密码）。"
+      ],
+      "ja": [
+        "**Ubuntu での Chromium のサンドボックス**：Ubuntu 23.10 以降は Chromium のサンドボックスに必要なユーザー名前空間を制限しているため、ハブとツールはサンドボックスなしで動いていました。.deb、.rpm、Arch のパッケージとしてインストールしたハブは、サンドボックスを再び有効にする AppArmor プロファイルを備えるようになりました（ハブが開くツールにも有効です）。AppImage としてインストールしたハブは、ツール用にこのプロファイルを追加することを提案します（システムがパスワードを求めます）。"
+      ]
+    }
+  },
+  {
     "version": "0.2.7",
     "date": "2026-11-20",
     "changes": {

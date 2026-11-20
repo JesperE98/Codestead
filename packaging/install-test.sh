@@ -35,7 +35,8 @@ apt_install() {
 
 case "$kind" in
   deb)
-    apt_install xvfb xauth
+    # AppArmor's tools, as on a desktop system: the package installs its AppArmor profile where they accept it.
+    apt_install xvfb xauth apparmor
     apt_install ./"${pkg}"_*_amd64.deb
     run=("$pkg")
     ;;
@@ -85,6 +86,18 @@ esac
 if [[ "$kind" != appimage ]]; then
   [[ -u "/opt/$pkg/chrome-sandbox" && "$(stat -c %u "/opt/$pkg/chrome-sandbox")" == 0 ]] \
     || { ls -l "/opt/$pkg/chrome-sandbox"; echo "chrome-sandbox is not setuid root" >&2; exit 1; }
+  # And its AppArmor profile (packaging/ts/postinstall.sh) is in /etc/apparmor.d where the system's AppArmor accepts it
+  # (AppArmor 4: Ubuntu 24.04), and nowhere else (Ubuntu 22.04's AppArmor 3, systems without AppArmor). A container
+  # has no AppArmor to load it into: that is the manual check in docs/RELEASE-CHECKLIST.md.
+  [[ -f "/opt/$pkg/apparmor-profile" ]] || { echo "The package has no AppArmor profile" >&2; exit 1; }
+  if [[ -x /usr/sbin/apparmor_parser || -x /sbin/apparmor_parser ]] && [[ -e /etc/apparmor.d/abi/4.0 ]]; then
+    grep -qxF "profile $pkg /opt/$pkg/$exe.bin flags=(unconfined) {" "/etc/apparmor.d/$pkg" \
+      || { cat "/etc/apparmor.d/$pkg"; echo "The AppArmor profile was not installed" >&2; exit 1; }
+    echo "AppArmor profile: /etc/apparmor.d/$pkg"
+  elif [[ -e "/etc/apparmor.d/$pkg" ]]; then
+    echo "The AppArmor profile was installed, but this system's AppArmor cannot use it" >&2
+    exit 1
+  fi
 fi
 
 echo "--- Starting ${run[*]} --smoke-test"
@@ -101,6 +114,10 @@ case "$kind" in
 esac
 if [[ "$kind" != appimage && -e "/opt/$pkg/$exe" ]]; then
   echo "Files left in /opt/$pkg after removal" >&2
+  exit 1
+fi
+if [[ "$kind" != appimage && -e "/etc/apparmor.d/$pkg" ]]; then
+  echo "The AppArmor profile /etc/apparmor.d/$pkg is left after removal" >&2
   exit 1
 fi
 echo "INSTALL TEST OK ($kind)"

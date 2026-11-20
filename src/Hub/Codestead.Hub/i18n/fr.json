@@ -70,5 +70,16 @@
   "tray.show": "Afficher Codestead",
   "tray.open": "Ouvrir {name}",
   "tray.quit": "Quitter",
-  "tool.autoUpdated": "{name} a été mis à jour vers {version}"
+  "tool.autoUpdated": "{name} a été mis à jour vers {version}",
+  "sandbox.title": "Activer le bac à sable de Chromium pour vos outils ?",
+  "sandbox.text": "Ubuntu ne laisse utiliser les espaces de noms utilisateur dont le bac à sable de Chromium a besoin qu'aux programmes dotés d'un profil AppArmor : vos outils Codestead fonctionnent donc sans bac à sable. Le hub peut ajouter un profil pour les outils de son dossier – votre système vous demande votre mot de passe. (Installé en paquet .deb, le hub n'a pas besoin d'un tel profil.)",
+  "sandbox.enable": "Activer",
+  "sandbox.later": "Pas maintenant",
+  "sandbox.working": "Activation du bac à sable – votre système demande votre mot de passe …",
+  "sandbox.done": "Le bac à sable de Chromium est activé : vos outils l'utilisent dès leur prochain démarrage.",
+  "sandbox.failed": "Le bac à sable de Chromium n'a pas été activé : {error}",
+  "settings.sandbox": "Bac à sable de Chromium",
+  "settings.sandboxOff": "Vos outils fonctionnent sans le bac à sable de Chromium, car Ubuntu restreint les espaces de noms utilisateur dont il a besoin. Un profil AppArmor pour les outils du dossier du hub l'active.",
+  "settings.sandboxOn": "Activé : un profil AppArmor permet à vos outils d'utiliser le bac à sable de Chromium.",
+  "settings.sandboxEnable": "Activer (demande votre mot de passe)"
 }

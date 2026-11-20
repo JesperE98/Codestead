@@ -1,0 +1,13 @@
+# AppArmor profile of ${PKG_DISPLAY_NAME} (the package ${PKG_NAME}), installed by the package (packaging/ts/postinstall.sh).
+# Ubuntu 23.10 and later let only programs with a profile that allows it use unprivileged user namespaces, which
+# Chromium's sandbox needs. Like Ubuntu's own profiles for Electron apps, this one allows them for the app and changes
+# nothing else (unconfined).
+abi <abi/4.0>,
+include <tunables/global>
+
+profile ${PKG_NAME} /opt/${PKG_NAME}/${PKG_EXECUTABLE}.bin flags=(unconfined) {
+  userns,
+
+  # Site-specific additions and overrides. See local/README for details.
+  include if exists <local/${PKG_NAME}>
+}

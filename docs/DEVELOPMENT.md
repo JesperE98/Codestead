@@ -801,6 +801,124 @@ packaging/native-update-test.sh /tmp/hub-old /tmp/hub-new deb ubuntu:24.04   # e
 (`NATIVE_UPDATE_DOCKER_ARGS="--tmpfs /opt:exec,size=2g --tmpfs /tmp:exec,size=2g"` lägger containerns stora filer i
 minnet där diskutrymmet är knappt.)
 
+### Chromiums sandlåda på Linux
+
+Chromium sandlådar sina processer med användarnamnrymder (user namespaces), eller med den setuid-märkta hjälpen
+`chrome-sandbox`. Ubuntu 23.10 och senare begränsar namnrymderna med AppArmor
+(`kernel.apparmor_restrict_unprivileged_userns=1`): bara program vars AppArmor-profil har regeln `userns` får använda
+dem. Där varken det eller hjälpen fungerar vägrar Chromium starta, så startskriptet `packaging/ts/launcher.sh` (appens
+`<exe>` bredvid Electrons `<exe>.bin`) startar då med `--no-sandbox`. Fönstret behåller Electrons egen isolering
+(`contextIsolation`, ingen `nodeIntegration`), men renderarens och GPU-processens sandlåda saknas.
+
+| Installation | Sandlådan där AppArmor begränsar namnrymderna |
+|---|---|
+| `.deb`, `.rpm`, Arch-paket (`/opt/<id>/`) | Ja: `chrome-sandbox` är setuid root, och paketet installerar AppArmor-profilen `/etc/apparmor.d/<id>`. |
+| Verktyg som hubben installerat (`<datamapp>/tools/<id>/<version>/`), startade av hubben som paket | Ja: verktyget ärver hubbens profil (se nedan). |
+| Samma verktyg, startade av hubben som AppImage eller portabelt arkiv | Bara om användaren slår på det i hubben (profilen `codestead-user-<uid>`), annars `--no-sandbox`. |
+| AppImage (hubben eller ett verktyg) | Nej, `--no-sandbox` (se nedan). |
+
+**Paketen.** `packaging/ts/apparmor-profile` (ifylld av `build-linux.sh`) följer med paketet som
+`/opt/<id>/apparmor-profile`; `packaging/ts/postinstall.sh` kopierar den till `/etc/apparmor.d/<id>` om systemets
+`apparmor_parser` godtar den (en torrkörning med `--skip-kernel-load`) och laddar den med
+`apparmor_parser --replace --write-cache --skip-read-cache` när AppArmor körs (`aa-enabled`), inte i en chroot och
+inte om en administratör har stängt av den med `/etc/apparmor.d/disable/<id>`. Profilen är samma sorts profil som
+Ubuntus egna för Electron-appar (Discord, Obsidian, Slack, VS Code …) och som electron-builders .deb-paket installerar:
+
+```
+abi <abi/4.0>,
+include <tunables/global>
+profile codestead-hub /opt/codestead-hub/Codestead.Hub.bin flags=(unconfined) {
+  userns,
+  include if exists <local/codestead-hub>
+}
+```
+
+Den är inte en paketfil i `/etc/apparmor.d`: AppArmor 3 (Ubuntu 22.04, Debian 12) känner inte till `abi/4.0` och
+`userns` och skulle vägra den vid varje start; där kopieras den inte. `packaging/ts/postremove.sh` laddar ur och tar
+bort den när paketet tas bort, men inte vid en uppgradering (dpkg: `upgrade`, rpm: `%postun 1` – som körs *efter* den
+nya versionens `%post` –, pacman: `post_upgrade`). `chrome-sandbox` görs fortfarande setuid root: den fungerar även där
+namnrymderna är avstängda helt.
+
+**Startskriptet** startar med sandlådan när hjälpen är setuid root, när namnrymderna inte är begränsade (och
+`unshare --user` fungerar), eller när en Codestead-profil gäller för `<exe>.bin`. Det sista avgörs så här:
+
+1. Skriptet kör redan under en `codestead-*`-profil (`/proc/self/attr/current`): det har startats av en Codestead-app
+   med profil. En `exec` av ett program utan egen profil stannar i en `flags=(unconfined)`-profil (kärnans
+   `profile_transition`: "unconfined exec no attachment"), så även Electron gör det.
+2. Annars, bara om `/etc/apparmor.d/<id>` eller `/etc/apparmor.d/codestead-user-<uid>` finns: Electron startas som
+   Node (`ELECTRON_RUN_AS_NODE=1 <exe>.bin -e …`, några hundradelar) och skriver ut sin egen etikett. Profiler knyts till
+   programmets sökväg när det startar, och listan över laddade profiler kan bara root läsa – en profilfil kan dessutom
+   gälla en annan sökväg (paketets profil gäller `/opt/<id>/`, inte en kopia av appen någon annanstans). Därför frågar
+   skriptet den riktiga filen. (Electrons säkring *RunAsNode* måste därför vara på, som den är.)
+
+`ts/packages/ui/test/LauncherTests.test.ts` kör skriptet med `sh` mot ett låtsat system: `/proc` och
+`/etc/apparmor.d` är testets mappar (skriptets två inställningar `proc=` och `apparmor_d=`), `id` och `unshare` är
+låtsasprogram, och Electron ett skript som skriver ut sina argument eller etiketten.
+
+**Hubbens verktyg.** Hubben installerar verktygen per användare, så deras `chrome-sandbox` kan inte vara setuid root.
+Installerad som paket kör hubben under sin profil, och verktygen den startar ärver den: inget mer behövs. Annars
+(AppImage, portabelt arkiv) visar hubben, när namnrymderna är begränsade och minst ett verktyg är installerat, en gång
+**Slå på Chromiums sandlåda för dina verktyg?** (**Inte nu** döljer den för gott; inställningarna har den kvar under
+**Chromiums sandlåda**). **Slå på** kör med pkexec (lösenordsrutan) ett fast skript som root
+(`ts/apps/hub/src/core/SandboxProfile.ts`): `pkexec /bin/sh -c <skript> codestead-sandbox <datamapp> codestead-linux
+Codestead.Linux codestead-gp Codestead.GP`. Ingen skalkod byggs av användarens data; mappen och verktygen är argument
+som skriptet själv kontrollerar:
+
+- användaren tas ur `PKEXEC_UID` (sätts av pkexec, inte av den som anropar);
+- mappen måste vara en absolut, verklig sökväg (inga länkar, `.`, `..`, `//`) med bara `A–Z a–z 0–9 . _ - /` (inget som
+  AppArmor läser som mönster, variabel eller citat), ligga i användarens hemmapp (`getent passwd`), och varje mapp från
+  hemmappen till den måste ägas av användaren och inte vara skrivbar för andra;
+- verktygen måste heta `codestead-…` och `Codestead.…`.
+
+Skriptet skriver själv profilen `/etc/apparmor.d/codestead-user-<uid>`, provar den med `apparmor_parser
+--skip-kernel-load` och installerar och laddar den först sedan:
+
+```
+profile codestead-user-1000 /home/anna/.local/share/codestead/tools/{codestead-linux/[0-9]*/Codestead.Linux.bin,codestead-gp/[0-9]*/Codestead.GP.bin} flags=(unconfined) {
+  userns,
+  include if exists <local/codestead-user-1000>
+}
+```
+
+Hubben räknar ut samma text (`userProfileText`) och visar sandlådan som på när filen är just den; ändras datamappen
+eller verktygslistan erbjuds den igen. Verktygens nya startskript (Codestead Linux 0.6.9, GP 0.2.9) behövs för att de
+ska använda den; äldre startar med `--no-sandbox` som förut. Ta bort profilen för hand:
+`sudo apparmor_parser -R /etc/apparmor.d/codestead-user-<uid> && sudo rm /etc/apparmor.d/codestead-user-<uid>`.
+
+**Säkerhet.** Begränsningen är en härdning: den minskar hur mycket av kärnan (namnrymdernas kod, som många
+kärnexploits går genom) som oprivilegierad kod kommer åt. Varje `userns`-profil öppnar den igen för det programmet:
+
+- Användarens profil gäller en mapp som användaren själv kan skriva i. Vilket program som helst som kör som den
+  användaren kan lägga ett annat program där och få namnrymder, så **för den användaren är begränsningen i praktiken
+  avstängd** (för andra användare inte: skriptet vägrar mappar som andra kan skriva i, utanför hemmappen eller via
+  länkar).
+- Men det gäller i stort sett redan varje `userns`-profil för ett dynamiskt länkat program, också paketets
+  `/opt/<id>/<exe>.bin`, som root äger: `LD_PRELOAD=egen.so /opt/codestead-hub/Codestead.Hub.bin` (eller
+  `ELECTRON_RUN_AS_NODE=1 … -e "require('child_process')…"`, eftersom program som startas ärver profilen) ger vem som
+  helst som kan starta programmet namnrymder. Det är samma sak som Qualys visade med Ubuntus egna profiler 2025, och
+  Ubuntu behandlar begränsningen som härdning och profilerna som sättet att låta appar som behöver namnrymder få dem.
+- Därför: paketets profil är det Ubuntu själv gör för Electron-appar. Användarens profil ger samma sak för en
+  användare, i utbyte mot Chromiums sandlåda (som skyddar mot det mer sannolika: en sårbarhet i renderaren eller
+  GPU-processen, t.ex. via shaders eller innehåll som verktygen visar). Den kräver en administratörs lösenord och ett
+  aktivt val, och den säkrare vägen – hubben som paket, som inte behöver någon profil för användarens mapp – står i
+  erbjudandet. En profil som bara gäller filer med ett visst xattr (`security.*`, som bara root kan sätta) vore inte säkrare, eftersom
+  `LD_PRELOAD` fungerar likadant mot den riktiga filen, och skulle kräva att root ändrar filer i användarens mappar.
+- Kod som redan kör som användaren kan ändå visa en falsk lösenordsruta eller ändra hubben (AppImagen är användarens
+  fil), så pkexec-steget skyddar mot felaktig indata och mot andra användare, inte mot skadlig kod som redan kör som
+  användaren.
+
+**AppImagen** monteras på en slumpmässig `/tmp/.mount_*`-sökväg (eller packas upp i `/tmp`), som alla användare kan
+skapa: en profil för den skulle stänga av begränsningen för alla. Den startar därför utan sandlåda där namnrymderna
+är begränsade; installera paketet för att få sandlådan.
+
+**Prova.** `npx vitest run apps/hub/test/SandboxProfileTests.test.ts packages/ui/test/LauncherTests.test.ts` (i `ts/`)
+provar texten, sökvägarna, när hubben erbjuder sandlådan och rootskriptet självt (med `sh`, en låtsas-`apparmor_parser`
+och en temporär mapp för `/etc/apparmor.d`); där AppArmor 4:s `apparmor_parser` finns (Ubuntu 24.04, CI) granskar den
+även båda profilerna. `packaging/install-test.sh` kontrollerar att paketen lägger profilen i `/etc/apparmor.d` på Ubuntu
+24.04 men inte på 22.04 och tar bort den igen. Att kärnan laddar profilen och att appen då verkligen kör med sandlådan
+går inte att prova i docker (containrar har ingen egen AppArmor): det görs för hand på ett riktigt Ubuntu 24.04
+([RELEASE-CHECKLIST.md](RELEASE-CHECKLIST.md)).
+
 ### Secrets i det här repot
 
 - `RELEASES_TOKEN`: en fine-grained token med *Contents: read and write* på `codestead-releases`.

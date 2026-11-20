@@ -69,6 +69,7 @@ function Page({ w }: { w: MainWindow }) {
     <div className="hub-page">
       {UiParts.text(w.t("hub.tagline"), 15, undefined, "muted")}
       {w.hubUpdate !== null && <HubUpdateBanner w={w} version={w.hubUpdate} />}
+      {w.offersSandbox && <SandboxBanner w={w} />}
 
       <div className="hub-header">
         {UiParts.text(w.t("tools.title"), 22, FontWeight.Bold)}
@@ -128,6 +129,25 @@ function HubUpdateBanner({ w, version }: { w: MainWindow; version: string }) {
       ) : (
         download
       )}
+    </div>
+  );
+}
+
+/** The offer to turn on Chromium's sandbox for the tools (Linux, where AppArmor restricts user namespaces). */
+function SandboxBanner({ w }: { w: MainWindow }) {
+  return (
+    <div className="hub-banner cs-stack" data-banner="sandbox">
+      {UiParts.text(w.t("sandbox.title"), 14.5, FontWeight.SemiBold)}
+      {UiParts.text(w.t("sandbox.text"), 13)}
+      {w.sandboxBusy ? (
+        UiParts.text(w.t("sandbox.working"), 13)
+      ) : (
+        <div className="hub-actions">
+          <Action label={w.t("sandbox.enable")} cls="primary" onClick={() => void w.enableSandbox()} />
+          <Action label={w.t("sandbox.later")} cls="flat" onClick={() => w.dismissSandboxOffer()} />
+        </div>
+      )}
+      {w.sandboxError !== null && <div className="cs-text hub-error">{w.t("sandbox.failed", { error: w.sandboxError })}</div>}
     </div>
   );
 }

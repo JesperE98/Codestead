@@ -73,6 +73,19 @@ function SettingsPanel({ w }: { w: MainWindow }) {
         }}
       />
 
+      {(w.sandbox === "off" || w.sandbox === "on") && (
+        <>
+          {SettingsSections.heading(w.t("settings.sandbox"))}
+          {UiParts.text(w.t(w.sandbox === "on" ? "settings.sandboxOn" : "settings.sandboxOff"), 13)}
+          {w.sandbox === "off" && (
+            <button type="button" className="secondary" style={{ alignSelf: "flex-start" }} disabled={w.sandboxBusy} onClick={() => void w.enableSandbox()}>
+              {w.sandboxBusy ? w.t("sandbox.working") : w.t("settings.sandboxEnable")}
+            </button>
+          )}
+          {w.sandboxError !== null && <div className="cs-text hub-error">{w.t("sandbox.failed", { error: w.sandboxError })}</div>}
+        </>
+      )}
+
       {SettingsSections.heading(w.t("settings.folder"))}
       <div className="hub-folder" dir="ltr">
         {w.info.dataRoot}

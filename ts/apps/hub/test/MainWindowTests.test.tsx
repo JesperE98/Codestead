@@ -5,6 +5,7 @@ import { CatalogAsset } from "../src/core/CatalogAsset.js";
 import { CatalogChange } from "../src/core/CatalogChange.js";
 import { CatalogTool } from "../src/core/CatalogTool.js";
 import { type InstalledTool, installedTool } from "../src/core/InstalledTool.js";
+import type { SandboxStatus } from "../src/core/SandboxProfile.js";
 import type { HubApi, HubStartInfo, Outcome, TrayMenu } from "../src/HubApi.js";
 import { MainWindow } from "../src/MainWindow.js";
 import { MainWindowView } from "../src/MainWindow.Layout.js";
@@ -73,6 +74,15 @@ class FakeApi implements HubApi {
   setTrayToolTip = () => {};
   startsWithComputer = () => Promise.resolve(false);
   setStartsWithComputer = () => Promise.resolve();
+  sandbox: SandboxStatus = { state: "not-needed" };
+  sandboxResult: Outcome<SandboxStatus> = { value: { state: "on", profile: "/etc/apparmor.d/codestead-user-1000" } };
+  sandboxCalls = 0;
+  sandboxStatus = () => Promise.resolve(this.sandbox);
+  enableSandbox = async (): Promise<Outcome<SandboxStatus>> => {
+    this.sandboxCalls++;
+    if ("value" in this.sandboxResult) this.sandbox = this.sandboxResult.value;
+    return this.sandboxResult;
+  };
   openExternal = () => Promise.resolve();
   pickFile = () => Promise.resolve(null);
   pickFolder = () => Promise.resolve(null);
@@ -174,6 +184,55 @@ describe("MainWindowTests", () => {
       closeToTray: true,
       autoCheckUpdates: true,
       autoInstallUpdates: false,
+      sandboxOfferDismissed: false,
     });
+  });
+
+  it("offers Chromium's sandbox for the tools where AppArmor restricts it, until it is on or turned down", async () => {
+    // Not needed (or the hub's package profile covers the tools): nothing is shown.
+    await open();
+    expect(screen.queryByText("Turn on Chromium's sandbox for your tools?")).toBeNull();
+    cleanup();
+
+    const api = new FakeApi();
+    api.sandbox = { state: "off", profile: "/etc/apparmor.d/codestead-user-1000" };
+    api.sandboxResult = { error: "The password dialog was closed, so nothing was changed." };
+    const { w } = await open(api);
+    expect(screen.getByText("Turn on Chromium's sandbox for your tools?")).toBeTruthy();
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Turn on" })));
+    expect(api.sandboxCalls).toBe(1);
+    expect(screen.getByText("Chromium's sandbox was not turned on: The password dialog was closed, so nothing was changed.")).toBeTruthy();
+    // Again, and it works: the offer goes, the settings say so.
+    api.sandboxResult = { value: { state: "on", profile: "/etc/apparmor.d/codestead-user-1000" } };
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Turn on" })));
+    expect(api.sandboxCalls).toBe(2);
+    expect(w.sandbox).toBe("on");
+    expect(screen.queryByText("Turn on Chromium's sandbox for your tools?")).toBeNull();
+    act(() => fireEvent.click(screen.getByLabelText("Settings")));
+    expect(screen.getByText("On: an AppArmor profile lets your tools use Chromium's sandbox.")).toBeTruthy();
+  });
+
+  it("“Not now” hides the offer for good; the settings still have it", async () => {
+    const api = new FakeApi();
+    api.sandbox = { state: "off" };
+    await open(api);
+    act(() => fireEvent.click(screen.getByRole("button", { name: "Not now" })));
+    expect(screen.queryByText("Turn on Chromium's sandbox for your tools?")).toBeNull();
+    expect(JSON.parse(api.storages.get("codestead-hub")!.loadText("state")!).sandboxOfferDismissed).toBe(true);
+    cleanup();
+    // The next start: not offered on the page again, but in the settings.
+    await open(api);
+    expect(screen.queryByText("Turn on Chromium's sandbox for your tools?")).toBeNull();
+    act(() => fireEvent.click(screen.getByLabelText("Settings")));
+    expect(screen.getByText(/^Your tools run without Chromium's sandbox/)).toBeTruthy();
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Turn on (asks for your password)" })));
+    expect(api.sandboxCalls).toBe(1);
+    // No tool installed yet: nothing to offer on the page.
+    cleanup();
+    const empty = new FakeApi();
+    empty.sandbox = { state: "off" };
+    empty.installedList = [];
+    await open(empty);
+    expect(screen.queryByText("Turn on Chromium's sandbox for your tools?")).toBeNull();
   });
 });

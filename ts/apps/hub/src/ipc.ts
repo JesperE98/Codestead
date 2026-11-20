@@ -22,6 +22,8 @@ export const Ipc = {
   setTrayToolTip: "hub:set-tray-tooltip",
   startsWithComputer: "hub:starts-with-computer",
   setStartsWithComputer: "hub:set-starts-with-computer",
+  sandboxStatus: "hub:sandbox-status",
+  enableSandbox: "hub:enable-sandbox",
   openExternal: "app:open-external",
   pickFile: "app:pick-file",
   pickFolder: "app:pick-folder",

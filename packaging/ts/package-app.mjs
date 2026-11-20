@@ -21,8 +21,9 @@
 //    files; electron-builder's own copy would leave out files by its default patterns).
 // 4. Linux: the executable (<exe>, as the C# app's) is a small launcher script next to Electron (<exe>.bin), because
 //    Chromium's sandbox needs user namespaces or a setuid helper, and where neither is there (as root, in containers,
-//    Ubuntu 24.04's AppArmor rule, a FUSE-mounted AppImage) Electron must be started with --no-sandbox
-//    (packaging/ts/launcher.sh).
+//    Ubuntu 24.04's AppArmor rule without a Codestead AppArmor profile for the app, a FUSE-mounted AppImage) Electron
+//    must be started with --no-sandbox (packaging/ts/launcher.sh). The launcher asks Electron, started as Node
+//    (ELECTRON_RUN_AS_NODE), for its AppArmor profile: the RunAsNode fuse must stay on.
 import { spawnSync } from "node:child_process";
 import { chmodSync, copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -242,7 +243,8 @@ async function main() {
     renameSync(join(out, opts.exe), join(out, `${opts.exe}.bin`));
     const launcher = readFileSync(join(root, "packaging", "ts", "launcher.sh"), "utf8")
       .replaceAll("${PKG_DISPLAY_NAME}", opts.name)
-      .replaceAll("${PKG_EXECUTABLE}", opts.exe);
+      .replaceAll("${PKG_EXECUTABLE}", opts.exe)
+      .replaceAll("${PKG_NAME}", opts.id);
     writeFileSync(join(out, opts.exe), launcher);
     chmodSync(join(out, opts.exe), 0o755);
   }

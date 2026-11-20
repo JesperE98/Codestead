@@ -70,5 +70,16 @@
   "tray.show": "显示 Codestead",
   "tray.open": "打开 {name}",
   "tray.quit": "退出",
-  "tool.autoUpdated": "{name} 已更新到 {version}"
+  "tool.autoUpdated": "{name} 已更新到 {version}",
+  "sandbox.title": "为你的工具开启 Chromium 沙箱？",
+  "sandbox.text": "Ubuntu 只允许带有 AppArmor 配置文件的程序使用 Chromium 沙箱所需的用户命名空间，因此你的 Codestead 工具目前在没有沙箱的情况下运行。Hub 可以为其文件夹中的工具添加一个配置文件——系统会要求输入你的密码。（以 .deb 软件包安装的 Hub 不需要这样的配置文件。）",
+  "sandbox.enable": "开启",
+  "sandbox.later": "以后再说",
+  "sandbox.working": "正在开启沙箱——系统会要求输入你的密码…",
+  "sandbox.done": "Chromium 沙箱已开启：你的工具下次启动时就会使用它。",
+  "sandbox.failed": "Chromium 沙箱没有开启：{error}",
+  "settings.sandbox": "Chromium 沙箱",
+  "settings.sandboxOff": "你的工具在没有 Chromium 沙箱的情况下运行，因为 Ubuntu 限制了它所需的用户命名空间。为 Hub 文件夹中的工具添加 AppArmor 配置文件即可开启它。",
+  "settings.sandboxOn": "已开启：AppArmor 配置文件让你的工具可以使用 Chromium 沙箱。",
+  "settings.sandboxEnable": "开启（需要输入密码）"
 }

@@ -180,8 +180,10 @@ TypeScript-version kan släppas som nästa version av samma produkt (fas 6).
   Electron (`<exe>.bin`): Chromium sandlådar med användarnamnrymder eller med den setuid-märkta hjälpen
   `chrome-sandbox`, och startar inte alls där ingen av dem fungerar. Skriptet startar då med `--no-sandbox`: som root
   (containrar, installationstesterna), när namnrymderna är avstängda eller begränsade (Ubuntu 23.10 och senare,
-  AppArmor) och `chrome-sandbox` inte är setuid root (hubbens installation per användare, AppImage). .deb/.rpm/Arch
-  gör `chrome-sandbox` setuid root (`packaging/ts/postinstall.sh`), så där fungerar sandlådan alltid.
+  AppArmor) och `chrome-sandbox` inte är setuid root (hubbens installation per användare, AppImage) – utom där en
+  Codestead-profil för AppArmor tillåter dem. .deb/.rpm/Arch gör `chrome-sandbox` setuid root och installerar en sådan
+  profil (`packaging/ts/postinstall.sh`), så där fungerar sandlådan alltid; för hubbens verktyg, se "Chromiums
+  sandlåda på Linux" i [DEVELOPMENT.md](DEVELOPMENT.md).
   Beroendena (`packaging/ts/nfpm.yaml`) är Electrons bibliotek (GTK, NSS, ALSA, CUPS …; på Ubuntu t64-paketen först).
 - **Uppdateringar:** Velopacks Node-SDK (npm-paketet `velopack` 1.2.161 – samma version som C#-apparnas Velopack och
   `vpk`) i main-processen, `@codestead/ui/electron-main` (`runVelopackHooks` först i main, som

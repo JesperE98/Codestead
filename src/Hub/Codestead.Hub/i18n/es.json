@@ -70,5 +70,16 @@
   "tray.show": "Mostrar Codestead",
   "tray.open": "Abrir {name}",
   "tray.quit": "Salir",
-  "tool.autoUpdated": "{name} se actualizó a la versión {version}"
+  "tool.autoUpdated": "{name} se actualizó a la versión {version}",
+  "sandbox.title": "¿Activar el sandbox de Chromium para tus herramientas?",
+  "sandbox.text": "Ubuntu solo deja usar los espacios de nombres de usuario que necesita el sandbox de Chromium a los programas con un perfil de AppArmor, así que tus herramientas de Codestead funcionan sin el sandbox. El hub puede añadir un perfil para las herramientas de su carpeta: tu sistema te pide la contraseña. (Instalado como paquete .deb, el hub no necesita ese perfil.)",
+  "sandbox.enable": "Activar",
+  "sandbox.later": "Ahora no",
+  "sandbox.working": "Activando el sandbox – tu sistema te pide la contraseña …",
+  "sandbox.done": "El sandbox de Chromium está activado: tus herramientas lo usan a partir de su próximo inicio.",
+  "sandbox.failed": "El sandbox de Chromium no se activó: {error}",
+  "settings.sandbox": "Sandbox de Chromium",
+  "settings.sandboxOff": "Tus herramientas funcionan sin el sandbox de Chromium, porque Ubuntu limita los espacios de nombres de usuario que necesita. Un perfil de AppArmor para las herramientas de la carpeta del hub lo activa.",
+  "settings.sandboxOn": "Activado: un perfil de AppArmor permite a tus herramientas usar el sandbox de Chromium.",
+  "settings.sandboxEnable": "Activar (pide tu contraseña)"
 }
