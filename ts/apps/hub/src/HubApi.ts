@@ -77,9 +77,9 @@ export interface HubApi {
 
   // ---------- The app ----------
   /**
-   * The hub's own updates (Velopack in the main process, @codestead/ui/electron-main): installed with Setup.exe or as
-   * an AppImage it updates itself; otherwise canUpdateItself is false and a newer hub in the catalog is offered as a
-   * download.
+   * The hub's own updates (in the main process, @codestead/ui/electron-main): installed with Setup.exe or as an
+   * AppImage it updates itself with Velopack, as a .deb/.rpm/Arch package with the system's package manager (pkexec
+   * asks for the password); otherwise canUpdateItself is false and a newer hub in the catalog is offered as a download.
    */
   readonly selfUpdate: SelfUpdate;
   /** Opens an http(s) address in the browser. */
