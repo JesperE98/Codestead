@@ -1,5 +1,32 @@
 [
   {
+    "version": "0.2.9",
+    "date": "2026-11-20",
+    "changes": {
+      "en": [
+        "**Signed updates for the Linux packages**: installed as a .deb, .rpm or Arch package, Codestead GP now checks its updates against Codestead's signed catalog – the new version and the package's checksum come from a list that is signed when the version is published, so only exactly the package that was published is installed."
+      ],
+      "sv": [
+        "**Signerade uppdateringar för Linuxpaketen**: installerad som .deb-, .rpm- eller Arch-paket kontrollerar Codestead GP nu sina uppdateringar mot Codesteads signerade katalog – den nya versionen och paketets kontrollsumma kommer från en lista som signeras när versionen publiceras, så bara exakt det paket som publicerades installeras."
+      ],
+      "de": [
+        "**Signierte Updates für die Linux-Pakete**: Als .deb-, .rpm- oder Arch-Paket installiert, prüft Codestead GP seine Updates jetzt anhand des signierten Katalogs von Codestead – die neue Version und die Prüfsumme des Pakets stammen aus einer Liste, die beim Veröffentlichen der Version signiert wird, sodass nur genau das veröffentlichte Paket installiert wird."
+      ],
+      "fr": [
+        "**Mises à jour signées pour les paquets Linux** : installé en paquet .deb, .rpm ou Arch, Codestead GP vérifie désormais ses mises à jour avec le catalogue signé de Codestead – la nouvelle version et la somme de contrôle du paquet proviennent d'une liste signée lors de la publication de la version, si bien que seul le paquet publié, à l'identique, est installé."
+      ],
+      "es": [
+        "**Actualizaciones firmadas para los paquetes de Linux**: instalado como paquete .deb, .rpm o de Arch, Codestead GP ahora comprueba sus actualizaciones con el catálogo firmado de Codestead: la nueva versión y la suma de comprobación del paquete vienen de una lista que se firma al publicar la versión, así que solo se instala exactamente el paquete publicado."
+      ],
+      "zh": [
+        "**Linux 软件包的签名更新**：以 .deb、.rpm 或 Arch 软件包安装时， Codestead GP 现在会根据 Codestead 的签名目录核对更新——新版本和软件包的校验和来自发布该版本时签名的列表，因此只会安装与发布时完全相同的软件包。"
+      ],
+      "ja": [
+        "**Linux パッケージの署名付き更新**：.deb、.rpm、Arch のパッケージとしてインストールした Codestead GP は、Codestead の署名付きカタログで更新を検証するようになりました。新しいバージョンとパッケージのチェックサムはバージョンの公開時に署名される一覧から取得するため、公開されたものとまったく同じパッケージだけがインストールされます。"
+      ]
+    }
+  },
+  {
     "version": "0.2.8",
     "date": "2026-11-20",
     "changes": {

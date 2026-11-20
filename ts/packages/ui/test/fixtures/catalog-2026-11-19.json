@@ -1,0 +1,1232 @@
+{
+  "schema": 1,
+  "generated": "2026-11-19T13:58:53Z",
+  "tools": [
+    {
+      "id": "codestead-gp",
+      "name": "Codestead GP",
+      "description": {
+        "en": "Learn graphics programming by doing – OpenGL, Vulkan or DirectX 12 in your own IDE, with checkpoints, the expected result of every task and automatic checks after each build and run.",
+        "sv": "Lär dig grafikprogrammering genom att göra – OpenGL, Vulkan eller DirectX 12 i din egen IDE, med kontrollfrågor, förväntat resultat för varje uppgift och automatisk kontroll efter varje bygge och körning.",
+        "es": "Aprende programación gráfica practicando: OpenGL, Vulkan o DirectX 12 en tu propio IDE, con preguntas de control, el resultado esperado de cada tarea y comprobación automática tras cada compilación y ejecución.",
+        "de": "Lerne Grafikprogrammierung durch Tun – OpenGL, Vulkan oder DirectX 12 in deiner eigenen IDE, mit Kontrollfragen, dem erwarteten Ergebnis jeder Aufgabe und automatischer Prüfung nach jedem Bauen und Ausführen.",
+        "fr": "Apprenez la programmation graphique en pratiquant : OpenGL, Vulkan ou DirectX 12 dans votre propre IDE, avec des questions de contrôle, le résultat attendu de chaque tâche et une vérification automatique après chaque compilation et exécution.",
+        "zh": "边做边学图形编程——在你自己的 IDE 中使用 OpenGL、Vulkan 或 DirectX 12，配有检查题、每个任务的预期结果，并在每次构建和运行后自动检查。",
+        "ja": "手を動かしてグラフィックスプログラミングを学ぶ――自分の IDE で OpenGL、Vulkan、DirectX 12 を使い、確認問題、各課題の期待される結果、ビルドと実行のたびの自動チェック付き。"
+      },
+      "version": "0.2.7",
+      "assets": {
+        "linux-x64": {
+          "url": "https://github.com/JesperE98/codestead-releases/releases/download/codestead-gp-v0.2.7/codestead-gp-0.2.7-linux-x64.tar.gz",
+          "sha256": "84e52bb980eb6f48a30be4827ce0b5b2a079ca15ecfa7dcb5c7df580478771d9",
+          "size": 176257349,
+          "executable": "Codestead.GP"
+        },
+        "win-x64": {
+          "url": "https://github.com/JesperE98/codestead-releases/releases/download/codestead-gp-v0.2.7/codestead-gp-0.2.7-win-x64.zip",
+          "sha256": "1eeec8427071fd067c55c04e97ea53fcd4b6a30ab5d63e8706ebde24022f0254",
+          "size": 206967107,
+          "executable": "Codestead.GP.exe"
+        }
+      },
+      "releaseNotesUrl": "https://github.com/JesperE98/codestead-releases/releases/tag/codestead-gp-v0.2.7",
+      "changes": [
+        {
+          "version": "0.2.7",
+          "date": "2026-11-19",
+          "changes": {
+            "en": [
+              "**The same text on every computer again**: Codestead GP brings its text font, Inter, with it again, so the text looks as it did before 0.2.6 instead of taking whatever font your system has.",
+              "**Pictures in every part of the course**: about 160 new diagrams and pictures explain the hard parts of the chapters – from the frame loop, normalized device coordinates and texture filtering through lighting vectors, shadow maps, tone mapping and the BRDF to the game's collisions, cascaded shadow maps and compute workgroups. Many are drawn by the course's own simulator from the code you write, and they follow the API you have chosen.",
+              "**Bigger pictures**: click a picture in a chapter to see it larger, with its caption – Escape or a click outside closes it.",
+              "**Pipeline scenes you can step through**: the Render Pipeline Visualizer's pictures in the chapters are now its live scenes – step forward and back, play a step again, switch model or mode and look at the code, in the graphics API, language and theme you chose. Without 3D graphics the pictures are shown as before.",
+              "**15 new achievements**: passing exams, solving exercises, your first texture, the depth test and wireframes, 100 tasks – and six new hidden ones to find by experimenting with your code."
+            ],
+            "sv": [
+              "**Samma text på alla datorer igen**: Codestead GP har åter med sig sitt typsnitt Inter, så texten ser ut som före 0.2.6 i stället för att ta det typsnitt som råkar finnas på datorn.",
+              "**Bilder i alla kursens delar**: ett 160-tal nya diagram och bilder förklarar kapitlens svåra delar – från en frame i programmet, normalized device coordinates och texturfiltrering, via ljusets vektorer, shadow maps, tone mapping och BRDF:en, till spelets kollisioner, cascaded shadow maps och arbetsgrupper i compute shaders. Många är ritade av kursens egen simulator från koden du skriver, och de följer det API du har valt.",
+              "**Större bilder**: klicka på en bild i ett kapitel för att se den större, med sin bildtext – Escape eller ett klick utanför stänger den.",
+              "**Pipelinescener att stega igenom**: Render Pipeline Visualizers bilder i kapitlen är nu dess levande scener – stega fram och tillbaka, spela ett steg igen, byt modell eller läge och titta på koden, i det grafik-API, det språk och det tema du valt. Utan 3D-grafik visas bilderna som förut.",
+              "**15 nya utmärkelser**: för godkända prov, lösta övningar, din första textur, djuptestet och trådmodeller, 100 uppgifter – och sex nya dolda att hitta genom att experimentera med din kod."
+            ],
+            "de": [
+              "**Wieder dieselbe Schrift auf jedem Computer**: Codestead GP bringt seine Schriftart Inter wieder selbst mit, sodass der Text wie vor 0.2.6 aussieht, statt die Schrift zu nehmen, die dein System gerade hat.",
+              "**Bilder in allen Teilen des Kurses**: rund 160 neue Diagramme und Bilder erklären die schwierigen Stellen der Kapitel – vom Frame, normalisierten Gerätekoordinaten und Texturfilterung über die Vektoren der Beleuchtung, Shadow Maps, Tone Mapping und die BRDF bis zu den Kollisionen im Spiel, Cascaded Shadow Maps und Compute-Arbeitsgruppen. Viele zeichnet der kurseigene Simulator aus dem Code, den du schreibst, und sie folgen der gewählten API.",
+              "**Größere Bilder**: Klicke auf ein Bild in einem Kapitel, um es größer mit seiner Bildunterschrift zu sehen – Escape oder ein Klick daneben schließt es.",
+              "**Pipeline-Szenen zum Durchklicken**: Die Bilder des Render Pipeline Visualizers in den Kapiteln sind jetzt seine lebendigen Szenen – Schritt vor und zurück, einen Schritt noch einmal abspielen, Modell oder Modus wechseln und den Code ansehen, in der Grafik-API, Sprache und dem Design, die du gewählt hast. Ohne 3D-Grafik erscheinen die Bilder wie bisher.",
+              "**15 neue Erfolge**: für bestandene Prüfungen, gelöste Übungen, deine erste Textur, den Tiefentest und Drahtgittermodelle, 100 Aufgaben – und sechs neue versteckte, die du durch Experimentieren mit deinem Code findest."
+            ],
+            "fr": [
+              "**Le même texte sur chaque ordinateur** : Codestead GP embarque de nouveau sa police Inter, si bien que le texte s'affiche comme avant la 0.2.6 au lieu d'utiliser la police que votre système a sous la main.",
+              "**Des images dans toutes les parties du cours** : environ 160 nouveaux schémas et images expliquent les passages difficiles des chapitres – de la frame du programme, des coordonnées normalisées et du filtrage des textures aux vecteurs de l'éclairage, aux shadow maps, au tone mapping et à la BRDF, jusqu'aux collisions du jeu, aux cascaded shadow maps et aux groupes de travail des compute shaders. Beaucoup sont dessinées par le simulateur du cours à partir du code que vous écrivez, et elles suivent l'API choisie.",
+              "**Des images plus grandes** : cliquez sur une image d'un chapitre pour la voir en plus grand, avec sa légende – Échap ou un clic à côté la ferme.",
+              "**Des scènes du pipeline à parcourir pas à pas** : les images du Render Pipeline Visualizer dans les chapitres sont désormais ses scènes animées – avancez et reculez d'une étape, rejouez une étape, changez de modèle ou de mode et regardez le code, dans l'API graphique, la langue et le thème que vous avez choisis. Sans graphismes 3D, les images s'affichent comme avant.",
+              "**15 nouveaux succès** : examens réussis, exercices résolus, votre première texture, le test de profondeur et le fil de fer, 100 tâches – et six nouveaux succès cachés à découvrir en expérimentant avec votre code."
+            ],
+            "es": [
+              "**El mismo texto en todos los ordenadores otra vez**: Codestead GP vuelve a incluir su tipografía, Inter, así que el texto se ve como antes de la 0.2.6 en lugar de usar la fuente que tenga tu sistema.",
+              "**Imágenes en todas las partes del curso**: unos 160 diagramas e imágenes nuevos explican las partes difíciles de los capítulos: desde el frame del programa, las coordenadas normalizadas y el filtrado de texturas, pasando por los vectores de la iluminación, los shadow maps, el tone mapping y la BRDF, hasta las colisiones del juego, las cascaded shadow maps y los grupos de trabajo de los compute shaders. Muchas las dibuja el propio simulador del curso a partir del código que escribes, y siguen la API que hayas elegido.",
+              "**Imágenes más grandes**: haz clic en una imagen de un capítulo para verla más grande, con su pie de foto; Escape o un clic fuera la cierra.",
+              "**Escenas del pipeline que puedes recorrer paso a paso**: las imágenes del Render Pipeline Visualizer en los capítulos son ahora sus escenas animadas: avanza y retrocede, repite un paso, cambia de modelo o de modo y mira el código, en la API gráfica, el idioma y el tema que elegiste. Sin gráficos 3D, las imágenes se muestran como antes.",
+              "**15 logros nuevos**: por aprobar exámenes, resolver ejercicios, tu primera textura, la prueba de profundidad y el modo alámbrico, 100 tareas – y seis logros ocultos nuevos que descubrirás experimentando con tu código."
+            ],
+            "zh": [
+              "**每台电脑上的文字重新一致**：Codestead GP 再次自带其文字字体 Inter，文字显示与 0.2.6 之前相同，不再使用系统碰巧安装的字体。",
+              "**课程的每个部分都有了图片**：约 160 张新的示意图和图片讲解各章的难点——从一帧的流程、标准化设备坐标和纹理过滤，到光照向量、阴影贴图、色调映射和 BRDF，再到游戏的碰撞、级联阴影贴图和计算着色器的工作组。其中许多由课程自己的模拟器根据你编写的代码绘制，并按你选择的 API 显示。",
+              "**更大的图片**：点击章节中的图片即可放大查看，并附带图片说明；按 Esc 或点击外部即可关闭。",
+              "**可逐步浏览的管线场景**：章节中 Render Pipeline Visualizer 的图片现在是它的实时场景——前进和后退、重播某一步、切换模型或模式并查看代码，全部使用你选择的图形 API、语言和主题。没有 3D 图形时，仍像以前一样显示图片。",
+              "**15 个新成就**：通过测验、完成练习、你的第一个纹理、深度测试和线框模式、100 个任务——还有六个新的隐藏成就，等你动手试验代码去发现。"
+            ],
+            "ja": [
+              "**どのパソコンでも同じ文字表示に**：Codestead GP が再び文字フォント Inter を同梱するようになり、システムにあるフォントではなく、0.2.6 より前と同じ見た目で表示されます。",
+              "**コースのすべてのパートに図を追加**：約 160 枚の新しい図や画像が各章の難しいところを説明します。1 フレームの流れ、正規化デバイス座標、テクスチャフィルタリングから、ライティングのベクトル、シャドウマップ、トーンマッピング、BRDF、さらにゲームの衝突判定、カスケードシャドウマップ、コンピュートシェーダーのワークグループまで。その多くはあなたが書くコードからコース自身のシミュレーターが描いたもので、選んだ API に合わせて表示されます。",
+              "**画像を大きく表示**：章の中の画像をクリックすると、キャプション付きで大きく表示されます。Esc キーか外側のクリックで閉じます。",
+              "**ステップごとに進められるパイプラインのシーン**：各章の Render Pipeline Visualizer の画像が、動くシーンになりました。ステップを進めたり戻したり、もう一度再生したり、モデルやモードを切り替えてコードを見たりでき、選んだグラフィックス API・言語・テーマで表示されます。3D グラフィックスが使えない環境では、これまでどおり画像が表示されます。",
+              "**新しい実績 15 個**：テストの合格、演習、はじめてのテクスチャ、深度テストとワイヤーフレーム、課題 100 個――さらに、コードをいろいろ試すと見つかる隠し実績が 6 個増えました。"
+            ]
+          }
+        },
+        {
+          "version": "0.2.6",
+          "date": "2026-11-18",
+          "changes": {
+            "en": [
+              "**A new engine under the hood**: Codestead GP is now built with Electron, the technology behind many desktop apps, instead of .NET, and the simulated GPU that checks your code and draws the expected results was rewritten with it – with the same results in every chapter and API. It is the same app, and your progress, XP, achievements, settings, IDE and chosen project files are kept.",
+              "What you may notice: the download is about twice as large as before, because the app now brings its own browser engine, and the text is shown in your system's font."
+            ],
+            "sv": [
+              "**En ny motor under huven**: Codestead GP är nu byggd med Electron, tekniken bakom många skrivbordsappar, i stället för .NET, och den simulerade GPU:n som kontrollerar din kod och ritar förväntat resultat har skrivits om med den – med samma resultat i varje kapitel och API. Det är samma app, och dina framsteg, din XP, dina utmärkelser, inställningar, din IDE och dina valda projektfiler finns kvar.",
+              "Det du kan märka: nedladdningen är ungefär dubbelt så stor som förut, eftersom appen nu har med sig en egen webbläsarmotor, och texten visas med datorns eget typsnitt."
+            ],
+            "de": [
+              "**Ein neuer Motor unter der Haube**: Codestead GP wird jetzt mit Electron gebaut, der Technik hinter vielen Desktop-Apps, statt mit .NET, und die simulierte GPU, die Ihren Code prüft und die erwarteten Ergebnisse zeichnet, wurde dabei neu geschrieben – mit denselben Ergebnissen in jedem Kapitel und jeder API. Es ist dieselbe App, und Ihr Fortschritt, Ihre XP, Auszeichnungen, Einstellungen, Ihre IDE und die gewählten Projektdateien bleiben erhalten.",
+              "Was Ihnen auffallen kann: Der Download ist etwa doppelt so groß wie bisher, weil die App jetzt eine eigene Browser-Engine mitbringt, und der Text erscheint in der Schrift Ihres Systems."
+            ],
+            "fr": [
+              "**Un nouveau moteur sous le capot** : Codestead GP est désormais construit avec Electron, la technologie de nombreuses applications de bureau, au lieu de .NET, et le GPU simulé qui vérifie votre code et dessine les résultats attendus a été réécrit avec lui – avec les mêmes résultats dans chaque chapitre et chaque API. C'est la même application, et votre progression, vos XP, vos succès, vos réglages, votre IDE et les fichiers de projet choisis sont conservés.",
+              "Ce que vous pourriez remarquer : le téléchargement est environ deux fois plus gros qu'avant, car l'application embarque désormais son propre moteur de navigateur, et le texte s'affiche dans la police de votre système."
+            ],
+            "es": [
+              "**Un motor nuevo por dentro**: Codestead GP ahora está hecho con Electron, la tecnología de muchas aplicaciones de escritorio, en lugar de .NET, y la GPU simulada que revisa tu código y dibuja los resultados esperados se ha reescrito con él, con los mismos resultados en cada capítulo y API. Es la misma aplicación, y se conservan tu progreso, tu XP, tus logros, tus ajustes, tu IDE y los archivos de proyecto que elegiste.",
+              "Lo que puedes notar: la descarga es aproximadamente el doble de grande que antes, porque la aplicación ahora trae su propio motor de navegador, y el texto se muestra con la fuente de tu sistema."
+            ],
+            "zh": [
+              "**全新的内部引擎**：Codestead GP 现在改用 Electron（许多桌面应用使用的技术）构建，而不再使用 .NET；检查你的代码并绘制预期结果的模拟 GPU 也随之重写——每个章节和每个 API 的结果都与以前相同。应用本身没有变，你的进度、XP、成就、设置、IDE 和所选的项目文件都会保留。",
+              "你可能会注意到：下载文件大约是以前的两倍，因为应用现在自带浏览器引擎；文字使用系统自带的字体显示。"
+            ],
+            "ja": [
+              "**中身が新しいエンジンに**：Codestead GP は .NET ではなく、多くのデスクトップアプリで使われている Electron で作られるようになり、コードを確認して期待される結果を描くシミュレーション GPU も合わせて書き直されました（どの章・どの API でも結果は同じです）。アプリは同じで、進捗、XP、実績、設定、IDE、選んだプロジェクトファイルはそのまま引き継がれます。",
+              "気づくかもしれない点：アプリが独自のブラウザーエンジンを内蔵するようになったため、ダウンロードサイズは以前の約 2 倍になり、文字はシステムのフォントで表示されます。"
+            ]
+          }
+        },
+        {
+          "version": "0.2.5",
+          "date": "2026-11-17",
+          "changes": {
+            "en": [
+              "**Exercises in every chapter**: after the chapter's steps (now under **Follow along**) come **Exercises** – about 220 small tasks of their own that test what the chapter taught, like the exercises in a maths book: change a colour, put a roof on the rectangle, a sepia filter, gold balls, a slower ball. Each starts from the chapter's finished program, has a hint, a solution in its own window and a picture of the expected result, and **Check my code** checks it.",
+              "Every window that opens in the app can be closed again – with the ✕ in its corner, Escape or a click outside. The enlarged picture of an expected result used to stay open until the app was restarted."
+            ],
+            "sv": [
+              "**Övningar i varje kapitel**: efter kapitlets steg (nu under **Följ med**) kommer **Övningar** – runt 220 egna små uppgifter som testar det kapitlet lärde ut, som övningarna i en mattebok: byt en färg, sätt ett tak på rektangeln, ett sepiafilter, guldkulor, en långsammare boll. Varje övning utgår från kapitlets färdiga program, har ett tips, en lösning i eget fönster och en bild av förväntat resultat, och **Kontrollera min kod** rättar den.",
+              "Varje fönster som öppnas i appen går att stänga igen – med ✕ i hörnet, Escape eller ett klick utanför. Den förstorade bilden av ett förväntat resultat låg tidigare kvar tills appen startades om."
+            ],
+            "de": [
+              "**Übungen in jedem Kapitel**: Nach den Schritten des Kapitels (jetzt unter **Mitmachen**) kommen **Übungen** – rund 220 eigene kleine Aufgaben, die prüfen, was das Kapitel vermittelt hat, wie die Übungen in einem Mathebuch: eine Farbe ändern, ein Dach auf das Rechteck setzen, ein Sepiafilter, goldene Kugeln, ein langsamerer Ball. Jede geht vom fertigen Programm des Kapitels aus, hat einen Tipp, eine Lösung im eigenen Fenster und ein Bild des erwarteten Ergebnisses, und **Meinen Code prüfen** prüft sie.",
+              "Jedes Fenster, das sich in der App öffnet, lässt sich wieder schließen – mit dem ✕ in der Ecke, Escape oder einem Klick daneben. Das vergrößerte Bild eines erwarteten Ergebnisses blieb bisher offen, bis die App neu gestartet wurde."
+            ],
+            "fr": [
+              "**Des exercices dans chaque chapitre** : après les étapes du chapitre (désormais sous **Pas à pas**) viennent des **Exercices** – environ 220 petites tâches à part qui testent ce que le chapitre a enseigné, comme les exercices d'un livre de maths : changer une couleur, poser un toit sur le rectangle, un filtre sépia, des boules d'or, une balle plus lente. Chacun part du programme terminé du chapitre, a un indice, une solution dans sa propre fenêtre et une image du résultat attendu, et **Vérifier mon code** le corrige.",
+              "Chaque fenêtre qui s'ouvre dans l'application peut être refermée – avec le ✕ dans son coin, Échap ou un clic à l'extérieur. L'image agrandie d'un résultat attendu restait auparavant ouverte jusqu'au redémarrage de l'application."
+            ],
+            "es": [
+              "**Ejercicios en cada capítulo**: tras los pasos del capítulo (ahora bajo **Paso a paso**) vienen **Ejercicios**: unas 220 pequeñas tareas propias que ponen a prueba lo que enseñó el capítulo, como los ejercicios de un libro de matemáticas: cambiar un color, poner un tejado al rectángulo, un filtro sepia, bolas de oro, una pelota más lenta. Cada uno parte del programa terminado del capítulo, tiene una pista, una solución en su propia ventana y una imagen del resultado esperado, y **Revisar mi código** lo corrige.",
+              "Cada ventana que se abre en la aplicación se puede volver a cerrar: con la ✕ de su esquina, Escape o un clic fuera. La imagen ampliada de un resultado esperado se quedaba abierta hasta reiniciar la aplicación."
+            ],
+            "zh": [
+              "**每章都有练习**：在本章步骤（现在位于**跟着做**下）之后是**练习**——约 220 个独立的小任务，用来检验本章所学，就像数学书里的练习：改一种颜色、给矩形加个屋顶、做一个棕褐色滤镜、金色小球、让球变慢。每个练习都从本章完成的程序出发，带有提示、在单独窗口中显示的答案和预期结果图片，并由**检查我的代码**批改。",
+              "应用中打开的每个窗口都可以关闭——点击角落的 ✕、按 Esc 或点击窗口外部。之前预期结果的放大图片会一直停留，直到重启应用。"
+            ],
+            "ja": [
+              "**すべての章に演習**：章の手順（今は **手順どおりに** の下）の後に **演習** があります。章で学んだことを試す約 220 の独立した小さな課題で、数学の教科書の練習問題のようなものです。色を変える、長方形に屋根を付ける、セピアフィルター、金色の球、ボールを遅くする、など。各演習は章の完成したプログラムから始まり、ヒント、専用ウィンドウの解答、期待される結果の画像があり、**コードを確認** で採点されます。",
+              "アプリで開いたウィンドウはすべて閉じられるようになりました。隅の ✕、Esc キー、または外側のクリックで閉じます。これまで期待される結果の拡大画像は、アプリを再起動するまで閉じられませんでした。"
+            ]
+          }
+        },
+        {
+          "version": "0.2.4",
+          "date": "2026-11-16",
+          "changes": {
+            "en": [
+              "**You write all the code yourself**, from the first line, in your own program – as on learnopengl.com. The app no longer hands out start files with code: every chapter says which of your programs it continues from, and **Save resources…** saves only the course's textures, models, fonts and levels that a chapter needs.",
+              "A task's **solution** opens in a window of its own, file by file, that you close again.",
+              "**Pictures and animations in the chapters**: the pipeline's steps from the Render Pipeline Visualizer – buffers, vertex attributes, coordinate spaces, clipping, rasterization, the depth test, blending and more – as pictures and slideshows, and at the top of every lesson what you will have built, drawn by the course's own simulator (moving where the scene moves). A click pauses an animation."
+            ],
+            "sv": [
+              "**Du skriver all kod själv**, från första raden, i ditt eget program – som på learnopengl.com. Appen delar inte längre ut startfiler med kod: varje kapitel säger vilket av dina program det fortsätter från, och **Spara resursfilerna…** sparar bara kursens texturer, modeller, typsnitt och banor som ett kapitel behöver.",
+              "En uppgifts **lösning** öppnas i ett eget fönster, fil för fil, som du stänger igen.",
+              "**Bilder och animationer i kapitlen**: pipelinens steg från Render Pipeline Visualizer – buffertar, vertexattribut, koordinatrum, clipping, rasterisering, djuptestet, blending med mera – som bilder och bildspel, och överst i varje lektion det du kommer att ha byggt, ritat av kursens egen simulator (i rörelse där scenen rör sig). Ett klick pausar en animation."
+            ],
+            "de": [
+              "**Du schreibst den ganzen Code selbst**, von der ersten Zeile an, in deinem eigenen Programm – wie auf learnopengl.com. Die App gibt keine Startdateien mit Code mehr aus: Jedes Kapitel sagt, mit welchem deiner Programme es weitergeht, und **Ressourcen speichern…** speichert nur die Texturen, Modelle, Schriften und Level des Kurses, die ein Kapitel braucht.",
+              "Die **Lösung** einer Aufgabe öffnet sich in einem eigenen Fenster, Datei für Datei, das du wieder schließt.",
+              "**Bilder und Animationen in den Kapiteln**: die Schritte der Pipeline aus dem Render Pipeline Visualizer – Puffer, Vertex-Attribute, Koordinatenräume, Clipping, Rasterisierung, Tiefentest, Blending und mehr – als Bilder und Diashows, und oben in jeder Lektion, was du am Ende gebaut haben wirst, gezeichnet vom Simulator des Kurses (in Bewegung, wo sich die Szene bewegt). Ein Klick hält eine Animation an."
+            ],
+            "fr": [
+              "**Vous écrivez tout le code vous-même**, dès la première ligne, dans votre propre programme – comme sur learnopengl.com. L'application ne fournit plus de fichiers de départ avec du code : chaque chapitre indique de quel programme il repart, et **Enregistrer les ressources…** n'enregistre que les textures, modèles, polices et niveaux du cours dont un chapitre a besoin.",
+              "La **solution** d'une tâche s'ouvre dans une fenêtre à part, fichier par fichier, que vous refermez ensuite.",
+              "**Images et animations dans les chapitres** : les étapes du pipeline tirées du Render Pipeline Visualizer – buffers, attributs de sommets, espaces de coordonnées, clipping, rastérisation, test de profondeur, blending et plus – en images et en diaporamas, et en tête de chaque leçon ce que vous aurez construit, dessiné par le simulateur du cours (animé quand la scène bouge). Un clic met une animation en pause."
+            ],
+            "es": [
+              "**Escribes todo el código tú mismo**, desde la primera línea, en tu propio programa, como en learnopengl.com. La aplicación ya no entrega archivos iniciales con código: cada capítulo indica de cuál de tus programas parte, y **Guardar recursos…** guarda solo las texturas, modelos, fuentes y niveles del curso que necesita un capítulo.",
+              "La **solución** de una tarea se abre en una ventana propia, archivo por archivo, que luego cierras.",
+              "**Imágenes y animaciones en los capítulos**: los pasos del pipeline del Render Pipeline Visualizer (buffers, atributos de vértices, espacios de coordenadas, clipping, rasterización, prueba de profundidad, blending y más) como imágenes y presentaciones, y al principio de cada lección lo que habrás construido, dibujado por el simulador del curso (en movimiento cuando la escena se mueve). Un clic pausa una animación."
+            ],
+            "zh": [
+              "**所有代码都由你自己编写**，从第一行开始，写在你自己的程序里——就像在 learnopengl.com 上一样。应用不再提供带代码的起始文件：每章都会说明它从你的哪个程序继续，**保存资源文件…** 只保存本章需要的课程纹理、模型、字体和关卡。",
+              "任务的**答案**会在单独的窗口中按文件显示，看完可以关闭。",
+              "**章节中的图片和动画**：来自 Render Pipeline Visualizer 的管线各步骤——缓冲区、顶点属性、坐标空间、裁剪、光栅化、深度测试、混合等——以图片和幻灯片呈现；每课开头还展示你最终会完成的效果，由课程自带的模拟器绘制（场景会动的地方就是动画）。点击可暂停动画。"
+            ],
+            "ja": [
+              "**コードはすべて自分で書きます**。最初の 1 行から、自分のプログラムの中で――learnopengl.com と同じです。アプリはコード入りの開始ファイルを配らなくなりました。各章はどのプログラムから続けるかを示し、**リソースを保存…** は章に必要なコースのテクスチャ、モデル、フォント、レベルだけを保存します。",
+              "課題の**解答**はファイルごとに専用のウィンドウで開き、閉じることができます。",
+              "**章の中の画像とアニメーション**：Render Pipeline Visualizer によるパイプラインの各段階（バッファー、頂点属性、座標空間、クリッピング、ラスタライズ、深度テスト、ブレンディングなど）を画像とスライドショーで表示し、各レッスンの冒頭には完成形をコースのシミュレーターで描いて表示します（シーンが動く場合はアニメーション）。クリックでアニメーションを一時停止できます。"
+            ]
+          }
+        },
+        {
+          "version": "0.2.3",
+          "date": "2026-11-12",
+          "changes": {
+            "en": [
+              "**Choose your IDE** at the top, next to the graphics API – Visual Studio, CLion, Rider or VS Code. The chapters then show the steps for your IDE where they differ: CMake for CLion and VS Code, a Visual Studio solution for Visual Studio and Rider (libraries, shader files, the working directory, debugging), and the **Your project** panel says where your program will appear.",
+              "**Tick the tasks yourself**, and organise your code however you like: the app no longer watches a folder or waits for you to build and run. Under every task, **Mark as done**; or **Check my code**: pick the chapter's main file – any name, any folder – and the app ticks every task your code solves and says what is missing in the others. **Save start files…** puts a chapter's files in a folder of your choice.",
+              "**Setting up your IDE**: with CLion or VS Code you write the CMakeLists.txt yourself. The chapter lists what it needs, with links to CMake's documentation, and a finished file is folded away for when you get stuck.",
+              "New achievement **Second opinion**: let the app check your code. It replaces the typo achievement, which a real compiler made almost impossible.",
+              "Links in the chapters – to GLFW, GLAD, GLM, the SDKs and the documentation – **open in your browser** again; clicking them did nothing. A link to the Vulkan tutorial's descriptor page is corrected."
+            ],
+            "sv": [
+              "**Välj din IDE** överst, bredvid grafik-API:et – Visual Studio, CLion, Rider eller VS Code. Kapitlen visar sedan stegen för din IDE där de skiljer sig: CMake för CLion och VS Code, en Visual Studio-lösning för Visual Studio och Rider (bibliotek, shaderfiler, arbetskatalogen, felsökning), och panelen **Ditt projekt** säger var ditt program kommer att hamna.",
+              "**Bocka i uppgifterna själv**, och ordna din kod som du vill: appen bevakar inte längre en mapp och väntar inte på att du bygger och kör. Under varje uppgift finns **Markera som klar**; eller **Kontrollera min kod**: välj kapitlets huvudfil – vilket namn och vilken mapp som helst – så bockar appen i varje uppgift som din kod löser och säger vad som saknas i de andra. **Spara startfilerna…** lägger ett kapitels filer i en mapp du väljer.",
+              "**Sätt upp din IDE**: med CLion eller VS Code skriver du CMakeLists.txt själv. Kapitlet listar vad den behöver, med länkar till CMakes dokumentation, och en färdig fil ligger hopfälld om du kör fast.",
+              "Ny utmärkelse **En andra åsikt**: låt appen kontrollera din kod. Den ersätter stavfelsutmärkelsen, som en riktig kompilator gjorde nästan omöjlig.",
+              "Länkarna i kapitlen – till GLFW, GLAD, GLM, SDK:erna och dokumentationen – **öppnas i webbläsaren** igen; att klicka på dem gjorde ingenting. En länk till Vulkan-tutorialens sida om deskriptorer är rättad."
+            ],
+            "de": [
+              "**Wähle deine IDE** oben neben der Grafik-API – Visual Studio, CLion, Rider oder VS Code. Die Kapitel zeigen dann dort, wo es Unterschiede gibt, die Schritte für deine IDE: CMake für CLion und VS Code, eine Visual-Studio-Projektmappe für Visual Studio und Rider (Bibliotheken, Shader-Dateien, das Arbeitsverzeichnis, Debuggen), und das Feld **Dein Projekt** sagt, wo dein Programm landen wird.",
+              "**Hake die Aufgaben selbst ab** und organisiere deinen Code, wie du willst: Die App überwacht keinen Ordner mehr und wartet nicht mehr darauf, dass du baust und ausführst. Unter jeder Aufgabe steht **Als erledigt markieren**; oder **Meinen Code prüfen**: Wähle die Hauptdatei des Kapitels – beliebiger Name, beliebiger Ordner –, und die App hakt jede Aufgabe ab, die dein Code löst, und sagt, was bei den anderen fehlt. **Startdateien speichern…** legt die Dateien eines Kapitels in einem Ordner deiner Wahl ab.",
+              "**Deine IDE einrichten**: Mit CLion oder VS Code schreibst du die CMakeLists.txt selbst. Das Kapitel zählt auf, was sie braucht, mit Links zur CMake-Dokumentation, und eine fertige Datei ist eingeklappt, falls du nicht weiterkommst.",
+              "Neue Auszeichnung **Zweite Meinung**: Lass die App deinen Code prüfen. Sie ersetzt die Tippfehler-Auszeichnung, die ein echter Compiler fast unmöglich gemacht hat.",
+              "Links in den Kapiteln – zu GLFW, GLAD, GLM, den SDKs und der Dokumentation – **öffnen sich wieder im Browser**; ein Klick darauf bewirkte nichts. Ein Link auf die Deskriptor-Seite des Vulkan-Tutorials ist korrigiert."
+            ],
+            "fr": [
+              "**Choisissez votre IDE** en haut, à côté de l'API graphique – Visual Studio, CLion, Rider ou VS Code. Les chapitres montrent alors les étapes propres à votre IDE là où elles diffèrent : CMake pour CLion et VS Code, une solution Visual Studio pour Visual Studio et Rider (bibliothèques, fichiers de shaders, répertoire de travail, débogage), et le panneau **Votre projet** indique où votre programme apparaîtra.",
+              "**Cochez les tâches vous-même**, et organisez votre code comme vous le voulez : l'application ne surveille plus de dossier et n'attend plus que vous compiliez et lanciez. Sous chaque tâche, **Marquer comme faite** ; ou **Vérifier mon code** : choisissez le fichier principal du chapitre – n'importe quel nom, n'importe quel dossier – et l'application coche chaque tâche que votre code résout et indique ce qui manque pour les autres. **Enregistrer les fichiers de départ…** place les fichiers d'un chapitre dans le dossier de votre choix.",
+              "**Configurer votre IDE** : avec CLion ou VS Code, vous écrivez vous-même le CMakeLists.txt. Le chapitre indique ce qu'il doit contenir, avec des liens vers la documentation de CMake, et un fichier complet est replié pour quand vous êtes bloqué.",
+              "Nouveau succès **Deuxième avis** : laissez l'application vérifier votre code. Il remplace le succès de la faute de frappe, qu'un vrai compilateur rendait presque impossible.",
+              "Les liens des chapitres – vers GLFW, GLAD, GLM, les SDK et la documentation – **s'ouvrent à nouveau dans votre navigateur** ; cliquer dessus ne faisait rien. Un lien vers la page du tutoriel Vulkan sur les descripteurs est corrigé."
+            ],
+            "es": [
+              "**Elige tu IDE** arriba, junto a la API gráfica: Visual Studio, CLion, Rider o VS Code. Los capítulos muestran entonces los pasos de tu IDE donde difieren: CMake para CLion y VS Code, una solución de Visual Studio para Visual Studio y Rider (bibliotecas, archivos de shaders, directorio de trabajo, depuración), y el panel **Tu proyecto** indica dónde aparecerá tu programa.",
+              "**Marca las tareas tú mismo** y organiza tu código como quieras: la aplicación ya no vigila una carpeta ni espera a que compiles y ejecutes. Debajo de cada tarea está **Marcar como hecha**; o **Revisar mi código**: elige el archivo principal del capítulo (cualquier nombre, cualquier carpeta) y la aplicación marca cada tarea que resuelve tu código y dice qué falta en las demás. **Guardar archivos iniciales…** pone los archivos de un capítulo en la carpeta que elijas.",
+              "**Configurar tu IDE**: con CLion o VS Code escribes tú mismo el CMakeLists.txt. El capítulo indica lo que necesita, con enlaces a la documentación de CMake, y hay un archivo terminado plegado por si te atascas.",
+              "Nuevo logro **Segunda opinión**: deja que la aplicación revise tu código. Sustituye al logro de la errata, que un compilador real hacía casi imposible.",
+              "Los enlaces de los capítulos (a GLFW, GLAD, GLM, los SDK y la documentación) **vuelven a abrirse en el navegador**; al hacer clic no pasaba nada. Se ha corregido un enlace a la página de descriptores del tutorial de Vulkan."
+            ],
+            "zh": [
+              "在顶部图形 API 旁边**选择你的 IDE**——Visual Studio、CLion、Rider 或 VS Code。各章会在有差异的地方显示适用于你的 IDE 的步骤：CLion 和 VS Code 使用 CMake，Visual Studio 和 Rider 使用 Visual Studio 解决方案（库、着色器文件、工作目录、调试），**你的项目** 面板也会说明程序将出现在哪里。",
+              "**自己勾选任务**，代码目录随你组织：应用不再监视文件夹，也不再等你构建和运行。每个任务下都有 **标记为完成**；或者使用 **检查我的代码**：选择本章的主文件——任意文件名、任意文件夹——应用会勾选你的代码完成的每个任务，并说明其他任务还缺什么。**保存起始文件…** 会把本章的文件放到你选择的文件夹。",
+              "**设置你的 IDE**：使用 CLion 或 VS Code 时，CMakeLists.txt 由你自己编写。本章列出它需要的内容并附上 CMake 文档链接，卡住时还可以展开一份完整的文件。",
+              "新成就 **第二意见**：让应用检查你的代码。它取代了拼写错误成就——真正的编译器让那个成就几乎无法获得。",
+              "章节中的链接（指向 GLFW、GLAD、GLM、各 SDK 和文档）现在**又能在浏览器中打开**了——之前点击没有任何反应。另外修正了一个指向 Vulkan 教程描述符页面的链接。"
+            ],
+            "ja": [
+              "上部のグラフィックス API の隣で **IDE を選択** できるようになりました（Visual Studio、CLion、Rider、VS Code）。各章では違いのある箇所で選んだ IDE の手順が表示されます。CLion と VS Code は CMake、Visual Studio と Rider は Visual Studio ソリューション（ライブラリ、シェーダーファイル、作業ディレクトリ、デバッグ）で、**あなたのプロジェクト** パネルにはプログラムの出力先が表示されます。",
+              "**課題には自分でチェックを付けられます**。コードの構成も自由です。アプリはフォルダーを監視せず、ビルドや実行を待つこともなくなりました。各課題の下に **完了にする** があります。または **コードを確認**：章のメインファイル（名前もフォルダーも自由）を選ぶと、コードが解いている課題すべてにチェックが付き、残りの課題に足りないものが表示されます。**開始ファイルを保存…** で章のファイルを好きなフォルダーに置けます。",
+              "**IDE のセットアップ**：CLion や VS Code では CMakeLists.txt を自分で書きます。章には必要な内容が CMake のドキュメントへのリンク付きで並び、行き詰まったときのために完成したファイルが折りたたまれています。",
+              "新しい実績 **セカンドオピニオン**：アプリにコードを確認してもらう。本物のコンパイラーではほぼ取れなくなったタイプミスの実績に代わるものです。",
+              "章の中のリンク（GLFW、GLAD、GLM、各 SDK、ドキュメントへのリンク）が再び**ブラウザーで開く**ようになりました。以前はクリックしても何も起きませんでした。Vulkan チュートリアルのディスクリプターのページへのリンクも修正しました。"
+            ]
+          }
+        },
+        {
+          "version": "0.2.2",
+          "date": "2026-11-12",
+          "changes": {
+            "en": [
+              "The **Your project** panel now fills the whole right-hand side of every chapter. The separate \"Read first\" box is gone: until you have answered the questions in the text, the panel itself shows how many are left, and the tasks stay locked."
+            ],
+            "sv": [
+              "Panelen **Ditt projekt** fyller nu hela högra sidan i varje kapitel. Den separata rutan \"Läs först\" är borta: tills du har svarat på frågorna i texten visar panelen själv hur många som är kvar, och uppgifterna är låsta så länge."
+            ],
+            "de": [
+              "Das Feld **Dein Projekt** füllt jetzt in jedem Kapitel die ganze rechte Seite. Der eigene Kasten „Zuerst lesen“ ist weg: Bis du die Fragen im Text beantwortet hast, zeigt das Feld selbst, wie viele noch fehlen, und die Aufgaben bleiben gesperrt."
+            ],
+            "fr": [
+              "Le panneau **Votre projet** occupe désormais tout le côté droit de chaque chapitre. L'encadré « À lire d'abord » a disparu : tant que vous n'avez pas répondu aux questions du texte, le panneau indique lui-même combien il en reste, et les tâches restent verrouillées."
+            ],
+            "es": [
+              "El panel **Tu proyecto** ocupa ahora todo el lado derecho de cada capítulo. El recuadro aparte «Lee primero» ha desaparecido: hasta que respondas a las preguntas del texto, el propio panel muestra cuántas quedan, y las tareas siguen bloqueadas."
+            ],
+            "zh": [
+              "**你的项目** 面板现在占据每章的整个右侧。单独的“先阅读”框已移除：在你回答完正文中的问题之前，面板本身会显示还剩多少题，任务保持锁定。"
+            ],
+            "ja": [
+              "**あなたのプロジェクト** パネルが各章の右側全体を使うようになりました。別枠の「まず読む」ボックスはなくなり、本文の問題に答えるまでは、パネル自体に残りの問題数が表示され、タスクはロックされたままです。"
+            ]
+          }
+        },
+        {
+          "version": "0.2.1",
+          "date": "2026-11-12",
+          "changes": {
+            "en": [
+              "**One place for the tasks**: each chapter's tasks – with their hints and solutions – are now in the **Your project** panel, each with what the app is waiting for or why it isn't done yet, instead of in two boxes.",
+              "The **Welcome** chapter has no tasks any more: you can't build before your IDE and the libraries are set up, so it now lists what you need, with links, and the first tasks are in *Creating a window*."
+            ],
+            "sv": [
+              "**Ett ställe för uppgifterna**: kapitlets uppgifter – med tips och lösningar – finns nu i panelen **Ditt projekt**, var och en med vad appen väntar på eller varför den inte är klar än, i stället för i två rutor.",
+              "Kapitlet **Välkommen** har inga uppgifter längre: du kan inte bygga innan din IDE och biblioteken är uppsatta, så kapitlet listar nu vad du behöver, med länkar, och de första uppgifterna finns i *Creating a window*."
+            ],
+            "de": [
+              "**Ein Ort für die Aufgaben**: Die Aufgaben eines Kapitels – mit Tipps und Lösungen – stehen jetzt im Feld **Dein Projekt**, jede mit dem, worauf die App wartet oder warum sie noch nicht erledigt ist, statt in zwei Kästen.",
+              "Das Kapitel **Willkommen** hat keine Aufgaben mehr: Bauen geht erst, wenn deine IDE und die Bibliotheken eingerichtet sind. Es listet jetzt, was du brauchst, mit Links, und die ersten Aufgaben stehen in *Creating a window*."
+            ],
+            "fr": [
+              "**Un seul endroit pour les tâches** : les tâches d'un chapitre – avec leurs indices et solutions – sont désormais dans le panneau **Votre projet**, chacune avec ce que l'application attend ou ce qui manque encore, au lieu de deux encadrés.",
+              "Le chapitre **Bienvenue** n'a plus de tâches : on ne peut pas compiler avant d'avoir installé son IDE et les bibliothèques. Il liste maintenant ce qu'il faut, avec des liens, et les premières tâches sont dans *Creating a window*."
+            ],
+            "es": [
+              "**Un solo lugar para las tareas**: las tareas de cada capítulo – con sus pistas y soluciones – están ahora en el panel **Tu proyecto**, cada una con lo que la aplicación espera o por qué aún no está hecha, en lugar de en dos recuadros.",
+              "El capítulo **Bienvenida** ya no tiene tareas: no se puede compilar antes de configurar tu IDE y las bibliotecas. Ahora enumera lo que necesitas, con enlaces, y las primeras tareas están en *Creating a window*."
+            ],
+            "zh": [
+              "**任务集中在一处**：每章的任务（连同提示和答案）现在都在 **你的项目** 面板中，每项都会显示应用正在等待什么或尚未完成的原因，不再分成两个框。",
+              "**欢迎** 章节不再有任务：在设置好 IDE 和库之前无法构建，所以它现在列出你需要的东西并附有链接，第一批任务位于 *Creating a window*。"
+            ],
+            "ja": [
+              "**タスクを一か所に**：各章のタスク（ヒントと解答付き）は **あなたのプロジェクト** パネルにまとめられ、アプリが何を待っているか、なぜまだ完了していないかがタスクごとに表示されます。2 つの枠に分かれることはなくなりました。",
+              "**ようこそ** の章にはタスクがなくなりました。IDE とライブラリを用意するまではビルドできないため、この章では必要なものをリンク付きで紹介し、最初のタスクは *Creating a window* から始まります。"
+            ]
+          }
+        },
+        {
+          "version": "0.2.0",
+          "date": "2026-11-11",
+          "changes": {
+            "en": [
+              "**Code in your own IDE**: the built-in editor and preview are gone. You write, build and run each chapter in Visual Studio, CLion, Rider or VS Code, and the new **Your project** panel watches your project folder: once you have built and run your program, the course checks your code and ticks the tasks it solves. The panel copies a chapter's start files into your folder and shows the expected result of each task.",
+              "New chapter **Setting up your IDE**: choosing an IDE, the compiler and CMake, and what to install for OpenGL, Vulkan and DirectX 12, with links.",
+              "New part: **Guest Articles**, learnopengl's articles by guest authors in twelve chapters – order-independent transparency, skeletal animation with an animated tentacle, scene graphs and frustum culling, cascaded shadow maps, terrain from a height map on the CPU and with tessellation, OpenGL's direct state access, physically based bloom, compute shaders and area lights – ending with a review and an exam."
+            ],
+            "sv": [
+              "**Koda i din egen IDE**: den inbyggda editorn och förhandsbilden är borta. Du skriver, bygger och kör varje kapitel i Visual Studio, CLion, Rider eller VS Code, och den nya panelen **Ditt projekt** bevakar din projektmapp: när du har byggt och kört programmet kontrollerar kursen din kod och bockar av de uppgifter den löser. Panelen kopierar kapitlets startfiler till din mapp och visar det förväntade resultatet för varje uppgift.",
+              "Nytt kapitel **Sätt upp din IDE**: att välja IDE, kompilatorn och CMake, och vad du installerar för OpenGL, Vulkan och DirectX 12, med länkar.",
+              "Ny del: **Gästartiklar**, learnopengls artiklar av gästskribenter i tolv kapitel – ordningsoberoende transparens, skelettanimation med en animerad tentakel, scengrafer och frustum culling, kaskaderade skuggkartor, terräng från en höjdkarta på CPU:n och med tessellering, OpenGL:s direct state access, fysikaliskt baserad bloom, compute shaders och ytljus – som avslutas med en sammanfattning och ett prov."
+            ],
+            "es": [
+              "**Programa en tu propio IDE**: el editor integrado y la vista previa desaparecen. Escribes, compilas y ejecutas cada capítulo en Visual Studio, CLion, Rider o VS Code, y el nuevo panel **Tu proyecto** vigila la carpeta de tu proyecto: cuando has compilado y ejecutado tu programa, el curso comprueba tu código y marca las tareas que resuelve. El panel copia los archivos iniciales de un capítulo en tu carpeta y muestra el resultado esperado de cada tarea.",
+              "Nuevo capítulo **Configura tu IDE**: elegir un IDE, el compilador y CMake, y qué instalar para OpenGL, Vulkan y DirectX 12, con enlaces.",
+              "Nueva parte: **Artículos invitados**, los artículos de autores invitados de learnopengl en doce capítulos: transparencia independiente del orden, animación esquelética con un tentáculo animado, grafos de escena y frustum culling, mapas de sombras en cascada, terreno a partir de un mapa de alturas en la CPU y con teselación, el acceso directo al estado (DSA) de OpenGL, bloom basado en la física, compute shaders y luces de área; termina con un repaso y un examen."
+            ],
+            "de": [
+              "**Programmiere in deiner eigenen IDE**: Der eingebaute Editor und die Vorschau sind weg. Du schreibst, baust und startest jedes Kapitel in Visual Studio, CLion, Rider oder VS Code, und das neue Feld **Dein Projekt** beobachtet deinen Projektordner: Sobald du dein Programm gebaut und gestartet hast, prüft der Kurs deinen Code und hakt die Aufgaben ab, die er löst. Das Feld kopiert die Startdateien eines Kapitels in deinen Ordner und zeigt das erwartete Ergebnis jeder Aufgabe.",
+              "Neues Kapitel **Deine IDE einrichten**: die Wahl der IDE, Compiler und CMake, und was du für OpenGL, Vulkan und DirectX 12 installierst, mit Links.",
+              "Neuer Teil: **Gastartikel**, die Artikel der Gastautoren von learnopengl in zwölf Kapiteln – reihenfolgeunabhängige Transparenz, Skelettanimation mit einem animierten Tentakel, Szenengraphen und Frustum Culling, kaskadierte Shadow Maps, Gelände aus einer Höhenkarte auf der CPU und mit Tessellation, Direct State Access in OpenGL, physikalisch basiertes Bloom, Compute Shader und Flächenlichter – mit einer Zusammenfassung und einer Prüfung am Ende."
+            ],
+            "fr": [
+              "**Codez dans votre propre IDE** : l'éditeur intégré et l'aperçu disparaissent. Vous écrivez, compilez et lancez chaque chapitre dans Visual Studio, CLion, Rider ou VS Code, et le nouveau panneau **Votre projet** surveille votre dossier de projet : une fois votre programme compilé et lancé, le cours vérifie votre code et coche les tâches qu'il résout. Le panneau copie les fichiers de départ d'un chapitre dans votre dossier et montre le résultat attendu de chaque tâche.",
+              "Nouveau chapitre **Configurer votre IDE** : choisir un IDE, le compilateur et CMake, et ce qu'il faut installer pour OpenGL, Vulkan et DirectX 12, avec des liens.",
+              "Nouvelle partie : **Articles invités**, les articles des auteurs invités de learnopengl en douze chapitres – transparence indépendante de l'ordre, animation squelettique avec un tentacule animé, graphes de scène et frustum culling, shadow maps en cascade, terrain à partir d'une carte de hauteurs sur le CPU puis avec la tessellation, le direct state access d'OpenGL, bloom physiquement réaliste, compute shaders et lumières surfaciques – qui se termine par une révision et un examen."
+            ],
+            "zh": [
+              "**在你自己的 IDE 中编写代码**：内置编辑器和预览已移除。你在 Visual Studio、CLion、Rider 或 VS Code 中编写、构建并运行每一章，新的 **你的项目** 面板会监视你的项目文件夹：当你构建并运行程序后，课程会检查你的代码，并勾选它完成的任务。该面板可将章节的起始文件复制到你的文件夹，并显示每个任务的预期结果。",
+              "新章节 **设置你的 IDE**：如何选择 IDE、编译器和 CMake，以及为 OpenGL、Vulkan 和 DirectX 12 需要安装什么，附带链接。",
+              "新部分：**客座文章**，learnopengl 客座作者的文章，共十二章——顺序无关透明、带动画触手的骨骼动画、场景图与视锥体剔除、级联阴影贴图、在 CPU 上和用曲面细分由高度图生成地形、OpenGL 的直接状态访问（DSA）、基于物理的泛光、计算着色器和面光源——最后是复习和考试。"
+            ],
+            "ja": [
+              "**自分の IDE でコードを書く**：内蔵のエディターとプレビューはなくなりました。各章を Visual Studio、CLion、Rider、VS Code で書き、ビルドして実行します。新しい **あなたのプロジェクト** パネルがプロジェクトフォルダーを見守り、プログラムをビルドして実行すると、コースがコードを確認して解けたタスクにチェックを付けます。パネルは章の開始ファイルをフォルダーにコピーし、各タスクの期待される結果を表示します。",
+              "新しい章 **IDE のセットアップ**：IDE の選び方、コンパイラーと CMake、OpenGL・Vulkan・DirectX 12 のために何をインストールするかを、リンク付きで説明します。",
+              "新しいパート：**ゲスト記事**。learnopengl のゲスト著者による記事を 12 章で — 順序に依存しない透明度、アニメーションする触手によるスケルタルアニメーション、シーングラフと視錐台カリング、カスケードシャドウマップ、CPU とテッセレーションによるハイトマップからの地形、OpenGL のダイレクトステートアクセス（DSA）、物理ベースのブルーム、コンピュートシェーダー、エリアライト — 最後に復習と試験があります。"
+            ]
+          }
+        },
+        {
+          "version": "0.1.0",
+          "date": "2026-11-09",
+          "changes": {
+            "en": [
+              "The first version of **Codestead GP**: learn graphics programming with **OpenGL**, **Vulkan** or **DirectX 12** – choose the API at the top, and every chapter, task and code example follows it.",
+              "The course follows learnopengl.com section by section. This version has the introduction, all of Getting started (from creating a window to Textures, Transformations, Coordinate Systems and Camera), Lighting (Colors to Multiple lights), Model Loading (Assimp, Mesh, Model – with a planet model drawn for the course), Advanced OpenGL (Depth testing to Anti Aliasing) and Advanced Lighting (Blinn-Phong, Gamma Correction, shadows, Normal and Parallax Mapping, HDR, Bloom, Deferred Shading and SSAO) PBR (the theory, lighting, diffuse irradiance and specular image based lighting) and In Practice (debugging, text rendering and the course's own 2D game Hedgerow, from the game loop and sprites to collisions, particles, postprocessing, power-ups and text), each part ending with a review and an exam.",
+              "Write the code in the built-in editor and press **Build & run**: a simulated GPU compiles it, runs your shaders and shows the window your program would open."
+            ],
+            "sv": [
+              "Första versionen av **Codestead GP**: lär dig grafikprogrammering med **OpenGL**, **Vulkan** eller **DirectX 12** – välj API högst upp, så följer varje kapitel, uppgift och kodexempel med.",
+              "Kursen följer learnopengl.com avsnitt för avsnitt. Den här versionen har introduktionen, hela Getting started (från att skapa ett fönster till Textures, Transformations, Coordinate Systems och Camera), Ljussättning (Färger till Flera ljuskällor), Modellinläsning (Assimp, Mesh, Model – med en planetmodell ritad för kursen), Avancerad OpenGL (Djuptestning till Anti Aliasing) och Avancerad belysning (Blinn-Phong, gammakorrigering, skuggor, normal mapping och parallax mapping, HDR, bloom, deferred shading och SSAO) PBR (teorin, belysning, diffus irradians och spekulär bildbaserad belysning) och I praktiken (felsökning, textrendering och kursens eget 2D-spel Hedgerow, från spelslinga och sprites till kollisioner, partiklar, postprocessing, power-ups och text), där varje del avslutas med en sammanfattning och ett prov.",
+              "Skriv koden i den inbyggda editorn och tryck **Bygg & kör**: en simulerad GPU kompilerar den, kör dina shaders och visar fönstret som ditt program skulle öppna."
+            ],
+            "es": [
+              "La primera versión de **Codestead GP**: aprende programación gráfica con **OpenGL**, **Vulkan** o **DirectX 12**; elige la API arriba y cada capítulo, tarea y ejemplo de código la sigue.",
+              "El curso sigue learnopengl.com sección por sección. Esta versión incluye la introducción, todo Getting started (desde crear una ventana hasta Texturas, Transformaciones, Sistemas de coordenadas y Cámara), Iluminación (de Colores a Múltiples luces), Carga de modelos (Assimp, Mesh, Model, con un modelo de planeta creado para el curso), OpenGL avanzado (de la prueba de profundidad al antialiasing) e Iluminación avanzada (Blinn-Phong, corrección gamma, sombras, normal mapping y parallax mapping, HDR, bloom, deferred shading y SSAO) PBR (la teoría, la iluminación, la irradiancia difusa y la iluminación basada en imágenes especular) y En la práctica (depuración, renderizado de texto y el juego 2D propio del curso, Hedgerow: del bucle de juego y los sprites a colisiones, partículas, posprocesado, power-ups y texto); cada parte termina con un repaso y un examen.",
+              "Escribe el código en el editor integrado y pulsa **Compilar y ejecutar**: una GPU simulada lo compila, ejecuta tus shaders y muestra la ventana que abriría tu programa."
+            ],
+            "de": [
+              "Die erste Version von **Codestead GP**: Lerne Grafikprogrammierung mit **OpenGL**, **Vulkan** oder **DirectX 12** – wähle die API oben, und jedes Kapitel, jede Aufgabe und jedes Codebeispiel folgt ihr.",
+              "Der Kurs folgt learnopengl.com Abschnitt für Abschnitt. Diese Version enthält die Einführung, ganz Getting started (vom Fenster bis zu Texturen, Transformationen, Koordinatensystemen und Kamera), Beleuchtung (von Farben bis Mehrere Lichter), Modelle laden (Assimp, Mesh, Model – mit einem eigens gezeichneten Planetenmodell), Fortgeschrittenes OpenGL (vom Tiefentest bis Anti-Aliasing) und Fortgeschrittene Beleuchtung (Blinn-Phong, Gammakorrektur, Schatten, Normal Mapping und Parallax Mapping, HDR, Bloom, Deferred Shading und SSAO) PBR (die Theorie, Beleuchtung, diffuse Irradianz und spiegelnde bildbasierte Beleuchtung) und In der Praxis (Debugging, Textdarstellung und das kurseigene 2D-Spiel Hedgerow – von Spielschleife und Sprites bis zu Kollisionen, Partikeln, Postprocessing, Power-ups und Text); jeder Teil endet mit einer Zusammenfassung und einer Prüfung.",
+              "Schreibe den Code im eingebauten Editor und drücke **Erstellen & ausführen**: Eine simulierte GPU kompiliert ihn, führt deine Shader aus und zeigt das Fenster, das dein Programm öffnen würde."
+            ],
+            "fr": [
+              "La première version de **Codestead GP** : apprenez la programmation graphique avec **OpenGL**, **Vulkan** ou **DirectX 12** – choisissez l'API en haut, et chaque chapitre, tâche et exemple de code la suit.",
+              "Le cours suit learnopengl.com section par section. Cette version contient l'introduction, tout Getting started (de la création d'une fenêtre aux Textures, Transformations, Systèmes de coordonnées et Caméra), Éclairage (des Couleurs aux Lumières multiples), Chargement de modèles (Assimp, Mesh, Model – avec un modèle de planète dessiné pour le cours), OpenGL avancé (du test de profondeur à l'anticrénelage) et Éclairage avancé (Blinn-Phong, correction gamma, ombres, normal mapping et parallax mapping, HDR, bloom, deferred shading et SSAO) PBR (la théorie, l’éclairage, l’irradiance diffuse et l’éclairage spéculaire basé sur l’image) et En pratique (débogage, rendu de texte et le jeu 2D du cours, Hedgerow : de la boucle de jeu et des sprites aux collisions, particules, post-traitement, bonus et texte) ; chaque partie se termine par une révision et un examen.",
+              "Écrivez le code dans l'éditeur intégré et appuyez sur **Compiler et exécuter** : un GPU simulé le compile, exécute vos shaders et affiche la fenêtre que votre programme ouvrirait."
+            ],
+            "zh": [
+              "**Codestead GP** 首个版本：使用 **OpenGL**、**Vulkan** 或 **DirectX 12** 学习图形编程——在顶部选择 API，每一章、每个任务和代码示例都会随之切换。",
+              "课程逐节对应 learnopengl.com。此版本包含引言、完整的“入门”（从创建窗口到纹理、变换、坐标系统和摄像机）、“光照”（从颜色到多光源）、“模型加载”（Assimp、网格、模型——附带为本课程绘制的行星模型）、“高级 OpenGL”（从深度测试到抗锯齿）、“高级光照”（Blinn-Phong、Gamma 校正、阴影、法线贴图与视差贴图、HDR、泛光、延迟着色和 SSAO）“PBR”（理论、光照、漫反射辐照度和镜面反射基于图像的光照）以及“实践”（调试、文字渲染和本课程自己的 2D 游戏 Hedgerow：从游戏循环和精灵到碰撞、粒子、后期处理、道具和文字），每个部分都以复习和考试结束。",
+              "在内置编辑器中编写代码并点击 **构建并运行**：模拟 GPU 会编译代码、运行你的着色器，并显示程序将打开的窗口。"
+            ],
+            "ja": [
+              "**Codestead GP** の最初のバージョン：**OpenGL**、**Vulkan**、**DirectX 12** でグラフィックスプログラミングを学べます。上部で API を選ぶと、すべての章・課題・コード例がそれに合わせて変わります。",
+              "コースは learnopengl.com を節ごとに追います。このバージョンには導入、「はじめに」全体（ウィンドウの作成からテクスチャ、変換、座標系、カメラまで）、「ライティング」（色から複数のライトまで）、「モデルの読み込み」（Assimp、メッシュ、モデル — コースのために描いた惑星モデル付き）、「高度な OpenGL」（深度テストからアンチエイリアシングまで）、「高度なライティング」（Blinn-Phong、ガンマ補正、シャドウ、法線マッピングと視差マッピング、HDR、ブルーム、ディファードシェーディング、SSAO）、「PBR」（理論、ライティング、拡散放射照度、鏡面反射のイメージベースドライティング）、「実践」（デバッグ、テキストレンダリング、コース独自の 2D ゲーム Hedgerow — ゲームループとスプライトから衝突、パーティクル、ポストプロセス、パワーアップ、テキストまで）が含まれ、各パートは復習と試験で締めくくられます。",
+              "内蔵エディタでコードを書き **ビルドして実行** を押すと、シミュレートされた GPU がコンパイルし、シェーダーを実行して、プログラムが開くウィンドウを表示します。"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "codestead-hub",
+      "name": "Codestead",
+      "description": {
+        "en": "Installs and updates the Codestead tools.",
+        "sv": "Installerar och uppdaterar Codestead-verktygen."
+      },
+      "version": "0.2.6",
+      "assets": {
+        "linux-x64": {
+          "url": "https://github.com/JesperE98/codestead-releases/releases/download/codestead-hub-v0.2.6/codestead-hub-0.2.6-linux-x64.tar.gz",
+          "sha256": "ef99873fe26f1a5dda5bc2e80afbd8417838b478c3487e660d8e43ea20c15cba",
+          "size": 124511181,
+          "executable": "Codestead.Hub"
+        },
+        "win-x64": {
+          "url": "https://github.com/JesperE98/codestead-releases/releases/download/codestead-hub-v0.2.6/codestead-hub-0.2.6-win-x64.zip",
+          "sha256": "0e1045254a1f8370b5691748ed66085d877abf80020a39b469f5fda2829706cf",
+          "size": 154798921,
+          "executable": "Codestead.Hub.exe"
+        }
+      },
+      "releaseNotesUrl": "https://github.com/JesperE98/codestead-releases/releases/tag/codestead-hub-v0.2.6",
+      "changes": [
+        {
+          "version": "0.2.6",
+          "date": "2026-11-19",
+          "changes": {
+            "en": [
+              "**The same text on every computer again**: the hub brings its text font, Inter, with it again, so the text looks as it did before 0.2.5 instead of taking whatever font your system has."
+            ],
+            "sv": [
+              "**Samma text på alla datorer igen**: hubben har åter med sig sitt typsnitt Inter, så texten ser ut som före 0.2.5 i stället för att ta det typsnitt som råkar finnas på datorn."
+            ],
+            "de": [
+              "**Wieder dieselbe Schrift auf jedem Computer**: Der Hub bringt seine Schriftart Inter wieder selbst mit, sodass der Text wie vor 0.2.5 aussieht, statt die Schrift zu nehmen, die dein System gerade hat."
+            ],
+            "fr": [
+              "**Le même texte sur chaque ordinateur** : le hub embarque de nouveau sa police Inter, si bien que le texte s'affiche comme avant la 0.2.5 au lieu d'utiliser la police que votre système a sous la main."
+            ],
+            "es": [
+              "**El mismo texto en todos los ordenadores otra vez**: el hub vuelve a incluir su tipografía, Inter, así que el texto se ve como antes de la 0.2.5 en lugar de usar la fuente que tenga tu sistema."
+            ],
+            "zh": [
+              "**每台电脑上的文字重新一致**：中心再次自带其文字字体 Inter，文字显示与 0.2.5 之前相同，不再使用系统碰巧安装的字体。"
+            ],
+            "ja": [
+              "**どのパソコンでも同じ文字表示に**：ハブが再び文字フォント Inter を同梱するようになり、システムにあるフォントではなく、0.2.5 より前と同じ見た目で表示されます。"
+            ]
+          }
+        },
+        {
+          "version": "0.2.5",
+          "date": "2026-11-18",
+          "changes": {
+            "en": [
+              "**A new engine under the hood**: the hub is now built with Electron, the technology behind many desktop apps, instead of .NET. It is the same hub: it installs, starts and updates the tools as before, and your installed tools, settings and the tools' progress are kept.",
+              "What you may notice: the download is about twice as large as before, because the hub now brings its own browser engine, and the text is shown in your system's font."
+            ],
+            "sv": [
+              "**En ny motor under huven**: hubben är nu byggd med Electron, tekniken bakom många skrivbordsappar, i stället för .NET. Det är samma hubb: den installerar, startar och uppdaterar verktygen som förut, och dina installerade verktyg, inställningar och verktygens framsteg finns kvar.",
+              "Det du kan märka: nedladdningen är ungefär dubbelt så stor som förut, eftersom hubben nu har med sig en egen webbläsarmotor, och texten visas med datorns eget typsnitt."
+            ],
+            "de": [
+              "**Ein neuer Motor unter der Haube**: Der Hub wird jetzt mit Electron gebaut, der Technik hinter vielen Desktop-Apps, statt mit .NET. Es ist derselbe Hub: Er installiert, startet und aktualisiert die Tools wie bisher, und Ihre installierten Tools, Einstellungen und der Fortschritt in den Tools bleiben erhalten.",
+              "Was Ihnen auffallen kann: Der Download ist etwa doppelt so groß wie bisher, weil der Hub jetzt eine eigene Browser-Engine mitbringt, und der Text erscheint in der Schrift Ihres Systems."
+            ],
+            "fr": [
+              "**Un nouveau moteur sous le capot** : le hub est désormais construit avec Electron, la technologie de nombreuses applications de bureau, au lieu de .NET. C'est le même hub : il installe, lance et met à jour les outils comme avant, et vos outils installés, vos réglages et votre progression dans les outils sont conservés.",
+              "Ce que vous pourriez remarquer : le téléchargement est environ deux fois plus gros qu'avant, car le hub embarque désormais son propre moteur de navigateur, et le texte s'affiche dans la police de votre système."
+            ],
+            "es": [
+              "**Un motor nuevo por dentro**: el hub ahora está hecho con Electron, la tecnología de muchas aplicaciones de escritorio, en lugar de .NET. Es el mismo hub: instala, inicia y actualiza las herramientas como antes, y se conservan tus herramientas instaladas, tus ajustes y tu progreso en las herramientas.",
+              "Lo que puedes notar: la descarga es aproximadamente el doble de grande que antes, porque el hub ahora trae su propio motor de navegador, y el texto se muestra con la fuente de tu sistema."
+            ],
+            "zh": [
+              "**全新的内部引擎**：中心现在改用 Electron（许多桌面应用使用的技术）构建，而不再使用 .NET。中心本身没有变：它像以前一样安装、启动和更新工具，你已安装的工具、设置以及在各工具中的进度都会保留。",
+              "你可能会注意到：下载文件大约是以前的两倍，因为中心现在自带浏览器引擎；文字使用系统自带的字体显示。"
+            ],
+            "ja": [
+              "**中身が新しいエンジンに**：ハブは .NET ではなく、多くのデスクトップアプリで使われている Electron で作られるようになりました。ハブは同じです。これまでどおりツールをインストール・起動・更新し、インストール済みのツール、設定、各ツールの進捗はそのまま引き継がれます。",
+              "気づくかもしれない点：ハブが独自のブラウザーエンジンを内蔵するようになったため、ダウンロードサイズは以前の約 2 倍になり、文字はシステムのフォントで表示されます。"
+            ]
+          }
+        },
+        {
+          "version": "0.2.4",
+          "date": "2026-11-12",
+          "changes": {
+            "en": [
+              "Behind the scenes: shared code of the Codestead tools was updated. Nothing changes in how you use the hub."
+            ],
+            "sv": [
+              "Bakom kulisserna: Codestead-verktygens gemensamma kod har uppdaterats. Inget ändras i hur du använder hubben."
+            ],
+            "de": [
+              "Hinter den Kulissen: Der gemeinsame Code der Codestead-Tools wurde aktualisiert. An der Bedienung des Hubs ändert sich nichts."
+            ],
+            "fr": [
+              "En coulisses : le code commun des outils Codestead a été mis à jour. Rien ne change dans votre utilisation du hub."
+            ],
+            "es": [
+              "Entre bastidores: se ha actualizado el código común de las herramientas de Codestead. No cambia nada en cómo usas el hub."
+            ],
+            "zh": [
+              "幕后改动：更新了 Codestead 工具的共享代码。中心的使用方式没有任何变化。"
+            ],
+            "ja": [
+              "内部の変更：Codestead ツール共通のコードを更新しました。ハブの使い方は変わりません。"
+            ]
+          }
+        },
+        {
+          "version": "0.2.3",
+          "date": "2026-11-12",
+          "changes": {
+            "en": [
+              "Behind the scenes: shared code of the Codestead tools was updated. Nothing changes in how you use the hub."
+            ],
+            "sv": [
+              "Bakom kulisserna: Codestead-verktygens gemensamma kod har uppdaterats. Inget ändras i hur du använder hubben."
+            ],
+            "de": [
+              "Hinter den Kulissen: Der gemeinsame Code der Codestead-Tools wurde aktualisiert. An der Bedienung des Hubs ändert sich nichts."
+            ],
+            "fr": [
+              "En coulisses : le code commun des outils Codestead a été mis à jour. Rien ne change dans votre utilisation du hub."
+            ],
+            "es": [
+              "Entre bastidores: se ha actualizado el código común de las herramientas de Codestead. No cambia nada en cómo usas el hub."
+            ],
+            "zh": [
+              "幕后改动：更新了 Codestead 工具的共享代码。中心的使用方式没有任何变化。"
+            ],
+            "ja": [
+              "内部の変更：Codestead ツール共通のコードを更新しました。ハブの使い方は変わりません。"
+            ]
+          }
+        },
+        {
+          "version": "0.2.2",
+          "date": "2026-11-11",
+          "changes": {
+            "en": [
+              "The hub now shows **Codestead GP** with its own icon, as in the app itself."
+            ],
+            "sv": [
+              "Hubben visar nu **Codestead GP** med sin egen ikon, samma som i själva appen."
+            ],
+            "de": [
+              "Der Hub zeigt **Codestead GP** jetzt mit seinem eigenen Symbol, wie in der App selbst."
+            ],
+            "fr": [
+              "Le hub affiche désormais **Codestead GP** avec sa propre icône, comme dans l'application elle-même."
+            ],
+            "es": [
+              "El hub muestra ahora **Codestead GP** con su propio icono, igual que en la propia aplicación."
+            ],
+            "zh": [
+              "中心现在会用 **Codestead GP** 自己的图标显示它，与应用本身一致。"
+            ],
+            "ja": [
+              "ハブで **Codestead GP** がアプリ本体と同じアイコンで表示されるようになりました。"
+            ]
+          }
+        },
+        {
+          "version": "0.2.1",
+          "date": "2026-11-03",
+          "changes": {
+            "en": [
+              "New **settings** in the hub: hide in the system tray while a tool is open, let the close button hide the hub in the tray, start with the computer, and look for and install tool updates by itself. Starting the hub again shows the one that is already running.",
+              "Codestead now comes in **7 languages**: English, Swedish, Spanish, German, French, Chinese and Japanese. Portuguese, Russian, Arabic and Hindi are paused until native speakers have checked them – if you used one of them, the app now starts in English.",
+              "Behind the scenes: the code is reorganised so that coming Codestead tools can share it. Nothing changes in how you use the app."
+            ],
+            "sv": [
+              "Nya **inställningar** i hubben: göm den i systemfältet medan ett verktyg är öppet, låt stängknappen gömma den i systemfältet, starta med datorn, och sök efter och installera verktygsuppdateringar automatiskt. Startar du hubben igen visas den som redan körs.",
+              "Codestead finns nu på **7 språk**: engelska, svenska, spanska, tyska, franska, kinesiska och japanska. Portugisiska, ryska, arabiska och hindi är pausade tills någon med språket som modersmål har granskat dem – använde du något av dem startar appen nu på engelska.",
+              "Bakom kulisserna: koden är omorganiserad så att kommande Codestead-verktyg kan dela på den. Inget ändras i hur du använder appen."
+            ],
+            "de": [
+              "Neue **Einstellungen** im Hub: im Infobereich verstecken, solange ein Tool geöffnet ist, die Schließen-Schaltfläche versteckt ihn im Infobereich, mit dem Computer starten, und Tool-Updates automatisch suchen und installieren. Startest du den Hub erneut, erscheint der bereits laufende.",
+              "Codestead gibt es jetzt in **7 Sprachen**: Englisch, Schwedisch, Spanisch, Deutsch, Französisch, Chinesisch und Japanisch. Portugiesisch, Russisch, Arabisch und Hindi pausieren, bis Muttersprachler sie geprüft haben – wenn du eine davon genutzt hast, startet die App jetzt auf Englisch.",
+              "Hinter den Kulissen: Der Code ist neu organisiert, damit künftige Codestead-Tools ihn gemeinsam nutzen können. An der Bedienung ändert sich nichts."
+            ],
+            "fr": [
+              "Nouveaux **paramètres** dans le hub : le masquer dans la zone de notification pendant qu'un outil est ouvert, faire masquer le hub par le bouton de fermeture, le démarrer avec l'ordinateur, et rechercher et installer automatiquement les mises à jour des outils. Relancer le hub affiche celui qui est déjà ouvert.",
+              "Codestead est désormais disponible en **7 langues** : anglais, suédois, espagnol, allemand, français, chinois et japonais. Le portugais, le russe, l'arabe et le hindi sont en pause jusqu'à leur relecture par des locuteurs natifs – si vous utilisiez l'une d'elles, l'application démarre maintenant en anglais.",
+              "En coulisses : le code est réorganisé pour que les futurs outils Codestead puissent le partager. Rien ne change dans votre utilisation de l'application."
+            ],
+            "es": [
+              "Nuevos **ajustes** en el hub: ocultarlo en la bandeja del sistema mientras una herramienta está abierta, que el botón de cerrar lo oculte en la bandeja, iniciarlo con el ordenador, y buscar e instalar las actualizaciones de las herramientas automáticamente. Si vuelves a abrir el hub, se muestra el que ya está en marcha.",
+              "Codestead está ahora disponible en **7 idiomas**: inglés, sueco, español, alemán, francés, chino y japonés. El portugués, el ruso, el árabe y el hindi quedan en pausa hasta que hablantes nativos los revisen; si usabas uno de ellos, la aplicación se abre ahora en inglés.",
+              "Entre bastidores: el código se ha reorganizado para que las próximas herramientas de Codestead puedan compartirlo. No cambia nada en cómo usas la aplicación."
+            ],
+            "zh": [
+              "Hub 新增**设置**：打开工具时隐藏到系统托盘、让关闭按钮把 Hub 隐藏到托盘、开机时启动，以及自动检查并安装工具更新。再次启动 Hub 会显示已在运行的那个。",
+              "Codestead 现在提供 **7 种语言**：英语、瑞典语、西班牙语、德语、法语、中文和日语。葡萄牙语、俄语、阿拉伯语和印地语暂停提供，直到母语人士审校完毕——如果你之前使用其中一种，应用现在会以英语启动。",
+              "幕后：代码已重新组织，以便未来的 Codestead 工具可以共用。你使用应用的方式没有任何变化。"
+            ],
+            "ja": [
+              "ハブに新しい**設定**：ツールを開いている間はシステムトレイに隠す、閉じるボタンでトレイに隠す、コンピューターの起動時に開始する、ツールの更新を自動で確認・インストールする。ハブをもう一度起動すると、すでに動いているハブが表示されます。",
+              "Codestead は **7 言語** に対応しました：英語、スウェーデン語、スペイン語、ドイツ語、フランス語、中国語、日本語。ポルトガル語、ロシア語、アラビア語、ヒンディー語はネイティブスピーカーの確認が済むまで一時停止します。これらを使っていた場合、アプリは英語で起動します。",
+              "舞台裏：今後の Codestead ツールで共有できるようにコードを整理しました。アプリの使い方は何も変わりません。"
+            ]
+          }
+        },
+        {
+          "version": "0.2.0",
+          "date": "2026-11-03",
+          "changes": {
+            "en": [
+              "Each tool's **level, XP, days in a row and achievements** are shown on its card, with a button that opens all of its achievements.",
+              "A **total** for all your tools at the top of the page.",
+              "Clearer **colours** and an indigo accent colour of its own for the hub."
+            ],
+            "sv": [
+              "Varje verktygs **nivå, XP, dagar i rad och utmärkelser** visas på dess kort, med en knapp som öppnar alla dess utmärkelser.",
+              "En **summa** för alla dina verktyg högst upp på sidan.",
+              "Tydligare **färger** och en egen indigoblå accentfärg för hubben."
+            ],
+            "de": [
+              "**Level, XP, Tage in Folge und Erfolge** jedes Werkzeugs werden auf seiner Karte angezeigt, mit einer Schaltfläche, die alle seine Erfolge öffnet.",
+              "Eine **Gesamtsumme** für alle deine Werkzeuge oben auf der Seite.",
+              "Klarere **Farben** und eine eigene indigoblaue Akzentfarbe für den Hub."
+            ],
+            "fr": [
+              "Le **niveau, les XP, les jours d’affilée et les succès** de chaque outil s’affichent sur sa carte, avec un bouton qui ouvre tous ses succès.",
+              "Un **total** pour tous vos outils en haut de la page.",
+              "Des **couleurs** plus lisibles et une couleur d’accent indigo propre au hub."
+            ],
+            "es": [
+              "El **nivel, los XP, los días seguidos y los logros** de cada herramienta se muestran en su tarjeta, con un botón que abre todos sus logros.",
+              "Un **total** de todas tus herramientas en la parte superior de la página.",
+              "**Colores** más claros y un color de acento índigo propio para el hub."
+            ],
+            "pt": [
+              "O **nível, o XP, os dias seguidos e as conquistas** de cada ferramenta aparecem no seu cartão, com um botão que abre todas as conquistas dela.",
+              "Um **total** de todas as suas ferramentas no topo da página.",
+              "**Cores** mais nítidas e uma cor de destaque índigo própria para o hub."
+            ],
+            "ru": [
+              "**Уровень, XP, дни подряд и достижения** каждого инструмента показаны на его карточке, а кнопка открывает все его достижения.",
+              "**Итог** по всем вашим инструментам вверху страницы.",
+              "Более понятные **цвета** и собственный акцентный цвет индиго для хаба."
+            ],
+            "zh": [
+              "每个工具的 **等级、XP、连续天数和成就** 都显示在它的卡片上，还有一个按钮可以打开它的全部成就。",
+              "页面顶部显示你所有工具的 **总计**。",
+              "更清晰的 **颜色**，Hub 也有了自己的靛蓝色强调色。"
+            ],
+            "ja": [
+              "各ツールの **レベル、XP、連続日数、実績** がカードに表示され、ボタンからそのツールのすべての実績を開けます。",
+              "ページ上部に、すべてのツールの **合計** を表示します。",
+              "より分かりやすい **色** と、ハブ独自のインディゴのアクセントカラー。"
+            ],
+            "ar": [
+              "يظهر **المستوى وXP والأيام المتتالية والإنجازات** لكل أداة على بطاقتها، مع زر يفتح جميع إنجازاتها.",
+              "**مجموع** لكل أدواتك أعلى الصفحة.",
+              "**ألوان** أوضح ولون مميِّز نيلي خاص بالـHub."
+            ],
+            "hi": [
+              "हर टूल का **लेवल, XP, लगातार दिन और उपलब्धियाँ** उसके कार्ड पर दिखती हैं, साथ में एक बटन जो उसकी सभी उपलब्धियाँ खोलता है।",
+              "पेज में सबसे ऊपर आपके सभी टूल का **कुल**।",
+              "ज़्यादा साफ़ **रंग** और हब का अपना इंडिगो ऐक्सेंट रंग।"
+            ]
+          }
+        },
+        {
+          "version": "0.1.6",
+          "date": "2026-11-03",
+          "changes": {
+            "en": [
+              "The button that opened the release notes on GitHub is gone – **What's new** shows the changes right in the hub.",
+              "The **OK** button in What's new is always visible, even when there is a lot of news – only the list scrolls."
+            ],
+            "sv": [
+              "Knappen som öppnade releaseanteckningarna på GitHub är borta – **Vad är nytt** visar ändringarna direkt i hubben.",
+              "Knappen **OK** i Vad är nytt syns alltid, även när det finns många nyheter – det är bara listan som rullar."
+            ],
+            "de": [
+              "Die Schaltfläche, die die Versionshinweise auf GitHub öffnete, ist weg – **Neuigkeiten** zeigt die Änderungen direkt im Hub.",
+              "Die Schaltfläche **OK** in den Neuigkeiten ist immer sichtbar, auch bei vielen Neuigkeiten – nur die Liste scrollt."
+            ],
+            "fr": [
+              "Le bouton qui ouvrait les notes de version sur GitHub a disparu – **Nouveautés** affiche les changements directement dans le hub.",
+              "Le bouton **OK** des Nouveautés est toujours visible, même quand il y a beaucoup de nouveautés – seule la liste défile."
+            ],
+            "es": [
+              "El botón que abría las notas de la versión en GitHub ya no está: **Novedades** muestra los cambios directamente en el hub.",
+              "El botón **OK** de Novedades siempre está visible, aunque haya muchas novedades: solo se desplaza la lista."
+            ],
+            "pt": [
+              "O botão que abria as notas da versão no GitHub foi removido – **Novidades** mostra as mudanças direto no hub.",
+              "O botão **OK** em Novidades fica sempre visível, mesmo quando há muitas novidades – só a lista rola."
+            ],
+            "ru": [
+              "Кнопки, которая открывала заметки о выпуске на GitHub, больше нет – **Что нового** показывает изменения прямо в хабе.",
+              "Кнопка **OK** в окне «Что нового» видна всегда, даже если новостей много, – прокручивается только список."
+            ],
+            "zh": [
+              "打开 GitHub 上发布说明的按钮已移除——**新功能** 直接在 Hub 中显示更改。",
+              "即使更新内容很多，新功能窗口中的 **确定** 按钮也始终可见——只有列表会滚动。"
+            ],
+            "ja": [
+              "GitHub のリリースノートを開くボタンはなくなりました。**新機能** でハブの中で直接変更を確認できます。",
+              "新機能の **OK** ボタンは、更新内容が多くても常に表示されます。スクロールするのはリストだけです。"
+            ],
+            "ar": [
+              "أُزيل الزر الذي كان يفتح ملاحظات الإصدار على GitHub – يعرض **ما الجديد** التغييرات مباشرة في الـHub.",
+              "زر **حسنًا** في ما الجديد ظاهر دائمًا، حتى عندما تكون الأخبار كثيرة – القائمة وحدها هي التي تُمرَّر."
+            ],
+            "hi": [
+              "GitHub पर रिलीज़ नोट्स खोलने वाला बटन हटा दिया गया है – **नया क्या है** बदलाव सीधे हब में दिखाता है।",
+              "नया क्या है में **ठीक है** बटन हमेशा दिखता है, भले ही बहुत सारी खबरें हों – सिर्फ़ सूची स्क्रॉल होती है।"
+            ]
+          }
+        },
+        {
+          "version": "0.1.5",
+          "date": "2026-11-03",
+          "changes": {
+            "en": [
+              "After an update – of the hub or of a tool – a **What's new** box shows what changed.",
+              "Every tool has a **What's new** button."
+            ],
+            "sv": [
+              "Efter en uppdatering – av hubben eller av ett verktyg – visar rutan **Vad är nytt** vad som har ändrats.",
+              "Varje verktyg har knappen **Vad är nytt**."
+            ],
+            "de": [
+              "Nach einem Update – des Hubs oder eines Werkzeugs – zeigt das Fenster **Neuigkeiten**, was sich geändert hat.",
+              "Jedes Werkzeug hat eine Schaltfläche **Neuigkeiten**."
+            ],
+            "fr": [
+              "Après une mise à jour – du hub ou d’un outil –, la fenêtre **Nouveautés** montre ce qui a changé.",
+              "Chaque outil a un bouton **Nouveautés**."
+            ],
+            "es": [
+              "Después de una actualización – del hub o de una herramienta –, la ventana **Novedades** muestra lo que ha cambiado.",
+              "Cada herramienta tiene un botón **Novedades**."
+            ],
+            "pt": [
+              "Depois de uma atualização – do hub ou de uma ferramenta –, a janela **Novidades** mostra o que mudou.",
+              "Cada ferramenta tem um botão **Novidades**."
+            ],
+            "ru": [
+              "После обновления – хаба или инструмента – окно **Что нового** показывает, что изменилось.",
+              "У каждого инструмента есть кнопка **Что нового**."
+            ],
+            "zh": [
+              "更新后（无论是 Hub 还是某个工具），**新功能** 窗口会显示有哪些变化。",
+              "每个工具都有 **新功能** 按钮。"
+            ],
+            "ja": [
+              "ハブやツールを更新すると、**新機能** ウィンドウに変更点が表示されます。",
+              "各ツールに **新機能** ボタンが付きました。"
+            ],
+            "ar": [
+              "بعد التحديث – سواء لـ Hub أو لإحدى الأدوات – تعرض نافذة **ما الجديد** ما الذي تغيّر.",
+              "لكل أداة زر **ما الجديد**."
+            ],
+            "hi": [
+              "अपडेट के बाद – हब का या किसी टूल का – **नया क्या है** बॉक्स दिखाता है कि क्या बदला है।",
+              "हर टूल में **नया क्या है** बटन है।"
+            ]
+          }
+        },
+        {
+          "version": "0.1.4",
+          "date": "2026-11-03",
+          "changes": {
+            "en": [
+              "Works on Fedora 45."
+            ],
+            "sv": [
+              "Fungerar på Fedora 45."
+            ],
+            "de": [
+              "Läuft unter Fedora 45."
+            ],
+            "fr": [
+              "Fonctionne sous Fedora 45."
+            ],
+            "es": [
+              "Funciona en Fedora 45."
+            ],
+            "pt": [
+              "Funciona no Fedora 45."
+            ],
+            "ru": [
+              "Работает в Fedora 45."
+            ],
+            "zh": [
+              "可在 Fedora 45 上运行。"
+            ],
+            "ja": [
+              "Fedora 45 で動作します。"
+            ],
+            "ar": [
+              "يعمل على Fedora 45."
+            ],
+            "hi": [
+              "Fedora 45 पर चलता है।"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "codestead-linux",
+      "name": "Codestead Linux",
+      "description": {
+        "en": "Learn the Linux shell by doing – with a simulated terminal, checkpoints and exams.",
+        "sv": "Lär dig Linux-shell genom att göra – med simulerad terminal, kontrollfrågor och prov.",
+        "es": "Aprende la shell de Linux practicando, con una terminal simulada, preguntas de control y exámenes.",
+        "zh": "边做边学 Linux shell——配有模拟终端、检查题和考试。",
+        "hi": "करके Linux शेल सीखें – सिम्युलेटेड टर्मिनल, जाँच प्रश्नों और परीक्षाओं के साथ।",
+        "ar": "تعلّم صدفة Linux بالممارسة، مع طرفية محاكاة وأسئلة تحقق واختبارات.",
+        "pt": "Aprenda o shell do Linux fazendo, com um terminal simulado, perguntas de verificação e provas.",
+        "fr": "Apprenez le shell Linux en pratiquant, avec un terminal simulé, des questions de contrôle et des examens.",
+        "de": "Lerne die Linux-Shell durch Tun – mit simuliertem Terminal, Kontrollfragen und Prüfungen.",
+        "ru": "Изучайте оболочку Linux на практике — с симулированным терминалом, контрольными вопросами и экзаменами.",
+        "ja": "手を動かして Linux シェルを学ぶ――模擬ターミナル、確認問題、試験付き。"
+      },
+      "version": "0.6.7",
+      "assets": {
+        "linux-x64": {
+          "url": "https://github.com/JesperE98/codestead-releases/releases/download/codestead-linux-v0.6.7/codestead-linux-0.6.7-linux-x64.tar.gz",
+          "sha256": "78faeeda7bdb01abbfa8e9714c744ac6191ea9325f192eea8c2d3655bfa6315b",
+          "size": 126120788,
+          "executable": "Codestead.Linux"
+        },
+        "win-x64": {
+          "url": "https://github.com/JesperE98/codestead-releases/releases/download/codestead-linux-v0.6.7/codestead-linux-0.6.7-win-x64.zip",
+          "sha256": "ab773d98318bf40293295a2526b9802861d43675e5725f092f20d7063e775094",
+          "size": 156415314,
+          "executable": "Codestead.Linux.exe"
+        }
+      },
+      "releaseNotesUrl": "https://github.com/JesperE98/codestead-releases/releases/tag/codestead-linux-v0.6.7",
+      "changes": [
+        {
+          "version": "0.6.7",
+          "date": "2026-11-19",
+          "changes": {
+            "en": [
+              "**The same text on every computer again**: Codestead Linux brings its text font, Inter, with it again, so the text looks as it did before 0.6.6 instead of taking whatever font your system has."
+            ],
+            "sv": [
+              "**Samma text på alla datorer igen**: Codestead Linux har åter med sig sitt typsnitt Inter, så texten ser ut som före 0.6.6 i stället för att ta det typsnitt som råkar finnas på datorn."
+            ],
+            "de": [
+              "**Wieder dieselbe Schrift auf jedem Computer**: Codestead Linux bringt seine Schriftart Inter wieder selbst mit, sodass der Text wie vor 0.6.6 aussieht, statt die Schrift zu nehmen, die dein System gerade hat."
+            ],
+            "fr": [
+              "**Le même texte sur chaque ordinateur** : Codestead Linux embarque de nouveau sa police Inter, si bien que le texte s'affiche comme avant la 0.6.6 au lieu d'utiliser la police que votre système a sous la main."
+            ],
+            "es": [
+              "**El mismo texto en todos los ordenadores otra vez**: Codestead Linux vuelve a incluir su tipografía, Inter, así que el texto se ve como antes de la 0.6.6 en lugar de usar la fuente que tenga tu sistema."
+            ],
+            "zh": [
+              "**每台电脑上的文字重新一致**：Codestead Linux 再次自带其文字字体 Inter，文字显示与 0.6.6 之前相同，不再使用系统碰巧安装的字体。"
+            ],
+            "ja": [
+              "**どのパソコンでも同じ文字表示に**：Codestead Linux が再び文字フォント Inter を同梱するようになり、システムにあるフォントではなく、0.6.6 より前と同じ見た目で表示されます。"
+            ]
+          }
+        },
+        {
+          "version": "0.6.6",
+          "date": "2026-11-18",
+          "changes": {
+            "en": [
+              "**A new engine under the hood**: Codestead Linux is now built with Electron, the technology behind many desktop apps, instead of .NET. It is the same app – the same chapters, tasks, terminal and look – and your progress, XP, achievements, settings and terminals are kept.",
+              "What you may notice: the download is about twice as large as before, because the app now brings its own browser engine, and the text is shown in your system's font."
+            ],
+            "sv": [
+              "**En ny motor under huven**: Codestead Linux är nu byggd med Electron, tekniken bakom många skrivbordsappar, i stället för .NET. Det är samma app – samma kapitel, uppgifter, terminal och utseende – och dina framsteg, din XP, dina utmärkelser, inställningar och terminaler finns kvar.",
+              "Det du kan märka: nedladdningen är ungefär dubbelt så stor som förut, eftersom appen nu har med sig en egen webbläsarmotor, och texten visas med datorns eget typsnitt."
+            ],
+            "de": [
+              "**Ein neuer Motor unter der Haube**: Codestead Linux wird jetzt mit Electron gebaut, der Technik hinter vielen Desktop-Apps, statt mit .NET. Es ist dieselbe App – dieselben Kapitel, Aufgaben, dasselbe Terminal und Aussehen – und Ihr Fortschritt, Ihre XP, Auszeichnungen, Einstellungen und Terminals bleiben erhalten.",
+              "Was Ihnen auffallen kann: Der Download ist etwa doppelt so groß wie bisher, weil die App jetzt eine eigene Browser-Engine mitbringt, und der Text erscheint in der Schrift Ihres Systems."
+            ],
+            "fr": [
+              "**Un nouveau moteur sous le capot** : Codestead Linux est désormais construit avec Electron, la technologie de nombreuses applications de bureau, au lieu de .NET. C'est la même application – les mêmes chapitres, tâches, le même terminal et la même apparence – et votre progression, vos XP, vos succès, vos réglages et vos terminaux sont conservés.",
+              "Ce que vous pourriez remarquer : le téléchargement est environ deux fois plus gros qu'avant, car l'application embarque désormais son propre moteur de navigateur, et le texte s'affiche dans la police de votre système."
+            ],
+            "es": [
+              "**Un motor nuevo por dentro**: Codestead Linux ahora está hecho con Electron, la tecnología de muchas aplicaciones de escritorio, en lugar de .NET. Es la misma aplicación – los mismos capítulos, tareas, terminal y aspecto – y se conservan tu progreso, tu XP, tus logros, tus ajustes y tus terminales.",
+              "Lo que puedes notar: la descarga es aproximadamente el doble de grande que antes, porque la aplicación ahora trae su propio motor de navegador, y el texto se muestra con la fuente de tu sistema."
+            ],
+            "zh": [
+              "**全新的内部引擎**：Codestead Linux 现在改用 Electron（许多桌面应用使用的技术）构建，而不再使用 .NET。应用本身没有变——同样的章节、任务、终端和外观——你的进度、XP、成就、设置和终端都会保留。",
+              "你可能会注意到：下载文件大约是以前的两倍，因为应用现在自带浏览器引擎；文字使用系统自带的字体显示。"
+            ],
+            "ja": [
+              "**中身が新しいエンジンに**：Codestead Linux は .NET ではなく、多くのデスクトップアプリで使われている Electron で作られるようになりました。アプリは同じです（章、課題、ターミナル、見た目も同じ）。進捗、XP、実績、設定、ターミナルはそのまま引き継がれます。",
+              "気づくかもしれない点：アプリが独自のブラウザーエンジンを内蔵するようになったため、ダウンロードサイズは以前の約 2 倍になり、文字はシステムのフォントで表示されます。"
+            ]
+          }
+        },
+        {
+          "version": "0.6.5",
+          "date": "2026-11-12",
+          "changes": {
+            "en": [
+              "Behind the scenes: the learning window shared with Codestead GP can now let a tool use the whole right-hand side. Nothing changes in how you use the app."
+            ],
+            "sv": [
+              "Bakom kulisserna: lärfönstret som delas med Codestead GP kan nu låta ett verktyg använda hela högra sidan. Inget ändras i hur du använder appen."
+            ],
+            "de": [
+              "Hinter den Kulissen: Das mit Codestead GP geteilte Lernfenster kann ein Tool jetzt die ganze rechte Seite nutzen lassen. An der Bedienung ändert sich nichts."
+            ],
+            "fr": [
+              "En coulisses : la fenêtre d'apprentissage partagée avec Codestead GP peut désormais laisser un outil utiliser tout le côté droit. Rien ne change dans votre utilisation de l'application."
+            ],
+            "es": [
+              "Entre bastidores: la ventana de aprendizaje compartida con Codestead GP ahora puede dejar que una herramienta use todo el lado derecho. No cambia nada en cómo usas la aplicación."
+            ],
+            "zh": [
+              "幕后改动：与 Codestead GP 共享的学习窗口现在可以让工具使用整个右侧。应用的使用方式没有任何变化。"
+            ],
+            "ja": [
+              "内部の変更：Codestead GP と共有している学習ウィンドウで、ツールが右側全体を使えるようになりました。アプリの使い方は変わりません。"
+            ]
+          }
+        },
+        {
+          "version": "0.6.4",
+          "date": "2026-11-12",
+          "changes": {
+            "en": [
+              "Behind the scenes: the learning window shared with Codestead GP can now let a tool show the tasks in its own panel. Nothing changes in how you use the app."
+            ],
+            "sv": [
+              "Bakom kulisserna: lärfönstret som delas med Codestead GP kan nu låta ett verktyg visa uppgifterna i sin egen panel. Inget ändras i hur du använder appen."
+            ],
+            "de": [
+              "Hinter den Kulissen: Das mit Codestead GP geteilte Lernfenster kann ein Tool die Aufgaben jetzt in seinem eigenen Feld zeigen lassen. An der Bedienung ändert sich nichts."
+            ],
+            "fr": [
+              "En coulisses : la fenêtre d'apprentissage partagée avec Codestead GP peut désormais laisser un outil afficher les tâches dans son propre panneau. Rien ne change dans votre utilisation de l'application."
+            ],
+            "es": [
+              "Entre bastidores: la ventana de aprendizaje compartida con Codestead GP ahora puede dejar que una herramienta muestre las tareas en su propio panel. No cambia nada en cómo usas la aplicación."
+            ],
+            "zh": [
+              "幕后改动：与 Codestead GP 共享的学习窗口现在可以让工具在自己的面板中显示任务。应用的使用方式没有任何变化。"
+            ],
+            "ja": [
+              "内部の変更：Codestead GP と共有している学習ウィンドウで、ツールが自分のパネルにタスクを表示できるようになりました。アプリの使い方は変わりません。"
+            ]
+          }
+        },
+        {
+          "version": "0.6.3",
+          "date": "2026-11-11",
+          "changes": {
+            "en": [
+              "Behind the scenes: the learning window shared with Codestead GP got a few new hooks for GP's project folders. Nothing changes in how you use the app."
+            ],
+            "sv": [
+              "Bakom kulisserna: lärfönstret som delas med Codestead GP har fått några nya kopplingar för GP:s projektmappar. Inget ändras i hur du använder appen."
+            ],
+            "de": [
+              "Hinter den Kulissen: Das mit Codestead GP geteilte Lernfenster hat einige neue Anknüpfungspunkte für die Projektordner von GP bekommen. An der Bedienung ändert sich nichts."
+            ],
+            "fr": [
+              "En coulisses : la fenêtre d'apprentissage partagée avec Codestead GP a reçu quelques nouveaux points d'accroche pour les dossiers de projet de GP. Rien ne change dans votre utilisation de l'application."
+            ],
+            "es": [
+              "Entre bastidores: la ventana de aprendizaje que comparte con Codestead GP tiene algunos puntos de enganche nuevos para las carpetas de proyecto de GP. No cambia nada en cómo usas la aplicación."
+            ],
+            "zh": [
+              "幕后改动：与 Codestead GP 共享的学习窗口新增了几个用于 GP 项目文件夹的挂接点。应用的使用方式没有任何变化。"
+            ],
+            "ja": [
+              "内部の変更：Codestead GP と共有している学習ウィンドウに、GP のプロジェクトフォルダー用の接続点をいくつか追加しました。アプリの使い方は変わりません。"
+            ]
+          }
+        },
+        {
+          "version": "0.6.2",
+          "date": "2026-11-09",
+          "changes": {
+            "en": [
+              "The big terminal is back: it is always next to the lesson, also before the tasks are unlocked. The small terminals in the questions are gone – \"try it\" questions are answered in the big terminal. The tasks still unlock only when you have answered every question in the chapter.",
+              "The basics are easier to get into: `cut` is now in \"Reading and searching text\" and `tr` in \"Redirection and pipes\", and `sed` and `awk` have their own chapter at the start of \"Scripts and automation\" – after variables and quotes, which awk needs. A new task practises `cut`, and the tasks you already solved count where they are now."
+            ],
+            "sv": [
+              "Den stora terminalen är tillbaka: den finns alltid bredvid lektionen, även innan uppgifterna är upplåsta. De små terminalerna i frågorna är borta – \"prova själv\"-frågor besvaras i den stora terminalen. Uppgifterna låses fortfarande upp först när du har svarat på alla frågor i kapitlet.",
+              "Grunderna är lättare att komma in i: `cut` finns nu i \"Läsa och söka i text\" och `tr` i \"Omdirigering och pipes\", och `sed` och `awk` har fått ett eget kapitel först i \"Skript och automatisering\" – efter variabler och citattecken, som awk behöver. En ny uppgift övar `cut`, och uppgifter du redan har klarat räknas där de ligger nu."
+            ],
+            "de": [
+              "Das große Terminal ist zurück: Es steht immer neben der Lektion, auch bevor die Aufgaben freigeschaltet sind. Die kleinen Terminals in den Fragen sind weg – „Probier es aus“-Fragen beantwortest du im großen Terminal. Die Aufgaben werden weiterhin erst freigeschaltet, wenn du alle Fragen des Kapitels beantwortet hast.",
+              "Der Einstieg in die Grundlagen ist leichter: `cut` steht jetzt in „Text lesen und durchsuchen“ und `tr` in „Umleitungen und Pipes“, und `sed` und `awk` haben ein eigenes Kapitel am Anfang von „Skripte und Automatisierung“ – nach Variablen und Anführungszeichen, die awk braucht. Eine neue Aufgabe übt `cut`, und bereits gelöste Aufgaben zählen dort, wo sie jetzt stehen."
+            ],
+            "fr": [
+              "Le grand terminal est de retour : il est toujours à côté de la leçon, même avant que les tâches soient débloquées. Les petits terminaux dans les questions ont disparu – les questions « Essayez » se font dans le grand terminal. Les tâches ne se débloquent toujours qu'une fois toutes les questions du chapitre répondues.",
+              "Les bases sont plus faciles à aborder : `cut` est maintenant dans « Lire et rechercher du texte » et `tr` dans « Redirections et pipes », et `sed` et `awk` ont leur propre chapitre au début de « Scripts et automatisation » – après les variables et les guillemets, dont awk a besoin. Un nouvel exercice entraîne `cut`, et les exercices déjà réussis comptent là où ils se trouvent maintenant."
+            ],
+            "es": [
+              "La terminal grande ha vuelto: siempre está junto a la lección, también antes de que se desbloqueen las tareas. Las terminales pequeñas de las preguntas ya no están: las preguntas de \"pruébalo\" se responden en la terminal grande. Las tareas siguen desbloqueándose solo cuando has respondido todas las preguntas del capítulo.",
+              "Los fundamentos son más fáciles de empezar: `cut` está ahora en \"Leer y buscar texto\" y `tr` en \"Redirecciones y pipes\", y `sed` y `awk` tienen su propio capítulo al comienzo de \"Scripts y automatización\", después de las variables y las comillas, que awk necesita. Una tarea nueva practica `cut`, y las tareas que ya resolviste cuentan donde están ahora."
+            ],
+            "zh": [
+              "大终端回来了：它始终显示在课程旁边，即使任务尚未解锁。问题中的小终端已移除——“试一试”类问题改在大终端中完成。只有回答完本章的所有问题后，任务才会解锁，这一点保持不变。",
+              "基础部分更容易上手了：`cut` 现在位于“阅读和搜索文本”，`tr` 位于“重定向和管道”，`sed` 和 `awk` 则在“脚本与自动化”的开头有了单独的一章——放在 awk 所需的变量和引号之后。新增了一个练习 `cut` 的任务，你已经完成的任务会在新的位置继续计入。"
+            ],
+            "ja": [
+              "大きなターミナルが戻りました。課題のロックが解除される前から、常にレッスンの隣に表示されます。問題の中の小さなターミナルはなくなり、「試してみよう」の問題は大きなターミナルで答えます。課題のロックが解除されるのは、これまでどおり章のすべての問題に答えたときです。",
+              "基礎編に入りやすくなりました。`cut` は「テキストを読む・検索する」に、`tr` は「リダイレクトとパイプ」に移り、`sed` と `awk` は「スクリプトと自動化」の最初に独立した章になりました。awk に必要な変数と引用符を学んだ後に来ます。`cut` を練習する課題が 1 つ増え、すでに解いた課題は新しい場所でもそのまま数えられます。"
+            ]
+          }
+        },
+        {
+          "version": "0.6.1",
+          "date": "2026-11-03",
+          "changes": {
+            "en": [
+              "Codestead now comes in **7 languages**: English, Swedish, Spanish, German, French, Chinese and Japanese. Portuguese, Russian, Arabic and Hindi are paused until native speakers have checked them – if you used one of them, the app now starts in English.",
+              "When a command is not found, the terminal now tells you why: a likely typo (\"did you mean `ls`?\"), a real Linux command that the simulator does not have, or a command in a package that is not installed.",
+              "Behind the scenes: the code is reorganised so that coming Codestead tools can share it. Nothing changes in how you use the app."
+            ],
+            "sv": [
+              "Codestead finns nu på **7 språk**: engelska, svenska, spanska, tyska, franska, kinesiska och japanska. Portugisiska, ryska, arabiska och hindi är pausade tills någon med språket som modersmål har granskat dem – använde du något av dem startar appen nu på engelska.",
+              "När ett kommando inte hittas säger terminalen nu varför: ett troligt stavfel (\"menade du `ls`?\"), ett riktigt Linux-kommando som simulatorn inte har, eller ett kommando i ett paket som inte är installerat.",
+              "Bakom kulisserna: koden är omorganiserad så att kommande Codestead-verktyg kan dela på den. Inget ändras i hur du använder appen."
+            ],
+            "de": [
+              "Codestead gibt es jetzt in **7 Sprachen**: Englisch, Schwedisch, Spanisch, Deutsch, Französisch, Chinesisch und Japanisch. Portugiesisch, Russisch, Arabisch und Hindi pausieren, bis Muttersprachler sie geprüft haben – wenn du eine davon genutzt hast, startet die App jetzt auf Englisch.",
+              "Wenn ein Befehl nicht gefunden wird, sagt dir das Terminal jetzt, warum: ein wahrscheinlicher Tippfehler (\"Meintest du `ls`?\"), ein echter Linux-Befehl, den der Simulator nicht hat, oder ein Befehl aus einem nicht installierten Paket.",
+              "Hinter den Kulissen: Der Code ist neu organisiert, damit künftige Codestead-Tools ihn gemeinsam nutzen können. An der Bedienung ändert sich nichts."
+            ],
+            "fr": [
+              "Codestead est désormais disponible en **7 langues** : anglais, suédois, espagnol, allemand, français, chinois et japonais. Le portugais, le russe, l'arabe et le hindi sont en pause jusqu'à leur relecture par des locuteurs natifs – si vous utilisiez l'une d'elles, l'application démarre maintenant en anglais.",
+              "Quand une commande est introuvable, le terminal vous dit maintenant pourquoi : une faute de frappe probable (« vouliez-vous dire `ls` ? »), une vraie commande Linux que le simulateur n'a pas, ou une commande d'un paquet non installé.",
+              "En coulisses : le code est réorganisé pour que les futurs outils Codestead puissent le partager. Rien ne change dans votre utilisation de l'application."
+            ],
+            "es": [
+              "Codestead está ahora disponible en **7 idiomas**: inglés, sueco, español, alemán, francés, chino y japonés. El portugués, el ruso, el árabe y el hindi quedan en pausa hasta que hablantes nativos los revisen; si usabas uno de ellos, la aplicación se abre ahora en inglés.",
+              "Cuando no se encuentra un comando, la terminal ahora te dice por qué: un probable error de escritura (\"¿quisiste decir `ls`?\"), un comando real de Linux que el simulador no tiene o un comando de un paquete que no está instalado.",
+              "Entre bastidores: el código se ha reorganizado para que las próximas herramientas de Codestead puedan compartirlo. No cambia nada en cómo usas la aplicación."
+            ],
+            "zh": [
+              "Codestead 现在提供 **7 种语言**：英语、瑞典语、西班牙语、德语、法语、中文和日语。葡萄牙语、俄语、阿拉伯语和印地语暂停提供，直到母语人士审校完毕——如果你之前使用其中一种，应用现在会以英语启动。",
+              "找不到命令时，终端现在会告诉你原因：可能是拼写错误（“你是想输入 `ls` 吗？”）、模拟器没有提供的真实 Linux 命令，或者是未安装的软件包中的命令。",
+              "幕后：代码已重新组织，以便未来的 Codestead 工具可以共用。你使用应用的方式没有任何变化。"
+            ],
+            "ja": [
+              "Codestead は **7 言語** に対応しました：英語、スウェーデン語、スペイン語、ドイツ語、フランス語、中国語、日本語。ポルトガル語、ロシア語、アラビア語、ヒンディー語はネイティブスピーカーの確認が済むまで一時停止します。これらを使っていた場合、アプリは英語で起動します。",
+              "コマンドが見つからないとき、ターミナルがその理由を教えてくれるようになりました：入力ミスの可能性（「もしかして `ls` ですか？」）、シミュレーターにない実在の Linux コマンド、またはインストールされていないパッケージのコマンドです。",
+              "舞台裏：今後の Codestead ツールで共有できるようにコードを整理しました。アプリの使い方は何も変わりません。"
+            ]
+          }
+        },
+        {
+          "version": "0.6.0",
+          "date": "2026-11-03",
+          "changes": {
+            "en": [
+              "**Achievements and levels**: earn XP for tasks, questions, chapters and exams, climb ten levels from Guest to root and collect 32 achievements – plus 10 hidden ones that you find by exploring the terminal.",
+              "A short **celebration** when you finish a chapter, a whole part or pass an exam: the commands you practised, the XP you earned and your new achievements.",
+              "**Days in a row**: solve a task or answer a question every day to keep your streak going. Missing a day costs nothing.",
+              "All achievements are under **Achievements** at the bottom of the chapter list, or click your level in the top bar. The progress you already had counts.",
+              "Clearer **colours**: green means done, amber a hint or warning, red an error, blue a link and gold a reward. Codestead Linux has its own teal accent colour."
+            ],
+            "sv": [
+              "**Utmärkelser och nivåer**: du får XP för uppgifter, frågor, kapitel och prov, klättrar tio nivåer från Gäst till root och samlar 32 utmärkelser – plus 10 dolda som du hittar genom att utforska terminalen.",
+              "Ett kort **firande** när du blir klar med ett kapitel, en hel del eller klarar ett prov: kommandona du övade på, XP:n du fick och dina nya utmärkelser.",
+              "**Dagar i rad**: lös en uppgift eller svara på en fråga varje dag för att hålla det igång. Missar du en dag kostar det ingenting.",
+              "Alla utmärkelser finns under **Utmärkelser** längst ner i kapitellistan, eller klicka på din nivå i den översta raden. Framstegen du redan hade räknas.",
+              "Tydligare **färger**: grönt betyder klart, gult en ledtråd eller varning, rött ett fel, blått en länk och guld en belöning. Codestead Linux har en egen blågrön accentfärg."
+            ],
+            "de": [
+              "**Erfolge und Level**: Verdiene XP für Aufgaben, Fragen, Kapitel und Prüfungen, steig zehn Level von Gast bis root auf und sammle 32 Erfolge – plus 10 versteckte, die du beim Erkunden des Terminals findest.",
+              "Eine kurze **Feier**, wenn du ein Kapitel oder ein ganzes Hauptkapitel abschließt oder eine Prüfung bestehst: die Befehle, die du geübt hast, die verdienten XP und deine neuen Erfolge.",
+              "**Tage in Folge**: Löse jeden Tag eine Aufgabe oder beantworte eine Frage, damit deine Serie weiterläuft. Ein verpasster Tag kostet nichts.",
+              "Alle Erfolge findest du unter **Erfolge** ganz unten in der Kapitelliste, oder klicke oben in der Leiste auf dein Level. Dein bisheriger Fortschritt zählt mit.",
+              "Klarere **Farben**: Grün heißt erledigt, Bernstein ein Tipp oder eine Warnung, Rot ein Fehler, Blau ein Link und Gold eine Belohnung. Codestead Linux hat eine eigene blaugrüne Akzentfarbe."
+            ],
+            "fr": [
+              "**Succès et niveaux** : gagnez des XP pour les tâches, les questions, les chapitres et les examens, grimpez dix niveaux d’Invité à root et collectionnez 32 succès – plus 10 cachés que vous découvrez en explorant le terminal.",
+              "Une courte **célébration** quand vous terminez un chapitre ou un chapitre principal entier, ou réussissez un examen : les commandes pratiquées, les XP gagnés et vos nouveaux succès.",
+              "**Jours d’affilée** : résolvez une tâche ou répondez à une question chaque jour pour continuer votre série. Manquer un jour ne coûte rien.",
+              "Tous les succès se trouvent sous **Succès** en bas de la liste des chapitres, ou cliquez sur votre niveau dans la barre du haut. La progression que vous aviez déjà compte.",
+              "Des **couleurs** plus lisibles : vert signifie terminé, ambre un indice ou un avertissement, rouge une erreur, bleu un lien et or une récompense. Codestead Linux a sa propre couleur d’accent bleu-vert."
+            ],
+            "es": [
+              "**Logros y niveles**: gana XP con tareas, preguntas, capítulos y exámenes, sube diez niveles de Invitado a root y consigue 32 logros, además de 10 ocultos que encontrarás explorando la terminal.",
+              "Una breve **celebración** cuando terminas un capítulo o un capítulo principal entero, o apruebas un examen: los comandos que practicaste, los XP que ganaste y tus nuevos logros.",
+              "**Días seguidos**: resuelve una tarea o responde una pregunta cada día para mantener la racha. Saltarte un día no cuesta nada.",
+              "Todos los logros están en **Logros**, al final de la lista de capítulos, o haz clic en tu nivel en la barra superior. El progreso que ya tenías cuenta.",
+              "**Colores** más claros: verde significa hecho, ámbar una pista o advertencia, rojo un error, azul un enlace y dorado una recompensa. Codestead Linux tiene su propio color de acento verde azulado."
+            ],
+            "pt": [
+              "**Conquistas e níveis**: ganhe XP por tarefas, perguntas, capítulos e provas, suba dez níveis de Convidado a root e colecione 32 conquistas – além de 10 ocultas que você encontra explorando o terminal.",
+              "Uma breve **comemoração** quando você conclui um capítulo, uma parte inteira ou é aprovado numa prova: os comandos que você praticou, o XP que ganhou e suas novas conquistas.",
+              "**Dias seguidos**: resolva uma tarefa ou responda a uma pergunta todo dia para manter a sequência. Perder um dia não custa nada.",
+              "Todas as conquistas ficam em **Conquistas**, no fim da lista de capítulos, ou clique no seu nível na barra superior. O progresso que você já tinha conta.",
+              "**Cores** mais nítidas: verde significa concluído, âmbar uma dica ou aviso, vermelho um erro, azul um link e dourado uma recompensa. O Codestead Linux tem sua própria cor de destaque verde-azulada."
+            ],
+            "ru": [
+              "**Достижения и уровни**: получайте XP за задания, вопросы, главы и экзамены, пройдите десять уровней от Гостя до root и соберите 32 достижения – плюс 10 скрытых, которые можно найти, исследуя терминал.",
+              "Короткое **празднование**, когда вы проходите главу, целую часть или сдаёте экзамен: команды, которые вы отработали, заработанные XP и новые достижения.",
+              "**Дни подряд**: выполняйте задание или отвечайте на вопрос каждый день, чтобы не прерывать серию. Пропущенный день ничем не грозит.",
+              "Все достижения собраны в разделе **Достижения** внизу списка глав – или нажмите на свой уровень в верхней панели. Уже имеющийся прогресс засчитывается.",
+              "Более понятные **цвета**: зелёный означает «готово», янтарный – подсказку или предупреждение, красный – ошибку, синий – ссылку, золотой – награду. У Codestead Linux свой бирюзовый акцентный цвет."
+            ],
+            "zh": [
+              "**成就和等级**：完成任务、回答问题、学完章节和通过测验都能获得 XP，从访客一路升到 root，共十个等级，还能收集 32 个成就——另有 10 个隐藏成就，需要你探索终端才能发现。",
+              "完成一个章节、一整个部分或通过测验时，会有简短的 **庆祝**：展示你练习过的命令、获得的 XP 和新解锁的成就。",
+              "**连续天数**：每天完成一个任务或回答一个问题，就能保持连续记录。错过一天也没有任何损失。",
+              "所有成就都在章节列表底部的 **成就** 中，也可以点击顶栏中的等级查看。你之前的进度同样计入。",
+              "更清晰的 **颜色**：绿色表示完成，琥珀色表示提示或警告，红色表示错误，蓝色表示链接，金色表示奖励。Codestead Linux 有了自己的青绿色强调色。"
+            ],
+            "ja": [
+              "**実績とレベル**：課題、問題、章、テストで XP を獲得し、ゲストから root まで 10 のレベルを駆け上がり、32 個の実績を集めましょう。さらに、ターミナルを探索すると見つかる隠し実績が 10 個あります。",
+              "章やパート全体を終えたとき、またはテストに合格したときに、短い **お祝い** が表示されます。練習したコマンド、獲得した XP、新しい実績を確認できます。",
+              "**連続日数**：毎日、課題を解くか問題に答えると、連続記録が続きます。1 日休んでもペナルティはありません。",
+              "すべての実績は、章リストのいちばん下の **実績** から見られます。上部バーのレベルをクリックしても開きます。これまでの進捗もカウントされます。",
+              "より分かりやすい **色**：緑は完了、琥珀色はヒントや警告、赤はエラー、青はリンク、金色はごほうびを表します。Codestead Linux には独自のティールのアクセントカラーがあります。"
+            ],
+            "ar": [
+              "**الإنجازات والمستويات**: اكسب XP مقابل المهام والأسئلة والفصول والاختبارات، وتسلّق عشرة مستويات من ضيف إلى root، واجمع 32 إنجازًا – إضافة إلى 10 إنجازات مخفية تكتشفها باستكشاف الطرفية.",
+              "**احتفال** قصير عندما تنهي فصلًا أو جزءًا كاملًا أو تنجح في اختبار: الأوامر التي تدرّبت عليها، وXP الذي كسبته، وإنجازاتك الجديدة.",
+              "**أيام متتالية**: أنجز مهمة أو أجب عن سؤال كل يوم لتحافظ على سلسلتك. تفويت يوم لا يكلّفك شيئًا.",
+              "تجد كل الإنجازات تحت **الإنجازات** أسفل قائمة الفصول، أو انقر على مستواك في الشريط العلوي. التقدّم الذي أحرزته من قبل محسوب.",
+              "**ألوان** أوضح: الأخضر يعني منجزًا، والكهرماني تلميحًا أو تحذيرًا، والأحمر خطأً، والأزرق رابطًا، والذهبي مكافأة. لـ Codestead Linux لون مميِّز خاص به بالأزرق المخضرّ."
+            ],
+            "hi": [
+              "**उपलब्धियाँ और लेवल**: कार्यों, प्रश्नों, अध्यायों और परीक्षाओं के लिए XP कमाएँ, मेहमान से root तक दस लेवल चढ़ें और 32 उपलब्धियाँ जुटाएँ – साथ में 10 छिपी उपलब्धियाँ, जो टर्मिनल को खंगालने पर मिलती हैं।",
+              "जब आप कोई अध्याय या पूरा भाग ख़त्म करते हैं या परीक्षा पास करते हैं, तो एक छोटा-सा **जश्न**: जिन कमांड का आपने अभ्यास किया, आपके कमाए XP और आपकी नई उपलब्धियाँ।",
+              "**लगातार दिन**: अपना सिलसिला जारी रखने के लिए हर दिन कोई कार्य पूरा करें या किसी प्रश्न का उत्तर दें। एक दिन छूट जाए तो कोई नुकसान नहीं।",
+              "सभी उपलब्धियाँ अध्यायों की सूची में सबसे नीचे **उपलब्धियाँ** में हैं, या ऊपर की पट्टी में अपने लेवल पर क्लिक करें। आपकी पहले की प्रगति भी गिनी जाती है।",
+              "ज़्यादा साफ़ **रंग**: हरा मतलब पूरा, एम्बर संकेत या चेतावनी, लाल त्रुटि, नीला लिंक और सुनहरा इनाम। Codestead Linux का अपना टील ऐक्सेंट रंग है।"
+            ]
+          }
+        },
+        {
+          "version": "0.5.6",
+          "date": "2026-11-03",
+          "changes": {
+            "en": [
+              "The settings are opened from the bottom of the chapter list – the extra button in the top right corner is gone.",
+              "The **OK** button in What's new is always visible, even when there is a lot of news – only the list scrolls."
+            ],
+            "sv": [
+              "Inställningarna öppnas längst ner i kapitellistan – den extra knappen uppe i högra hörnet är borta.",
+              "Knappen **OK** i Vad är nytt syns alltid, även när det finns många nyheter – det är bara listan som rullar."
+            ],
+            "de": [
+              "Die Einstellungen öffnest du unten in der Kapitelliste – die zusätzliche Schaltfläche oben rechts ist weg.",
+              "Die Schaltfläche **OK** in den Neuigkeiten ist immer sichtbar, auch bei vielen Neuigkeiten – nur die Liste scrollt."
+            ],
+            "fr": [
+              "Les paramètres s'ouvrent en bas de la liste des chapitres – le bouton supplémentaire en haut à droite a disparu.",
+              "Le bouton **OK** des Nouveautés est toujours visible, même quand il y a beaucoup de nouveautés – seule la liste défile."
+            ],
+            "es": [
+              "La configuración se abre al final de la lista de capítulos: el botón extra de la esquina superior derecha ya no está.",
+              "El botón **OK** de Novedades siempre está visible, aunque haya muchas novedades: solo se desplaza la lista."
+            ],
+            "pt": [
+              "As configurações são abertas no fim da lista de capítulos – o botão extra no canto superior direito foi removido.",
+              "O botão **OK** em Novidades fica sempre visível, mesmo quando há muitas novidades – só a lista rola."
+            ],
+            "ru": [
+              "Настройки открываются внизу списка глав – лишней кнопки в правом верхнем углу больше нет.",
+              "Кнопка **OK** в окне «Что нового» видна всегда, даже если новостей много, – прокручивается только список."
+            ],
+            "zh": [
+              "从章节列表底部打开设置——右上角多余的按钮已移除。",
+              "即使更新内容很多，新功能窗口中的 **确定** 按钮也始终可见——只有列表会滚动。"
+            ],
+            "ja": [
+              "設定は章リストのいちばん下から開きます。右上の余分なボタンはなくなりました。",
+              "新機能の **OK** ボタンは、更新内容が多くても常に表示されます。スクロールするのはリストだけです。"
+            ],
+            "ar": [
+              "تُفتح الإعدادات من أسفل قائمة الفصول – أُزيل الزر الإضافي في الزاوية العلوية اليمنى.",
+              "زر **حسنًا** في ما الجديد ظاهر دائمًا، حتى عندما تكون الأخبار كثيرة – القائمة وحدها هي التي تُمرَّر."
+            ],
+            "hi": [
+              "सेटिंग्स अब अध्यायों की सूची के नीचे से खुलती हैं – ऊपर दाएँ कोने का अतिरिक्त बटन हटा दिया गया है।",
+              "नया क्या है में **ठीक है** बटन हमेशा दिखता है, भले ही बहुत सारी खबरें हों – सिर्फ़ सूची स्क्रॉल होती है।"
+            ]
+          }
+        },
+        {
+          "version": "0.5.5",
+          "date": "2026-11-03",
+          "changes": {
+            "en": [
+              "After an update, a **What's new** box shows what changed. You can open it again from the settings."
+            ],
+            "sv": [
+              "Efter en uppdatering visar rutan **Vad är nytt** vad som har ändrats. Du kan öppna den igen från inställningarna."
+            ],
+            "de": [
+              "Nach einem Update zeigt das Fenster **Neuigkeiten**, was sich geändert hat. Du kannst es in den Einstellungen erneut öffnen."
+            ],
+            "fr": [
+              "Après une mise à jour, la fenêtre **Nouveautés** montre ce qui a changé. Vous pouvez la rouvrir depuis les paramètres."
+            ],
+            "es": [
+              "Después de una actualización, la ventana **Novedades** muestra lo que ha cambiado. Puedes volver a abrirla desde los ajustes."
+            ],
+            "pt": [
+              "Depois de uma atualização, a janela **Novidades** mostra o que mudou. Você pode abri-la de novo nas configurações."
+            ],
+            "ru": [
+              "После обновления окно **Что нового** показывает, что изменилось. Его можно снова открыть в настройках."
+            ],
+            "zh": [
+              "更新后，**新功能** 窗口会显示有哪些变化。你也可以在设置中再次打开它。"
+            ],
+            "ja": [
+              "更新後、**新機能** ウィンドウに変更点が表示されます。設定からもう一度開くこともできます。"
+            ],
+            "ar": [
+              "بعد التحديث، تعرض نافذة **ما الجديد** ما الذي تغيّر. يمكنك فتحها مرة أخرى من الإعدادات."
+            ],
+            "hi": [
+              "अपडेट के बाद **नया क्या है** बॉक्स दिखाता है कि क्या बदला है। आप इसे सेटिंग्स से फिर से खोल सकते हैं।"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,15 +1,14 @@
 // The updates of an app installed as a .deb, .rpm or Arch package (NativePackageUpdate.ts): which installations are
-// native packages, which file of the release is this system's, the release's checksums, the package manager's command
-// line (through pkexec, or as root without it) and what the user is told when it does not work. The package manager,
-// pkexec and GitHub are fakes here; packaging/native-update-test.sh runs the real ones in containers.
-import { createHash } from "node:crypto";
+// native packages, which file of the release is this system's, the signed catalog's version and SHA-256, the package
+// manager's command line (through pkexec, or as root without it) and what the user is told when it does not work. The
+// package manager, pkexec and GitHub are fakes here; packaging/native-update-test.sh runs the real ones in containers.
+import { createHash, generateKeyPairSync, sign } from "node:crypto";
 import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { appSelfUpdate } from "../src/electron/AppSelfUpdate.js";
 import {
-  checksumFor,
   type CommandResult,
   detectNativeInstall,
   type DetectEnvironment,
@@ -21,7 +20,8 @@ import {
   installFailure,
   isAllowedDownloadUrl,
   isNewerVersion,
-  latestFromVelopackFeed,
+  latestFromSignedCatalog,
+  linuxRid,
   type NativeInstall,
   NativePackageSelfUpdate,
   nativePackageAsset,
@@ -32,6 +32,7 @@ import {
   type RunCommand,
 } from "../src/electron/NativePackageUpdate.js";
 import { remoteMessage, SelfUpdateChannels, selfUpdateBridge } from "../src/electron/SelfUpdateBridge.js";
+import { catalogPublicKey, type SignedRelease } from "../src/electron/SignedCatalog.js";
 import { VelopackSelfUpdate } from "../src/electron/VelopackUpdate.js";
 
 const repo = "JesperE98/codestead-releases";
@@ -123,14 +124,8 @@ describe("NativePackageUpdateTests: releasens filer", () => {
     );
   });
 
-  it("kontrollsumman ur SHA256SUMS.txt (sha256sum: text- och binärläge), annars ingen", () => {
-    const a = "a".repeat(64);
-    const b = "B".repeat(64);
-    const sums = `${a}  codestead-hub_0.2.7_amd64.deb\n${b} *codestead-hub-0.2.7-1.x86_64.rpm\r\n${"c".repeat(64)}  x-codestead-hub_0.2.7_amd64.deb.sig\n`;
-    expect(checksumFor(sums, "codestead-hub_0.2.7_amd64.deb")).toBe(a);
-    expect(checksumFor(sums, "codestead-hub-0.2.7-1.x86_64.rpm")).toBe("b".repeat(64));
-    expect(checksumFor(sums, "codestead-hub-0.2.7-1-x86_64.pkg.tar.zst")).toBeNull();
-    expect(checksumFor("not a checksum file", "codestead-hub_0.2.7_amd64.deb")).toBeNull();
+  it("katalogens processor-id", () => {
+    expect(linuxRid("x64")).toBe("linux-x64");
   });
 
   it("bara HTTPS från GitHub", () => {
@@ -142,19 +137,38 @@ describe("NativePackageUpdateTests: releasens filer", () => {
     }
   });
 
-  it("den senaste versionen i Velopack-flödet (releases.linux.json, som AppImage uppdaterar från)", async () => {
-    const feed = {
-      Assets: [
-        { PackageId: "codestead-linux", Version: "0.6.7", Type: "Full", FileName: "a.nupkg" },
-        { PackageId: "codestead-linux", Version: "0.6.10", Type: "Full", FileName: "b.nupkg" },
-        { PackageId: "codestead-linux", Version: "0.6.11", Type: "Delta", FileName: "c.nupkg" },
-        { PackageId: "other", Version: "9.0.0", Type: "Full" },
-      ],
+  it("den senaste versionen och paketens SHA-256 ur den signerade katalogen (exakt de signerade byten)", async () => {
+    const { privateKey, publicKey } = generateKeyPairSync("ec", { namedCurve: "prime256v1" });
+    const key = catalogPublicKey(publicKey.export({ type: "spki", format: "pem" }).toString())!;
+    const catalog = new TextEncoder().encode(
+      JSON.stringify({
+        schema: 1,
+        generated: "2026-11-20T00:00:00Z",
+        tools: [{ id: "codestead-linux", version: "0.6.10", nativePackages: { "linux-x64": { deb: { file: "codestead-linux_0.6.10_amd64.deb", sha256: "a".repeat(64), size: 9 } } } }],
+      }),
+    );
+    const signature = sign("sha256", catalog, { key: privateKey, dsaEncoding: "der" }).toString("base64");
+    const catalogAt = `https://github.com/${repo}/releases/download/catalog/catalog.json`;
+    const serve = (files: Record<string, Uint8Array<ArrayBuffer> | string>) => {
+      const urls: string[] = [];
+      const get: HttpGet = (url) => (urls.push(url), Promise.resolve(url in files ? new Response(files[url]) : new Response("Not Found", { status: 404 })));
+      return { get, urls };
     };
-    const urls: string[] = [];
-    const get: HttpGet = (url) => (urls.push(url), Promise.resolve(new Response(JSON.stringify(feed))));
-    expect(await latestFromVelopackFeed(get, `https://github.com/${repo}/releases/download/codestead-linux-latest/`, "codestead-linux")).toBe("0.6.10");
-    expect(urls).toEqual([`https://github.com/${repo}/releases/download/codestead-linux-latest/releases.linux.json`]);
+    const good = serve({ [catalogAt]: catalog, [`${catalogAt}.sig`]: signature });
+    expect(await latestFromSignedCatalog(good.get, repo, key, "codestead-linux")).toEqual({
+      version: "0.6.10",
+      nativePackages: { "linux-x64": { deb: { file: "codestead-linux_0.6.10_amd64.deb", sha256: "a".repeat(64), size: 9 } } },
+    });
+    expect(good.urls).toEqual([catalogAt, `${catalogAt}.sig`]);
+    expect(await latestFromSignedCatalog(good.get, repo, key, "codestead-gp")).toBeNull();
+
+    // One byte changed (here: the JSON's white space, which does not change what it says): the signature is wrong.
+    const changed = new Uint8Array([...catalog, 0x0a]);
+    const e = (await latestFromSignedCatalog(serve({ [catalogAt]: changed, [`${catalogAt}.sig`]: signature }).get, repo, key, "codestead-linux").catch((x: unknown) => x)) as NativeUpdateError;
+    expect(e).toBeInstanceOf(NativeUpdateError);
+    expect([e.reason, e.message]).toEqual(["catalog", "The catalog signature is wrong – the catalog has been changed or damaged and is not used."]);
+    // No signature: a download error, nothing is read.
+    expect(((await latestFromSignedCatalog(serve({ [catalogAt]: catalog }).get, repo, key, "codestead-linux").catch((x: unknown) => x)) as NativeUpdateError).reason).toBe("download");
     expect(isNewerVersion("0.6.10", "0.6.9")).toBe(true);
     expect(isNewerVersion("0.6.9", "0.6.9")).toBe(false);
     expect(isNewerVersion("1.0", "0.6.9")).toBe(false);
@@ -213,13 +227,22 @@ describe("NativePackageUpdateTests: uppdateringen", () => {
 
   const newDeb = new TextEncoder().encode("the 0.2.7 package ".repeat(5000));
   const sha = (b: Uint8Array) => createHash("sha256").update(b).digest("hex");
-  const base = `https://github.com/${repo}/releases/download/codestead-hub-v0.2.7/`;
+  const deb = "codestead-hub_0.2.7_amd64.deb";
+  const base = `https://github.com/${repo}/releases/download/`;
+  const release = `${base}codestead-hub-v0.2.7/`;
 
   const assets = "https://objects.githubusercontent.com/github-production-release-asset/";
 
+  /** The signed catalog's word on 0.2.7: its .deb with this SHA-256 and size (`packages` replaces the list). */
+  const signed = (over: { sha256?: string; size?: number; packages?: SignedRelease["nativePackages"]; version?: string } = {}): SignedRelease => ({
+    version: over.version ?? "0.2.7",
+    nativePackages:
+      over.packages !== undefined ? over.packages : { "linux-x64": { deb: { file: deb, sha256: over.sha256 ?? sha(newDeb), size: over.size ?? newDeb.length } } },
+  });
+
   /**
-   * GitHub with one release; `files`: name → content (a string is the checksums file). As GitHub, a download redirects
-   * to the download host (or to `redirectTo`, which serves the files too). `urls`: every request.
+   * GitHub with the releases; `files`: "<tag>/<name>" → content. As GitHub, a download redirects to the download host
+   * (or to `redirectTo`, which serves the files too). `urls`: every request.
    */
   function github(files: Partial<Record<string, Uint8Array<ArrayBuffer> | string>>, redirectTo?: string): { get: HttpGet; urls: string[] } {
     const urls: string[] = [];
@@ -238,6 +261,8 @@ describe("NativePackageUpdateTests: uppdateringen", () => {
     };
   }
 
+  const withPackage = (redirectTo?: string) => github({ [`codestead-hub-v0.2.7/${deb}`]: newDeb }, redirectTo);
+
   function updater(over: Partial<NativeUpdateOptions> & { answers?: Record<string, CommandResult>; tools?: string[] }) {
     const temp = mkdtempSync(join(tmpdir(), "native-update-test-"));
     dirs.push(temp);
@@ -254,7 +279,7 @@ describe("NativePackageUpdateTests: uppdateringen", () => {
       packageId: id,
       currentVersion: "0.2.6",
       install: { kind: "deb", version: "0.2.6" } satisfies NativeInstall,
-      latestVersion: () => Promise.resolve("0.2.7"),
+      latestRelease: () => Promise.resolve(signed()),
       get: github({}).get,
       restart: () => restarted++,
       arch: "x64",
@@ -267,15 +292,35 @@ describe("NativePackageUpdateTests: uppdateringen", () => {
     return { u, calls, temp, installed, restarted: () => restarted };
   }
 
-  it("laddar ner paketet, kontrollerar summan, installerar med pkexec apt-get och startar om", async () => {
-    const gh = github({ "SHA256SUMS.txt": `${sha(newDeb)}  codestead-hub_0.2.7_amd64.deb\n`, "codestead-hub_0.2.7_amd64.deb": newDeb });
-    const t = updater({ get: gh.get });
+  /** A signed catalog on the fake GitHub (release "catalog"), and the key the app has built in. */
+  function signedCatalog(tools: unknown[]): { files: Record<string, string>; key: ReturnType<typeof catalogPublicKey> & object } {
+    const { privateKey, publicKey } = generateKeyPairSync("ec", { namedCurve: "prime256v1" });
+    const data = JSON.stringify({ schema: 1, generated: "2026-11-20T00:00:00Z", tools }, null, 2);
+    return {
+      files: { "catalog/catalog.json": data, "catalog/catalog.json.sig": sign("sha256", Buffer.from(data), { key: privateKey, dsaEncoding: "der" }).toString("base64") },
+      key: catalogPublicKey(publicKey.export({ type: "spki", format: "pem" }).toString())!,
+    };
+  }
+
+  it("den signerade katalogen, paketet, summan, pkexec apt-get och omstarten (SHA256SUMS.txt används inte)", async () => {
+    const catalog = signedCatalog([{ id, version: "0.2.7", nativePackages: { "linux-x64": { deb: { file: deb, sha256: sha(newDeb), size: newDeb.length } } } }]);
+    const gh = github({ ...catalog.files, [`codestead-hub-v0.2.7/${deb}`]: newDeb, "codestead-hub-v0.2.7/SHA256SUMS.txt": "not used" });
+    const lines: string[] = [];
+    const t = updater({ get: gh.get, latestRelease: () => latestFromSignedCatalog(gh.get, repo, catalog.key, id), log: (l) => lines.push(l) });
     expect(t.u.canUpdateItself).toBe(true);
     expect(t.u.asksForPassword).toBe(true);
     expect(await t.u.check()).toBe("0.2.7");
     const progress: number[] = [];
     await t.u.downloadAndRestart((p) => progress.push(p));
-    expect(gh.urls).toEqual([`${base}SHA256SUMS.txt`, `${assets}SHA256SUMS.txt?sig=x`, `${base}codestead-hub_0.2.7_amd64.deb`, `${assets}codestead-hub_0.2.7_amd64.deb?sig=x`]);
+    expect(gh.urls).toEqual([
+      `${base}catalog/catalog.json`,
+      `${assets}catalog/catalog.json?sig=x`,
+      `${base}catalog/catalog.json.sig`,
+      `${assets}catalog/catalog.json.sig?sig=x`,
+      `${release}${deb}`,
+      `${assets}codestead-hub-v0.2.7/${deb}?sig=x`,
+    ]);
+    expect(lines).toContain(`SHA-256 ${sha(newDeb)} matches the signed catalog`);
     expect(t.calls).toHaveLength(1);
     const [pkexec, aptGet, install, yes, file] = t.calls[0]!;
     expect([pkexec, aptGet, install, yes]).toEqual(["/usr/bin/pkexec", "/usr/bin/apt-get", "install", "-y"]);
@@ -287,9 +332,19 @@ describe("NativePackageUpdateTests: uppdateringen", () => {
     expect(readdirSync(t.temp)).toEqual([]); // the private folder is removed
   });
 
+  it("en katalog som inte är signerad med appens nyckel: ingen uppdatering erbjuds", async () => {
+    const catalog = signedCatalog([{ id, version: "0.2.7", nativePackages: { "linux-x64": { deb: { file: deb, sha256: sha(newDeb), size: newDeb.length } } } }]);
+    const other = signedCatalog([]);
+    const gh = github({ ...catalog.files, [`codestead-hub-v0.2.7/${deb}`]: newDeb });
+    const t = updater({ get: gh.get, latestRelease: () => latestFromSignedCatalog(gh.get, repo, other.key, id) });
+    const e = (await t.u.check().catch((x: unknown) => x)) as NativeUpdateError;
+    expect([e.reason, e.message]).toEqual(["catalog", "The catalog signature is wrong – the catalog has been changed or damaged and is not used."]);
+    expect(gh.urls.some((u) => u.includes(deb))).toBe(false);
+    expect(t.calls).toEqual([]);
+  });
+
   it("som root: pakethanteraren direkt, inget lösenord", async () => {
-    const gh = github({ "SHA256SUMS.txt": `${sha(newDeb)}  codestead-hub_0.2.7_amd64.deb\n`, "codestead-hub_0.2.7_amd64.deb": newDeb });
-    const t = updater({ get: gh.get, isRoot: true, tools: ["apt-get"] });
+    const t = updater({ get: withPackage().get, isRoot: true, tools: ["apt-get"] });
     expect(t.u.asksForPassword).toBe(false);
     await t.u.check();
     await t.u.downloadAndRestart(() => {});
@@ -297,30 +352,35 @@ describe("NativePackageUpdateTests: uppdateringen", () => {
     expect(t.restarted()).toBe(1);
   });
 
-  it("fel kontrollsumma: ingenting installeras", async () => {
-    const gh = github({ "SHA256SUMS.txt": `${"0".repeat(64)}  codestead-hub_0.2.7_amd64.deb\n`, "codestead-hub_0.2.7_amd64.deb": newDeb });
-    const t = updater({ get: gh.get });
-    await t.u.check();
-    const e = await t.u.downloadAndRestart(() => {}).catch((x: unknown) => x);
-    expect(e).toBeInstanceOf(NativeUpdateError);
-    expect((e as NativeUpdateError).reason).toBe("checksum");
-    expect(t.calls).toEqual([]);
-    expect(t.restarted()).toBe(0);
-    expect(readdirSync(t.temp)).toEqual([]);
+  it("en annan SHA-256 än katalogens, eller en större fil: ingenting installeras", async () => {
+    for (const release of [signed({ sha256: "0".repeat(64) }), signed({ size: newDeb.length - 1 })]) {
+      const t = updater({ get: withPackage().get, latestRelease: () => Promise.resolve(release) });
+      await t.u.check();
+      const e = await t.u.downloadAndRestart(() => {}).catch((x: unknown) => x);
+      expect(e).toBeInstanceOf(NativeUpdateError);
+      expect((e as NativeUpdateError).reason).toBe(release.nativePackages!["linux-x64"]!["deb"]!.size === newDeb.length ? "checksum" : "download");
+      expect(t.calls).toEqual([]);
+      expect(t.restarted()).toBe(0);
+      expect(readdirSync(t.temp)).toEqual([]);
+    }
   });
 
-  it("ingen kontrollsumma för paketet, eller ingen SHA256SUMS.txt: inget laddas ner eller installeras", async () => {
-    const choices: Partial<Record<string, Uint8Array<ArrayBuffer> | string>>[] = [
-      { "SHA256SUMS.txt": `${sha(newDeb)}  codestead-hub-0.2.7-1.x86_64.rpm\n`, "codestead-hub_0.2.7_amd64.deb": newDeb },
-      { "codestead-hub_0.2.7_amd64.deb": newDeb },
+  it("paketet saknas i katalogen (en äldre post, en annan sort eller processor, ett annat filnamn): inget laddas ner", async () => {
+    const entry = { file: deb, sha256: sha(newDeb), size: newDeb.length };
+    const choices: SignedRelease["nativePackages"][] = [
+      null,
+      {},
+      { "linux-x64": { rpm: entry } },
+      { "linux-arm64": { deb: entry } },
+      { "linux-x64": { deb: { ...entry, file: "codestead-hub_0.2.6_amd64.deb" } } },
     ];
-    for (const files of choices) {
-      const gh = github(files);
-      const t = updater({ get: gh.get });
-      await t.u.check();
+    for (const packages of choices) {
+      const gh = withPackage();
+      const t = updater({ get: gh.get, latestRelease: () => Promise.resolve(signed({ packages })) });
+      expect(await t.u.check()).toBe("0.2.7");
       const e = (await t.u.downloadAndRestart(() => {}).catch((x: unknown) => x)) as NativeUpdateError;
-      expect(e.reason, JSON.stringify(Object.keys(files))).toBe("SHA256SUMS.txt" in files ? "checksum" : "download");
-      expect(gh.urls).toEqual([`${base}SHA256SUMS.txt`, `${assets}SHA256SUMS.txt?sig=x`]);
+      expect([e.reason, e.message], JSON.stringify(packages)).toEqual(["catalog", `The signed catalog lists no ${deb} for codestead-hub 0.2.7, so it is not installed.`]);
+      expect(gh.urls).toEqual([]);
       expect(t.calls).toEqual([]);
       expect(t.restarted()).toBe(0);
     }
@@ -328,12 +388,12 @@ describe("NativePackageUpdateTests: uppdateringen", () => {
 
   it("en omdirigering bort från GitHub följs inte (inte ens med rätt kontrollsumma)", async () => {
     for (const away of ["https://evil.example/", "http://objects.githubusercontent.com/"]) {
-      const gh = github({ "SHA256SUMS.txt": `${sha(newDeb)}  codestead-hub_0.2.7_amd64.deb\n`, "codestead-hub_0.2.7_amd64.deb": newDeb }, away);
+      const gh = withPackage(away);
       const t = updater({ get: gh.get });
       await t.u.check();
       const e = (await t.u.downloadAndRestart(() => {}).catch((x: unknown) => x)) as NativeUpdateError;
-      expect(e.message).toBe(`The download was redirected away from GitHub: ${away}SHA256SUMS.txt?sig=x`);
-      expect(gh.urls).toEqual([`${base}SHA256SUMS.txt`]); // the other host is never asked
+      expect(e.message).toBe(`The download was redirected away from GitHub: ${away}codestead-hub-v0.2.7/${deb}?sig=x`);
+      expect(gh.urls).toEqual([`${release}${deb}`]); // the other host is never asked
       expect(t.calls).toEqual([]);
     }
   });
@@ -355,8 +415,7 @@ describe("NativePackageUpdateTests: uppdateringen", () => {
       [{ pkexec: { code: 127, stdout: "", stderr: "Error executing command as another user: No authentication agent found." } }, "no-agent"],
       [{ pkexec: { code: 100, stdout: "", stderr: "E: Unmet dependencies." } }, "install-failed"],
     ] as const) {
-      const gh = github({ "SHA256SUMS.txt": `${sha(newDeb)}  codestead-hub_0.2.7_amd64.deb\n`, "codestead-hub_0.2.7_amd64.deb": newDeb });
-      const t = updater({ get: gh.get, answers });
+      const t = updater({ get: withPackage().get, answers });
       await t.u.check();
       const e = (await t.u.downloadAndRestart(() => {}).catch((x: unknown) => x)) as NativeUpdateError;
       expect(e.reason).toBe(reason);
@@ -366,26 +425,32 @@ describe("NativePackageUpdateTests: uppdateringen", () => {
   });
 
   it("ingen nyare version, ingen pkexec eller ett system utan paket: inget erbjuds", async () => {
-    expect(await updater({ latestVersion: () => Promise.resolve("0.2.6") }).u.check()).toBeNull();
-    expect(await updater({ latestVersion: () => Promise.resolve("garbage") }).u.check()).toBeNull();
+    expect(await updater({ latestRelease: () => Promise.resolve(signed({ version: "0.2.6" })) }).u.check()).toBeNull();
+    expect(await updater({ latestRelease: () => Promise.resolve(signed({ version: "garbage" })) }).u.check()).toBeNull();
+    expect(await updater({ latestRelease: () => Promise.resolve(null) }).u.check()).toBeNull();
     const noPkexec = updater({ tools: ["apt-get"] }).u;
     expect(noPkexec.canUpdateItself).toBe(false);
     expect(await noPkexec.check()).toBeNull();
     expect(updater({ arch: "arm64" }).u.canUpdateItself).toBe(false);
   });
 
-  it("appens uppdatering: Velopacks, eller pakethanterarens när appen är ett native-paket", () => {
+  it("appens uppdatering: Velopacks, eller pakethanterarens när appen är ett native-paket med katalogens nyckel inbyggd", () => {
+    const pem = generateKeyPairSync("ec", { namedCurve: "prime256v1" }).publicKey.export({ type: "spki", format: "pem" }).toString();
     const common = {
       releasesRepo: repo,
       packageId: id,
       currentVersion: "0.2.6",
       exit: () => {},
       get: github({}).get,
-      latestVersion: () => Promise.resolve(null),
+      catalogPublicKey: pem,
       relaunch: { executable: "/opt/codestead-hub/Codestead.Hub" },
     };
+    const native = { kind: "deb", version: "0.2.6" } as const;
     expect(appSelfUpdate({ ...common, nativeInstall: null })).toBeInstanceOf(VelopackSelfUpdate);
-    expect(appSelfUpdate({ ...common, nativeInstall: { kind: "deb", version: "0.2.6" } })).toBeInstanceOf(NativePackageSelfUpdate);
+    expect(appSelfUpdate({ ...common, nativeInstall: native })).toBeInstanceOf(NativePackageSelfUpdate);
+    // A build without the key (or with a key that is not one): no native update.
+    expect(appSelfUpdate({ ...common, nativeInstall: native, catalogPublicKey: null })).toBeInstanceOf(VelopackSelfUpdate);
+    expect(appSelfUpdate({ ...common, nativeInstall: native, catalogPublicKey: "-----BEGIN PUBLIC KEY-----\nAAAA\n-----END PUBLIC KEY-----\n" })).toBeInstanceOf(VelopackSelfUpdate);
   });
 });
 

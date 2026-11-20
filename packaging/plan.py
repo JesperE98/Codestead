@@ -27,7 +27,15 @@ updated to the new build from a user's installation of
   - its last C# release ("lastCSharpRelease" in products.json: the releases before the switch to TypeScript), so that an
     old installation can always update straight to the newest version, and
   - its previous release, when that is not the same one (a TypeScript release).
-Writes products=[...], publish=[...], upgrade_linux=[...] and upgrade_windows=[...] to $GITHUB_OUTPUT.
+The native update test (release.yml's upgrade-native job, also part of the gate): when the hub gets a new version, its
+previous TypeScript release, installed as a .deb (Ubuntu), .rpm (Fedora) and Arch package (Arch Linux), updates
+itself to the new build with its one-click native update (packaging/native-update-test.sh, as root and as a user
+through pkexec). The hub is enough: Codestead Linux and GP share the code (ts/packages/ui/src/electron). The old
+package is the previous release's, downloaded – no second build. There is no case for the hub's first release or a
+C# one; the job skips a release without that kind of package, or whose hub cannot be driven yet (--self-update-test).
+Writes products=[...], publish=[...], upgrade_linux=[...], upgrade_windows=[...] and upgrade_native=[...] to
+$GITHUB_OUTPUT (upgrade_native is never empty, so the job always runs and the gate does not depend on a skipped job: with
+nothing to test it is one entry {"skip": "<why>"}).
 """
 import json
 import os
@@ -38,11 +46,17 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 with open(os.path.join(ROOT, "packaging", "products.json"), encoding="utf-8") as _f:
     PRODUCTS = json.load(_f)
 REPO = os.environ.get("RELEASES_REPO", PRODUCTS["releasesRepo"])
+PRODUCTS_BY_KEY = {p["key"]: p for p in PRODUCTS["products"]}
 
 # Where the upgrade tests run: (name, docker image) on Linux (AppImage), runner images on Windows (Setup.exe). The update
 # from the last C# release runs on all of them; the cheaper one from a TypeScript release on the first only.
 UPGRADE_LINUX = [("Ubuntu 24.04 LTS (AppImage)", "ubuntu:24.04"), ("Fedora (AppImage)", "fedora:latest")]
 UPGRADE_WINDOWS = ["windows-2025", "windows-2022"]
+# The native update test's systems: (name, docker image, package kind as in NativePackageKind).
+UPGRADE_NATIVE = [("Ubuntu 24.04 LTS (.deb)", "ubuntu:24.04", "deb"), ("Fedora (.rpm)", "fedora:latest", "rpm"),
+                  ("Arch Linux (.pkg.tar.zst)", "archlinux:latest", "arch")]
+# The product whose native update is tested (the code is shared).
+NATIVE_PRODUCT = "hub"
 
 
 def run(*cmd):
@@ -136,6 +150,20 @@ def upgrade_cases(product, previous):
     return linux, windows, note
 
 
+def native_cases(product, previous):
+    """The native update tests of a product that gets a new version: from its previous release, when that is a
+    TypeScript one (a C# release has no one-click native update), on every system in UPGRADE_NATIVE."""
+    if product["key"] != NATIVE_PRODUCT:
+        return [], None
+    cs = product["lastCSharpRelease"]
+    if previous is None:
+        return [], "no native update test: no previous release"
+    if cs is not None and parse_version(previous) <= parse_version(cs):
+        return [], f"no native update test: the previous release {previous} is a C# one"
+    cases = [dict(product, upgradeFrom=previous, targetName=name, image=image, kind=kind) for (name, image, kind) in UPGRADE_NATIVE]
+    return cases, f"native update tests from {previous} ({', '.join(k for (_, _, k) in UPGRADE_NATIVE)})"
+
+
 def main():
     want = os.environ.get("WANT_PUBLISH") == "true"
     # Everything publishing needs, with what is missing named one by one.
@@ -151,7 +179,7 @@ def main():
     tags = releases()
     products, publish = [], []
     problems = []
-    upgrade_linux, upgrade_windows = [], []
+    upgrade_linux, upgrade_windows, upgrade_native = [], [], []
     for p in PRODUCTS["products"]:
         pid, minor, name = p["id"], p["majorMinor"], p["name"]
         if not re.fullmatch(r"\d+\.\d+", minor):
@@ -197,6 +225,10 @@ def main():
             upgrade_linux += linux
             upgrade_windows += windows
             state += f"; {note}"
+            native, native_note = native_cases(product, previous)
+            upgrade_native += native
+            if native_note:
+                state += f"; {native_note}"
         print(f"{product['name']} {version}: {state}" + (", will be published" if product in publish else ""))
     if want and not secrets_ok and any(True for _ in products):
         print(f"::warning::Nothing is published. Missing: {', '.join(missing)}. Secrets must be repository "
@@ -210,6 +242,9 @@ def main():
         f.write(f"publish={json.dumps(publish)}\n")
         f.write(f"upgrade_linux={json.dumps(upgrade_linux)}\n")
         f.write(f"upgrade_windows={json.dumps(upgrade_windows)}\n")
+        # Never empty (see the docstring): a skipped job would skip the publish job that needs it.
+        skip = [{"skip": f"{PRODUCTS_BY_KEY[NATIVE_PRODUCT].get('title', PRODUCTS_BY_KEY[NATIVE_PRODUCT]['name'])} gets no new version from a TypeScript release in this run"}]
+        f.write(f"upgrade_native={json.dumps(upgrade_native or skip)}\n")
 
 
 if __name__ == "__main__":
