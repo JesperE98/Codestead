@@ -4,10 +4,11 @@
 //
 // The engine (three.js and the slides, a chunk of its own) is loaded when the first scene comes near the screen. A
 // scene runs only near the screen and pauses out of sight; a few run at once (SceneBudget). Where WebGL is missing or
-// the scene fails, the still picture (`fallback`) is shown instead, as before scenes could run.
+// the scene fails, the still picture (`fallback`) is shown instead, as before scenes could run. The overview's stages
+// lead to the scenes of the course that show them, where the app says (`links`).
 
 import { type KeyboardEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
-import type { EngineOptions, MountedScene, VizApi, VizLang, VizMode, VizModel, VizTheme } from "./EngineApi.js";
+import type { EngineOptions, MountedScene, SceneLinks, VizApi, VizLang, VizMode, VizModel, VizTheme } from "./EngineApi.js";
 import { VizModels } from "./EngineApi.js";
 import { VizEnvironment } from "./Environment.js";
 import { type BudgetEntry, sceneBudget } from "./SceneBudget.js";
@@ -47,6 +48,8 @@ export interface PipelineSceneProps {
   texts: VizTexts;
   /** The still picture where the scene cannot run. */
   fallback: ReactNode;
+  /** Where the slide's links to other slides lead (the overview's stages); none: they are not links. */
+  links?: SceneLinks | null;
 }
 
 /** idle: not started (or stopped out of sight); parked: stopped to make room, until it comes near again or is asked for. */
@@ -73,8 +76,14 @@ export function PipelineScene(props: PipelineSceneProps) {
   const scene = useRef<MountedScene | null>(null);
   const generation = useRef(0);
   const options: EngineOptions = { slide: spec.slide, api, lang, theme, mode, model };
-  const latest = useRef({ options, step, visible, codeOn });
-  latest.current = { options, step, visible, codeOn };
+  const latest = useRef({ options, step, visible, codeOn, links: props.links ?? null });
+  latest.current = { options, step, visible, codeOn, links: props.links ?? null };
+  /** The links the engine gets: always the latest props' (the scene is not built again when they change). */
+  const links = useRef<SceneLinks>({
+    has: (slide) => latest.current.links?.has(slide) ?? false,
+    title: (slide) => latest.current.links?.title(slide) ?? "",
+    go: (slide) => latest.current.links?.go(slide),
+  });
   const total = stepCount(spec);
 
   /** Reads what the scene shows now (the step's text, whether it has code). */
@@ -143,7 +152,14 @@ export function PipelineScene(props: PipelineSceneProps) {
       VizEnvironment.loadEngine()
         .then((mount) => {
           if (gen !== generation.current || !stageHost.current || !codeHost.current) throw new Error("superseded");
-          return mount({ stage: stageHost.current, code: codeHost.current }, o, slideStep(spec, st), !VizEnvironment.reducedMotion(), () => fail(new Error("WebGL context lost")));
+          return mount(
+            { stage: stageHost.current, code: codeHost.current },
+            o,
+            slideStep(spec, st),
+            !VizEnvironment.reducedMotion(),
+            () => fail(new Error("WebGL context lost")),
+            latest.current.links ? links.current : null,
+          );
         })
         .then((s) => {
           if (gen !== generation.current) {

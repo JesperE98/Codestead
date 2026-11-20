@@ -6,6 +6,11 @@
 // scene stops everything it started. The slide is laid out at a design size like the visualizer's window and scaled to
 // the chapter's width. The models' data (Derived: software renders, layouts) is shared by the scenes and prepared in
 // the visualizer's workers when they can start (they fall back to the main thread).
+//
+// In the light theme, a step whose point is light added to the picture (additive blending: added light cannot show on
+// white) is drawn as in the dark theme, on a dark stage (DarkSteps). The overview's stages (links to the visualizer's
+// other slides) lead to the scene in the course that shows that slide, through the SceneLinks the app gives; a stage
+// with no such scene is not a link.
 
 import { setCodeDrawerHost } from '../visualizer/core/codeDrawer';
 import { Derived } from '../visualizer/core/derived';
@@ -16,7 +21,7 @@ import { builtinMesh, type BuiltinId } from '../visualizer/model/builtins';
 import { SLIDES } from '../visualizer/slides';
 import type { SlideContext, SlideDef, SlideInstance } from '../visualizer/slides/types';
 import { ThreeStage, type StageView } from '../visualizer/views/ThreeStage';
-import type { EngineOptions, MountedScene, MountScene, SceneHosts } from '../src/EngineApi';
+import type { EngineOptions, MountedScene, MountScene, SceneHosts, SceneLinks } from '../src/EngineApi';
 import { themeScene } from './light';
 import { sceneSheets } from './styles';
 import { killContext, pauseContext, withContext } from './tween';
@@ -45,6 +50,12 @@ async function prepare(d: Derived, api: EngineOptions['api']): Promise<void> {
   await Promise.race([d.prepare(api).catch(() => {}), new Promise((r) => setTimeout(r, 4000))]);
 }
 
+/** The steps (0-based) of a slide drawn on a dark stage in the light theme: the blending slide's additive blending. */
+const DarkSteps: Readonly<Record<string, readonly number[]>> = { blending: [3] };
+
+/** The visualizer's event for "go to another slide" (the overview's stages dispatch it on window with the slide's index). */
+const GoEvent = 'rpv:go';
+
 interface StageInternals {
   frame(): void;
   composer?: { dispose(): void };
@@ -68,11 +79,18 @@ class Scene implements MountedScene {
   private tweens: object = {};
   /** The geometries and textures this scene's renderer drew (see releaseShared). */
   private readonly drawn = new Set<{ dispatchEvent(e: { type: 'dispose' }): void }>();
+  /** The view on the stage now (its bloom). */
+  private view: StageView | null = null;
+  /** The step shown is drawn on a dark stage (DarkSteps). */
+  private darkStage = false;
+  /** While a click in this scene is handled: the slide it asks to go to, through `rpv:go` (see wireLinks). */
+  private onGo: ((slide: string) => void) | null = null;
 
   constructor(
     private readonly hosts: SceneHosts,
     private options: EngineOptions,
     private readonly onLost: () => void,
+    private readonly links: SceneLinks | null,
   ) {
     const def = SLIDES.find((s) => s.id === options.slide);
     if (!def) throw new Error(`No slide "${options.slide}" in the visualizer.`);
@@ -104,6 +122,8 @@ class Scene implements MountedScene {
     this.ro.observe(hosts.stage);
     this.layout();
     this.wrapAttach();
+    this.frame.addEventListener('click', this.onClick, true);
+    window.addEventListener(GoEvent, this.onGoEvent);
   }
 
   get slideSteps(): number {
@@ -112,6 +132,48 @@ class Scene implements MountedScene {
 
   get title(): string {
     return tr(this.def.title, this.options.lang);
+  }
+
+  /** A click on one of the slide's links (in the capture phase, before the link's own handler dispatches `rpv:go`). */
+  private readonly onClick = (e: Event): void => {
+    const link = (e.target as Element | null)?.closest?.('[data-cs-link]');
+    if (!link) return;
+    const slide = (link as HTMLElement).dataset.csLink!;
+    // The slide's own handler would dispatch rpv:go for the visualizer's window, which is not here.
+    e.stopPropagation();
+    this.links?.go(slide);
+  };
+
+  /** `rpv:go` from this scene's slide, while onGo listens (see wireLinks). */
+  private readonly onGoEvent = (e: Event): void => {
+    const i = (e as CustomEvent<number>).detail;
+    const slide = SLIDES[i]?.id;
+    if (this.onGo && slide !== undefined) this.onGo(slide);
+  };
+
+  /**
+   * The slide's links to other slides (the overview's stages: buttons whose click dispatches `rpv:go`): each is asked,
+   * by a click while this scene listens, which slide it leads to. The ones the course has a scene for become links
+   * (data-cs-link, followed by onClick); the others are no longer buttons one can press.
+   */
+  private wireLinks(root: HTMLElement): void {
+    for (const chip of root.querySelectorAll<HTMLButtonElement>('button.ov-chip')) {
+      let slide: string | null = null;
+      this.onGo = (s) => (slide = s);
+      try {
+        chip.click();
+      } finally {
+        this.onGo = null;
+      }
+      if (slide !== null && this.links?.has(slide)) {
+        chip.dataset.csLink = slide;
+        chip.title = this.links.title(slide);
+      } else {
+        chip.disabled = true;
+        chip.removeAttribute('title');
+        chip.classList.add('cs-no-link');
+      }
+    }
   }
 
   private applyTheme(): void {
@@ -136,7 +198,6 @@ class Scene implements MountedScene {
   private wrapAttach(): void {
     const attach = this.stage.attach.bind(this.stage);
     this.stage.attach = (host: HTMLElement, view: StageView) => {
-      const light = this.options.theme === 'light';
       const onFrame = view.onFrame;
       const tweens = this.tweens;
       // With reduced motion the idle motion stops (the model's spin, the drifting dust): time stands still for the
@@ -145,18 +206,40 @@ class Scene implements MountedScene {
       view.onFrame = (t, dt) =>
         withContext(tweens, () => {
           onFrame?.(still ? 0 : t, still ? 0 : dt);
-          themeScene(view.scene, light);
+          this.themeView(view);
         });
-      themeScene(view.scene, light);
+      this.themeView(view);
       this.collect(view);
+      this.view = view;
       attach(host, view);
-      // No glow on a light background. The view still goes through the composer, whose output pass gives the colours
-      // the slide was made with (the visualizer's shaders write linear colours).
-      if (light) {
-        const bloom = (this.stage as unknown as StageInternals).bloomPass;
-        if (bloom) bloom.enabled = false;
-      }
+      this.applyBloom();
     };
+  }
+
+  private get light(): boolean {
+    return this.options.theme === 'light';
+  }
+
+  /** The view's materials in the theme's colours (a dark stage keeps the slide's own, without the star field). */
+  private themeView(view: StageView): void {
+    themeScene(view.scene, this.light && !this.darkStage, this.light);
+  }
+
+  /**
+   * No glow on a light background (a dark stage has the slide's own). The view still goes through the composer, whose
+   * output pass gives the colours the slide was made with (the visualizer's shaders write linear colours).
+   */
+  private applyBloom(): void {
+    const bloom = (this.stage as unknown as StageInternals).bloomPass;
+    if (bloom && this.view && this.stage.isAttachedTo(this.view)) bloom.enabled = !!this.view.bloom && !(this.light && !this.darkStage);
+  }
+
+  /** Whether a step is drawn on a dark stage (in the light theme), and the stage's look for it. */
+  private setDarkStage(slideStep: number): void {
+    this.darkStage = this.light && (DarkSteps[this.def.id] ?? []).includes(slideStep);
+    this.frame.classList.toggle('rpv-dark-stage', this.darkStage);
+    if (this.view) this.themeView(this.view);
+    this.applyBloom();
   }
 
   /**
@@ -210,6 +293,8 @@ class Scene implements MountedScene {
     this.teardown();
     this.tweens = {};
     const tweens = this.tweens;
+    this.view = null;
+    this.setDarkStage(Math.max(0, Math.min(this.def.steps - 1, step)));
     setCodeDrawerHost(this.codeHost);
     try {
       this.instance = withContext(tweens, () => this.def.create(this.context()));
@@ -217,13 +302,16 @@ class Scene implements MountedScene {
       setCodeDrawerHost(document.createElement('div'));
     }
     this.inner.replaceChildren(this.instance.el);
+    this.wireLinks(this.instance.el);
     this.show(step, animate);
   }
 
   show(slideStep: number, animate: boolean): void {
     const inst = this.instance;
     if (!inst) return;
-    withContext(this.tweens, () => inst.show(Math.max(0, Math.min(this.def.steps - 1, slideStep)), animate));
+    const s = Math.max(0, Math.min(this.def.steps - 1, slideStep));
+    this.setDarkStage(s);
+    withContext(this.tweens, () => inst.show(s, animate));
     if (this.paused) pauseContext(this.tweens, true);
   }
 
@@ -273,6 +361,8 @@ class Scene implements MountedScene {
     if (this.destroyed) return;
     this.destroyed = true;
     this.ro.disconnect();
+    this.frame.removeEventListener('click', this.onClick, true);
+    window.removeEventListener(GoEvent, this.onGoEvent);
     this.teardown();
     const renderer = this.stage.renderer;
     if (renderer) {
@@ -288,9 +378,9 @@ class Scene implements MountedScene {
   }
 }
 
-export const mountScene: MountScene = async (hosts, options, slideStep, animate, onLost) => {
+export const mountScene: MountScene = async (hosts, options, slideStep, animate, onLost, links) => {
   await prepare(derivedFor(options.model), options.api);
-  const scene = new Scene(hosts, options, onLost);
+  const scene = new Scene(hosts, options, onLost, links ?? null);
   try {
     scene.build(slideStep, animate);
   } catch (err) {

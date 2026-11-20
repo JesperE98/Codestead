@@ -382,6 +382,7 @@
   "viz.step": "Paso {n} de {total}",
   "viz.loading": "Cargando la escena…",
   "viz.start": "Iniciar la escena",
+  "viz.goTo": "Ir a la escena en «{chapter}»",
   "viz.model": "Modelo",
   "viz.modeData": "Datos reales",
   "viz.modeConcept": "Concepto",

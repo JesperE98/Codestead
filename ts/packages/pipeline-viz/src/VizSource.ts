@@ -39,3 +39,25 @@ export function parseVizSource(href: string): VizPlacement | null {
   if (!(VizModels as readonly string[]).includes(model) || (mode !== "data" && mode !== "concept")) return null;
   return { name: name as SceneName, spec, model: model as VizModel, mode, picture: scenePicture(name as SceneName) };
 }
+
+/** A scene placed in a chapter. */
+export interface ScenePlace {
+  readonly chapter: string;
+  readonly scene: SceneName;
+}
+
+const placedScenes = /!\[[^\]]*\]\((viz:[^\s)]+)/g;
+
+/**
+ * Where each of the visualizer's slides is shown in the course: the first scene of that slide, in the chapters' order
+ * (the overview's stages lead there). Slides no chapter shows are missing.
+ */
+export function slidePlaces(chapters: Iterable<{ readonly id: string; readonly text: string }>): ReadonlyMap<string, ScenePlace> {
+  const places = new Map<string, ScenePlace>();
+  for (const { id, text } of chapters)
+    for (const m of text.matchAll(placedScenes)) {
+      const placement = parseVizSource(m[1]!);
+      if (placement !== null && !places.has(placement.spec.slide)) places.set(placement.spec.slide, { chapter: id, scene: placement.name });
+    }
+  return places;
+}

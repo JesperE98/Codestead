@@ -1,9 +1,9 @@
 // A scene of the Render Pipeline Visualizer in a chapter (`![alt](viz:<scene> "caption")`, see
 // @codestead/pipeline-viz): live, in the chosen API, the window's language and theme; its still picture where it
-// cannot run.
+// cannot run. The overview's stages lead to the scene of the course that shows each (revealScene).
 
 import { type MarkdownPicture, AnimatedImage } from "@codestead/ui";
-import { PipelineScene, parseVizSource, useAppTheme, type VizApi, type VizModel, VizModels, type VizTexts } from "@codestead/pipeline-viz";
+import { PipelineScene, parseVizSource, type SceneLinks, useAppTheme, type VizApi, VizEnvironment, type VizModel, VizModels, type VizTexts } from "@codestead/pipeline-viz";
 import type { ReactNode } from "react";
 
 export interface VizSceneHost {
@@ -15,6 +15,8 @@ export interface VizSceneHost {
   t(key: string, args?: Readonly<Record<string, unknown>>): string;
   /** A picture's URL in the language ("images/viz-buffers.webp"), or null. */
   picture(path: string, lang: string): string | null;
+  /** Where the slides' links lead (the overview's stages: to the scene in the course that shows the stage). */
+  readonly links: SceneLinks | null;
 }
 
 function texts(h: VizSceneHost): VizTexts {
@@ -51,6 +53,7 @@ function Scene({ host, picture }: { host: VizSceneHost; picture: MarkdownPicture
       theme={theme}
       texts={texts(host)}
       fallback={still === null ? null : <AnimatedImage source={still} alt={picture.alt} />}
+      links={host.links}
     />
   );
 }
@@ -59,4 +62,35 @@ function Scene({ host, picture }: { host: VizSceneHost; picture: MarkdownPicture
 export function vizScene(host: VizSceneHost, picture: MarkdownPicture): ReactNode | null {
   if (parseVizSource(picture.href) === null) return null;
   return <Scene host={host} picture={picture} />;
+}
+
+/** The scenes on screen now (for revealScene: the chapter shown before has its own). */
+function scenesNamed(name: string): HTMLElement[] {
+  return [...document.querySelectorAll<HTMLElement>(`.cs-viz[data-scene="${CSS.escape(name)}"]`)];
+}
+
+/**
+ * Scrolls a scene of the chapter into view and gives it the focus (its steps follow the keyboard), once it is on screen:
+ * `navigate` shows its chapter first when it is another one (which starts at the top, so the scroll waits for that).
+ */
+export function revealScene(name: string, navigate: (() => void) | null): void {
+  const before = new Set(navigate === null ? [] : scenesNamed(name));
+  navigate?.();
+  const started = Date.now();
+  const look = () => {
+    const el = scenesNamed(name).find((e) => !before.has(e));
+    if (el === undefined) {
+      if (Date.now() - started < 3000) setTimeout(look, 16);
+      return;
+    }
+    // After the new chapter's own scroll to the top (an effect after it is drawn).
+    setTimeout(
+      () => {
+        el.scrollIntoView({ block: "center", behavior: navigate === null && !VizEnvironment.reducedMotion() ? "smooth" : "auto" });
+        el.focus({ preventScroll: true });
+      },
+      navigate === null ? 0 : 60,
+    );
+  };
+  look();
 }
