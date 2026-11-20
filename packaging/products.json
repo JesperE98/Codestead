@@ -48,7 +48,10 @@
         "ts/packages/common/test",
         "ts/packages/learning/test",
         "ts/packages/ui/test",
-        "packaging/ts/update-from-feed.cjs"
+        "packaging/ts/update-from-feed.cjs",
+        "packaging/ts/velopack-check.cjs",
+        "packaging/ts/velopack-glibc.d.mts",
+        "packaging/ts/deb-xz.d.mts"
       ]
     },
     {
@@ -103,7 +106,10 @@
         "ts/packages/common/test",
         "ts/packages/learning/test",
         "ts/packages/ui/test",
-        "packaging/ts/update-from-feed.cjs"
+        "packaging/ts/update-from-feed.cjs",
+        "packaging/ts/velopack-check.cjs",
+        "packaging/ts/velopack-glibc.d.mts",
+        "packaging/ts/deb-xz.d.mts"
       ]
     },
     {
@@ -164,7 +170,10 @@
         "ts/packages/common/test",
         "ts/packages/learning/test",
         "ts/packages/ui/test",
-        "packaging/ts/update-from-feed.cjs"
+        "packaging/ts/update-from-feed.cjs",
+        "packaging/ts/velopack-check.cjs",
+        "packaging/ts/velopack-glibc.d.mts",
+        "packaging/ts/deb-xz.d.mts"
       ]
     }
   ]

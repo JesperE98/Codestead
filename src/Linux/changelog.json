@@ -1,5 +1,32 @@
 [
   {
+    "version": "0.6.9",
+    "date": "2026-11-20",
+    "changes": {
+      "en": [
+        "**Smaller downloads**: the .deb, .rpm and Arch packages and the AppImage of Codestead Linux are 14–24 % smaller, and so are the AppImage's updates."
+      ],
+      "sv": [
+        "**Mindre nedladdningar**: Codestead Linux .deb-, .rpm- och Arch-paket och AppImage är 14–24 % mindre, och detsamma gäller AppImagens uppdateringar."
+      ],
+      "de": [
+        "**Kleinere Downloads**: Die .deb-, .rpm- und Arch-Pakete und das AppImage von Codestead Linux sind 14–24 % kleiner, ebenso die Updates des AppImage."
+      ],
+      "fr": [
+        "**Téléchargements plus légers** : les paquets .deb, .rpm et Arch et l'AppImage de Codestead Linux sont 14 à 24 % plus petits, tout comme les mises à jour de l'AppImage."
+      ],
+      "es": [
+        "**Descargas más pequeñas**: los paquetes .deb, .rpm y de Arch y la AppImage de Codestead Linux son entre un 14 y un 24 % más pequeños, igual que las actualizaciones de la AppImage."
+      ],
+      "zh": [
+        "**更小的下载**：Codestead Linux 的 .deb、.rpm、Arch 软件包和 AppImage 缩小了 14–24%，AppImage 的更新也同样变小。"
+      ],
+      "ja": [
+        "**ダウンロードが小さく**：Codestead Linux の .deb、.rpm、Arch パッケージと AppImage が 14～24% 小さくなり、AppImage の更新も同様に小さくなりました。"
+      ]
+    }
+  },
+  {
     "version": "0.6.8",
     "date": "2026-11-20",
     "changes": {

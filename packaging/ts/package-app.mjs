@@ -13,8 +13,9 @@
 //      package.json                     main: ts/apps/<name>/dist-electron/main.cjs
 //      ts/apps/<name>/dist, dist-electron
 //      node_modules/velopack, @neon-rs/load   (updates; only this platform's native module)
-//      <files the app reads from the repository at run time>   (dist-electron/repo-files.json, written by the app's
-//                                        build: Codestead GP's course worker reads the course's binary files by path)
+//      <files the app reads from the repository at run time>   (dist-electron/ and dist/repo-files.json, written by
+//                                        the app's builds: Codestead GP's course worker reads the course's binary files
+//                                        by path, and its page loads the same files instead of copies in dist/assets)
 // 3. Lets electron-builder make the unpacked app (`--dir`: Electron renamed to the executable, the Windows icon and
 //    version information, only the Chromium locales of the apps' languages), then puts the staged folder in it as it is
 //    (resources/app, no asar: the GP course worker – a Node worker thread – and the native update module are plain
@@ -28,6 +29,7 @@ import { chmodSync, copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, r
 import { createRequire } from "node:module";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { makeGlibcNeedOptionalInFile } from "./velopack-glibc.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const tsRoot = join(root, "ts");
@@ -51,11 +53,14 @@ function run(cmd, args, options) {
   if (r.status !== 0) throw new Error(`${cmd} ${args.join(" ")} failed (${r.status ?? r.signal})`);
 }
 
-/** Chromium's locale files for the apps' languages (build/languages.json); the rest is left out (≈ 40 MB). */
+/**
+ * Chromium's locale files for the languages the apps offer (build/languages.json: a parked language is not in their
+ * menus, and comes back here with its "offered"); the rest is left out (≈ 40 MB). Chromium falls back to en-US.
+ */
 function chromiumLocales() {
   const names = { en: ["en-US", "en-GB"], zh: ["zh-CN", "zh-TW"], pt: ["pt-BR", "pt-PT"], es: ["es", "es-419"] };
   const { languages } = JSON.parse(readFileSync(join(root, "build", "languages.json"), "utf8"));
-  return [...new Set(["en-US", ...languages.flatMap((l) => names[l.code] ?? [l.code])])];
+  return [...new Set(["en-US", ...languages.filter((l) => l.offered).flatMap((l) => names[l.code] ?? [l.code])])];
 }
 
 /** The native module of velopack for the target platform (lib/load.js picks it at run time). */
@@ -71,71 +76,12 @@ function addNodeModules(opts, appFolder) {
     });
   }
   if (opts.platform === "linux") {
+    // Loads on glibc older than the one it was built against (packaging/ts/velopack-glibc.mjs); fails the build when
+    // a new velopack is not as expected.
     const native = join(appFolder, "node_modules", "velopack", "lib", "native", velopackNative.linux);
-    const weakened = weakenOptionalGlibcVersions(native);
-    if (weakened.length > 0) console.log(`${velopackNative.linux}: optional ${weakened.join(", ")}`);
+    const { version, symbols } = makeGlibcNeedOptionalInFile(native);
+    console.log(`${velopackNative.linux}: ${version} optional (only the weak ${symbols.join(", ")} need it)`);
   }
-}
-
-/**
- * velopack's Linux module is built against glibc 2.39, but its only 2.39 functions (pidfd_spawnp, pidfd_getpid, which
- * Rust's standard library uses when they exist) are weak symbols: it works with older glibc, yet the dynamic loader
- * refuses to load it there ("GLIBC_2.39 not found": Ubuntu 22.04, Debian 12), because the version is required. This
- * marks each glibc version that only weak symbols need, and that is newer than the newest one it really needs (2.34), as
- * weak (VER_FLG_WEAK in .gnu.version_r), so the loader accepts its absence and the weak symbols stay null – as Rust
- * expects. Returns the versions it marked.
- */
-function weakenOptionalGlibcVersions(file) {
-  const b = readFileSync(file);
-  if (b.readUInt32BE(0) !== 0x7f454c46 || b[4] !== 2 || b[5] !== 1) throw new Error(`${file}: not a 64-bit little-endian ELF file`);
-  const shoff = Number(b.readBigUInt64LE(0x28));
-  const shentsize = b.readUInt16LE(0x3a);
-  const shnum = b.readUInt16LE(0x3c);
-  const sections = Array.from({ length: shnum }, (_, i) => {
-    const o = shoff + i * shentsize;
-    return { type: b.readUInt32LE(o + 4), offset: Number(b.readBigUInt64LE(o + 0x18)), size: Number(b.readBigUInt64LE(o + 0x20)), link: b.readUInt32LE(o + 0x28), entsize: Number(b.readBigUInt64LE(o + 0x38)) };
-  });
-  const SHT_DYNSYM = 11, SHT_GNU_VERSYM = 0x6fffffff, SHT_GNU_VERNEED = 0x6ffffffe, VER_FLG_WEAK = 2, STB_WEAK = 2;
-  const dynsym = sections.find((s) => s.type === SHT_DYNSYM);
-  const versym = sections.find((s) => s.type === SHT_GNU_VERSYM);
-  const verneed = sections.find((s) => s.type === SHT_GNU_VERNEED);
-  if (!dynsym || !versym || !verneed) return [];
-  const strtab = sections[verneed.link];
-  const str = (off) => b.toString("latin1", strtab.offset + off, b.indexOf(0, strtab.offset + off));
-  // For each version index: are all the symbols that need it weak?
-  const onlyWeak = new Map();
-  for (let i = 1; i < dynsym.size / dynsym.entsize; i++) {
-    const sym = dynsym.offset + i * dynsym.entsize;
-    if (b.readUInt16LE(sym + 6) !== 0) continue; // defined here, not needed from a library
-    const index = b.readUInt16LE(versym.offset + i * 2) & 0x7fff;
-    const weak = b[sym + 4] >> 4 === STB_WEAK;
-    onlyWeak.set(index, (onlyWeak.get(index) ?? true) && weak);
-  }
-  // libc's versions: [offset of the Vernaux entry, "GLIBC_x.y", needed only by weak symbols].
-  const needed = [];
-  for (let vn = verneed.offset; ; ) {
-    const library = str(b.readUInt32LE(vn + 4));
-    for (let aux = vn + b.readUInt32LE(vn + 8); ; ) {
-      if (library.startsWith("libc.so")) needed.push([aux, str(b.readUInt32LE(aux + 8)), onlyWeak.get(b.readUInt16LE(aux + 6)) === true]);
-      const next = b.readUInt32LE(aux + 12);
-      if (next === 0) break;
-      aux += next;
-    }
-    const next = b.readUInt32LE(vn + 12);
-    if (next === 0) break;
-    vn += next;
-  }
-  // Only the versions newer than the newest one it really needs (2.34) change anything.
-  const number = (v) => (v.match(/\d+/g) ?? []).map(Number).reduce((a, n, i) => a + n / 1000 ** i, 0);
-  const required = Math.max(0, ...needed.filter(([, , weak]) => !weak).map(([, v]) => number(v)));
-  const weakened = [];
-  for (const [aux, name, weak] of needed) {
-    if (!weak || number(name) <= required) continue;
-    b.writeUInt16LE(b.readUInt16LE(aux + 4) | VER_FLG_WEAK, aux + 4);
-    weakened.push(name);
-  }
-  if (weakened.length > 0) writeFileSync(file, b);
-  return weakened;
 }
 
 function stage(opts, appDir, stageDir) {
@@ -146,18 +92,20 @@ function stage(opts, appDir, stageDir) {
     if (!existsSync(join(appDir, part))) throw new Error(`${rel}/${part} is missing: build the app first.`);
     cpSync(join(appDir, part), join(stageDir, rel, part), { recursive: true });
   }
-  // Files the app reads from the repository at run time, listed by its build.
-  const listFile = join(appDir, "dist-electron", "repo-files.json");
-  if (existsSync(listFile)) {
-    const files = JSON.parse(readFileSync(listFile, "utf8"));
-    for (const f of files) {
-      if (f.startsWith("/") || f.includes("..")) throw new Error(`repo-files.json: not a repository path: ${f}`);
-      mkdirSync(dirname(join(stageDir, f)), { recursive: true });
-      copyFileSync(join(root, f), join(stageDir, f));
-    }
-    rmSync(join(stageDir, rel, "dist-electron", "repo-files.json"));
-    console.log(`${files.length} files of the repository (${relative(root, listFile)})`);
+  // Files the app reads from the repository at run time, listed by its builds (each file once, for both).
+  const files = new Set();
+  for (const part of ["dist-electron", "dist"]) {
+    const listFile = join(appDir, part, "repo-files.json");
+    if (!existsSync(listFile)) continue;
+    for (const f of JSON.parse(readFileSync(listFile, "utf8"))) files.add(f);
+    rmSync(join(stageDir, rel, part, "repo-files.json"));
   }
+  for (const f of files) {
+    if (f.startsWith("/") || f.includes("..")) throw new Error(`repo-files.json: not a repository path: ${f}`);
+    mkdirSync(dirname(join(stageDir, f)), { recursive: true });
+    copyFileSync(join(root, f), join(stageDir, f));
+  }
+  if (files.size > 0) console.log(`${files.size} files of the repository (repo-files.json)`);
   writeFileSync(
     join(stageDir, "package.json"),
     JSON.stringify(

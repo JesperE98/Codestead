@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# The mksquashfs vpk runs for the AppImage (packaging/build-linux.sh puts this folder first in PATH, and the real
+# mksquashfs in REAL_MKSQUASHFS). vpk asks for gzip (its --compression offers gzip, or xz with small blocks, which gains
+# nothing); the AppImage runtime it puts in front of the squashfs reads zstd as well. This makes it zstd -19 with 1 MiB
+# blocks: about 15 % smaller, and so is the Velopack update package, which carries the AppImage.
+# It refuses arguments it was not written for, so that a new vpk is looked at (build-linux.sh also checks that the
+# AppImage's runtime extracts a file again).
+set -euo pipefail
+real="${REAL_MKSQUASHFS:?REAL_MKSQUASHFS is not set}"
+args=("$@")
+comps=0
+for i in "${!args[@]}"; do
+  if [[ "${args[i]}" == -comp ]]; then
+    comps=$((comps + 1))
+    at=$i
+  fi
+done
+if [[ $comps == 1 && "${args[at + 1]:-}" == gzip ]]; then
+  args[at + 1]=zstd
+  exec "$real" "${args[@]}" -Xcompression-level 19 -b 1M
+elif [[ " $* " == *" -version "* ]]; then
+  exec "$real" "$@"
+fi
+echo "packaging/ts/squashfs/mksquashfs: vpk ran mksquashfs $* (expected one -comp gzip)" >&2
+exit 1

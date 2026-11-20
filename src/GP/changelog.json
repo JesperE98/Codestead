@@ -1,5 +1,32 @@
 [
   {
+    "version": "0.2.9",
+    "date": "2026-11-20",
+    "changes": {
+      "en": [
+        "**Smaller downloads**: Codestead GP no longer ships two copies of the course's pictures and files, so every download and update is smaller – the .deb, .rpm and Arch packages and the AppImage, which are also compressed better, by 16–36 %."
+      ],
+      "sv": [
+        "**Mindre nedladdningar**: Codestead GP har inte längre med två kopior av kursens bilder och filer, så alla nedladdningar och uppdateringar är mindre – .deb-, .rpm- och Arch-paketen och AppImagen, som dessutom komprimeras bättre, med 16–36 %."
+      ],
+      "de": [
+        "**Kleinere Downloads**: Codestead GP enthält die Bilder und Dateien des Kurses nicht mehr doppelt, daher sind alle Downloads und Updates kleiner – die .deb-, .rpm- und Arch-Pakete und das AppImage, die außerdem besser komprimiert sind, um 16–36 %."
+      ],
+      "fr": [
+        "**Téléchargements plus légers** : Codestead GP n'embarque plus deux copies des images et fichiers du cours, si bien que tous les téléchargements et mises à jour sont plus petits – les paquets .deb, .rpm et Arch et l'AppImage, désormais mieux compressés, de 16 à 36 %."
+      ],
+      "es": [
+        "**Descargas más pequeñas**: Codestead GP ya no incluye dos copias de las imágenes y archivos del curso, así que todas las descargas y actualizaciones son más pequeñas; los paquetes .deb, .rpm y de Arch y la AppImage, que además se comprimen mejor, entre un 16 y un 36 %."
+      ],
+      "zh": [
+        "**更小的下载**：Codestead GP 不再包含课程图片和文件的两份副本，因此所有下载和更新都变小了；.deb、.rpm、Arch 软件包和 AppImage 的压缩也更好，缩小了 16–36%。"
+      ],
+      "ja": [
+        "**ダウンロードが小さく**：Codestead GP がコースの画像とファイルを二重に含まなくなったため、すべてのダウンロードと更新が小さくなりました。圧縮も改善された .deb、.rpm、Arch パッケージと AppImage は 16～36% 小さくなっています。"
+      ]
+    }
+  },
+  {
     "version": "0.2.8",
     "date": "2026-11-20",
     "changes": {

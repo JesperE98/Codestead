@@ -1,5 +1,32 @@
 [
   {
+    "version": "0.2.8",
+    "date": "2026-11-20",
+    "changes": {
+      "en": [
+        "**Smaller downloads**: the hub's .deb, .rpm and Arch packages and its AppImage are 15–26 % smaller, and so are the AppImage's updates."
+      ],
+      "sv": [
+        "**Mindre nedladdningar**: hubbens .deb-, .rpm- och Arch-paket och AppImage är 15–26 % mindre, och detsamma gäller AppImagens uppdateringar."
+      ],
+      "de": [
+        "**Kleinere Downloads**: Die .deb-, .rpm- und Arch-Pakete und das AppImage des Hubs sind 15–26 % kleiner, ebenso die Updates des AppImage."
+      ],
+      "fr": [
+        "**Téléchargements plus légers** : les paquets .deb, .rpm et Arch et l'AppImage du hub sont 15 à 26 % plus petits, tout comme les mises à jour de l'AppImage."
+      ],
+      "es": [
+        "**Descargas más pequeñas**: los paquetes .deb, .rpm y de Arch y la AppImage del hub son entre un 15 y un 26 % más pequeños, igual que las actualizaciones de la AppImage."
+      ],
+      "zh": [
+        "**更小的下载**：中心的 .deb、.rpm、Arch 软件包和 AppImage 缩小了 15–26%，AppImage 的更新也同样变小。"
+      ],
+      "ja": [
+        "**ダウンロードが小さく**：ハブの .deb、.rpm、Arch パッケージと AppImage が 15～26% 小さくなり、AppImage の更新も同様に小さくなりました。"
+      ]
+    }
+  },
+  {
     "version": "0.2.7",
     "date": "2026-11-20",
     "changes": {
