@@ -13,7 +13,9 @@ import {
   type CommandResult,
   detectNativeInstall,
   type DetectEnvironment,
-  type FetchLike,
+  type HttpGet,
+  fetchGet,
+  electronGet,
   findSystemTool,
   installCommand,
   installFailure,
@@ -64,7 +66,7 @@ const notInstalled: CommandResult = { code: 1, stdout: "", stderr: "not installe
 
 describe("NativePackageUpdateTests: installationen", () => {
   it("en .deb: dpkg-query säger att paketet är installerat", async () => {
-    const { env: e, calls } = env({ answers: { "dpkg-query": ok("install ok installed\t0.2.6") } });
+    const { env: e, calls } = env({ answers: { "dpkg-query": ok("install ok installed\t0.2.6-1") } });
     expect(await detectNativeInstall(id, e)).toEqual({ kind: "deb", version: "0.2.6" });
     expect(calls).toEqual([["/usr/bin/dpkg-query", "-W", "--showformat=${Status}\\t${Version}", id]]);
   });
@@ -150,8 +152,8 @@ describe("NativePackageUpdateTests: releasens filer", () => {
       ],
     };
     const urls: string[] = [];
-    const fetchFn: FetchLike = (url) => (urls.push(url), Promise.resolve(new Response(JSON.stringify(feed))));
-    expect(await latestFromVelopackFeed(fetchFn, `https://github.com/${repo}/releases/download/codestead-linux-latest/`, "codestead-linux")).toBe("0.6.10");
+    const get: HttpGet = (url) => (urls.push(url), Promise.resolve(new Response(JSON.stringify(feed))));
+    expect(await latestFromVelopackFeed(get, `https://github.com/${repo}/releases/download/codestead-linux-latest/`, "codestead-linux")).toBe("0.6.10");
     expect(urls).toEqual([`https://github.com/${repo}/releases/download/codestead-linux-latest/releases.linux.json`]);
     expect(isNewerVersion("0.6.10", "0.6.9")).toBe(true);
     expect(isNewerVersion("0.6.9", "0.6.9")).toBe(false);
@@ -213,18 +215,25 @@ describe("NativePackageUpdateTests: uppdateringen", () => {
   const sha = (b: Uint8Array) => createHash("sha256").update(b).digest("hex");
   const base = `https://github.com/${repo}/releases/download/codestead-hub-v0.2.7/`;
 
-  /** GitHub with one release; `files`: name → content (a string is the checksums file). */
-  function github(files: Partial<Record<string, Uint8Array<ArrayBuffer> | string>>, redirectTo?: string): { fetch: FetchLike; urls: string[] } {
+  const assets = "https://objects.githubusercontent.com/github-production-release-asset/";
+
+  /**
+   * GitHub with one release; `files`: name → content (a string is the checksums file). As GitHub, a download redirects
+   * to the download host (or to `redirectTo`, which serves the files too). `urls`: every request.
+   */
+  function github(files: Partial<Record<string, Uint8Array<ArrayBuffer> | string>>, redirectTo?: string): { get: HttpGet; urls: string[] } {
     const urls: string[] = [];
     return {
       urls,
-      fetch: (url) => {
+      get: (url) => {
         urls.push(url);
-        const name = url.startsWith(base) ? decodeURIComponent(url.slice(base.length)) : null;
+        if (url.startsWith(base)) return Promise.resolve(new Response(null, { status: 302, headers: { location: (redirectTo ?? assets) + url.slice(base.length) + "?sig=x" } }));
+        const host = redirectTo ?? assets;
+        const name = url.startsWith(host) ? decodeURIComponent(url.slice(host.length).replace(/\?.*$/, "")) : null;
         const body = name !== null ? files[name] : undefined;
-        const r = body === undefined ? new Response("Not Found", { status: 404, statusText: "Not Found" }) : new Response(body, { headers: { "content-length": String(typeof body === "string" ? new TextEncoder().encode(body).length : body.length) } });
-        if (redirectTo !== undefined) Object.defineProperty(r, "url", { value: redirectTo });
-        return Promise.resolve(r);
+        if (body === undefined) return Promise.resolve(new Response("Not Found", { status: 404, statusText: "Not Found" }));
+        const length = typeof body === "string" ? new TextEncoder().encode(body).length : body.length;
+        return Promise.resolve(new Response(body, { headers: { "content-length": String(length) } }));
       },
     };
   }
@@ -246,7 +255,7 @@ describe("NativePackageUpdateTests: uppdateringen", () => {
       currentVersion: "0.2.6",
       install: { kind: "deb", version: "0.2.6" } satisfies NativeInstall,
       latestVersion: () => Promise.resolve("0.2.7"),
-      fetch: github({}).fetch,
+      get: github({}).get,
       restart: () => restarted++,
       arch: "x64",
       isRoot: false,
@@ -260,13 +269,13 @@ describe("NativePackageUpdateTests: uppdateringen", () => {
 
   it("laddar ner paketet, kontrollerar summan, installerar med pkexec apt-get och startar om", async () => {
     const gh = github({ "SHA256SUMS.txt": `${sha(newDeb)}  codestead-hub_0.2.7_amd64.deb\n`, "codestead-hub_0.2.7_amd64.deb": newDeb });
-    const t = updater({ fetch: gh.fetch });
+    const t = updater({ get: gh.get });
     expect(t.u.canUpdateItself).toBe(true);
     expect(t.u.asksForPassword).toBe(true);
     expect(await t.u.check()).toBe("0.2.7");
     const progress: number[] = [];
     await t.u.downloadAndRestart((p) => progress.push(p));
-    expect(gh.urls).toEqual([`${base}SHA256SUMS.txt`, `${base}codestead-hub_0.2.7_amd64.deb`]);
+    expect(gh.urls).toEqual([`${base}SHA256SUMS.txt`, `${assets}SHA256SUMS.txt?sig=x`, `${base}codestead-hub_0.2.7_amd64.deb`, `${assets}codestead-hub_0.2.7_amd64.deb?sig=x`]);
     expect(t.calls).toHaveLength(1);
     const [pkexec, aptGet, install, yes, file] = t.calls[0]!;
     expect([pkexec, aptGet, install, yes]).toEqual(["/usr/bin/pkexec", "/usr/bin/apt-get", "install", "-y"]);
@@ -280,7 +289,7 @@ describe("NativePackageUpdateTests: uppdateringen", () => {
 
   it("som root: pakethanteraren direkt, inget lösenord", async () => {
     const gh = github({ "SHA256SUMS.txt": `${sha(newDeb)}  codestead-hub_0.2.7_amd64.deb\n`, "codestead-hub_0.2.7_amd64.deb": newDeb });
-    const t = updater({ fetch: gh.fetch, isRoot: true, tools: ["apt-get"] });
+    const t = updater({ get: gh.get, isRoot: true, tools: ["apt-get"] });
     expect(t.u.asksForPassword).toBe(false);
     await t.u.check();
     await t.u.downloadAndRestart(() => {});
@@ -290,7 +299,7 @@ describe("NativePackageUpdateTests: uppdateringen", () => {
 
   it("fel kontrollsumma: ingenting installeras", async () => {
     const gh = github({ "SHA256SUMS.txt": `${"0".repeat(64)}  codestead-hub_0.2.7_amd64.deb\n`, "codestead-hub_0.2.7_amd64.deb": newDeb });
-    const t = updater({ fetch: gh.fetch });
+    const t = updater({ get: gh.get });
     await t.u.check();
     const e = await t.u.downloadAndRestart(() => {}).catch((x: unknown) => x);
     expect(e).toBeInstanceOf(NativeUpdateError);
@@ -307,23 +316,37 @@ describe("NativePackageUpdateTests: uppdateringen", () => {
     ];
     for (const files of choices) {
       const gh = github(files);
-      const t = updater({ fetch: gh.fetch });
+      const t = updater({ get: gh.get });
       await t.u.check();
       const e = (await t.u.downloadAndRestart(() => {}).catch((x: unknown) => x)) as NativeUpdateError;
       expect(e.reason, JSON.stringify(Object.keys(files))).toBe("SHA256SUMS.txt" in files ? "checksum" : "download");
-      expect(gh.urls).toEqual([`${base}SHA256SUMS.txt`]);
+      expect(gh.urls).toEqual([`${base}SHA256SUMS.txt`, `${assets}SHA256SUMS.txt?sig=x`]);
       expect(t.calls).toEqual([]);
       expect(t.restarted()).toBe(0);
     }
   });
 
-  it("en omdirigering bort från GitHub stoppas", async () => {
-    const gh = github({ "SHA256SUMS.txt": `${sha(newDeb)}  codestead-hub_0.2.7_amd64.deb\n` }, "https://evil.example/SHA256SUMS.txt");
-    const t = updater({ fetch: gh.fetch });
+  it("en omdirigering bort från GitHub följs inte (inte ens med rätt kontrollsumma)", async () => {
+    for (const away of ["https://evil.example/", "http://objects.githubusercontent.com/"]) {
+      const gh = github({ "SHA256SUMS.txt": `${sha(newDeb)}  codestead-hub_0.2.7_amd64.deb\n`, "codestead-hub_0.2.7_amd64.deb": newDeb }, away);
+      const t = updater({ get: gh.get });
+      await t.u.check();
+      const e = (await t.u.downloadAndRestart(() => {}).catch((x: unknown) => x)) as NativeUpdateError;
+      expect(e.message).toBe(`The download was redirected away from GitHub: ${away}SHA256SUMS.txt?sig=x`);
+      expect(gh.urls).toEqual([`${base}SHA256SUMS.txt`]); // the other host is never asked
+      expect(t.calls).toEqual([]);
+    }
+  });
+
+  it("för många eller trasiga omdirigeringar", async () => {
+    const loop: HttpGet = (url) => Promise.resolve(new Response(null, { status: 302, headers: { location: url } }));
+    const t = updater({ get: loop });
     await t.u.check();
-    const e = (await t.u.downloadAndRestart(() => {}).catch((x: unknown) => x)) as NativeUpdateError;
-    expect(e.message).toMatch(/redirected away from GitHub/);
-    expect(t.calls).toEqual([]);
+    await expect(t.u.downloadAndRestart(() => {})).rejects.toThrow(/a broken redirect/);
+    const none: HttpGet = () => Promise.resolve(new Response(null, { status: 302 }));
+    const t2 = updater({ get: none });
+    await t2.u.check();
+    await expect(t2.u.downloadAndRestart(() => {})).rejects.toThrow(/a broken redirect/);
   });
 
   it("lösenordsrutan stängd, eller pakethanteraren misslyckas: felet, ingen omstart, filerna borta", async () => {
@@ -333,7 +356,7 @@ describe("NativePackageUpdateTests: uppdateringen", () => {
       [{ pkexec: { code: 100, stdout: "", stderr: "E: Unmet dependencies." } }, "install-failed"],
     ] as const) {
       const gh = github({ "SHA256SUMS.txt": `${sha(newDeb)}  codestead-hub_0.2.7_amd64.deb\n`, "codestead-hub_0.2.7_amd64.deb": newDeb });
-      const t = updater({ fetch: gh.fetch, answers });
+      const t = updater({ get: gh.get, answers });
       await t.u.check();
       const e = (await t.u.downloadAndRestart(() => {}).catch((x: unknown) => x)) as NativeUpdateError;
       expect(e.reason).toBe(reason);
@@ -357,12 +380,55 @@ describe("NativePackageUpdateTests: uppdateringen", () => {
       packageId: id,
       currentVersion: "0.2.6",
       exit: () => {},
-      fetch: github({}).fetch,
+      get: github({}).get,
       latestVersion: () => Promise.resolve(null),
       relaunch: { executable: "/opt/codestead-hub/Codestead.Hub" },
     };
     expect(appSelfUpdate({ ...common, nativeInstall: null })).toBeInstanceOf(VelopackSelfUpdate);
     expect(appSelfUpdate({ ...common, nativeInstall: { kind: "deb", version: "0.2.6" } })).toBeInstanceOf(NativePackageSelfUpdate);
+  });
+});
+
+describe("NativePackageUpdateTests: HTTP utan att följa omdirigeringar", () => {
+  it("fetchGet ber fetch om redirect: manual", async () => {
+    const seen: unknown[] = [];
+    const get = fetchGet((url, init) => (seen.push([url, init]), Promise.resolve(new Response("x"))));
+    expect(await (await get("https://github.com/a")).text()).toBe("x");
+    expect(seen).toEqual([["https://github.com/a", { redirect: "manual" }]]);
+  });
+
+  it("electronGet: net.request med redirect: manual, en omdirigering lämnas tillbaka, ett svar med sin kropp", async () => {
+    type Listener = (...args: unknown[]) => void;
+    const requests: { options: unknown; aborted: boolean }[] = [];
+    const net = {
+      request(options: { url: string; redirect: "manual" }) {
+        const listeners = new Map<string, Listener>();
+        const r = { options, aborted: false };
+        requests.push(r);
+        return {
+          on: (event: string, l: Listener) => listeners.set(event, l),
+          abort: () => void (r.aborted = true),
+          end: () => {
+            if (options.url.endsWith("/redirect")) listeners.get("redirect")!(302, "GET", "https://objects.githubusercontent.com/x");
+            else if (options.url.endsWith("/fail")) listeners.get("error")!(new Error("net::ERR_NAME_NOT_RESOLVED"));
+            else {
+              const body = (async function* () {
+                yield new TextEncoder().encode("hello ");
+                yield new TextEncoder().encode("world");
+              })();
+              listeners.get("response")!(Object.assign(body, { statusCode: 200, statusMessage: "OK", headers: { "content-length": "11", "set-cookie": ["a", "b"] } }));
+            }
+          },
+        };
+      },
+    };
+    const get = electronGet(net);
+    const redirect = await get("https://github.com/redirect");
+    expect([redirect.status, redirect.headers.get("location")]).toEqual([302, "https://objects.githubusercontent.com/x"]);
+    expect(requests[0]).toEqual({ options: { url: "https://github.com/redirect", redirect: "manual" }, aborted: true });
+    const ok = await get("https://github.com/file");
+    expect([ok.status, ok.headers.get("content-length"), await ok.text()]).toEqual([200, "11", "hello world"]);
+    await expect(get("https://github.com/fail")).rejects.toThrow("net::ERR_NAME_NOT_RESOLVED");
   });
 });
 

@@ -16,6 +16,7 @@ import { accessSync, constants, existsSync } from "node:fs";
 import { mkdtemp, open, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { Readable } from "node:stream";
 import type { SelfUpdate } from "../SelfUpdate.js";
 
 /** The kind of native package the app is installed as. */
@@ -38,8 +39,57 @@ export interface CommandResult {
 /** Runs a program with arguments (no shell) and never throws: the result says how it ended. */
 export type RunCommand = (file: string, args: readonly string[], options?: { readonly timeoutMs?: number }) => Promise<CommandResult>;
 
-/** The part of fetch() the updates need (global fetch, or Electron's net.fetch, which uses the system's proxy). */
-export type FetchLike = (url: string, init: { redirect: "follow"; signal?: AbortSignal }) => Promise<Response>;
+/**
+ * One HTTP GET that does not follow redirects: a redirect comes back as its 3xx response with its Location, and the
+ * updates follow it themselves once they have checked where it goes (Electron's net.fetch can neither report where its
+ * redirects went nor stop at them: {@link electronGet} is made of net.request; elsewhere {@link fetchGet}).
+ */
+export type HttpGet = (url: string) => Promise<Response>;
+
+/** An {@link HttpGet} over fetch() (Node's: redirect "manual" gives the redirect itself). */
+export function fetchGet(fetchFn: (url: string, init: { redirect: "manual" }) => Promise<Response>): HttpGet {
+  return (url) => fetchFn(url, { redirect: "manual" });
+}
+
+/** The response of Electron's net.request: a stream of the body. */
+interface ElectronResponseLike extends AsyncIterable<Uint8Array> {
+  readonly statusCode: number;
+  readonly statusMessage: string;
+  readonly headers: Record<string, string | string[]>;
+}
+
+/** The part of Electron's net (its ClientRequest's events are overloads: given loosely here). */
+export interface ElectronNetLike {
+  request(options: { url: string; redirect: "manual" }): {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    on(event: any, listener: (...args: any[]) => void): unknown;
+    abort(): void;
+    end(): void;
+  };
+}
+
+/**
+ * An {@link HttpGet} of Electron's net.request in the main process (the system's proxy settings, like net.fetch): a
+ * redirect is not followed but returned.
+ */
+export function electronGet(net: ElectronNetLike): HttpGet {
+  return (url) =>
+    new Promise<Response>((resolve, reject) => {
+      const request = net.request({ url, redirect: "manual" });
+      request.on("redirect", (statusCode: number, _method: string, redirectUrl: string) => {
+        resolve(new Response(null, { status: statusCode, headers: { location: redirectUrl } }));
+        request.abort();
+      });
+      request.on("response", (response: ElectronResponseLike) => {
+        const headers = new Headers();
+        for (const [name, value] of Object.entries(response.headers)) headers.set(name, Array.isArray(value) ? value.join(", ") : value);
+        const body = Readable.toWeb(Readable.from(response)) as ReadableStream<Uint8Array>;
+        resolve(new Response(body, { status: response.statusCode, statusText: response.statusMessage, headers }));
+      });
+      request.on("error", reject);
+      request.end();
+    });
+}
 
 /** The system's own program folders: pkexec and the package managers are taken from here, never from the PATH. */
 export const systemBinDirs: readonly string[] = ["/usr/bin", "/usr/sbin", "/bin", "/sbin"];
@@ -134,7 +184,7 @@ export async function detectNativeInstall(packageId: string, env: DetectEnvironm
   const dpkgQuery = env.findTool("dpkg-query");
   if (dpkgQuery !== null) {
     const r = await env.run(dpkgQuery, ["-W", "--showformat=${Status}\\t${Version}", packageId], { timeoutMs });
-    const m = r.code === 0 ? /^install ok installed\t(\S+)$/.exec(r.stdout.trim()) : null;
+    const m = r.code === 0 ? /^install ok installed\t(\S+?)(?:-\d+)?$/.exec(r.stdout.trim()) : null;
     if (m) return { kind: "deb", version: m[1]! };
   }
   const rpm = env.findTool("rpm");
@@ -205,30 +255,45 @@ export class NativeUpdateError extends Error {
   }
 }
 
-async function get(fetchFn: FetchLike, url: string, signal?: AbortSignal): Promise<Response> {
+/** How many redirects a download may take (GitHub: one, to its download host). */
+const maxRedirects = 5;
+
+/** A GET of a GitHub download, its redirects followed only while they stay on GitHub's hosts. */
+async function get(httpGet: HttpGet, url: string): Promise<Response> {
   if (!isAllowedDownloadUrl(url)) throw new NativeUpdateError("download", `Not a download from GitHub: ${url}`);
-  let response: Response;
-  try {
-    response = await fetchFn(url, { redirect: "follow", signal });
-  } catch (e) {
-    const cause = e instanceof Error && e.cause !== undefined ? e.cause : e;
-    throw new NativeUpdateError("download", `The download failed: ${cause instanceof Error ? cause.message : String(cause)}`);
+  for (let current = url, redirects = 0; ; redirects++) {
+    let response: Response;
+    try {
+      response = await httpGet(current);
+    } catch (e) {
+      const cause = e instanceof Error && e.cause !== undefined ? e.cause : e;
+      throw new NativeUpdateError("download", `The download failed: ${cause instanceof Error ? cause.message : String(cause)}`);
+    }
+    if ([301, 302, 303, 307, 308].includes(response.status)) {
+      await response.body?.cancel().catch(() => {});
+      const location = response.headers.get("location");
+      let next: string | null = null;
+      try {
+        next = location === null ? null : new URL(location, current).href;
+      } catch {
+        next = null;
+      }
+      if (next === null || redirects >= maxRedirects) throw new NativeUpdateError("download", `The download failed: ${url}: a broken redirect.`);
+      if (!isAllowedDownloadUrl(next)) throw new NativeUpdateError("download", `The download was redirected away from GitHub: ${next}`);
+      current = next;
+      continue;
+    }
+    if (!response.ok) {
+      await response.body?.cancel().catch(() => {});
+      throw new NativeUpdateError("download", `The download failed: ${url}: ${response.status} ${response.statusText}`.trim());
+    }
+    return response;
   }
-  // Where the redirects ended (fetch follows them): only GitHub's hosts.
-  if (response.url !== "" && !isAllowedDownloadUrl(response.url)) {
-    await response.body?.cancel().catch(() => {});
-    throw new NativeUpdateError("download", `The download was redirected away from GitHub: ${response.url}`);
-  }
-  if (!response.ok) {
-    await response.body?.cancel().catch(() => {});
-    throw new NativeUpdateError("download", `The download failed: ${url}: ${response.status} ${response.statusText}`.trim());
-  }
-  return response;
 }
 
 /** A small text file (at most `maxBytes`). */
-export async function downloadText(fetchFn: FetchLike, url: string, maxBytes = 1 << 20): Promise<string> {
-  const response = await get(fetchFn, url);
+export async function downloadText(httpGet: HttpGet, url: string, maxBytes = 1 << 20): Promise<string> {
+  const response = await get(httpGet, url);
   const bytes = new Uint8Array(await response.arrayBuffer());
   if (bytes.length > maxBytes) throw new NativeUpdateError("download", `${url} is too large.`);
   return new TextDecoder().decode(bytes);
@@ -238,8 +303,8 @@ export async function downloadText(fetchFn: FetchLike, url: string, maxBytes = 1
  * Downloads to a new file (it must not exist) and returns its SHA-256 (lower case hex). Progress 0-100 as it arrives,
  * when the size is known.
  */
-export async function downloadFile(fetchFn: FetchLike, url: string, file: string, progress: (percent: number) => void, maxBytes = 2 * 1024 ** 3): Promise<string> {
-  const response = await get(fetchFn, url);
+export async function downloadFile(httpGet: HttpGet, url: string, file: string, progress: (percent: number) => void, maxBytes = 2 * 1024 ** 3): Promise<string> {
+  const response = await get(httpGet, url);
   const total = Number(response.headers.get("content-length") ?? NaN);
   const hash = createHash("sha256");
   const handle = await open(file, "wx", 0o600);
@@ -273,8 +338,8 @@ export async function downloadFile(fetchFn: FetchLike, url: string, file: string
 }
 
 /** The latest version in a product's Velopack feed (releases.linux.json of <id>-latest, which the AppImage updates from). */
-export async function latestFromVelopackFeed(fetchFn: FetchLike, feedUrl: string, packageId: string): Promise<string | null> {
-  const json = JSON.parse(await downloadText(fetchFn, `${feedUrl}releases.linux.json`)) as { Assets?: unknown };
+export async function latestFromVelopackFeed(httpGet: HttpGet, feedUrl: string, packageId: string): Promise<string | null> {
+  const json = JSON.parse(await downloadText(httpGet, `${feedUrl}releases.linux.json`)) as { Assets?: unknown };
   let best: string | null = null;
   for (const a of Array.isArray(json.Assets) ? (json.Assets as Record<string, unknown>[]) : []) {
     const v = a?.Version;
@@ -358,7 +423,8 @@ export interface NativeUpdateOptions {
   readonly install: NativeInstall;
   /** The latest released version (the hub: its signed catalog; the learning apps: the Velopack feed). */
   readonly latestVersion: () => Promise<string | null>;
-  readonly fetch: FetchLike;
+  /** One GET without redirects (Electron: {@link electronGet}). */
+  readonly get: HttpGet;
   /** Starts the app again (the new version) once this process has ended, and ends it. */
   readonly restart: () => void;
   /** process.arch by default. */
@@ -419,12 +485,12 @@ export class NativePackageSelfUpdate implements SelfUpdate {
     const log = this.o.log ?? (() => {});
     const dir = await mkdtemp(join(this.o.tempRoot ?? tmpdir(), `${this.o.packageId}-update-`));
     try {
-      const sums = await downloadText(this.o.fetch, releaseAssetUrl(this.o.releasesRepo, tag, checksumsFileName));
+      const sums = await downloadText(this.o.get, releaseAssetUrl(this.o.releasesRepo, tag, checksumsFileName));
       const expected = checksumFor(sums, asset);
       if (expected === null) throw new NativeUpdateError("checksum", `${checksumsFileName} of ${tag} has no checksum for ${asset}, so it is not installed.`);
       const file = join(dir, asset);
       log(`Downloading ${releaseAssetUrl(this.o.releasesRepo, tag, asset)}`);
-      const actual = await downloadFile(this.o.fetch, releaseAssetUrl(this.o.releasesRepo, tag, asset), file, progress);
+      const actual = await downloadFile(this.o.get, releaseAssetUrl(this.o.releasesRepo, tag, asset), file, progress);
       if (actual !== expected) throw new NativeUpdateError("checksum", `${asset} does not have the checksum its release gives (${checksumsFileName}), so it is not installed.`);
       log(`SHA-256 ${actual} matches ${checksumsFileName}`);
 

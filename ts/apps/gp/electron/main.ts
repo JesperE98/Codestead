@@ -11,7 +11,7 @@ import { storageDirectory } from "@codestead/ui";
 import {
   appSelfUpdate,
   detectNativeInstall,
-  type FetchLike,
+  electronGet,
   latestFromVelopackFeed,
   launcherOf,
   type NativeInstall,
@@ -152,7 +152,7 @@ function start(): void {
   });
   // The app's own updates (C#: the learning window's SelfUpdate): installed with Setup.exe or as an AppImage (Velopack),
   // or as a .deb/.rpm/Arch package (the package manager, with the version of the AppImage's update feed).
-  const fetch: FetchLike = (url, init) => net.fetch(url, init);
+  const get = electronGet(net);
   serveSelfUpdate(ipcMain, () =>
     appSelfUpdate({
       releasesRepo: ProductInfo.releasesRepo,
@@ -160,8 +160,8 @@ function start(): void {
       currentVersion: ProductInfo.version,
       nativeInstall,
       exit: () => app.exit(0),
-      fetch,
-      latestVersion: () => latestFromVelopackFeed(fetch, updateFeedUrl(ProductInfo.releasesRepo, ProductInfo.toolId), ProductInfo.toolId),
+      get,
+      latestVersion: () => latestFromVelopackFeed(get, updateFeedUrl(ProductInfo.releasesRepo, ProductInfo.toolId), ProductInfo.toolId),
       relaunch: { executable: launcherOf(process.execPath) },
     }),
   );

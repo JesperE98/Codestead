@@ -1,7 +1,7 @@
 import { type ChildProcess } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { appSelfUpdate, detectNativeInstall, launcherOf, type NativeInstall, runVelopackHooks, serveSelfUpdate } from "@codestead/ui/electron-main";
+import { appSelfUpdate, detectNativeInstall, electronGet, launcherOf, type NativeInstall, runVelopackHooks, serveSelfUpdate } from "@codestead/ui/electron-main";
 import { app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, net, shell } from "electron";
 import iconData from "../../../../src/Hub/Codestead.Hub/Assets/icon.png?inline";
 import { Catalog } from "../src/core/Catalog.js";
@@ -177,7 +177,7 @@ function selfUpdate(relaunchArgs: readonly string[], inheritOutput: boolean) {
     currentVersion: HubInfo.version,
     nativeInstall,
     exit: () => app.exit(0),
-    fetch: (url, init) => net.fetch(url, init),
+    get: electronGet(net),
     latestVersion: async () => (catalog ?? (await catalogClient.load()).catalog).find(HubInfo.id)?.version ?? null,
     relaunch: { executable: launcherOf(process.execPath), args: relaunchArgs, inheritOutput },
     log: (line) => console.log(`SELF-UPDATE ${line}`),
@@ -191,7 +191,7 @@ function selfUpdate(relaunchArgs: readonly string[], inheritOutput: boolean) {
  */
 async function selfUpdateTest(): Promise<void> {
   const updater = selfUpdate(
-    args.filter((a) => a !== "--self-update-test" && a !== "--no-sandbox"),
+    args.filter((a) => a !== "--self-update-test"),
     true,
   );
   console.log(
