@@ -30,6 +30,8 @@ Eine **Sandbox** bedeutet, dass das Programm nur an das herankommt, was ihm
 erlaubt wurde, zum Beispiel das Netzwerk oder deinen Download-Ordner, statt an
 dein ganzes Home-Verzeichnis.
 
+![Ein Programm mit und ohne Sandbox](images/sandbox.webp "Ein Programm aus den Paketen der Distribution oder ein AppImage kommt an dein ganzes Home-Verzeichnis. Ein Flatpak oder ein Snap in seiner Sandbox kommt nur an das, was ihm erlaubt wurde – hier das Netzwerk und den Download-Ordner.")
+
 ```quiz
 Welches Format wird automatisch im Hintergrund aktualisiert?
 - [ ] Flatpak
@@ -136,6 +138,8 @@ Was passiert, wenn du ein Flatpak mit `--user` installierst?
 Denk daran, dass die Benutzerinstallation eigene Remotes hat – Flathub muss
 auch mit `--user` hinzugefügt werden.
 ```
+
+![Flatpak für das ganze System oder nur für dich](images/flatpak-user.webp "Ohne Optionen landet ein Flatpak in /var/lib/flatpak, und alle Benutzer sehen es. Mit --user landet es in deinem Home-Verzeichnis, nur du siehst es, und die Benutzerinstallation hat eigene Remotes.")
 
 ### Aktualisieren und entfernen
 

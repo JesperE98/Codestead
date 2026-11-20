@@ -41,6 +41,8 @@ shell هو الذي يفهم `|` و`>` و`$VARIABLES` وأحرف البدل (wil
 على Debian وUbuntu) و`ash` (على الأنظمة الصغيرة مثل Alpine). أما fish فهو **غير**
 متوافق مع POSIX عن قصد – وهذا ما يجعله أبسط، لكنه مختلف أيضًا.
 
+![sh وbash وzsh وfish على خط زمني](images/shell-family.webp "ينحدر bash وzsh من Bourne shell، أي sh، وهما متوافقان مع POSIX. أما fish فجاء لاحقًا وله صياغته الخاصة.")
+
 ## ما الأصداف المثبّتة؟
 
 يسرد الملف `/etc/shells` الأصداف التي يجوز استخدامها بوصفها login shell (shell
@@ -113,6 +115,8 @@ ps
 ```sh
 echo $SHELL
 ```
+
+![zsh يعمل داخل bash](images/nested-shells.webp "بدأ bash الـ zsh، فهو يعمل داخله. يخبرك $0 بالـ shell الذي تشغّله الآن، و$SHELL بالـ login shell الخاص بك – وهو لا يزال bash.")
 
 ### معظم الأشياء تعمل كما في bash
 
@@ -448,6 +452,8 @@ exit
 ---
 سطر `#!` هو الذي يحدّد أيّ shell يشغّل السكربت. وfish يبدؤه فقط.
 ```
+
+![سطر #! يختار الـ shell](images/shebang.webp "لا يفعل fish سوى تشغيل السكربت. يجعل السطر #!/bin/bash الـ bash ينفّذه، ولذا تعمل صياغة bash مع أنك داخل fish.")
 
 ## تغيير الـ shell الافتراضي باستخدام chsh
 

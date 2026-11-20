@@ -21,6 +21,8 @@ this chapter comes one chapter for each family: the **Debian family** (apt),
 the **Arch family** (pacman) and the **Red Hat family** (dnf). Each of them
 always runs on a distribution from that family, so you can do all three.
 
+![The three families of distributions](images/distro-families.webp "Each family has its own package manager and package format. Ubuntu is built on Debian, Linux Mint on Ubuntu, and Rocky Linux and AlmaLinux are clones of RHEL, which is based on Fedora.")
+
 ## What's the same everywhere?
 
 - **The Linux kernel** – though in different versions.
@@ -80,6 +82,8 @@ Which distribution has no versions at all, but is updated continuously
 - [ ] Fedora
 ```
 
+![Three release models on a time line](images/release-models.webp "Ubuntu LTS comes every other year, Fedora every six months, and Arch has no versions at all – only a steady stream of updates.")
+
 ## Which distribution am I running?
 
 The file `/etc/os-release` exists on all modern distributions and tells you
@@ -126,6 +130,8 @@ install it with the package manager?
 - [x] The package manager installs the dependency automatically
 - [ ] The package is installed, but doesn't work until you download the other one
 ```
+
+![Repository, package manager and computer](images/packages.webp "The package manager fetches the program from the distribution's signed repository – and its dependency along with it: htop needs the ncurses library, so both are installed.")
 
 ### Same program, different names
 

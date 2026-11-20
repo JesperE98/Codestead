@@ -62,6 +62,8 @@ dnf спрашивает `Is this ok [y/N]`, а вы просто нажимае
 `[Y/n]`, поэтому там Enter означает «да».
 ```
 
+![Enter отвечает заглавной буквой](images/yes-no-default.webp "Заглавная буква – это ответ, который даёт Enter. apt спрашивает Y/n, поэтому Enter продолжает установку; dnf спрашивает y/N, поэтому Enter её отменяет.")
+
 `dnf remove пакет` снова удаляет пакет.
 
 ## Обновление системы
@@ -183,6 +185,8 @@ dnf copr list
 - [ ] `disable` заодно удаляет пакеты, а `remove` – нет
 - [ ] Ничем
 ```
+
+![dnf copr enable, disable и remove](images/copr-states.webp "enable создаёт файл репозитория в /etc/yum.repos.d с enabled=1. disable оставляет файл, но ставит enabled=0, и dnf repolist больше не показывает репозиторий, а remove удаляет файл.")
 
 ### RPM Fusion
 

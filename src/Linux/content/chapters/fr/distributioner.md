@@ -22,6 +22,8 @@ différences. Après ce chapitre vient un chapitre pour chaque famille : la
 Hat** (dnf). Chacun tourne toujours sur une distribution de cette famille,
 vous pouvez donc faire les trois.
 
+![Les trois familles de distributions](images/distro-families.webp "Chaque famille a son propre gestionnaire de paquets et son propre format de paquets. Ubuntu est basée sur Debian, Linux Mint sur Ubuntu, et Rocky Linux et AlmaLinux sont des clones de RHEL, lui-même issu de Fedora.")
+
 ## Qu'est-ce qui est pareil partout ?
 
 - **Le noyau Linux** – mais dans des versions différentes.
@@ -87,6 +89,8 @@ continu (*rolling*) ?
 - [ ] Fedora
 ```
 
+![Trois modèles de publication sur une frise](images/release-models.webp "Ubuntu LTS sort tous les deux ans, Fedora tous les six mois, et Arch n'a pas de versions du tout – seulement un flux continu de mises à jour.")
+
 ## Quelle distribution est-ce que j'utilise ?
 
 Le fichier `/etc/os-release` existe sur toutes les distributions modernes et
@@ -136,6 +140,8 @@ quand vous l'installez avec le gestionnaire de paquets ?
 - [x] Le gestionnaire de paquets installe la dépendance automatiquement
 - [ ] Le paquet est installé, mais ne fonctionne pas tant que vous n'avez pas téléchargé l'autre
 ```
+
+![Dépôt, gestionnaire de paquets et ordinateur](images/packages.webp "Le gestionnaire de paquets récupère le programme dans le dépôt signé de la distribution – et sa dépendance avec : htop a besoin de la bibliothèque ncurses, donc les deux sont installés.")
 
 ### Même programme, noms différents
 

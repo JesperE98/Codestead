@@ -61,6 +61,8 @@ dnf पूछता है `Is this ok [y/N]` और आप बस Enter दब�
 Enter का मतलब हाँ है।
 ```
 
+![Enter बड़े अक्षर वाला जवाब देता है](images/yes-no-default.webp "बड़ा अक्षर वह जवाब है जो Enter देता है। apt Y/n पूछता है, इसलिए Enter इंस्टॉलेशन जारी रखता है; dnf y/N पूछता है, इसलिए Enter उसे रद्द कर देता है।")
+
 `dnf remove package` किसी पैकेज को फिर से हटा देता है।
 
 ## सिस्टम अपग्रेड करना
@@ -177,6 +179,8 @@ dnf copr list
 - [ ] `disable` पैकेज भी अनइंस्टॉल करता है, `remove` नहीं
 - [ ] कोई फ़र्क़ नहीं है
 ```
+
+![dnf copr enable, disable और remove](images/copr-states.webp "enable /etc/yum.repos.d में रिपॉज़िटरी की फ़ाइल enabled=1 के साथ बनाता है। disable फ़ाइल रखता है पर enabled=0 कर देता है, इसलिए dnf repolist उसे अब नहीं दिखाता, और remove फ़ाइल मिटा देता है।")
 
 ### RPM Fusion
 

@@ -60,6 +60,8 @@ la lista de paquetes está vacía y apt no encuentra ningún paquete.
 versiones nuevas.
 ```
 
+![apt update y apt upgrade](images/apt-update-upgrade.webp "apt update solo descarga la lista de versiones disponibles. Después, apt upgrade instala las versiones nuevas; aquí, una versión nueva de bash.")
+
 ## Instalar y desinstalar
 
 ```sh
@@ -163,6 +165,8 @@ instalar paquetes desde él?
 mismo, también tienes que hacerlo tú.
 ```
 
+![Qué pasa al añadir un PPA](images/ppa-sources.webp "add-apt-repository crea un archivo en /etc/apt/sources.list.d que le indica a apt dónde está el PPA. apt update lee todos los archivos de ahí, y entonces la lista de paquetes también tiene moonphase.")
+
 Mira el archivo:
 
 ```sh
@@ -194,6 +198,8 @@ repositorio y `100` significa «lo que ya está instalado». Si el mismo paquete
 está en varios repositorios, apt elige la versión más alta, así que un PPA
 puede sustituir uno de los paquetes propios de la distribución por su propia
 versión.
+
+![La salida de apt policy moonphase](images/apt-policy.webp "Los tres asteriscos marcan la versión instalada, 500 es la prioridad del PPA y 100 indica lo que ya está instalado.")
 
 ```quiz
 El mismo paquete está tanto en el repositorio de la distribución como en un

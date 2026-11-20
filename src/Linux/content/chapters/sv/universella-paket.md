@@ -28,6 +28,8 @@ En **sandlåda** betyder att programmet bara kommer åt det det fått lov till,
 till exempel nätverket eller din nedladdningsmapp, i stället för hela din
 hemkatalog.
 
+![Ett program med och utan sandlåda](images/sandbox.webp "Ett program från distributionens paket eller en AppImage kommer åt hela din hemkatalog. En Flatpak eller en snap i sin sandlåda kommer bara åt det den fått lov till – här nätverket och nedladdningsmappen.")
+
 ```quiz
 Vilket format uppdateras automatiskt i bakgrunden?
 - [ ] Flatpak
@@ -133,6 +135,8 @@ Vad händer när du installerar en Flatpak med `--user`?
 Kom ihåg att användarinstallationen har egna remotes – Flathub måste läggas
 till med `--user` också.
 ```
+
+![Flatpak för hela systemet eller bara för dig](images/flatpak-user.webp "Utan flaggor hamnar en Flatpak i /var/lib/flatpak och alla användare ser den. Med --user hamnar den i din hemkatalog, bara du ser den, och den egna installationen har egna remotes.")
 
 ### Uppdatera och ta bort
 

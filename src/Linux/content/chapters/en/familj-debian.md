@@ -58,6 +58,8 @@ What does `sudo apt update` do?
 versions.
 ```
 
+![apt update and apt upgrade](images/apt-update-upgrade.webp "apt update only downloads the list of which versions there are into the package list. apt upgrade then installs the new versions – here a new version of bash.")
+
 ## Installing and removing
 
 ```sh
@@ -158,6 +160,8 @@ packages from it?
 yourself, you have to do it yourself.
 ```
 
+![What adding a PPA does](images/ppa-sources.webp "add-apt-repository creates a file in /etc/apt/sources.list.d that points apt to the PPA. apt update reads every file there, and then the package list has moonphase too.")
+
 Look at the file:
 
 ```sh
@@ -188,6 +192,8 @@ apt policy moonphase
 priority and `100` means "what is already installed". If the same package is
 in several repositories, apt picks the highest version – so a PPA can replace
 one of the distribution's own packages with its own version.
+
+![The output of apt policy moonphase](images/apt-policy.webp "The three stars mark the installed version, 500 is the priority of the PPA and 100 stands for what is already installed.")
 
 ```quiz
 The same package is both in the distribution's repository and in a PPA you

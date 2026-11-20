@@ -22,6 +22,8 @@ enseguida. Después de este capítulo viene un capítulo para cada familia: la
 Hat** (dnf). Cada uno se ejecuta siempre en una distribución de esa familia,
 así que puedes hacer los tres.
 
+![Las tres familias de distribuciones](images/distro-families.webp "Cada familia tiene su propio gestor de paquetes y su propio formato de paquete. Ubuntu se basa en Debian, Linux Mint en Ubuntu, y Rocky Linux y AlmaLinux son clones de RHEL, que se basa en Fedora.")
+
 ## ¿Qué es igual en todas partes?
 
 - **El kernel Linux**, aunque en distintas versiones.
@@ -83,6 +85,8 @@ La familia Debian llama al grupo `sudo`; Arch y Red Hat lo llaman `wheel`.
 - [ ] Fedora
 ```
 
+![Tres modelos de publicación en una línea de tiempo](images/release-models.webp "Ubuntu LTS sale cada dos años, Fedora cada seis meses, y Arch no tiene versiones: solo un flujo constante de actualizaciones.")
+
 ## ¿Qué distribución estoy usando?
 
 El archivo `/etc/os-release` existe en todas las distribuciones modernas e
@@ -129,6 +133,8 @@ con el gestor de paquetes?
 - [x] El gestor de paquetes instala la dependencia automáticamente
 - [ ] El paquete se instala, pero no funciona hasta que descargues el otro
 ```
+
+![Repositorio, gestor de paquetes y ordenador](images/packages.webp "El gestor de paquetes descarga el programa del repositorio firmado de la distribución, y su dependencia con él: htop necesita la biblioteca ncurses, así que se instalan los dos.")
 
 ### El mismo programa, nombres distintos
 

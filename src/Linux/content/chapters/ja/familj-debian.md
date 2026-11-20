@@ -60,6 +60,8 @@ sudo apt update && sudo apt upgrade
 `apt upgrade` です。
 ```
 
+![apt update と apt upgrade](images/apt-update-upgrade.webp "apt update は利用できるバージョンの一覧をダウンロードするだけです。新しいバージョンをインストールするのは apt upgrade で、ここでは bash の新しいバージョンです。")
+
 ## インストールと削除
 
 ```sh
@@ -161,6 +163,8 @@ apt がそこからパッケージをインストールできるようにする�
 自分で作った場合は、自分で実行する必要があります。
 ```
 
+![PPA を追加すると何が起こるか](images/ppa-sources.webp "add-apt-repository は /etc/apt/sources.list.d に、apt に PPA の場所を教えるファイルを作ります。apt update がそこにあるすべてのファイルを読むと、パッケージ一覧に moonphase も加わります。")
+
 ファイルを見てみましょう。
 
 ```sh
@@ -194,6 +198,8 @@ apt policy moonphase
 パッケージが複数のリポジトリにある場合、apt は最も新しいバージョンを選びます。
 そのため、PPA はディストリビューション自身のパッケージを独自のバージョンで
 置き換えることがあります。
+
+![apt policy moonphase の出力](images/apt-policy.webp "3 つの星印はインストールされているバージョン、500 は PPA の優先度、100 はすでにインストールされているものを表します。")
 
 ```quiz
 同じパッケージが、ディストリビューションのリポジトリと、追加した PPA の両方に

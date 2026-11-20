@@ -61,6 +61,8 @@ Den stora bokstaven är standardvalet. I Debian-familjen frågar apt `[Y/n]`, s�
 där betyder Enter ja.
 ```
 
+![Enter svarar med den stora bokstaven](images/yes-no-default.webp "Den stora bokstaven är det Enter svarar. apt frågar Y/n, så Enter fortsätter installationen; dnf frågar y/N, så Enter avbryter den.")
+
 `dnf remove paket` tar bort ett paket igen.
 
 ## Uppgradera systemet
@@ -177,6 +179,8 @@ Vad är skillnaden mellan `dnf copr disable` och `dnf copr remove`?
 - [ ] `disable` avinstallerar också paketen, det gör inte `remove`
 - [ ] Det är ingen skillnad
 ```
+
+![dnf copr enable, disable och remove](images/copr-states.webp "enable skapar förrådets fil i /etc/yum.repos.d med enabled=1. disable behåller filen men sätter enabled=0, så att dnf repolist inte längre visar förrådet, och remove tar bort filen.")
 
 ### RPM Fusion
 

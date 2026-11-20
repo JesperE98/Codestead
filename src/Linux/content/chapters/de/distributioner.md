@@ -22,6 +22,8 @@ diesem Kapitel kommt ein Kapitel für jede Familie: die **Debian-Familie**
 davon läuft immer auf einer Distribution aus dieser Familie, sodass du alle
 drei machen kannst.
 
+![Die drei Familien der Distributionen](images/distro-families.webp "Jede Familie hat ihren eigenen Paketmanager und ihr eigenes Paketformat. Ubuntu baut auf Debian auf, Linux Mint auf Ubuntu, und Rocky Linux und AlmaLinux sind Klone von RHEL, das auf Fedora beruht.")
+
 ## Was ist überall gleich?
 
 - **Der Linux-Kernel** – wenn auch in verschiedenen Versionen.
@@ -83,6 +85,8 @@ aktualisiert (*rolling*)?
 - [ ] Fedora
 ```
 
+![Drei Veröffentlichungsmodelle auf einer Zeitleiste](images/release-models.webp "Ubuntu LTS erscheint alle zwei Jahre, Fedora alle sechs Monate, und Arch hat überhaupt keine Versionen – nur einen stetigen Strom von Updates.")
+
 ## Welche Distribution benutze ich?
 
 Die Datei `/etc/os-release` gibt es auf allen modernen Distributionen; sie
@@ -131,6 +135,8 @@ es mit dem Paketmanager installierst?
 - [x] Der Paketmanager installiert die Abhängigkeit automatisch
 - [ ] Das Paket wird installiert, funktioniert aber erst, wenn du das andere herunterlädst
 ```
+
+![Repository, Paketmanager und Computer](images/packages.webp "Der Paketmanager holt das Programm aus dem signierten Repository der Distribution – und die Abhängigkeit gleich mit: htop braucht die Bibliothek ncurses, also werden beide installiert.")
 
 ### Dasselbe Programm, verschiedene Namen
 

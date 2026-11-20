@@ -150,6 +150,8 @@ Ein Commit speichert, was im Index liegt. Die anderen drei Änderungen bleiben
 im Arbeitsverzeichnis, bis du sie hinzufügst.
 ```
 
+![Arbeitsverzeichnis, Index und Geschichte](images/git-areas.webp "git add legt die geänderte README.md in den Index, und git commit speichert den Index als neuen Commit in der Geschichte in .git.")
+
 ## `git status` ist dein Kompass
 
 Der Befehl, den du am häufigsten ausführen wirst, ist `git status`. Er sagt
@@ -261,6 +263,8 @@ dass die Zeilen 1–3 der alten Version den Zeilen 1–4 der neuen entsprechen.
 `git diff` vergleicht das Arbeitsverzeichnis mit dem Index – zeigt also, was
 du *noch nicht* hinzugefügt hast. Um zu sehen, was im Index liegt und auf den
 Commit wartet, gibst du `git diff --staged` ein.
+
+![Was git diff vergleicht](images/git-diff.webp "git diff vergleicht das Arbeitsverzeichnis mit dem Index. git diff --staged vergleicht den Index mit dem neuesten Commit.")
 
 Füge die Änderung hinzu und committe sie. Die Option `-a` führt `git add` für
 jede Datei aus, die git bereits verfolgt, sodass es in einem einzigen Schritt
@@ -470,6 +474,8 @@ Fast-forward
 angelegt wurde. Git muss `main` dann nur auf denselben Commit wie `{{newDesign}}`
 vorschieben.
 
+![Branches als Etiketten an Commits](images/git-branches.webp "Ein Branch ist ein Etikett, das auf einen Commit zeigt. Nach git switch main sieht das Arbeitsverzeichnis aus wie der neueste Commit von main, und git merge schiebt main vor bis zum Commit des Branches – ein Fast-forward.")
+
 Wenn beide Branches neue Commits haben, macht git einen **Three-Way-Merge**:
 Es vergleicht beide Branches mit ihrem gemeinsamen Vorfahren und erstellt einen
 neuen *Merge-Commit* mit zwei Eltern. `git log --oneline --graph --all` zeigt,
@@ -629,6 +635,8 @@ Das Remote heißt meist `origin`, und ein typischer Arbeitsablauf sieht so aus:
 `git pull`, wenn du anfängst, dann bearbeiten, `git add` und `git commit` – und
 zum Schluss `git push`. GitHub und GitLab melden dich mit einem SSH-Schlüssel
 oder einem Zugriffstoken an, nicht mit einem Passwort.
+
+![Dein Repository und sein Remote](images/git-remote.webp "origin hat nur die Geschichte, kein Arbeitsverzeichnis. git push schickt deine neuen Commits dorthin, git fetch holt nur neue Commits nach .git, und git pull führt sie außerdem in dein Arbeitsverzeichnis zusammen.")
 
 All das braucht ein Netzwerk, und das hat der Simulator nicht. Aber `clone`,
 `push` und `pull` funktionieren genauso gut zwischen zwei Repositorys auf

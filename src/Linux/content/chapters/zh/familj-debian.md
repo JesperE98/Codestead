@@ -50,6 +50,8 @@ sudo apt update && sudo apt upgrade
 `apt update` 只刷新列表。真正安装新版本的是 `apt upgrade`。
 ```
 
+![apt update 和 apt upgrade](images/apt-update-upgrade.webp "apt update 只下载可用版本的列表。然后 apt upgrade 才会安装新版本——这里是 bash 的新版本。")
+
 ## 安装和删除
 
 ```sh
@@ -119,6 +121,8 @@ sudo add-apt-repository ppa:lunatool/moonphase
 `add-apt-repository` 会替你运行 `apt update`。如果文件是你自己创建的，这一步就得你自己来做。
 ```
 
+![添加 PPA 时发生了什么](images/ppa-sources.webp "add-apt-repository 在 /etc/apt/sources.list.d 中创建一个文件，让 apt 指向这个 PPA。apt update 会读取那里的所有文件，之后软件包列表里也就有了 moonphase。")
+
 看看这个文件：
 
 ```sh
@@ -146,6 +150,8 @@ apt policy moonphase
 ```
 
 `***` 标记的是已安装的版本。数字 `500` 是软件源的优先级，`100` 表示“已经安装的版本”。如果同一个软件包存在于多个软件源中，apt 会选择版本最高的那个——所以 PPA 可以用它自己的版本替换掉发行版自带的某个软件包。
+
+![apt policy moonphase 的输出](images/apt-policy.webp "三个星号标记已安装的版本，500 是这个 PPA 的优先级，100 代表已经安装的版本。")
 
 ```quiz
 同一个软件包既在发行版的软件源中，也在你添加的一个 PPA 中。apt 会选择哪个版本？

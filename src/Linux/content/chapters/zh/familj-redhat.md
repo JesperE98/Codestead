@@ -50,6 +50,8 @@ dnf 询问 `Is this ok [y/N]`，你直接按了 Enter。会发生什么？
 大写字母就是默认选项。在 Debian 家族中，apt 问的是 `[Y/n]`，所以在那里按 Enter 表示 yes。
 ```
 
+![回车键给出的是大写字母那个答案](images/yes-no-default.webp "大写字母就是直接按回车时的答案。apt 问的是 Y/n，所以回车会继续安装；dnf 问的是 y/N，所以回车会取消安装。")
+
 `dnf remove package` 会再把软件包删除。
 
 ## 升级系统
@@ -145,6 +147,8 @@ dnf copr list
 - [ ] `disable` 还会卸载软件包，`remove` 则不会
 - [ ] 没有区别
 ```
+
+![dnf copr enable、disable 和 remove](images/copr-states.webp "enable 在 /etc/yum.repos.d 中创建这个软件源的文件，其中写着 enabled=1。disable 保留文件，但改成 enabled=0，于是 dnf repolist 不再显示它；remove 则删除这个文件。")
 
 ### RPM Fusion
 
