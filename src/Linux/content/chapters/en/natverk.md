@@ -109,6 +109,8 @@ $ ip route | grep default | cut -d' ' -f3
 The third word on the `default` line is the gateway's address.
 ```
 
+![The home network and its routes](images/home-network.webp "Everything in 192.168.1.0/24 – the server and the router – is reached directly. Everything else follows the default route via the gateway 192.168.1.1 out to the internet.")
+
 ## ping – can it be reached?
 
 `ping` sends small test packets and measures how long the replies take. With
@@ -244,6 +246,8 @@ name:
 The order (first the file, then DNS) is set by the line `hosts: files dns`
 in `/etc/nsswitch.conf`.
 
+![getent and dig looking up server.lan](images/hosts-dns.webp "getent asks the way the system does – first /etc/hosts, then DNS – so it finds server.lan. dig asks only DNS, which does not know the name, and prints nothing.")
+
 ```quiz
 Why does `sudo echo '192.168.1.10 server.lan' >> /etc/hosts` give
 *Permission denied*?
@@ -291,6 +295,8 @@ sudo ss -tulpn
 If the practice server `myserver` from the processes chapter is running,
 you see it here on port 8080. The older command `netstat -tulpn` (from
 *net-tools*) does the same thing.
+
+![Ports on your computer](images/ports.webp "The address leads to the computer, the port to a program on it. sshd listens on 22 and myserver on 8080; nothing listens on port 80, so curl cannot connect there.")
 
 ## Fetching from the web: curl and wget
 

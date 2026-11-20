@@ -107,6 +107,8 @@ $ ip route | grep default | cut -d' ' -f3
 Det tredje ordet på `default`-raden är gatewayens adress.
 ```
 
+![Hemnätverket och dess vägar](images/home-network.webp "Allt i 192.168.1.0/24 – servern och routern – nås direkt. Allt annat följer standardvägen via gatewayen 192.168.1.1 ut på internet.")
+
 ## ping – går det att nå?
 
 `ping` skickar små testpaket och mäter hur lång tid svaren tar. Med `-c`
@@ -240,6 +242,8 @@ getent hosts server.lan
 Ordningen (först filen, sedan DNS) bestäms av raden `hosts: files dns` i
 `/etc/nsswitch.conf`.
 
+![getent och dig slår upp server.lan](images/hosts-dns.webp "getent frågar som systemet gör – först /etc/hosts, sedan DNS – och hittar därför server.lan. dig frågar bara DNS, som inte känner till namnet, och skriver ingenting.")
+
 ```quiz
 Varför ger `sudo echo '192.168.1.10 server.lan' >> /etc/hosts`
 *Permission denied*?
@@ -287,6 +291,8 @@ sudo ss -tulpn
 Om övningsservern `myserver` från kapitlet om processer körs, ser du den
 här på port 8080. Det äldre kommandot `netstat -tulpn` (från *net-tools*) gör samma
 sak.
+
+![Portar på din dator](images/ports.webp "Adressen leder till datorn, porten till ett program på den. sshd lyssnar på 22 och myserver på 8080; på port 80 lyssnar ingen, så där kan curl inte ansluta.")
 
 ## Hämta från webben: curl och wget
 

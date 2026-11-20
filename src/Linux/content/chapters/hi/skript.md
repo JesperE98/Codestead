@@ -124,6 +124,8 @@ Bash सिर्फ़ पूर्णांकों (integers) से गि�
 if [ -f ~/.bashrc ]; then echo "File मौजूद है"; else echo "File नहीं है"; fi
 ```
 
+![if exit code देखता है](images/if-exit.webp "if command चलाता है और उसका exit code देखता है: 0 का मतलब true है और then वाला हिस्सा चलता है, कुछ भी दूसरा false है और else वाला हिस्सा चलता है।")
+
 `[ ]` के अंदर के spaces ज़रूरी हैं! Script की तरह कई lines में लिखने पर यह ऐसा दिखता है:
 
 ```text
@@ -264,6 +266,8 @@ done
 
 `exit 1` script को exit code 1 के साथ ख़त्म करता है, ताकि जिसने भी script चलाई है वह देख
 सके कि कुछ गड़बड़ हुई।
+
+![backup.sh के हिस्से](images/script-anatomy.webp "Shebang बताता है कि script को कौन-सा program चलाएगा। बिना arguments के script exit code 1 के साथ ख़त्म होती है; वरना loop एक बार में एक argument लेता है और error messages stderr पर भेजता है।")
 
 ## अच्छी scripts के लिए tips
 

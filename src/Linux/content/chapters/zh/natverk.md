@@ -78,6 +78,8 @@ $ ip route | grep default | cut -d' ' -f3
 `default` 那一行中的第三个单词就是网关的地址。
 ```
 
+![家庭网络及其路由](images/home-network.webp "192.168.1.0/24 中的一切（服务器和路由器）都可以直接到达。其他所有流量都走默认路由，经网关 192.168.1.1 出去到互联网。")
+
 ## ping——能连通吗？
 
 `ping` 会发送小的测试数据包，并测量回复需要多长时间。用 `-c`（*count*，次数）可以指定发送多少个包——否则 ping 会一直发下去，直到你按 **Ctrl+C**：
@@ -186,6 +188,8 @@ getent hosts server.lan
 
 查找顺序（先查文件，再查 DNS）由 `/etc/nsswitch.conf` 中的 `hosts: files dns` 这一行决定。
 
+![getent 和 dig 查找 server.lan](images/hosts-dns.webp "getent 按系统的方式查找——先查 /etc/hosts，再查 DNS——所以能找到 server.lan。dig 只问 DNS，而 DNS 不知道这个名字，所以什么也不输出。")
+
 ```quiz
 为什么 `sudo echo '192.168.1.10 server.lan' >> /etc/hosts` 会报 *Permission denied*？
 - [ ] `echo` 不能用 sudo 运行
@@ -221,6 +225,8 @@ sudo ss -tulpn
 ```
 
 如果进程那一章中的练习服务器 `myserver` 正在运行，你会在这里看到它监听在 8080 端口。旧命令 `netstat -tulpn`（来自 *net-tools*）的作用相同。
+
+![你电脑上的端口](images/ports.webp "地址指向计算机，端口指向计算机上的某个程序。sshd 监听 22，myserver 监听 8080；80 端口上没有程序监听，所以 curl 连不上。")
 
 ## 从网上获取内容：curl 和 wget
 

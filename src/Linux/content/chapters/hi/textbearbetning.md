@@ -47,6 +47,8 @@ bonana
 `g` के बिना पंक्ति का सिर्फ़ पहला `a` बदला जाता है।
 ```
 
+![sed के s command के हिस्से](images/sed-substitute.webp "g flag के बिना s हर line में सिर्फ़ पहला match बदलता है; g के साथ वह हर match बदल देता है।")
+
 `i` flag खोज को case-insensitive बना देता है, बिल्कुल `grep -i` की तरह:
 
 ```sh
@@ -174,6 +176,8 @@ log level है:
 awk '{print $3}' ~/{{documents}}/server.log
 ```
 
+![awk एक line को fields में बाँटता है](images/awk-fields.webp "awk हर line को spaces पर बाँटता है, चाहे वे कितने भी हों: $1 पहला field है, $NF आख़िरी, NF fields की संख्या और $0 पूरी line।")
+
 Program `{ }` के अंदर जाता है और हर line के लिए चलता है। awk program को हमेशा
 **single** quotes में रखिए – वरना shell `$3` को shell variable समझकर awk के शुरू होने
 से पहले ही बदल देगा।
@@ -258,6 +262,8 @@ awk में variables होते हैं जिन्हें declare क
 ```sh
 awk -F, 'NR > 1 {{{sumVar}} += $3} END {print {{sumVar}}}' ~/{{documents}}/{{grades}}
 ```
+
+![awk एक column को कैसे जोड़ता है](images/awk-sum.webp "Curly brackets वाला हिस्सा header के बाद हर line के लिए चलता है और field 3 को variable में जोड़ता है। END एक बार, आख़िरी line के बाद चलता है और जोड़ छापता है।")
 
 `{{sumVar}} += $3` का मतलब है "field 3 को {{sumVar}} में जोड़ो"। अगर आप साथ-साथ lines
 भी गिनें (`count++` गिनती को 1 बढ़ाता है), तो आप औसत निकाल सकते हैं:

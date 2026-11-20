@@ -97,6 +97,8 @@ Fíjate en `sdb1`: un sistema de archivos `vfat` con la etiqueta `USBSTICK`
 que no está montado en ninguna parte. Es la memoria
 USB que vamos a conectar.
 
+![Discos, particiones y sistemas de archivos](images/disk-layout.webp "lsblk -f en este ordenador: el disco sda tiene tres particiones, cada una con su sistema de archivos y su punto de montaje. La memoria USB sdb tiene una partición FAT que todavía no está montada.")
+
 ## Distintos sistemas de archivos
 
 Hay muchos sistemas de archivos, con puntos fuertes diferentes:
@@ -216,6 +218,8 @@ en el directorio:
 ls -l /mnt/usb
 df -h /mnt/usb
 ```
+
+![Tres sistemas de archivos en un árbol](images/mount-tree.webp "Tras montarla, los archivos de la memoria aparecen en /mnt/usb. El sistema de archivos raíz está montado en / y la partición EFI en /boot/efi: un solo árbol, sin letras de unidad.")
 
 A partir de aquí, la memoria funciona como cualquier otro directorio. Copia un
 archivo a tu directorio personal:

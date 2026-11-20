@@ -68,6 +68,8 @@ minute 15, heure 8, n'importe quelle date, n'importe quel mois, jour 6 – samed
 Minute 0 et une heure sur deux : 00:00, 02:00, 04:00 …
 ```
 
+![Quand deux lignes de crontab s'exécutent](images/cron-times.webp "La première ligne lance la tâche toutes les dix minutes, à chaque heure ; la seconde à 07:00 les jours 1 à 5 de la semaine, du lundi au vendredi. Dimanche vaut 0 ou 7.")
+
 ## Installer des tâches
 
 `crontab -e` ouvre votre crontab dans un éditeur de texte et l'installe quand
@@ -145,6 +147,8 @@ La sortie des tâches cron ne s'affiche dans aucun terminal. Le vrai cron essaie
 de l'envoyer par e-mail, et la plupart des ordinateurs n'ont pas de messagerie
 – elle est donc perdue.
 ```
+
+![Votre terminal et une tâche cron](images/cron-env.webp "Une tâche cron s'exécute avec /bin/sh, sans votre ~/.bashrc et avec un PATH court. Sa sortie est perdue si la ligne ne l'envoie pas dans un fichier.")
 
 ## Les tâches du système
 

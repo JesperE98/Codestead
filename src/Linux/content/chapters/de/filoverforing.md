@@ -95,6 +95,8 @@ Ohne den Doppelpunkt ist `srv` einfach ein Dateiname, und `scp` kopiert lokal
 wie `cp`. Den Doppelpunkt vergisst man leicht!
 ```
 
+![In welche Richtung scp kopiert](images/scp-copy.webp "Die Quelle kommt zuerst, das Ziel zuletzt; HOST:PATH liegt auf dem Server. Ohne Doppelpunkt ist srv nur ein Dateiname, und die Kopie bleibt auf deinem Rechner.")
+
 ## Synchron halten – `rsync`
 
 Für viele Dateien oder für etwas, das du immer wieder kopierst (Backups!), ist
@@ -138,6 +140,8 @@ $ ls /tmp/x
 ---
 Ohne den Schrägstrich wurde das Verzeichnis selbst nach `/tmp/x` kopiert.
 ```
+
+![rsync mit und ohne Schrägstrich](images/rsync-slash.webp "Ohne Schrägstrich kopiert rsync das Verzeichnis selbst nach /tmp/x. Mit Schrägstrich kopiert es nur seinen Inhalt.")
 
 ### Über SSH und `--delete`
 

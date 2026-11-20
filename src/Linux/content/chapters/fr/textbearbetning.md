@@ -49,6 +49,8 @@ bonana
 Sans `g`, seul le premier `a` de la ligne est remplacé.
 ```
 
+![Les parties de la commande s de sed](images/sed-substitute.webp "Sans le drapeau g, s ne remplace que la première correspondance de chaque ligne ; avec g, il les remplace toutes.")
+
 Le drapeau `i` rend la recherche insensible à la casse, comme `grep -i` :
 
 ```sh
@@ -184,6 +186,8 @@ Dans `server.log`, le champ 3 est le niveau de log :
 awk '{print $3}' ~/{{documents}}/server.log
 ```
 
+![awk découpe une ligne en champs](images/awk-fields.webp "awk découpe chaque ligne aux espaces, quel que soit leur nombre : $1 est le premier champ, $NF le dernier, NF le nombre de champs et $0 la ligne entière.")
+
 Le programme se place entre `{ }` et s'exécute pour chaque ligne. Mettez
 toujours le programme awk entre apostrophes **simples** – sinon le shell
 croit que `$3` est une variable du shell et la remplace avant même que awk
@@ -276,6 +280,8 @@ colonne :
 ```sh
 awk -F, 'NR > 1 {{{sumVar}} += $3} END {print {{sumVar}}}' ~/{{documents}}/{{grades}}
 ```
+
+![Comment awk additionne une colonne](images/awk-sum.webp "La partie entre accolades s'exécute pour chaque ligne après l'en-tête et ajoute le champ 3 à la variable. END s'exécute une fois, après la dernière ligne, et affiche la somme.")
 
 `{{sumVar}} += $3` signifie « ajouter le champ 3 à {{sumVar}} ». Si vous comptez
 les lignes en même temps (`nombre++` augmente `nombre` de 1), vous pouvez

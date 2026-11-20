@@ -125,6 +125,8 @@ else false. Most of the time you use the command `[` (also known as `test`):
 if [ -f ~/.bashrc ]; then echo "The file exists"; else echo "The file is missing"; fi
 ```
 
+![if looks at the exit code](images/if-exit.webp "if runs the command and looks at its exit code: 0 means true and runs the then part, anything else means false and runs the else part.")
+
 The spaces inside `[ ]` are mandatory! Written over several lines, as in a
 script, it looks like this:
 
@@ -268,6 +270,8 @@ done
 
 `exit 1` ends the script with exit code 1, so that whoever called the script
 can see that something went wrong.
+
+![The parts of backup.sh](images/script-anatomy.webp "The shebang says which program runs the script. Without arguments the script ends with exit code 1; otherwise the loop takes one argument at a time and sends its error messages to stderr.")
 
 ## Tips for good scripts
 

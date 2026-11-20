@@ -103,6 +103,8 @@ bash 只用整数计算：7 / 2 得 3，余数（`%`）是 1。
 if [ -f ~/.bashrc ]; then echo "The file exists"; else echo "The file is missing"; fi
 ```
 
+![if 看的是退出码](images/if-exit.webp "if 运行命令并查看它的退出码：0 表示真，执行 then 部分；其他任何值表示假，执行 else 部分。")
+
 `[ ]` 内部的空格是必需的！像在脚本中那样分多行书写时，它看起来是这样的：
 
 ```text
@@ -233,6 +235,8 @@ done
 ```
 
 `exit 1` 会以退出码 1 结束脚本，这样调用该脚本的一方就能知道出了问题。
+
+![backup.sh 的各个部分](images/script-anatomy.webp "shebang 说明由哪个程序运行脚本。没有参数时，脚本以退出码 1 结束；否则循环每次取一个参数，并把错误信息发送到 stderr。")
 
 ## 编写好脚本的技巧
 

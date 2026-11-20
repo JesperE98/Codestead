@@ -130,6 +130,8 @@ als `test`):
 if [ -f ~/.bashrc ]; then echo "Die Datei existiert"; else echo "Die Datei fehlt"; fi
 ```
 
+![if schaut auf den Exit-Code](images/if-exit.webp "if führt den Befehl aus und schaut auf seinen Exit-Code: 0 bedeutet wahr und führt den then-Teil aus, alles andere bedeutet falsch und führt den else-Teil aus.")
+
 Die Leerzeichen innerhalb von `[ ]` sind Pflicht! Über mehrere Zeilen
 geschrieben, wie in einem Skript, sieht das so aus:
 
@@ -274,6 +276,8 @@ done
 
 `exit 1` beendet das Skript mit dem Exit-Code 1, damit der Aufrufer des
 Skripts sieht, dass etwas schiefgegangen ist.
+
+![Die Teile von backup.sh](images/script-anatomy.webp "Die Shebang-Zeile sagt, welches Programm das Skript ausführt. Ohne Argumente endet das Skript mit Exit-Code 1; sonst nimmt die Schleife ein Argument nach dem anderen und schickt ihre Fehlermeldungen nach stderr.")
 
 ## Tipps für gute Skripte
 

@@ -47,6 +47,8 @@ bonana
 Without `g`, only the first `a` on the line is replaced.
 ```
 
+![The parts of sed's s command](images/sed-substitute.webp "Without the g flag, s replaces only the first match on each line; with g it replaces every match.")
+
 The `i` flag makes the search case-insensitive, just like `grep -i`:
 
 ```sh
@@ -177,6 +179,8 @@ By default, fields are separated by spaces (any number of them). In
 awk '{print $3}' ~/{{documents}}/server.log
 ```
 
+![awk splits a line into fields](images/awk-fields.webp "awk splits each line at the spaces, however many there are: $1 is the first field, $NF the last, NF the number of fields and $0 the whole line.")
+
 The program goes inside `{ }` and runs for every line. Always put the awk
 program in **single** quotes – otherwise the shell thinks `$3` is a shell
 variable and replaces it before awk even starts.
@@ -260,6 +264,8 @@ easy way to add up a column:
 ```sh
 awk -F, 'NR > 1 {{{sumVar}} += $3} END {print {{sumVar}}}' ~/{{documents}}/{{grades}}
 ```
+
+![How awk adds up a column](images/awk-sum.webp "The part in braces runs for every line after the header and adds field 3 to the variable. END runs once, after the last line, and prints the sum.")
 
 `{{sumVar}} += $3` means "add field 3 to `{{sumVar}}`". If you count the lines
 at the same time (`count++` increases `count` by 1), you can work out the

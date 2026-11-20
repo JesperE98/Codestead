@@ -146,6 +146,8 @@ cosas distintas.**
 | `systemctl enable --now X` | Las dos cosas a la vez. |
 | `systemctl disable X` | No iniciarlo al arrancar (`--now` también lo detiene). |
 
+![start y enable](images/start-enable.webp "Para un servicio detenido: start lo inicia ahora pero no después de reiniciar, enable hace que arranque al iniciar el sistema pero no ahora, y enable --now hace las dos cosas.")
+
 `enable` crea un enlace en un directorio que lleva el nombre del target de la
 sección `[Install]` del archivo de unidad, normalmente
 `multi-user.target.wants`:
@@ -270,6 +272,8 @@ entero.
 todo lo que tiene el mismo número o uno menor (`warning` es 4).
 ```
 
+![Las prioridades del journal](images/journal-priorities.webp "-p muestra la prioridad que eliges y todas las más graves, las de número más bajo: -p err muestra de 0 a 3 y -p warning de 0 a 4.")
+
 ## Diagnosticar un servicio que no arranca
 
 Alguien ha configurado el servicio **reportd** en este ordenador, pero algo
@@ -376,6 +380,8 @@ Los archivos de `/etc/systemd/system` tienen prioridad y no se sobrescriben
 cuando se actualiza el paquete. `daemon-reload` hace que systemd vuelva a
 cargar el archivo de unidad modificado.
 ```
+
+![Dónde están los archivos de unidad](images/unit-files.webp "Los paquetes ponen sus archivos de unidad en /usr/lib/systemd/system; los tuyos van en /etc/systemd/system y tienen prioridad. enable crea un enlace en multi-user.target.wants, cuyas unidades systemd inicia al arrancar.")
 
 ## ¿Cómo se llaman los servicios?
 

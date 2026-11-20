@@ -129,6 +129,8 @@ verdadeiro, qualquer outro valor, falso. Na maioria das vezes se usa o comando
 if [ -f ~/.bashrc ]; then echo "O arquivo existe"; else echo "O arquivo não existe"; fi
 ```
 
+![O if olha o código de saída](images/if-exit.webp "O if executa o comando e olha o código de saída dele: 0 significa verdadeiro e executa a parte then; qualquer outro valor significa falso e executa a parte else.")
+
 Os espaços dentro de `[ ]` são obrigatórios! Escrito em várias linhas, como em
 um script, fica assim:
 
@@ -272,6 +274,8 @@ done
 
 O `exit 1` encerra o script com o código de saída 1, para que quem chamou o
 script veja que algo deu errado.
+
+![As partes do backup.sh](images/script-anatomy.webp "O shebang diz qual programa executa o script. Sem argumentos, o script termina com código de saída 1; senão, o laço pega um argumento de cada vez e manda suas mensagens de erro para stderr.")
 
 ## Dicas para bons scripts
 

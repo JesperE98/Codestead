@@ -93,6 +93,8 @@ lsblk -f
 Lägg märke till `sdb1`: ett `vfat`-filsystem med etiketten `USBSTICK` som
 inte är monterat någonstans. Det är USB-stickan vi ska koppla in.
 
+![Diskar, partitioner och filsystem](images/disk-layout.webp "lsblk -f på den här datorn: disken sda har tre partitioner, var och en med sitt filsystem och sin monteringspunkt. USB-stickan sdb har en FAT-partition som inte är monterad än.")
+
 ## Olika filsystem
 
 Det finns många filsystem, med olika styrkor:
@@ -209,6 +211,8 @@ kan du skriva `-t vfat`. Nu syns stickans filer i katalogen:
 ls -l /mnt/usb
 df -h /mnt/usb
 ```
+
+![Tre filsystem i ett träd](images/mount-tree.webp "Efter monteringen syns stickans filer under /mnt/usb. Rotfilsystemet är monterat på / och EFI-partitionen på /boot/efi – ett träd, inga enhetsbokstäver.")
 
 Härifrån fungerar stickan som vilken katalog som helst. Kopiera en fil till
 hemkatalogen:

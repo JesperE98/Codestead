@@ -147,6 +147,8 @@ zwei verschiedene Dinge.**
 | `systemctl enable --now X` | Beides auf einmal. |
 | `systemctl disable X` | Beim Booten nicht starten (`--now` stoppt ihn auch). |
 
+![start und enable](images/start-enable.webp "Für einen gestoppten Dienst: start führt ihn jetzt aus, aber nicht nach einem Neustart, enable lässt ihn beim Booten starten, aber nicht jetzt, und enable --now macht beides.")
+
 `enable` legt einen Link in einem Verzeichnis an, das nach dem Target im
 Abschnitt `[Install]` der Unit-Datei benannt ist, meistens
 `multi-user.target.wants`:
@@ -270,6 +272,8 @@ Welche Prioritäten zeigt `journalctl -p warning` an?
 alles mit derselben oder einer niedrigeren Nummer (`warning` ist 4).
 ```
 
+![Die Prioritäten des Journals](images/journal-priorities.webp "-p zeigt die gewählte Priorität und alle schwereren, also die mit kleinerer Nummer: -p err zeigt 0 bis 3 und -p warning 0 bis 4.")
+
 ## Fehlersuche bei einem Dienst, der nicht startet
 
 Jemand hat auf diesem Rechner den Dienst **reportd** eingerichtet, aber
@@ -377,6 +381,8 @@ Dateien in `/etc/systemd/system` haben Vorrang und werden nicht überschrieben,
 wenn das Paket aktualisiert wird. `daemon-reload` lässt systemd die geänderte
 Unit-Datei neu laden.
 ```
+
+![Wo die Unit-Dateien liegen](images/unit-files.webp "Pakete legen ihre Unit-Dateien in /usr/lib/systemd/system ab; deine eigenen kommen nach /etc/systemd/system und haben Vorrang. enable legt einen Link in multi-user.target.wants an, dessen Units systemd beim Booten startet.")
 
 ## Wie heißen die Dienste?
 

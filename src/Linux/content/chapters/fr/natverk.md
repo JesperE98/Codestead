@@ -114,6 +114,8 @@ $ ip route | grep default | cut -d' ' -f3
 Le troisième mot de la ligne `default` est l'adresse de la passerelle.
 ```
 
+![Le réseau domestique et ses routes](images/home-network.webp "Tout ce qui est dans 192.168.1.0/24 – le serveur et le routeur – est joint directement. Tout le reste suit la route par défaut via la passerelle 192.168.1.1 vers Internet.")
+
 ## ping – est-ce joignable ?
 
 `ping` envoie de petits paquets de test et mesure le temps que mettent les
@@ -252,6 +254,8 @@ getent hosts server.lan
 L'ordre (d'abord le fichier, puis le DNS) est défini par la ligne
 `hosts: files dns` de `/etc/nsswitch.conf`.
 
+![getent et dig cherchent server.lan](images/hosts-dns.webp "getent demande comme le système – d'abord /etc/hosts, puis le DNS – et trouve donc server.lan. dig n'interroge que le DNS, qui ne connaît pas ce nom, et n'affiche rien.")
+
 ```quiz
 Pourquoi `sudo echo '192.168.1.10 server.lan' >> /etc/hosts` donne-t-il
 *Permission denied* ?
@@ -299,6 +303,8 @@ sudo ss -tulpn
 Si le serveur d'exercice `myserver` du chapitre sur les processus tourne,
 vous le voyez ici sur le port 8080. L'ancienne commande `netstat -tulpn` (de
 *net-tools*) fait la même chose.
+
+![Les ports de votre ordinateur](images/ports.webp "L'adresse mène à l'ordinateur, le port à un programme sur cet ordinateur. sshd écoute sur 22 et myserver sur 8080 ; rien n'écoute sur le port 80, donc curl ne peut pas s'y connecter.")
 
 ## Récupérer sur le web : curl et wget
 

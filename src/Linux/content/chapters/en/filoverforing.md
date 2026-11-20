@@ -90,6 +90,8 @@ Without the colon, `srv` is just a file name, and `scp` copies locally like
 `cp`. It is easy to forget the colon!
 ```
 
+![Which way scp copies](images/scp-copy.webp "The source comes first and the target last; HOST:PATH is on the server. Without the colon, srv is only a file name and the copy stays on your computer.")
+
 ## Keeping in sync – `rsync`
 
 For many files, or something you copy again and again (backups!), `rsync` is
@@ -133,6 +135,8 @@ $ ls /tmp/x
 ---
 Without the slash, the directory itself was copied into `/tmp/x`.
 ```
+
+![rsync with and without the slash](images/rsync-slash.webp "Without the slash, rsync copies the directory itself into /tmp/x. With the slash it copies only what is in it.")
 
 ### Over SSH and `--delete`
 
