@@ -116,7 +116,7 @@ Tekniken är densamma i alla API:er; kapitlet visar den för {{api}}.
 :::opengl
 Utgå från ditt program från *Modell* i en ny mapp – dess modellkod behövs för asteroidfältet – och gör det till
 learnopengls första exempel före instancing: ingen kamera, inga matriser, rensningsfärgen (0.1, 0.1, 0.1) och en liten
-fyrhörning – learnopengls `quadVertices`, en 2D-position och en färg per vertex, ±0.05 – ritad en gång i mitten med
+fyrhörning – learnopengls `quadVertices`, en 2D-position och en färg per vertex, ±0,05 – ritad en gång i mitten med
 `glDrawArrays(GL_TRIANGLES, 0, 6)` av `instancing.vs` / `instancing.fs`. För asteroidfältet behåller du
 Model-kapitlets `mesh.h` och `model.h` – med `Mesh::VAO`, `Mesh::indices`, `Model::meshes` och
 `Model::textures_loaded` publika, som learnopengls asteroiddemo behöver och planeten, och lägger till kursens sten
@@ -126,7 +126,7 @@ Model-kapitlets `mesh.h` och `model.h` – med `Mesh::VAO`, `Mesh::indices`, `Mo
 :::vulkan
 Utgå från ditt program från *Modell* i en ny mapp – dess modellkod behövs för asteroidfältet – och gör det till
 learnopengls första exempel före instancing: ingen kamera, inga matriser, rensningsfärgen (0.1, 0.1, 0.1) och en liten
-fyrhörning – learnopengls `quadVertices` (`struct QuadVertex { glm::vec2 pos; glm::vec3 color; }`, ±0.05, i en egen
+fyrhörning – learnopengls `quadVertices` (`struct QuadVertex { glm::vec2 pos; glm::vec3 color; }`, ±0,05, i en egen
 vertexbuffer `quadVertexBuffer`) – ritad en gång i mitten med `vkCmdDraw(commandBuffer, 6, 1, 0, 0)` av
 `shaders/instancing.vert` / `.frag`. Vulkans y-axel pekar nedåt, så fyrhörningens y-värden är negerade och bilden blir
 learnopengls (rött hörn uppe till vänster).
@@ -139,7 +139,7 @@ kursens sten, deras vertex- och indexbuffrar, tre texturer, uniform buffern (`vi
 :::d3d12
 Utgå från ditt program från *Modell* i en ny mapp – dess modellkod behövs för asteroidfältet – och gör det till
 learnopengls första exempel före instancing: ingen kamera, inga matriser, rensningsfärgen (0.1, 0.1, 0.1) och en liten
-fyrhörning – learnopengls `quadVertices` (`struct QuadVertex { XMFLOAT2 position; XMFLOAT3 color; }`, ±0.05, 6
+fyrhörning – learnopengls `quadVertices` (`struct QuadVertex { XMFLOAT2 position; XMFLOAT3 color; }`, ±0,05 och 6
 vertices) – ritad en gång i mitten med `DrawInstanced(6, 1, 0, 0)` av `instancing.hlsl`. För asteroidfältet behåller
 du Model-kapitlets klass `Model` – med varje meshs `vertexBufferView`, `indexBufferView` och `srvHandle` publika, som
 learnopengl gör meshens VAO publik för sin asteroiddemo – planeten, kursens sten (`models/rock.obj`, `rock.mtl`,
@@ -163,7 +163,7 @@ väljs ur en array med instansnumret.
 
 Vi definierar förskjutningarna i en nästlad for-loop innan vi går in i renderloopen: vi skapar sammanlagt 100
 translationsvektorer, en för varje position i ett rutnät på 10x10. Loopen låter y gå från -10 och uppåt och x från -10
-åt höger, i steg om 2, och delar med 10: fyrhörningarnas mittpunkter ligger på -0.9, -0.7, … 0.9 i båda riktningarna.
+åt höger, i steg om 2, och delar med 10: fyrhörningarnas mittpunkter ligger på -0,9; -0,7; … 0,9 i båda riktningarna.
 Instans 0 är alltså fyrhörningen nere till vänster, instans 9 den nere till höger och instans 99 den uppe till höger.
 
 :::opengl
@@ -856,7 +856,7 @@ Nu stenarna. I stället för ett ritanrop per sten räknar vi ut alla deras mode
 buffer och läser matrisen i vertex shadern som en instansierad array – en matris per instans. learnopengls loop som
 skapar matriserna är densamma i alla API:er (bara matristypen skiljer): vinkeln går runt cirkeln, tre slumpmässiga
 förskjutningar i [-offset, offset] flyttar stenen bort från cirkeln (höjden bara med 40 %, så att ringen förblir
-platt), och sedan följer en slumpmässig skalning mellan 0.05 och 0.25 och en slumpmässig rotation kring axeln (0.4,
+platt), och sedan följer en slumpmässig skalning mellan 0,05 och 0,25 och en slumpmässig rotation kring axeln (0.4,
 0.6, 0.8).
 
 En matris är för stor för ett vertexattribut: ett attribut är högst fyra floats, en `vec4`. En `mat4` är i grunden 4

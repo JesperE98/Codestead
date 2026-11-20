@@ -50,8 +50,8 @@ resources. När du är klar kontrollerar provet i slutet av delen vad du har lä
   `G = G_sub(n, v, k) · G_sub(n, l, k)` – mikrofasetternas självskuggning (ljusriktningen) och skymning (vyriktningen).
   `k_direct = (α + 1)² / 8`, `k_IBL = α² / 2`, med α = strävheten i koden.
 - **Fresnel F, Fresnel-Schlick**: `F0 + (1 − F0) · (1 − (h · v))⁵` – alla ytor reflekterar mer i strykande vinkel.
-  **F0**, grundreflektiviteten vid vinkelrätt infall: dielektrika 0.02–0.17 och ofärgade, metaller 0.5–1.0 och färgade.
-- **Metalliskt arbetsflöde**: `F0 = mix(vec3(0.04), albedo, metallic)` – 0.04 för alla icke-metaller, albedot för
+  **F0**, grundreflektiviteten vid vinkelrätt infall: dielektrika 0,02–0,17 och ofärgade, metaller 0,5–1,0 och färgade.
+- **Metalliskt arbetsflöde**: `F0 = mix(vec3(0.04), albedo, metallic)` – 0,04 för alla icke-metaller, albedot för
   metaller – och `kD *= 1.0 - metallic`.
 - **PBR-material**: **albedo** (färgen eller, för metaller, F0; ingen belysning i den; sRGB, så den omvandlas till
   linjär), **normal** (normal map i tangentrum), **metallic**, **roughness** (vissa motorer använder smoothness = 1 −
@@ -64,10 +64,10 @@ resources. När du är klar kontrollerar provet i slutet av delen vad du har lä
   lightColor * attenuation`, multiplicerad med `NdotL` i ekvationen. Ett riktat ljus har en konstant ωi och ingen
   dämpning; en spotlights intensitet beror på dess riktning.
 - **Omvända kvadratlagen**: `attenuation = 1.0 / (distance * distance)`, fysikaliskt korrekt i linjärt rum. Därav ljusens
-  (300, 300, 300): på ungefär 17 enheters avstånd för 1/300 tillbaka dem till ungefär 1.0.
-- **Scenen**: learnopengls 7 × 7 sfärer, 2.5 isär, `metallic = row / 7` (nederst 0),
+  (300, 300, 300): på ungefär 17 enheters avstånd för 1/300 tillbaka dem till ungefär 1,0.
+- **Scenen**: learnopengls 7 × 7 sfärer, 2,5 isär, `metallic = row / 7` (nederst 0),
   `roughness = clamp(col / 7, 0.05, 1.0)` (strävheten exakt 0 skulle göra ett punktljus högdager oändligt liten), albedo
-  (0.5, 0, 0), ao 1.0; fyra ljus på (±10, ±10, 10). Kursens kamera står på (0, 0, 22) (learnopengl: (0, 0, 3), inne i
+  (0.5, 0, 0), ao 1,0; fyra ljus på (±10, ±10, 10). Kursens kamera står på (0, 0, 22) (learnopengl: (0, 0, 3), inne i
   rutnätet), sfären har 24 × 24 segment (learnopengl: 64 × 64 – kursen ritar sina kontroller och förväntade resultat på
   CPU:n), ingen multisampling.
 - **UV-sfären**: 25 × 25 vertex på ett rutnät i (u, v), normal = position, och här en **tangent** per vertex
@@ -84,7 +84,7 @@ resources. När du är klar kontrollerar provet i slutet av delen vad du har lä
   från den röda kanalen. Normalen via en **TBN** byggd av den interpolerade normalen och vertexens tangent:
   `T = normalize(T - dot(T, N) * N)` (Gram-Schmidt), `B = cross(N, T)`. learnopengl härleder T från derivator i
   skärmrummet (`dFdx` / `dFdy`) i stället; vertexens tangent är jämn, behöver inga derivator och fungerar likadant i alla
-  API:er. 3 × 3 stora sfärer (avstånd 6, skala 2.4, vridna 90° kring y så att texturens mitt vetter mot kameran).
+  API:er. 3 × 3 stora sfärer (avstånd 6, skala 2,4, vridna 90° kring y så att texturens mitt vetter mot kameran).
 
 :::opengl
 - **Strippen**: `glDrawElements(GL_TRIANGLE_STRIP, indexCount, GL_UNSIGNED_INT, 0)` – primitivtypen är en del av
@@ -127,15 +127,15 @@ resources. När du är klar kontrollerar provet i slutet av delen vad du har lä
 - **HDR-omgivning**: **Radiance-formatet `.hdr`** lagrar flyttal (8 bitar per kanal med gemensam exponent); de flesta
   omgivningar är **ekvirektangulära** – longituden åt sidan, latituden uppåt. `stbi_loadf` ger flyttal; kursens
   `environment.hdr` (512 × 256: himmel, en disig sol med radiansen ungefär 60, kullar, mark, tre lampor; learnopengl:
-  `newport_loft.hdr`). Varje textur på vägen har flyttal, annars skulle solen klippas vid 1.0.
+  `newport_loft.hdr`). Varje textur på vägen har flyttal, annars skulle solen klippas vid 1,0.
 - **Från ekvirektangulär till cube map**: en kub ritad från sin mittpunkt med 90° projektion, bildförhållande 1, och sex
   vyer (+x, -x, +y, -y, +z, -z med uppvektorerna (0, -1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1), (0, -1, 0), (0, -1, 0) –
   cube map-sidorna har bildens origo uppe till vänster); `SampleSphericalMap`: `uv = (atan(z, x), asin(y)) · (1/2π, 1/π)
   + 0.5`. 128 × 128 per sida här (learnopengl 512 × 512).
-- **Bakgrunden**: kuben runt kameran med bara vyns rotation, `xyww` (djup 1.0), djupfunktionen mindre än eller lika med,
+- **Bakgrunden**: kuben runt kameran med bara vyns rotation, `xyww` (djup 1,0), djupfunktionen mindre än eller lika med,
   ritad sist; HDR-färgen tonmappad och gammakorrigerad.
 - **Konvolutionen**: för varje texel är N riktningen; halvsfären runt den i sfäriska koordinater, φ i 0..2π, θ i 0..π/2,
-  steg `sampleDelta = 0.1` (learnopengl 0.025: 1008 samples per texel i stället för ungefär 16 000); varje sample viktat
+  steg `sampleDelta = 0.1` (learnopengl 0,025: 1008 samples per texel i stället för ungefär 16 000); varje sample viktat
   med `cos θ` (n · ωi) och `sin θ` (den mindre ytan nära toppen: dω = sin θ dθ dφ); resultatet `PI * irradiance /
   nrSamples` – π från stegstorlekarna tar ut den Lambertska 1/π.
 - **Den ambienta termen**: `kS = fresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness)` (ingen enskild
@@ -202,10 +202,10 @@ resources. När du är klar kontrollerar provet i slutet av delen vad du har lä
   `V = (sqrt(1 − NdotV²), 0, NdotV)`, `G_Vis = G · VdotH / (NdotH · NdotV)`, `Fc = (1 − VdotH)⁵`, med `k_IBL = α² / 2`.
   128 × 128 med två 16-bitars flyttalskanaler, 128 samples (learnopengl 512 × 512, 1024). Oberoende av omgivningen.
 - **Split sum i shadern**: `R = reflect(-V, N)`, `prefilteredColor = textureLod(prefilterMap, R, roughness ·
-  MAX_REFLECTION_LOD)` (4.0), `brdf = texture(brdfLUT, (NdotV, roughness)).rg`, `specular = prefilteredColor · (F ·
+  MAX_REFLECTION_LOD)` (4,0), `brdf = texture(brdfLUT, (NdotV, roughness)).rg`, `specular = prefilteredColor · (F ·
   brdf.x + brdf.y)` med F från `fresnelSchlickRoughness`, `ambient = (kD · diffuse + specular) · ao` – specular
   multipliceras inte med kS igen.
-- **Det du såg**: bakgrunden på förfilternivå 1.2 (suddig, ett varmt sken från en lampa, inga prickar), LUT:en över
+- **Det du såg**: bakgrunden på förfilternivå 1,2 (suddig, ett varmt sken från en lampa, inga prickar), LUT:en över
   fönstret (rött till höger och nederst, gröngult nere till vänster), sedan sfärer som speglar himmel, mark, sol och
   lampor; icke-metallers reflektioner ofärgade. learnopengls sista demo har fem material; kursen visar sitt enda material
   på nio sfärer.

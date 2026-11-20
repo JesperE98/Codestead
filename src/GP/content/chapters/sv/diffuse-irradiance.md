@@ -120,7 +120,7 @@ utanför bilden, men de kommer att belysa sfärerna framifrån.
 
 Två tal är mindre än learnopengls, eftersom kursen ritar sina kontroller och förväntade resultat på CPU:n (en riktig GPU
 klarar learnopengls värden lätt): environment-cube mappen har 128 × 128 texlar per sida i stället för 512 × 512, och
-konvolutionen samplar halvsfären med steget 0.1 i stället för 0.025 – 1008 samples per texel i stället för ungefär 16
+konvolutionen samplar halvsfären med steget 0,1 i stället för 0,025 – 1008 samples per texel i stället för ungefär 16
 000.
 
 :::opengl
@@ -160,13 +160,13 @@ ljusintensitet på färgvärdena i en environment-cube map behöver vi ett sätt
 i en environment map.
 
 De environment maps vi har använt hittills som cube maps (till exempel som skyboxar) har lågt dynamiskt omfång (LDR). Vi
-använde deras färgvärden från de enskilda sidbilderna direkt, mellan 0.0 och 1.0, och bearbetade dem som de var. Det kan
+använde deras färgvärden från de enskilda sidbilderna direkt, mellan 0,0 och 1,0, och bearbetade dem som de var. Det kan
 fungera bra för det visuella, men som fysikaliska indataparametrar fungerar det inte.
 
 ### Radiance-HDR-formatet
 
 Här kommer radiance-formatet in. Radiance-formatet (med filändelsen `.hdr`) lagrar en hel cube map med alla 6 sidor som
-flyttalsdata. Det låter oss ange färgvärden utanför intervallet 0.0 till 1.0 och ge ljusen deras korrekta
+flyttalsdata. Det låter oss ange färgvärden utanför intervallet 0,0 till 1,0 och ge ljusen deras korrekta
 färgintensiteter. Formatet använder också ett smart trick för att lagra varje flyttal, inte som ett 32-bitarsvärde per
 kanal, utan med 8 bitar per kanal där färgens alfakanal används som exponent (det kostar en del precision). Det fungerar
 ganska bra, men kräver att programmet som läser filen omvandlar varje färg tillbaka till flyttal.
@@ -175,7 +175,7 @@ Det finns en hel del radiance-HDR-environment maps fritt tillgängliga, till exe
 lagrade som sex sidor utan som en enda bild, en *ekvirektangulär map*: riktningarnas sfär utvikt på en rektangel som är
 dubbelt så bred som hög, med longituden åt sidan och latituden uppåt. Kursens `environment.hdr` är en sådan bild. Himlen
 ser utsträckt ut, men bilden innehåller all information i en cube map: vi omvandlar den till en senare. De ljusa delarna
-ligger långt över 1.0 – i kursens bild har solen radiansen ungefär 60 – och det är de värdena som låter omgivningen
+ligger långt över 1,0 – i kursens bild har solen radiansen ungefär 60 – och det är de värdena som låter omgivningen
 *belysa* scenen i stället för att bara synas bakom den.
 
 ### HDR och stb_image.h
@@ -211,7 +211,7 @@ en array av flyttal, vilket passar oss perfekt. Med `stb_image` i projektet är 
 
 `stb_image.h` gör automatiskt om HDR-värdena till en lista med flyttal: 32 bitar per kanal och 3 kanaler per färg som
 standard. Det är allt vi behöver för att lagra den ekvirektangulära HDR-environment mappen i en 2D-textur med flyttal:
-`GL_RGB16F` behåller värdena över 1.0. Med vändningen är bildens översta rad – rakt uppåt – v = 1.
+`GL_RGB16F` behåller värdena över 1,0. Med vändningen är bildens översta rad – rakt uppåt – v = 1.
 :::
 :::vulkan
 ```cpp
@@ -241,7 +241,7 @@ standard. Det är allt vi behöver för att lagra den ekvirektangulära HDR-envi
 
 `stb_image.h` gör om HDR-värdena till en lista med 32-bitars flyttal; begär man `STBI_rgb_alpha` får man fyra per pixel,
 layouten för `VK_FORMAT_R32G32B32A32_SFLOAT` (format med tre kanaler stöds sällan för bilder). Värdena förblir som de är –
-långt över 1.0 för solen. Vulkan kräver inte att en enhet kan filtrera 32-bitars flyttalsbilder linjärt, så
+långt över 1,0 för solen. Vulkan kräver inte att en enhet kan filtrera 32-bitars flyttalsbilder linjärt, så
 `findSupportedFormat` kontrollerar `VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT` innan projektet förlitar sig på
 det. Bilden vänds vid laddningen, som hos learnopengl, så den översta raden – rakt uppåt – är v = 1 och learnopengls
 `SampleSphericalMap` fungerar oförändrad. `clampSampler` (linjär, `CLAMP_TO_EDGE`) läser den och cube mapparna.
@@ -261,7 +261,7 @@ Varför laddas omgivningen med `stbi_loadf` i en flyttalstextur, och inte med `s
 - [ ] Eftersom `stbi_load` inte kan läsa `.hdr`-filer alls
 - [ ] Eftersom flyttalstexturer filtreras mjukare
 - [ ] Eftersom omvandlingen till cube map bara fungerar med flyttal som indata
-- [x] Eftersom omgivningens radians går långt över 1.0 – solen ligger kring 60 –; en 8-bitarstextur skulle klippa den vid 1.0, och solen skulle inte belysa sfärerna mer än ett vitt moln
+- [x] Eftersom omgivningens radians går långt över 1,0 – solen ligger kring 60 –; en 8-bitarstextur skulle klippa den vid 1,0, och solen skulle inte belysa sfärerna mer än ett vitt moln
 ---
 Omgivningen är bildbaserad belysnings ljuskälla, så dess värden måste vara fysikalisk, obegränsad radians. Varje textur på vägen – 2D-bilden, cube mappen, irradiansmappen – behåller flyttal av det skälet.
 ```
@@ -412,7 +412,7 @@ GLSL:s `atan(y, x)` med två argument är HLSL:s `atan2(y, x)`.
 :::
 
 `atan(z, x)` är riktningens longitud, mellan -π och π; `asin(y)` dess latitud, mellan -π/2 och π/2. Multiplicerade med
-(1/2π, 1/π) – 0.1591 och 0.3183 – och förskjutna med 0.5 blir båda texturkoordinater mellan 0 och 1.
+(1/2π, 1/π) – 0,1591 och 0,3183 – och förskjutna med 0,5 blir båda texturkoordinater mellan 0 och 1.
 
 Ritar du en kub mitt i scenen med en ekvirektangulär HDR-map får du något som ser ut som himlen vikt runt en låda. Det
 visar att vi verkligen har avbildat en ekvirektangulär bild på en kubisk form, men det hjälper oss ännu inte att omvandla
@@ -766,7 +766,7 @@ mappen som bakgrund (beskrivs härnäst).
 
 För att visa cube mappen bakom sfärerna – den kallas bakgrund här, eftersom den ritas på en kub runt kameran – behöver vi
 en separat shader, learnopengls `background`-shadrar. Vertex shadern tar vymatrisen utan dess translation, så att kuben
-stannar runt kameran hur långt den än flyttar sig, och skriver `xyww`: efter perspektivdivisionen är djupet 1.0, det
+stannar runt kameran hur långt den än flyttar sig, och skriver `xyww`: efter perspektivdivisionen är djupet 1,0, det
 största värdet:
 
 :::opengl
@@ -892,19 +892,19 @@ DXGI_FORMAT_D32_FLOAT`. `PopulateCommandList` ritar bakgrunden sist, efter `Rend
 ```
 :::
 
-Djuptestet släpper bara igenom bakgrunden där dess djup 1.0 är mindre än *eller lika med* det som står i djupbuffern –
-det rensade 1.0 där ingen sfär finns, så bakgrunden fyller allt runt sfärerna och inget framför dem. Att rita den sist
+Djuptestet släpper bara igenom bakgrunden där dess djup 1,0 är mindre än *eller lika med* det som står i djupbuffern –
+det rensade 1,0 där ingen sfär finns, så bakgrunden fyller allt runt sfärerna och inget framför dem. Att rita den sist
 betyder att varje pixel som en sfär täcker underkänns tidigt i djuptestet, och den dyra uppslagningen i omgivningen görs
 inte för den.
 
 ```quiz
 Bakgrundskuben ritas sist med `gl_Position = clipPos.xyww` (`xyww` i HLSL) och djupfunktionen mindre än eller lika med. Vad åstadkommer det?
-- [x] Efter perspektivdivisionen är dess djup w / w = 1.0, det mest avlägsna värdet: den klarar testet bara där djupbuffern fortfarande har det rensade 1.0, så den syns bakom varje sfär, och pixlar som sfärer täcker underkänns innan dess fragment shader körs
+- [x] Efter perspektivdivisionen är dess djup w / w = 1,0, det mest avlägsna värdet: den klarar testet bara där djupbuffern fortfarande har det rensade 1,0, så den syns bakom varje sfär, och pixlar som sfärer täcker underkänns innan dess fragment shader körs
 - [ ] Den flyttar kuben till det främre klipplanet, så att den ritas framför sfärerna med blending
 - [ ] Den gör kuben oändligt stor, så att djuptestet inte behövs
 - [ ] Den stänger av perspektivet för bakgrunden, så att himlen inte rör sig när kameran vrids
 ---
-Med standardtestet mindre än skulle 1.0 < 1.0 underkännas överallt och bakgrunden försvinna. Kapitlet Cubemaps införde samma trick för sin skybox.
+Med standardtestet mindre än skulle 1,0 < 1,0 underkännas överallt och bakgrunden försvinna. Kapitlet Cubemaps införde samma trick för sin skybox.
 ```
 
 Bygg och kör: **himlen syns bakom sfärerna**. Blekt blågrå upptill, ett band av mörkgröna kullar vid horisonten – högre
@@ -1052,7 +1052,7 @@ dem i en loop vars antal varv inte är bestämt vid kompileringen; environment m
 :::
 
 Vi anger ett fast stegvärde `sampleDelta` för att gå igenom halvsfären; ett mindre eller större steg ökar respektive
-minskar noggrannheten. learnopengl använder 0.025; kursen använder **0.1**, vilket ger 63 × 16 = 1008 samples per texel –
+minskar noggrannheten. learnopengl använder 0,025; kursen använder **0,1**, vilket ger 63 × 16 = 1008 samples per texel –
 16 gånger färre, och ändå jämnt för en omgivning vars ljusaste delar är några grader breda.
 
 Inne i båda looparna gör vi om de två sfäriska koordinaterna till en kartesisk 3D-samplingsvektor, omvandlar samplet
@@ -1252,7 +1252,7 @@ float3 fresnelSchlickRoughness(float cosTheta, float3 F0, float roughness)
 ```
 :::
 
-Reflektansen i strykande vinkel går inte längre upp till 1.0 utan till `max(1 − roughness, F0)`: en sträv ytas kanter
+Reflektansen i strykande vinkel går inte längre upp till 1,0 utan till `max(1 − roughness, F0)`: en sträv ytas kanter
 reflekterar mindre. Med ytans strävhet medräknad i Fresnel-svaret blir den ambienta koden (learnopengls källfil 2.1.2
 anropar fortfarande `fresnelSchlick` här; dess text inför `fresnelSchlickRoughness`, som kursen använder):
 

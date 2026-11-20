@@ -27,7 +27,7 @@ Scenen är learnopengls: ett trägolv på 50 × 50 enheter vid y = -2 och tio tr
 riktat ljus som solen, `lightDir = normalize(20, 50, 20)` (riktningen mot ljuset). learnopengl placerar sina lådor med en
 slumpgenerator, så dess scen ändras vid varje körning; kursen anger tio fasta placeringar – position, rotation kring axeln
 (1, 0, 1) och skala – så att bilderna kan jämföras. Kameran står i (0, 3, 17) och tittar 15° nedåt längs -z, med
-learnopengls nära och bortre plan på **0.1 och 500**: blicken når långt bortom golvets bortre kant 25 enheter bort.
+learnopengls nära och bortre plan på **0,1 och 500**: blicken når långt bortom golvets bortre kant 25 enheter bort.
 Belysningen är Blinn-Phong från kapitlet *Shadow mapping* med det ambienta ljuset `0.3 * lightColor` (learnopengls
 CSM-shader multiplicerar det ambienta med träfärgen två gånger – kursen behåller det tidigare kapitlets variant).
 
@@ -63,7 +63,7 @@ planet:
 shadowCascadeLevels = { far / 50, far / 25, far / 10, far / 2 }  =  { 10, 20, 50, 250 }   (far = 500)
 ```
 
-Fyra delningar ger **fem kaskader**: 0.1 – 10, 10 – 20, 20 – 50, 50 – 250 och 250 – 500 enheter från kameran. Var och en
+Fyra delningar ger **fem kaskader**: 0,1 – 10, 10 – 20, 20 – 50, 50 – 250 och 250 – 500 enheter från kameran. Var och en
 är längre än den förra, ungefär i proportion till sitt avstånd – vilket är vad perspektivaliasingen kräver, eftersom en
 pixels fotavtryck växer med avståndet. Riktiga motorer väljer ofta delningarna med en formel mellan en jämn (linjär) och
 en logaritmisk fördelning; learnopengls fasta bråkdelar är lätta att läsa och fungerar för den här scenen.
@@ -75,7 +75,7 @@ Med learnopengls delningsavstånd 10, 20, 50 och 250 – vilken kaskad hör ett 
 - [ ] Kaskad 3 (50–250)
 - [ ] Kaskad 0: den första kaskaden täcker allt fram till den första delningen bortom fragmentet
 ---
-Kaskaderna numreras från 0: 0.1–10, 10–20, 20–50, 50–250, 250–500. Fragment shadern väljer den första kaskad vars bortre avstånd ligger bortom fragmentets djup – här 50.
+Kaskaderna numreras från 0: 0,1–10, 10–20, 20–50, 50–250, 250–500. Fragment shadern väljer den första kaskad vars bortre avstånd ligger bortom fragmentets djup – här 50.
 ```
 
 ![De fem kaskaderna](images/csm-splits.webp "Kamerans vy uppifrån, delad vid 10, 20, 50 och 250 enheter i fem kaskader, i färgerna från kapitlets felsökningsvy; avståndet är ritat på en kvadratrotsskala.")
@@ -152,7 +152,7 @@ std::vector<glm::vec4> getFrustumCornersWorldSpace(const glm::mat4& projview) {
 ```
 
 Med learnopengls `2.0f * z - 1.0f` skulle z = -1 ligga *framför* Vulkans nära plan: de nära hörnen skulle hamna för nära
-kameran (kaskad 1 skulle börja vid 6.7 i stället för 10), och varje kaskads låda skulle växa. Projektionen här är en ny
+kameran (kaskad 1 skulle börja vid 6,7 i stället för 10), och varje kaskads låda skulle växa. Projektionen här är en ny
 `glm::perspective` för kaskaden; den är inte vänd i y, men vändningen skulle inte spela någon roll – de åtta hörnen är
 samma mängd i båda fallen.
 
@@ -395,7 +395,7 @@ bildruta. Ingenting läser matriserna ännu, så bilden förblir densamma.
 Fem skuggkartor skulle kunna vara fem texturer. learnopengl använder i stället en **2D-texturarray** med fem lager: ett
 texturobjekt, en bindning i shadern, och lagret är bara en tredje texturkoordinat. Den låter också djuppasset rendera
 alla fem på en gång, som vi ska se. Kursen använder 1024 × 1024 texlar per lager (learnopengl: 4096 × 4096 – kursen
-ritar sina kontroller och förväntade resultat på CPU:n), närmaste-filtrering, och en kant med djupet 1.0 utanför kartan,
+ritar sina kontroller och förväntade resultat på CPU:n), närmaste-filtrering, och en kant med djupet 1,0 utanför kartan,
 så att inget utanför en kaskads låda hamnar i skugga.
 
 :::opengl
@@ -446,7 +446,7 @@ samplad. En vy av typen `VK_IMAGE_VIEW_TYPE_2D_ARRAY` täcker alla fem lager, oc
 `layers = 5` är det som låter geometry shaderns `gl_Layer` välja lager. Render passet är det endast-djup-pass som
 *Shadow mapping*-projektet hade (clear, store, slutlayout `DEPTH_STENCIL_READ_ONLY_OPTIMAL`). Samplern filtrerar med
 NEAREST och använder `VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER` med `VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE` – learnopengls
-kant på 1.0.
+kant på 1,0.
 :::
 :::d3d12
 Skuggkartan är en texturarray, `m_lightDepthMaps`: `R32_TYPELESS` med `DepthOrArraySize = 5` (det fjärde argumentet
@@ -707,7 +707,7 @@ texturkoordinaten för en `sampler2DArray` – och den skalar bias per kaskad.
 Bias behöver skalas eftersom kaskadernas lådor har mycket olika storlek. Bias är ett avstånd i skuggkartans djup, 0..1
 över ljuslådans z-intervall; en låda som är tio gånger längre gör om samma bias till tio gånger så långt avstånd i
 världen – och för mycket bias lösgör skuggor från det som kastar dem (*peter panning*). learnopengl dividerar därför bias
-med kaskadens bortre avstånd (gånger en faktor 0.5): ju längre bort och större kaskad, desto mindre bias i djupenheter.
+med kaskadens bortre avstånd (gånger en faktor 0,5): ju längre bort och större kaskad, desto mindre bias i djupenheter.
 
 :::opengl
 ```glsl
@@ -798,7 +798,7 @@ Varför skalar skuggfunktionen ned bias för de avlägsnare kaskaderna?
 - [ ] För att de avlägsna kaskadernas skuggkartor har färre texlar
 - [ ] För att PCF redan tar bort acnet i de avlägsna kaskaderna
 ---
-I kaskad 0 är ljuslådan några tiotal enheter djup, i kaskad 3 hundratals. En djupskillnad på 0.005 är ett kort avstånd i den första och ett långt i den andra. Att dividera med kaskadens bortre avstånd håller bias ungefär konstant i världsenheter.
+I kaskad 0 är ljuslådan några tiotal enheter djup, i kaskad 3 hundratals. En djupskillnad på 0,005 är ett kort avstånd i den första och ett långt i den andra. Att dividera med kaskadens bortre avstånd håller bias ungefär konstant i världsenheter.
 ```
 
 Gör nu den fjärde uppgiften, **shadows**. Bygg och kör: lådorna kastar sina skuggor på golvet – bakåt och åt vänster, bort

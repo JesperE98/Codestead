@@ -164,7 +164,8 @@ npm run test:e2e
 ```
 
 Codestead GP's TaskTests (every task of every chapter in every API through the simulated GPU, about an hour) run
-only when asked: `CODESTEAD_GP_PARTS=pbr npx vitest run packages/gp-course/test/TaskTests.test.ts` in `ts/`.
+only when asked: `CODESTEAD_GP_PARTS=pbr npx vitest run packages/gp-course/test/TaskTests.test.ts` in `ts/`
+(`CODESTEAD_GP_CHAPTERS=bloom,ssao` for some chapters, `!bloom` to leave one out; CI runs them in eight parallel jobs).
 
 ### Adding a new tool
 

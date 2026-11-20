@@ -50,12 +50,12 @@ Båda PSO:na skapas med samma root signature, så root-argumenten förblir som d
 
 ```quiz
 Vinkeln mellan ett fragments normal och riktningen mot ljuset är 60°. Båda vektorerna är normaliserade. Vilken är den diffusa faktorn `diff`?
-- [ ] 1.0, eftersom varje yta som är vänd mot ljuset lyses upp helt
-- [ ] 0.0, eftersom bara ytor som vetter rakt mot ljuset lyses upp
-- [ ] 0.87
-- [x] 0.5
+- [ ] 1,0, eftersom varje yta som är vänd mot ljuset lyses upp helt
+- [ ] 0,0, eftersom bara ytor som vetter rakt mot ljuset lyses upp
+- [ ] 0,87
+- [x] 0,5
 ---
-Skalärprodukten av två enhetsvektorer är cosinus för vinkeln mellan dem: cos 60° = 0.5. Ytan får hälften av det ljus den skulle få om den vette rakt mot ljuset.
+Skalärprodukten av två enhetsvektorer är cosinus för vinkeln mellan dem: cos 60° = 0,5. Ytan får hälften av det ljus den skulle få om den vette rakt mot ljuset.
 ```
 
 ```quiz
@@ -231,23 +231,23 @@ Den diffusa faktorn är `dot(norm, lightDir)` med `lightDir` pekande mot ljuset,
 ```
 
 ```quiz
-Dämpningen är `1.0 / (constant + linear * d + quadratic * d²)` med `constant = 1.0`. Varför är den konstanta termen 1.0?
+Dämpningen är `1.0 / (constant + linear * d + quadratic * d²)` med `constant = 1.0`. Varför är den konstanta termen 1,0?
 - [ ] Den sätter ljusets räckvidd till en enhet
 - [x] Den håller nämnaren på minst 1, så att dämpningen aldrig gör ett ljus starkare än det är
 - [ ] Den gör att ljuset avtar linjärt
 - [ ] Utan den skulle ljuset bli för svagt nära källan
 ---
-Med en konstant term under 1 skulle dämpningen bli större än 1 nära ljuset och göra det starkare. Med 1.0, 0.09 och 0.032 avtar ljuset över ett avstånd på ungefär 50 enheter.
+Med en konstant term under 1 skulle dämpningen bli större än 1 nära ljuset och göra det starkare. Med 1,0; 0,09 och 0,032 avtar ljuset över ett avstånd på ungefär 50 enheter.
 ```
 
 ```quiz
 En spotlight har `cutOff = cos(12.5°)`, och `theta` är skalärprodukten av `lightDir` och spotlightens (negerade) riktning. När ligger ett fragment inuti konen?
-- [ ] När `theta` är lika med 12.5
+- [ ] När `theta` är lika med 12,5
 - [x] När `theta > cutOff`, eftersom cosinus blir större när vinkeln blir mindre
 - [ ] När `theta < cutOff`, eftersom en mindre vinkel ligger innanför
 - [ ] När `theta` är negativ
 ---
-Båda värdena är cosinusvärden, inte vinklar. Ett fragment rakt framför ljuset har vinkeln 0° och `theta` = 1; vid konens kant är `theta` = cos 12.5° ≈ 0.976. Att jämföra cosinusvärden sparar en `acos`.
+Båda värdena är cosinusvärden, inte vinklar. Ett fragment rakt framför ljuset har vinkeln 0° och `theta` = 1; vid konens kant är `theta` = cos 12,5° ≈ 0,976. Att jämföra cosinusvärden sparar en `acos`.
 ```
 
 ```quiz

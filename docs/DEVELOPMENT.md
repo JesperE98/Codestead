@@ -322,10 +322,13 @@ src/GP/
   **inte** redan är löst före.
 - Lägg till kapitlet i `lessonList` i `ts/packages/gp-course/src/GpCourse.ts` (ordningen där är kursens ordning) och
   dess kontroller i `Checks/`.
-- `TaskTests` tar ungefär en timme på en kärna, så `npm test` hoppar över dem; CI kör dem i parallella jobb per
-  kursdel (`gp-tasks` i `.github/workflows/ci.yml` och `release.yml`, med `CODESTEAD_GP_PARTS`). **En ny kursdel ska
-  in i matrisen i båda arbetsflödena** (`CiTests` kontrollerar det). Lokalt, i `ts/`:
-  `CODESTEAD_GP_PARTS=pbr npx vitest run packages/gp-course/test/TaskTests.test.ts`.
+- `TaskTests` tar ungefär en timme på en kärna, så `npm test` hoppar över dem; CI kör dem i åtta parallella jobb på
+  ungefär sju minuter var (`gp-tasks` i `.github/workflows/ci.yml` och `release.yml`): varje jobb väljer kursdelar
+  (`CODESTEAD_GP_PARTS`) och några kapitel ur dem eller alla utom några (`CODESTEAD_GP_CHAPTERS=bloom,ssao` respektive
+  `!bloom,!ssao`, se `test/TaskSelection.ts`); de tunga kapitlen (bloom, ssao, specular-ibl, area-lights …) är
+  utspridda efter CI:s tider. **Ett nytt kapitel eller en ny kursdel ska finnas i exakt ett jobb i båda
+  arbetsflödena** (`CiTests` kontrollerar det; ett nytt kapitel i en del hamnar oftast själv i dess "!"-jobb). Lokalt,
+  i `ts/`: `CODESTEAD_GP_PARTS=pbr npx vitest run packages/gp-course/test/TaskTests.test.ts`.
 
 **Koden ska vara korrekt.** `src/GP/verify/verify.sh <mappar>` kompilerar projekten med de riktiga verktygen:
 OpenGL och Vulkan med g++ (GLAD genereras med `pip install glad`), DirectX 12 med MinGW-w64 mot Microsofts
@@ -363,7 +366,7 @@ kapitlets färdiga program (`GpCourse.SolutionProject`), inte av en annan övnin
 `i18n/<språk>/<kapitel>.json`, kontrollerna i `Checks/TaskChecks.Exercises*.ts` (en övning utan kontroll bockar eleven
 i själv). Panelen visar stegen under "Follow along" och övningarna under "Exercises" (`TaskInfo.Section`).
 `TaskTests` kräver att varje övning byggs rent och att en övning med kontroll inte
-godkänns av kapitlets program men av sin lösning; `CODESTEAD_GP_CHAPTERS=a,b` kör testerna för några kapitel.
+godkänns av kapitlets program men av sin lösning; `CODESTEAD_GP_CHAPTERS=a,b` kör testerna för några kapitel (`!a` hoppar över ett).
 
 **Bilder i kapitlen.** Ett stycke som bara är en bild, `![alt](images/namn.webp "bildtext")`, visas av textvyn
 (`AnimatedImage` i `ts/packages/ui`: PNG, JPEG, WebP och animerad GIF/WebP; bildrutor på en sekund eller mer är ett bildspel som tonar
@@ -378,6 +381,18 @@ slides visas levande i kapitlen: eleven stegar fram och tillbaka genom en slides
 scenen har fokus), spelar ett steg igen, byter modell (triangel, kub, tekanna …) och läge (verklig data/koncept) och kan
 visa API:ts kod för steget – i det API eleven valt, på svenska eller engelska (andra språk får engelska; knapparnas texter
 är `viz.*` i UI-texterna) och i fönstrets ljusa eller mörka tema, och de följer med när något av dem ändras.
+
+- **Ljust tema**: stilarna och 3D-materialen vänds till ljusa (`engine/css.ts`, `engine/light.ts`). Två saker förblir
+  mörka med flit (`engine/light-only.css`): 2D-närbilderna (`PixelCanvas`: rasterisering, fragment, djup, blending) är
+  bilder av ett render target – pixlarnas riktiga färger på svart, med siffrorna bredvid – och visas som en mörk skärm
+  med tydlig kant; och ett steg vars poäng är ljus som läggs till (blending-slidens additiva steg: på vitt syns
+  ingenting) ritas på en mörk scen med slidens egna färger och ljusa paneler ovanpå (`DarkSteps` i
+  `engine/mount.ts`).
+- **Översiktens steg** (`viz:pipeline`, slide `overview`) är länkar till den scen i kursen som visar steget: den första
+  `viz:`-scenen med den sliden i kursens ordning (eller i kapitlet som visas, om det har en), `slidePlaces` i
+  `VizSource.ts`. Ett klick visar kapitlet, scrollar till scenen och ger den fokus (`revealScene` i
+  `ts/apps/gp/src/VizScene.tsx`); verktygstipset är `viz.goTo`. Steg som ingen scen visar (Vertex layout, Pipeline
+  state) är inga länkar. Motorn tar reda på vart varje steg leder genom att låta sliden själv svara (`rpv:go`).
 
 - **I texten** är en scen en bild vars källa är `viz:<scen>`, ensam i sitt stycke, med alt-text och bildtext som en bild:
   `![Vertexattribut](viz:input-layout "Vertexattribut: en stride stegar …")`. Scenens namn finns i
@@ -402,10 +417,11 @@ visa API:ts kod för steget – i det API eleven valt, på svenska eller engelsk
   kopierar koden på nytt (och ändrar bara importerna av GSAP och stilarna samt testernas sökvägar); skriv in commiten i
   paketets README, kör `npm run typecheck` och testerna och titta på scenerna i appen. Visualiserarens egna tester av den
   kopierade koden (`visualizer/tests/`) körs med `npm test`.
-- **Testerna**: `ts/packages/pipeline-viz/test/` (stegen, `viz:`-källorna, budgeten, stilarnas ljusa version,
-  tween-motorn, komponenten med en låtsasmotor i jsdom), `GpToolTests` (scenerna står där bilderna stod, stillbilderna
+- **Testerna**: `ts/packages/pipeline-viz/test/` (stegen, `viz:`-källorna och var varje slide visas, budgeten,
+  stilarnas och 3D-materialens ljusa version, tween-motorn, komponenten med en låtsasmotor i jsdom), `GpToolTests` (scenerna står där bilderna stod, stillbilderna
   utan WebGL) och e2e-testet (`ts/apps/gp/e2e`): med SwiftShader (`--use-angle=swiftshader --enable-unsafe-swiftshader`)
-  körs Hello Triangles scener, stegas och är aldrig fler än två; med `--disable-gpu --disable-software-rasterizer` visas
+  körs Hello Triangles scener, stegas och är aldrig fler än två, och översiktens "Depth test" leder till Depth testings
+  scen; med `--disable-gpu --disable-software-rasterizer` visas
   stillbilderna.
 
 **Diagram och simulatorbilder** (`src/GP/content/images/diagrams/`). Bilderna som förklarar kapitlen (inte

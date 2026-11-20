@@ -2,7 +2,7 @@
 // The scene in a chapter without WebGL: a fake engine and a fake IntersectionObserver stand in for the browser's.
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { type EngineOptions, type MountedScene, PipelineScene, type PipelineSceneProps, Scenes, VizEnvironment, type VizTexts } from "../src/index.js";
+import { type EngineOptions, type MountedScene, PipelineScene, type PipelineSceneProps, type SceneLinks, Scenes, VizEnvironment, type VizTexts } from "../src/index.js";
 
 const texts: VizTexts = {
   prev: "Previous step",
@@ -20,7 +20,7 @@ const texts: VizTexts = {
 
 /** What the fake engine was asked to do. */
 let calls: string[] = [];
-let mounted: { options: EngineOptions; step: number } | null = null;
+let mounted: { options: EngineOptions; step: number; links: SceneLinks | null } | null = null;
 let observers: { cb: IntersectionObserverCallback; el: Element | null }[] = [];
 
 class FakeObserver {
@@ -52,8 +52,8 @@ beforeEach(() => {
   VizEnvironment.canObserve = () => true;
   VizEnvironment.webgl = () => true;
   VizEnvironment.reducedMotion = () => false;
-  VizEnvironment.loadEngine = async () => async (_hosts, options, step, animate) => {
-    mounted = { options, step };
+  VizEnvironment.loadEngine = async () => async (_hosts, options, step, animate, _onLost, links) => {
+    mounted = { options, step, links: links ?? null };
     calls.push(`mount ${options.slide} ${step} ${animate}`);
     const scene: MountedScene = {
       slideSteps: 5,
@@ -142,6 +142,28 @@ describe("PipelineScene", () => {
     expect(calls).toContain("rebuild vulkan sv light teapot data 0 false");
     fireEvent.click(screen.getByRole("button", { name: "Concept" }));
     expect(calls).toContain("rebuild vulkan sv light teapot concept 0 false");
+  });
+
+  it("slidens länkar (översiktens steg) leder dit appen säger, med de senaste länkarna; utan länkar inga", async () => {
+    const went: string[] = [];
+    const links = (tag: string): SceneLinks => ({ has: (s) => s === "depth", title: (s) => `${tag} ${s}`, go: (s) => void went.push(`${tag} ${s}`) });
+    const { rerender, unmount } = render(<PipelineScene {...props({ spec: Scenes.pipeline, links: links("a") })} />);
+    act(() => intersect(true));
+    await settle();
+    const given = mounted!.links!;
+    expect([given.has("depth"), given.has("layout"), given.title("depth")]).toEqual([true, false, "a depth"]);
+    given.go("depth");
+    // New links (the API changed): the scene is not built again, and follows them.
+    rerender(<PipelineScene {...props({ spec: Scenes.pipeline, links: links("b") })} />);
+    given.go("depth");
+    expect(went).toEqual(["a depth", "b depth"]);
+    expect(calls.filter((c) => c.startsWith("rebuild"))).toEqual([]);
+    unmount();
+
+    render(<PipelineScene {...props()} />);
+    act(() => intersect(true));
+    await settle();
+    expect(mounted!.links).toBeNull();
   });
 
   it("pausas utom synhåll; utan rörelse spelas inget upp", async () => {

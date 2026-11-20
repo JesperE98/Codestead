@@ -113,7 +113,7 @@ mörk korallfärgad siluett.
 
 ```quiz
 Efter uppgiften **ambient** har varje synlig sida av kuben samma mycket mörka korallfärg. Varför?
-- [x] Ambient-termen är en konstant – 0.1 × lightColor – som inte beror på ljusets position eller på åt vilket håll en sida pekar
+- [x] Ambient-termen är en konstant – 0,1 × lightColor – som inte beror på ljusets position eller på åt vilket håll en sida pekar
 - [ ] Ljuset är för långt från kuben för att lysa upp den
 - [ ] Ambient-termen lyser bara upp de sidor som pekar bort från ljuset
 ---
@@ -162,7 +162,7 @@ kryssprodukten, men eftersom en kub inte är en komplicerad form kan vi helt enk
 hörndatan. Ge vart och ett av de 36 hörnen en normal: sidans sex hörn delar dess normal, och sidorna kommer i
 ordningen baksida (0, 0, -1), framsida (0, 0, 1), vänster (-1, 0, 0), höger (1, 0, 0), undersida (0, -1, 0) och
 ovansida (0, 1, 0). Försök se framför dig att normalerna verkligen är vektorer som är vinkelräta mot varje plans yta
-(en kub består av 6 plan). Den första sidan, baksidan vid z = -0.5, har normalen (0, 0, -1), som pekar bort från
+(en kub består av 6 plan). Den första sidan, baksidan vid z = -0,5, har normalen (0, 0, -1), som pekar bort från
 kuben:
 
 :::opengl
@@ -581,14 +581,14 @@ igen. Försök föreställa dig normalvektorerna och flytta kameran runt kuben f
 normalvektorn och ljusets riktning är, desto mörkare blir fragmentet.
 
 Låt oss kontrollera värdet i mitten av framsidan, (0, 0, 0.5): riktningen mot lampan är (1.2, 1.0, 1.5), med längden
-2.17, så `lightDir` = (0.55, 0.46, 0.69). Med normalen (0, 0, 1) blir skalärprodukten 0.69; ambient plus diffust ger
-0.79, och 0.79 × korall × 255 = (202, 101, 63).
+2,17, så `lightDir` = (0.55, 0.46, 0.69). Med normalen (0, 0, 1) blir skalärprodukten 0,69; ambient plus diffust ger
+0,79, och 0,79 × korall × 255 = (202, 101, 63).
 
 ```quiz
 Varför förblir kubens vänstersida lika mörk som med bara ambient ljus?
 - [ ] För att rastreraren interpolerar framsidans normaler över vänstersidan
 - [ ] För att kameran tittar på vänstersidan från en för brant vinkel
-- [x] För att dess normal (-1, 0, 0) pekar bort från lampan vid x = 1.2, så skalärprodukten med ljusriktningen är negativ och `max(…, 0.0)` gör den diffusa termen till 0
+- [x] För att dess normal (-1, 0, 0) pekar bort från lampan vid x = 1,2, så skalärprodukten med ljusriktningen är negativ och `max(…, 0.0)` gör den diffusa termen till 0
 ---
 Lampan står till höger om kuben, vänstersidan pekar åt vänster: vinkeln mellan dess normal och riktningen mot ljuset är mer än 90°. Bara ambient-termen återstår.
 ```
@@ -906,9 +906,9 @@ bör du se en **högdager** dyka upp i den övre vänstra delen av framsidan: ru
 ljusare än själva korallfärgen, eftersom ambient + diffust + spekulärt där blir mer än 1 och färgen kläms – medan den
 nedre högra delen av sidan knappt ändras.
 
-Varför just där? Högdagern syns där sidan skulle spegla lampan in i kameran. Framsidan är planet z = 0.5; lampan är 1.5
-enheter framför det, kameran 2.5 enheter. Spegelpunkten ligger på linjen mellan lampans och kamerans positioner i
-planet, 1.5 / (1.5 + 2.5) av vägen från lampan: vid ungefär x = -0.4, y = 0.6 – i den vänstra halvan, strax ovanför
+Varför just där? Högdagern syns där sidan skulle spegla lampan in i kameran. Framsidan är planet z = 0,5; lampan är 1,5
+enheter framför det, kameran 2,5 enheter. Spegelpunkten ligger på linjen mellan lampans och kamerans positioner i
+planet, 1,5 / (1,5 + 2,5) av vägen från lampan: vid ungefär x = -0,4, y = 0,6 – i den vänstra halvan, strax ovanför
 sidans överkant. Så sidans starkaste spekulära ljus ligger längs dess övre vänstra kant, och det klingar av mot nedre
 högra hörnet. Från learnopengl:s standardkamera i (0, 0, 3), med lampan i bild, skulle du se samma effekt på ett annat
 ställe; flytta kameran i ditt program och se högdagern glida över sidan.
@@ -994,8 +994,8 @@ så lampans modellmatris använder samma nya position och lampan ritas exakt dä
 :::
 
 Gör nu uppgiften **moving-light**. Lampan svänger nu från sida till sida och upp och ner (en hel sväng åt sidan tar 2π ≈
-6.3 sekunder), och belysningen på kuben följer med: när lampan rör sig åt höger glider högdagern mot framsidans högra
-kant; när lampan rör sig åt vänster förbi x = -0.5, vänstersidans plan, börjar även den sidan få ljus. Efter 1 sekund,
+6,3 sekunder), och belysningen på kuben följer med: när lampan rör sig åt höger glider högdagern mot framsidans högra
+kant; när lampan rör sig åt vänster förbi x = -0,5, vänstersidans plan, börjar även den sidan få ljus. Efter 1 sekund,
 till exempel, är ljuset i (2.68, 0.48, 2.0) och lampan står lägre och längre till höger än förut.
 
 ### View space och Gouraud shading

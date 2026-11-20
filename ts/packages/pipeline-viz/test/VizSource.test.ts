@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { clampStep, isVizSource, parseVizSource, SceneBudget, Scenes, slideStep, stepCount, stepForKey, scenePicture } from "../src/index.js";
+import { clampStep, isVizSource, parseVizSource, SceneBudget, Scenes, slidePlaces, slideStep, stepCount, stepForKey, scenePicture } from "../src/index.js";
 
 describe("VizSource", () => {
   it("viz:<scen> ger scenens bild, steg, modell och läge", () => {
@@ -14,6 +14,18 @@ describe("VizSource", () => {
   it("en annan modell eller ett annat läge efter ?", () => {
     const p = parseVizSource("viz:indices?model=teapot&mode=concept")!;
     expect([p.spec.slide, p.model, p.mode]).toEqual(["input-assembly", "teapot", "concept"]);
+  });
+
+  it("varje slide visas i den första scenen i kapitlens ordning som visar den", () => {
+    const places = slidePlaces([
+      { id: "one", text: "Text\n\n![Pic](images/a.webp \"x\")\n\n![Indices](viz:indices \"Indices\")\n\n![Nope](viz:nope)" },
+      { id: "two", text: "![Buffers](viz:buffers?model=teapot \"B\")\n\n![Strip](viz:strip)" },
+      { id: "three", text: "![Again](viz:buffers)" },
+    ]);
+    expect(Object.fromEntries(places)).toEqual({
+      "input-assembly": { chapter: "one", scene: "indices" },
+      buffers: { chapter: "two", scene: "buffers" },
+    });
   });
 
   it("okända scener, modeller, lägen och parametrar är inga scener", () => {

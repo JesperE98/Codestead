@@ -19,7 +19,7 @@ föremålets färg består till 50 % av dess egen färg och till 50 % av färger
 De texturer vi har använt hittills bestod alla av 3 färgkomponenter (rött, grönt och blått) eller hade alfa 1 överallt,
 men vissa texturer har också en inbäddad alfakanal med ett alfavärde per texel. Det alfavärdet talar om exakt vilka
 delar av texturen som är genomskinliga och hur mycket. Kursens `window.png` är en sådan textur: rött glas med ett alfa
-på ungefär 0.55 – lite mer än hälften egen färg – i en ogenomskinlig mörkröd ram med ett kors i mitten.
+på ungefär 0,55 – lite mer än hälften egen färg – i en ogenomskinlig mörkröd ram med ett kors i mitten.
 
 Vi börjar med att titta på hur man hanterar texturer som antingen är helt genomskinliga eller helt ogenomskinliga, och
 sedan på riktig blending med fönstren. Som i de andra kapitlen i den här delen fungerar allt på samma sätt i {{api}};
@@ -93,8 +93,8 @@ alfakanal får helt enkelt alfa 255. Pixel shaderns `texture1.Sample(…)` retur
 :::
 
 För att lägga till lite gräs behöver vi en quad att sätta texturen på: 1 × 1, upprätt, med vänsterkanten vid x = 0
-och nederkanten vid y = -0.5, så att en förflyttning till en position ställer den med nederkanten på golvet (golvet
-ligger på y = -0.5). Vi placerar fem sådana quads på de positioner som learnopengl använder: en strax framför den
+och nederkanten vid y = -0,5, så att en förflyttning till en position ställer den med nederkanten på golvet (golvet
+ligger på y = -0,5). Vi placerar fem sådana quads på de positioner som learnopengl använder: en strax framför den
 vänstra kuben, en till höger, en nära kameran, en långt bak och en bakom den som står nära.
 
 :::opengl
@@ -502,7 +502,7 @@ målfaktorerna kan vi välja själva.
 
 Vi börjar med ett enkelt exempel: vi har två kvadrater och vill rita den halvgenomskinliga gröna kvadraten ovanpå den
 röda. Den röda kvadraten blir målfärgen (och ska alltså ligga först i color buffern), och nu ska vi rita den gröna
-kvadraten över den röda. Den gröna kvadraten har färgen (0.0, 1.0, 0.0) med alfa 0.6, den röda är (1.0, 0.0, 0.0).
+kvadraten över den röda. Den gröna kvadraten har färgen (0.0, 1.0, 0.0) med alfa 0,6, den röda är (1.0, 0.0, 0.0).
 
 Frågan blir då: vad sätter vi faktorerna till? Vi vill åtminstone multiplicera den gröna kvadraten med dess alfavärde,
 så vi sätter `F_source` lika med källfärgsvektorns alfavärde, alltså `0.6`. Då är det rimligt att låta målkvadraten
@@ -517,10 +517,10 @@ C_result = (0.0, 1.0, 0.0) * 0.6 + (1.0, 0.0, 0.0) * (1 - 0.6) = (0.4, 0.6, 0.0)
 Resultatet är att de kombinerade kvadratfragmenten får en färg som är 60 % grön och 40 % röd: en smutsig, brunaktig
 färg.
 
-![Grönt över rött](images/blend-equation.webp "Kapitlets exempel: den gröna kvadraten med alfa 0.6 ritad över den röda ger (0.4, 0.6, 0) där de överlappar.")
+![Grönt över rött](images/blend-equation.webp "Kapitlets exempel: den gröna kvadraten med alfa 0,6 ritad över den röda ger (0.4, 0.6, 0) där de överlappar.")
 
 ```quiz
-Med `F_source` = källans alfa och `F_destination` = 1 − källans alfa ritas ett vitt fragment (1.0, 1.0, 1.0) med alfa 0.25 över en svart color buffer (0.0, 0.0, 0.0). Vilken färg hamnar i color buffern?
+Med `F_source` = källans alfa och `F_destination` = 1 − källans alfa ritas ett vitt fragment (1.0, 1.0, 1.0) med alfa 0,25 över en svart color buffer (0.0, 0.0, 0.0). Vilken färg hamnar i color buffern?
 - [ ] (1.0, 1.0, 1.0)
 - [ ] (0.75, 0.75, 0.75)
 - [ ] (0.0, 0.0, 0.0)
@@ -762,7 +762,7 @@ Sedan laddar vi `window.png` i stället för `grass.png` och, eftersom det nu ä
 `windows` (och dess kommentar till `// transparent window locations`); ritloopen (`// windows`) går över `windows`.
 
 Eftersom vi har slagit på blending behöver vi inte kasta fragment, så vi skulle kunna återställa fragment shadern till
-sin ursprungliga version. I projektet får `discard` stå kvar: ingen texel i fönstret ligger under 0.1, så den slår
+sin ursprungliga version. I projektet får `discard` stå kvar: ingen texel i fönstret ligger under 0,1, så den slår
 aldrig till.
 :::
 :::vulkan
@@ -772,7 +772,7 @@ byter namn på `vegetation` till `windows` (med kommentaren `// transparent wind
 (`// windows`) går över `windows`.
 
 Eftersom vi har slagit på blending behöver vi inte kasta fragment, så vi skulle kunna återställa fragment shadern till
-sin ursprungliga version. I projektet får `discard` stå kvar: ingen texel i fönstret ligger under 0.1, så den slår
+sin ursprungliga version. I projektet får `discard` stå kvar: ingen texel i fönstret ligger under 0,1, så den slår
 aldrig till.
 :::
 :::d3d12
@@ -780,7 +780,7 @@ Sätt blend state för `m_transparentPipelineState` som ovan. Ladda sedan `windo
 eftersom det nu är fönster, byt namn på `vegetation` till `windows`; loopen går över `_countof(windows)`.
 
 Eftersom vi har slagit på blending behöver vi inte kasta pixlar, så vi skulle kunna gå tillbaka till en pixel shader
-utan `discard`. I projektet behåller `PSTransparent` den: ingen texel i fönstret ligger under 0.1, så den slår aldrig
+utan `discard`. I projektet behåller `PSTransparent` den: ingen texel i fönstret ligger under 0,1, så den slår aldrig
 till – och den clampande samplern är fortfarande vad fönstren behöver.
 :::
 

@@ -61,13 +61,13 @@ spekulära reflektioner i strykande vinkel när vi tittar snett på ytan; det br
 kompromiss.
 
 Den andra delen av split sum-ekvationen är lika med BRDF-delen av den spekulära integralen. Om vi låtsas att den
-inkommande radiansen är helt vit från alla håll (alltså L(p, x) = 1.0) kan vi räkna ut BRDF:ens svar i förväg för en given
+inkommande radiansen är helt vit från alla håll (alltså L(p, x) = 1,0) kan vi räkna ut BRDF:ens svar i förväg för en given
 strävhet och en given vinkel mellan normalen n och ljusriktningen ωi, eller n · ωi. Epic Games lagrar BRDF:ens
 förberäknade svar för varje kombination av normal och ljusriktning och för olika strävhet i en 2D-uppslagstextur (LUT)
 som kallas *BRDF-integrationsmappen*. Uppslagstexturen ger en skala (röd) och en förskjutning, bias (grön), för ytans
 Fresnel-svar, och det är den spekulära integralens andra del.
 
-Vi genererar uppslagstexturen genom att behandla den vågräta texturkoordinaten (mellan 0.0 och 1.0) på ett plan som
+Vi genererar uppslagstexturen genom att behandla den vågräta texturkoordinaten (mellan 0,0 och 1,0) på ett plan som
 BRDF:ens indata n · ωi, och den lodräta texturkoordinaten som indata för strävheten. Med BRDF-integrationsmappen och den
 förfiltrerade environment mappen kan vi kombinera båda och få den spekulära integralens resultat:
 
@@ -178,7 +178,7 @@ filtrering.
 :::
 
 Vi lagrar de förfiltrerade spekulära reflektionerna i nivåerna: nivå `mip` innehåller omgivningen suddad för strävheten
-`mip / 4`, från 0 (64 × 64, en skarp reflektion) till 1.0 (4 × 4, helt sträv). Ju suddigare reflektionen är, desto mindre
+`mip / 4`, från 0 (64 × 64, en skarp reflektion) till 1,0 (4 × 4, helt sträv). Ju suddigare reflektionen är, desto mindre
 upplösning behöver den, så de krympande mipnivåerna passar bra.
 
 ![Pre-filter-mapens mipnivåer](images/prefilter-levels.webp "Pre-filter-mapens fem mipnivåer, ritade som bakgrund av kursens simulator: varje nivå håller miljön blurrad för en högre roughness, med halva upplösningen.")
@@ -333,8 +333,8 @@ Funktionen `Hammersley` ger oss lågdiskrepans-samplet i av hela samplingsmängd
 skift och masker är vanlig HLSL från shader model 4 och framåt (projektet kompilerar `ps_5_0`).
 :::
 
-Att vända bitarna i i speglar dess binära siffror kring binärpunkten: 1 = 0.1₂ blir 0.5, 2 = 0.01₂ blir 0.25, 3 = 0.11₂ blir
-0.75 och så vidare. Varje nytt sample hamnar i den största lucka som de tidigare lämnade, så punkterna täcker kvadraten
+Att vända bitarna i i speglar dess binära siffror kring binärpunkten: 1 = 0.1₂ blir 0,5; 2 = 0.01₂ blir 0,25; 3 = 0.11₂ blir
+0,75 och så vidare. Varje nytt sample hamnar i den största lucka som de tidigare lämnade, så punkterna täcker kvadraten
 jämnt, utan slumptalens klumpar.
 
 ```quiz
@@ -342,7 +342,7 @@ jämnt, utan slumptalens klumpar.
 - [ ] Den returnerar ett pseudoslumptal från en hash av i, olika i varje bildruta
 - [ ] Den omvandlar i från sRGB till linjärt
 - [ ] Den returnerar i / N en gång till, så att båda koordinaterna växer tillsammans
-- [x] Den speglar de binära siffrorna i i kring binärpunkten (bitreversering): 1, 2, 3 blir 0.5, 0.25, 0.75 …; tillsammans med i / N ger det punkter som täcker enhetskvadraten jämnt – en lågdiskrepanssekvens – och samma punkter vid varje körning
+- [x] Den speglar de binära siffrorna i i kring binärpunkten (bitreversering): 1, 2, 3 blir 0,5; 0,25; 0,75 …; tillsammans med i / N ger det punkter som täcker enhetskvadraten jämnt – en lågdiskrepanssekvens – och samma punkter vid varje körning
 ---
 Det är Van der Corput-sekvensen i bas 2. Jämnt spridda samplingspunkter gör att Monte Carlo-skattningen konvergerar snabbare än med slumpmässiga (Quasi-Monte Carlo), och eftersom den är deterministisk blir den förfiltrerade mappen likadan varje gång.
 ```
@@ -574,7 +574,7 @@ och i slutet skrivs `prefilteredColor / totalWeight`.
 `SampleLevel` är det naturliga anropet här – och en loop med en databeroende gren tillåter ändå inte `Sample`.
 :::
 
-Vi förfiltrerar omgivningen utifrån en strävhet som varierar över förfilter-cube mappens mipnivåer (från 0.0 till 1.0) och
+Vi förfiltrerar omgivningen utifrån en strävhet som varierar över förfilter-cube mappens mipnivåer (från 0,0 till 1,0) och
 lagrar resultatet i `prefilteredColor`. Det resulterande `prefilteredColor` delas med den totala samplingsvikten, där
 samples med mindre inverkan på slutresultatet (för litet NdotL) bidrar mindre till den slutliga vikten.
 
@@ -864,7 +864,7 @@ omgivningens mipkedja: alla dess nivåer skrivs bara i det här passet, så en e
 :::
 
 Visa tills vidare förfiltermappen som bakgrund: bind den i stället för environment mappen när bakgrunden ritas och låt
-bakgrundens shader sampla mipnivå **1.2** i stället för 0.0 – mellan nivåerna för strävheten 0.25 och 0.5. Gör nu den
+bakgrundens shader sampla mipnivå **1,2** i stället för 0,0 – mellan nivåerna för strävheten 0,25 och 0,5. Gör nu den
 första uppgiften, **prefilter-map**.
 
 Bygg och kör: bakgrunden är **en suddig omgivning**. Himlen är fortfarande blågrå upptill, kullarna är utsmetade, och
@@ -883,7 +883,7 @@ se på den spekulära split sum-approximationen igen:
 
 Vi har räknat ut split sum-approximationens vänstra del i förväg i förfiltermappen för olika strävhetsnivåer. Den högra
 sidan kräver att vi konvolverar BRDF-ekvationen över vinkeln n · ωo, ytans strävhet och Fresnels F0. Det liknar att
-integrera den spekulära BRDF:en med en helt vit omgivning, alltså en konstant radians Li på 1.0. Att konvolvera BRDF:en över
+integrera den spekulära BRDF:en med en helt vit omgivning, alltså en konstant radians Li på 1,0. Att konvolvera BRDF:en över
 3 variabler är lite mycket, men vi försöker flytta ut F0 ur den spekulära BRDF-ekvationen:
 
 ```text
@@ -1331,8 +1331,8 @@ void main()
 ```
 
 I förfiltersteget konvolverade vi environment mappen upp till högst 5 mipnivåer (0 till 4), vilket vi här betecknar
-`MAX_REFLECTION_LOD`, så att vi inte samplar en mipnivå där det inte finns några (relevanta) data. Strävheten 0.3 läser nivå
-1.2, mellan nivåerna för 0.25 och 0.5 – det trilinjära filtret blandar dem.
+`MAX_REFLECTION_LOD`, så att vi inte samplar en mipnivå där det inte finns några (relevanta) data. Strävheten 0,3 läser nivå
+1,2, mellan nivåerna för 0,25 och 0,5 – det trilinjära filtret blandar dem.
 
 Sedan samplar vi BRDF-uppslagstexturen med materialets strävhet och vinkeln mellan normalen och vyvektorn:
 
@@ -1397,17 +1397,17 @@ med `float3 R = reflect(-V, N);` efter `V`. `textureLod` blir `SampleLevel`.
 Observera att vi inte multiplicerar `specular` med kS, eftersom det redan finns en Fresnel-multiplikation i den.
 
 ```quiz
-Shadern läser förfiltermappen med `textureLod(prefilterMap, R, roughness * MAX_REFLECTION_LOD)` och `MAX_REFLECTION_LOD = 4.0`. Vad läser en sfär med strävheten 0.3?
-- [ ] Mipnivå 0.3, den skarpaste nivån med lite oskärpa från filtret
+Shadern läser förfiltermappen med `textureLod(prefilterMap, R, roughness * MAX_REFLECTION_LOD)` och `MAX_REFLECTION_LOD = 4.0`. Vad läser en sfär med strävheten 0,3?
+- [ ] Mipnivå 0,3, den skarpaste nivån med lite oskärpa från filtret
 - [ ] Mipnivå 4, den suddigaste, eftersom varje strävhet över 0 är sträv
-- [ ] Nivån vars storlek är 0.3 × 64 texlar
-- [x] Mipnivå 1.2: det trilinjära filtret blandar nivå 1 och 2, som förfiltrerades för strävheten 0.25 och 0.5 – varje nivå innehåller omgivningen suddad för strävhet = nivå / 4, så strävhet × 4 hittar rätt ställe mellan dem
+- [ ] Nivån vars storlek är 0,3 × 64 texlar
+- [x] Mipnivå 1,2: det trilinjära filtret blandar nivå 1 och 2, som förfiltrerades för strävheten 0,25 och 0,5 – varje nivå innehåller omgivningen suddad för strävhet = nivå / 4, så strävhet × 4 hittar rätt ställe mellan dem
 ---
-Förfilterloopen renderade nivå `mip` med `roughness = mip / 4`; att läsa nivå `roughness * 4` inverterar det. Bakgrunden i uppgiften prefilter-map visade just nivå 1.2.
+Förfilterloopen renderade nivå `mip` med `roughness = mip / 4`; att läsa nivå `roughness * 4` inverterar det. Bakgrunden i uppgiften prefilter-map visade just nivå 1,2.
 ```
 
 Ta bort debug-fyrhörningen igen (dess shaderobjekt eller pipeline och dess ritanrop), och visa environment mappen som
-bakgrund igen på nivå 0.0. Gör nu uppgiften **specular**.
+bakgrund igen på nivå 0,0. Gör nu uppgiften **specular**.
 
 Bygg och kör: **sfärerna speglar omgivningen**. På de släta sfärerna i de vänstra kolumnerna ser du himlen i den övre
 halvan och den mörkare marken i den nedre, med horisonten emellan; en stor vit fläck upp och till höger om mitten är
@@ -1425,7 +1425,7 @@ learnopengls sista demo, `2.2.2.ibl_specular_textured`, lägger texturerade mate
 (rostigt järn, guld, gräs, plast och en vägg). Kursen har ett material, sitt nitade stål med rost, och visar det på
 PBR-belysningskapitlets 3 × 3-rutnät av stora sfärer från sista uppgiften, så att reflektionerna kan jämföras på olika
 ställen i omgivningen. Ändringarna är desamma som där – de fem mapparna, `getNormalFromMap()` med vertexens tangent,
-albedot omvandlat med `pow(…, 2.2)`, rutnätet med avståndet 6.0, varje sfär skalad med 2.4 och vriden 90° kring y – utom var
+albedot omvandlat med `pow(…, 2.2)`, rutnätet med avståndet 6,0, varje sfär skalad med 2,4 och vriden 90° kring y – utom var
 mapparna hamnar, eftersom IBL-texturerna kommer först:
 
 :::opengl

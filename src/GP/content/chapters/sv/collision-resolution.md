@@ -381,20 +381,20 @@ räknar vi ut inträngningen ur x-komponenten i `diff_vector` och lägger anting
 position beroende på riktningen. Samma sak gäller de lodräta kollisionerna, men den här gången arbetar vi med
 y-komponenten i alla vektorer.
 
-Gör nu uppgiften **resolve**. Bygg och kör. Det förväntade resultatet visar nu **2.0 s** (bildruta 120), och den ser
+Gör nu uppgiften **resolve**. Bygg och kör. Det förväntade resultatet visar nu **2,0 s** (bildruta 120), och den ser
 helt annorlunda ut än i förra kapitlet: **alla block finns kvar**, och bollen är på väg *nedåt*, till höger om racketen.
 Vad som hände: på väg upp är bollens första kontakt den solida stenen i rad 5, kolumn 9 – den som den flög igenom förut.
 I bildruta 86 når dess cirkel stenen underifrån, riktning `DOWN`: dess lodräta hastighet vänds, från (100, −350) till
 (100, 350), och den flyttas ut ur stenen. Stenen är solid, så ingenting förstörs, och bollen kommer ned åt höger.
 
 ```quiz
-Hanteringen hittar en vågrät kollision med `diff_vector` = (−9, 2), och bollens radie är 12.5. Hur långt flyttas bollen, och åt vilket håll?
+Hanteringen hittar en vågrät kollision med `diff_vector` = (−9, 2), och bollens radie är 12,5. Hur långt flyttas bollen, och åt vilket håll?
 - [ ] 9 pixlar åt vänster
-- [ ] 12.5 pixlar, hela radien
-- [ ] 3.5 pixlar åt vänster: −9 är LEFT, så bollen flyttas åt vänster
-- [x] 3.5 pixlar (12.5 − |−9|) åt höger: (−9, 2) pekar åt vänster, `VectorDirection` returnerar LEFT, och `Position.x += penetration`
+- [ ] 12,5 pixlar, hela radien
+- [ ] 3,5 pixlar åt vänster: −9 är LEFT, så bollen flyttas åt vänster
+- [x] 3,5 pixlar (12,5 − |−9|) åt höger: (−9, 2) pekar åt vänster, `VectorDirection` returnerar LEFT, och `Position.x += penetration`
 ---
-Bollens mittpunkt ligger 9 pixlar från den närmaste punkten, men dess radie är 12.5, så den når 3.5 pixlar in i blocket. Vektorn pekar åt vänster – från bollen till blocket till vänster om den – så bollen flyttas åt höger, bort från det, och dess x-hastighet vänds.
+Bollens mittpunkt ligger 9 pixlar från den närmaste punkten, men dess radie är 12,5, så den når 3,5 pixlar in i blocket. Vektorn pekar åt vänster – från bollen till blocket till vänster om den – så bollen flyttas åt höger, bort från det, och dess x-hastighet vänds.
 ```
 
 ## Kollisioner mellan spelare och boll
@@ -507,7 +507,7 @@ Bollen träffar racketen med sin mittpunkt 40 pixlar till höger om racketens mi
 - [ ] Dess x-hastighet blir 40 × 2 = 80, och farten ändras
 - [ ] Bara dess y-hastighet vänds
 - [ ] Den behåller sin hastighet: träffar utanför mitten ignoreras
-- [x] `percentage` är 40 / 50 = 0.8, så `Velocity.x` = 100 × 0.8 × 2 = 160 innan vektorn normeras och skalas tillbaka till den gamla farten – och y görs negativt: uppåt
+- [x] `percentage` är 40 / 50 = 0,8, så `Velocity.x` = 100 × 0,8 × 2 = 160 innan vektorn normeras och skalas tillbaka till den gamla farten – och y görs negativt: uppåt
 ---
 Ju längre från mitten, desto mer åt sidan lämnar bollen racketen; en träff på vänstra halvan ger ett negativt x. Normeringen och multiplikationen med den gamla längden behåller farten, så bara riktningen ändras. En träff längst ut, percentage 1, ger x = 200 före normeringen.
 ```
@@ -644,16 +644,16 @@ void Update(Game& game, float dt)
 Bollens `Position` är dess övre vänstra hörn, så `Position.y >= game.Height` betyder att hela bollen ligger nedanför
 fönstret. (Senare i delen får spelaren ett antal liv, och bara den sist tappade bollen avslutar spelet.)
 
-Gör nu uppgiften **lose-ball**. Vid 2.0 s ändras ingenting: bollen är fortfarande på väg nedåt. Den lämnar fönstret i
+Gör nu uppgiften **lose-ball**. Vid 2,0 s ändras ingenting: bollen är fortfarande på väg nedåt. Den lämnar fönstret i
 bildruta 151, och återställningen sätter tillbaka den på racketen. För att det ska synas kontrolleras uppgiften också vid
-**3.0 s**: där ligger bollen på racketen igen, fastsittande – mellanslag trycktes bara ned en gång – och varje block är på
+**3,0 s**: där ligger bollen på racketen igen, fastsittande – mellanslag trycktes bara ned en gång – och varje block är på
 plats.
 
 ```quiz
-Kursens boll studsar mot en sten vid 1.4 s, missar racketen och återställs vid ungefär 2.5 s. Varför ligger den sedan kvar på racketen resten av körningen?
+Kursens boll studsar mot en sten vid 1,4 s, missar racketen och återställs vid ungefär 2,5 s. Varför ligger den sedan kvar på racketen resten av körningen?
 - [ ] Därför att `ResetPlayer` sätter dess hastighet till noll
 - [ ] Därför att banan är klar
-- [x] Därför att `Reset` gör den fastsittande igen, och kursens fasta indata trycker bara ned mellanslag en gång, vid 0.5 s – ingenting släpper den en andra gång
+- [x] Därför att `Reset` gör den fastsittande igen, och kursens fasta indata trycker bara ned mellanslag en gång, vid 0,5 s – ingenting släpper den en andra gång
 - [ ] Därför att `Move` slutar flytta bollar efter en återställning
 ---
 `Stuck = true` betyder att `Move` låter bollen vara och att `ProcessInput` väntar på mellanslag. Med ett riktigt tangentbord skulle du skjuta iväg den igen.

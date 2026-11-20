@@ -1,0 +1,34 @@
+/* Only in the light theme, and not turned round like the other stylesheets (engine/styles.ts): what stays dark on
+   purpose. */
+
+/* The 2D close-ups (PixelCanvas) are pictures of a render target: the pixels' real colours on the black it was cleared
+   to, with the numbers beside them. They stay a dark screen, with a clear edge, instead of turning round. */
+.rpv .pixel-canvas {
+  background: #070914;
+  border-radius: 8px;
+  outline: 1px solid #5d6690;
+  outline-offset: -1px;
+}
+
+/* A step drawn on a dark stage (engine/mount.ts, DarkSteps: added light cannot show on white). */
+.rpv .visual::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(ellipse at 60% 35%, rgba(36, 42, 92, 0.9), transparent 70%),
+    #060812;
+  opacity: 0;
+  transition: opacity 0.45s ease;
+  pointer-events: none;
+}
+
+.rpv.rpv-dark-stage .visual::before {
+  opacity: 1;
+}
+
+/* The panels stay light cards on it, opaque enough to read. */
+.rpv.rpv-dark-stage .ms-panel {
+  background: rgba(235, 237, 249, 0.95);
+}

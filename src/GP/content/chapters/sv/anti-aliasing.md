@@ -720,7 +720,7 @@ I `recordCommandBuffer()` ritas kuben i passet utanför skärmen, och fyrhörnin
         offscreenPassInfo.framebuffer = offscreenFramebuffer;
 ```
 
-(med rensningsvärdena 0.1 för färgen och 1.0 för djupet – resolve attachmentet rensas inte), sedan kubens ritning och
+(med rensningsvärdena 0,1 för färgen och 1,0 för djupet – resolve attachmentet rensas inte), sedan kubens ritning och
 `vkCmdEndRenderPass`, och:
 
 ```cpp
@@ -894,7 +894,7 @@ Gör nu den sista uppgiften, **post-process**. I `aa_post.hlsl`:
 ```
 :::
 
-Bygg och kör: kuben blir grå (0.7152 × 255 ≈ 182), bakgrunden behåller sitt mörkgrå, och kanterna är fortfarande mjuka,
+Bygg och kör: kuben blir grå (0,7152 × 255 ≈ 182), bakgrunden behåller sitt mörkgrå, och kanterna är fortfarande mjuka,
 nu i gråtoner.
 
 ```quiz

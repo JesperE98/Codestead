@@ -365,7 +365,7 @@ b1, sprites – learnopengls "ställ in partikelshadern med samma projektion" be
 :::
 
 ```quiz
-En partikels `Color` är (rColor, rColor, rColor, 1) med rColor mellan 0.5 och 1.49, och partikeltexturen är ett vitt sken. Vad ger fragment shaderns `texture × color`?
+En partikels `Color` är (rColor, rColor, rColor, 1) med rColor mellan 0,5 och 1,49, och partikeltexturen är ett vitt sken. Vad ger fragment shaderns `texture × color`?
 - [ ] En färgad partikel: texturens färgton gånger färgen
 - [x] Ett grått till vitt sken, ljusast i mitten, som tonar ut mot rektangelns kanter där texturen är genomskinlig
 - [ ] En helt vit kvadrat på 10 × 10 pixlar
@@ -588,16 +588,16 @@ void respawnParticle(Particle& particle, GameObject& object, XMFLOAT2 offset = X
 `XMVectorReplicate(random)` lägger till samma tal till x och y, som glm:s `object.Position + random + offset` gör.
 :::
 
-Funktionen återställer helt enkelt partikelns liv till 1.0f, ger den en slumpad ljusstyrka (via färgvektorn) från 0.5
+Funktionen återställer helt enkelt partikelns liv till 1.0f, ger den en slumpad ljusstyrka (via färgvektorn) från 0,5
 och uppåt och tilldelar en (lite slumpad) position och hastighet utifrån spelobjektets data. Den slumpade förskjutningen
-−5.0 … +4.9 läggs till *båda* komponenterna – samma tal –, så partiklarna sprids längs en diagonal linje kring
+−5,0 … +4,9 läggs till *båda* komponenterna – samma tal –, så partiklarna sprids längs en diagonal linje kring
 startpunkten. Hastigheten är en tiondel av objektets, och uppdateringen *drar av* den: partiklarna driver sakta åt
 motsatt håll mot bollen, vilket lämnar dem efter den som ett spår.
 
 Den andra partikelloopen i uppdateringsfunktionen går igenom alla partiklar och minskar för var och en livet med delta
 time; på så sätt motsvarar varje partikels liv exakt den sekund den får leva. Sedan kontrollerar vi om partikeln lever,
 och i så fall uppdaterar vi dess position och färg. Vi minskar också sakta alfakomponenten i varje partikel så att det
-ser ut som om de långsamt försvinner – och ganska snabbt: `2.5f` per sekund betyder att alfa når 0 efter 0.4 s, 24
+ser ut som om de långsamt försvinner – och ganska snabbt: `2.5f` per sekund betyder att alfa når 0 efter 0,4 s, 24
 bildrutor, medan partikeln lever en hel sekund, 60 bildrutor. Under de sista 36 bildrutorna av sitt liv är en partikel
 fortfarande "levande" och ritas, men med ett alfa på 0 eller lägre bidrar den inte med något till bilden.
 
@@ -632,7 +632,7 @@ hörn mot dess mitt; en partikelrektangel på 10 × 10 hamnar då på bollens ö
 
 Gör nu uppgifterna **particle-shader**, **particle-generator** och **spawn**: shadern och dess inställning, structarna och
 `InitParticles`, och uppdateringsfunktionerna med anropet. Partiklarna lever nu, men ingenting ritar dem, så bilden – vid
-**2.0 s**, bollen på väg ned efter sin studs mot stenen – ändras inte ännu.
+**2,0 s**, bollen på väg ned efter sin studs mot stenen – ändras inte ännu.
 
 ```quiz
 Två partiklar skapas varje bildruta, var och en lever 60 bildrutor, men dess alfa når 0 efter 24. Ungefär hur många partiklar lever samtidigt när spåret har byggts upp, och hur många av dem syns?
@@ -641,7 +641,7 @@ Två partiklar skapas varje bildruta, var och en lever 60 bildrutor, men dess al
 - [x] Ungefär 120 lever (2 × 60), men bara ungefär 48 syns (2 × 24) – de andra ritas med ett alfa på 0 eller lägre
 - [ ] 60 lever, 24 syns
 ---
-De 500 används aldrig alla: `firstUnusedParticle` återanvänder hela tiden döda, så generatorn behöver aldrig fler än ungefär 120. learnopengls tal gör spåret kort; en långsammare uttoning (en mindre faktor än 2.5) skulle göra det längre.
+De 500 används aldrig alla: `firstUnusedParticle` återanvänder hela tiden döda, så generatorn behöver aldrig fler än ungefär 120. learnopengls tal gör spåret kort; en långsammare uttoning (en mindre faktor än 2,5) skulle göra det längre.
 ```
 
 ## Rendera partiklarna

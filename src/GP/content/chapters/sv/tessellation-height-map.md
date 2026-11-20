@@ -382,12 +382,12 @@ floddalen som slingrar sig fram till framkanten, sjön nästan lika mörk som ba
 
 ```quiz
 Pixeln för en vertex i höjdkartan har gråvärdet 128. Vilken gråton ger fragment shadern vertexen?
-- [ ] 128 / 255 ≈ 0.50, samma värde
-- [x] Höjden 128 · 64/256 − 16 = 16, och (16 + 16) / 64 = 0.5
-- [ ] Höjden 128 − 16 = 112, som klämps till 1.0
-- [ ] (128 + 16) / 64 = 2.25, klämt till 1.0
+- [ ] 128 / 255 ≈ 0,50, samma värde
+- [x] Höjden 128 · 64/256 − 16 = 16, och (16 + 16) / 64 = 0,5
+- [ ] Höjden 128 − 16 = 112, som klämps till 1,0
+- [ ] (128 + 16) / 64 = 2,25, klämt till 1,0
 ---
-Vertexloopen skalar värdet 0–255 till −16 … 47.75; shadern tar bort förskjutningen och dividerar med intervallet 64. Resultatet är kartans eget grå, så när som på avrundningen av höjderna.
+Vertexloopen skalar värdet 0–255 till −16 … 47,75; shadern tar bort förskjutningen och dividerar med intervallet 64. Resultatet är kartans eget grå, så när som på avrundningen av höjderna.
 ```
 
 ## Vad ett tätt mesh kostar

@@ -382,6 +382,7 @@
   "viz.step": "Steg {n} av {total}",
   "viz.loading": "Laddar scenen…",
   "viz.start": "Starta scenen",
+  "viz.goTo": "Gå till scenen i ”{chapter}”",
   "viz.model": "Modell",
   "viz.modeData": "Verklig data",
   "viz.modeConcept": "Koncept",

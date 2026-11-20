@@ -188,7 +188,7 @@ sampler som skapas i en descriptor heap för samplers kan ha vilken kantfärg so
 :::
 
 ```quiz
-En rektangels texturkoordinater går från 0.0 till 2.0 längs båda axlarna, och texturen läses med repeat (wrap). Vad ser du?
+En rektangels texturkoordinater går från 0,0 till 2,0 längs båda axlarna, och texturen läses med repeat (wrap). Vad ser du?
 - [x] Bilden fyra gånger, i ett rutnät på 2 × 2
 - [ ] Bilden en gång i en fjärdedel, och bildens kantpixlar utdragna över resten
 - [ ] Bilden en gång, utsträckt över hela rektangeln
@@ -1036,8 +1036,8 @@ och i lådans block, efter bildinläsningen:
 ```
 
 Beskrivningen: en 2D-textur med `width` × `height` texlar, en mipnivå, en array-skiva (`DepthOrArraySize`), ett sample
-per texel och formatet `DXGI_FORMAT_R8G8B8A8_UNORM` – fyra 8-bitarskanaler som shadern läser som värden från 0.0 till
-1.0, filens bytes oförändrade, som OpenGL:s `GL_RGB`/`GL_RGBA` och kursens swap chain i `R8G8B8A8_UNORM`. Lägg märke
+per texel och formatet `DXGI_FORMAT_R8G8B8A8_UNORM` – fyra 8-bitarskanaler som shadern läser som värden från 0,0 till
+1,0, filens bytes oförändrade, som OpenGL:s `GL_RGB`/`GL_RGBA` och kursens swap chain i `R8G8B8A8_UNORM`. Lägg märke
 till att vi inte väljer hur texlarna ordnas i minnet: GPU:n använder sin egen ordning för texturer, vilket är ett skäl
 till att CPU:n inte bara kan skriva in i den.
 
@@ -1464,7 +1464,7 @@ nya för location 2:
         attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
 ```
 
-Varje hörn av rektangeln får sitt hörn av bilden. Kom ihåg att Vulkans y-axel pekar nedåt, så vertexen med y = -0.5
+Varje hörn av rektangeln får sitt hörn av bilden. Kom ihåg att Vulkans y-axel pekar nedåt, så vertexen med y = -0,5
 ligger överst, och att (0, 0) är bildens övre vänstra hörn:
 
 ```cpp
@@ -1970,12 +1970,12 @@ alfan, så 20 % svart blandas in i lådan överallt utanför ansiktet. (Blandnin
 kapitel.)
 
 ```quiz
-Utanför ansiktet är lådan mörkare efter blandningen med 0.2 än den var ensam. Varför?
+Utanför ansiktet är lådan mörkare efter blandningen med 0,2 än den var ensam. Varför?
 - [x] Ansiktets genomskinliga pixlar är lagrade som svarta med alfa 0; blandningen bryr sig inte om alfa och blandar in 20 % av det svarta i lådan
 - [ ] Ansiktstexturen samplas utanför 0..1 där och returnerar en svart kantfärg
 - [ ] En blandning halverar alltid ljusstyrkan hos båda indata
 ---
-En genomskinlig pixel har ändå ett RGB-värde, och i `awesomeface.png` är det svart. För att lämna lådan orörd där ansiktet är genomskinligt kan du använda ansiktets alfa i blandningsvikten – ansiktets `.a` gånger 0.2.
+En genomskinlig pixel har ändå ett RGB-värde, och i `awesomeface.png` är det svart. För att lämna lådan orörd där ansiktet är genomskinligt kan du använda ansiktets alfa i blandningsvikten – ansiktets `.a` gånger 0,2.
 ```
 
 ## Övningar
@@ -2129,7 +2129,7 @@ rektangeln.
 
 Den här övningen är ingen uppgift. Vill du prova den, gör det när du har klarat den sista uppgiften, och ändra
 tillbaka värdena efteråt. Ge rektangeln texturkoordinater som bara täcker en liten del mitt i bilden, till exempel
-0.45 till 0.55 längs båda axlarna i stället för 0 till 2. Då dras bara ungefär 26 × 26 texlar ut över hela
+0,45 till 0,55 längs båda axlarna i stället för 0 till 2. Då dras bara ungefär 26 × 26 texlar ut över hela
 rektangeln, och med nearest-filtrering blir var och en av dem ett tydligt synligt block.
 
 :::opengl
@@ -2147,7 +2147,7 @@ För nearest-filtrering sätter du static samplernas `Filter` till `D3D12_FILTER
 
 ### Blanda med piltangenterna
 
-Det fasta värdet 0.2 i blandningen blir ett värde som programmet sätter från CPU:n, och upp- och nedpilarna ändrar
+Det fasta värdet 0,2 i blandningen blir ett värde som programmet sätter från CPU:n, och upp- och nedpilarna ändrar
 det.
 
 :::opengl
@@ -2189,7 +2189,7 @@ och renderingsloopen sätter uniformen varje bildruta, efter att shadern aktiver
     }
 ```
 
-Värdet ändras med 0.001 för varje bildruta som tangenten är nedtryckt, och det hålls inom intervallet för `mix`.
+Värdet ändras med 0,001 för varje bildruta som tangenten är nedtryckt, och det hålls inom intervallet för `mix`.
 
 Gör nu uppgiften **mix-value**.
 :::
@@ -2285,7 +2285,7 @@ och en andra root parameter – descriptor table förblir parameter 0:
     m_commandList->SetGraphicsRoot32BitConstants(1, sizeof(MixConstants) / 4, &mixConstants, 0);
 ```
 
-Gör nu uppgiften **mix-value**. Ansiktena är mycket starkare vid 0.5.
+Gör nu uppgiften **mix-value**. Ansiktena är mycket starkare vid 0,5.
 
 Tangenterna kommer till fönsterproceduren som `WM_KEYDOWN`-meddelanden, men `WindowProc` är en fri funktion som inte
 känner till vår app. Microsofts exempel löser det genom att spara en pekare till appen i fönstrets *user data*. I
@@ -2340,13 +2340,13 @@ void D3D12App::OnKeyDown(UINT8 key)
 
 OpenGL- och Vulkan-versionerna frågar GLFW varje bildruta om en tangent är nedtryckt; Windows skickar i stället ett
 meddelande per tangenttryck – och upprepar det medan tangenten hålls nere – så varje meddelande flyttar värdet ett
-helt steg på 0.1.
+helt steg på 0,1.
 
 Gör nu uppgiften **mix-keys**.
 :::
 
-Vid 0.5 är ansiktena mycket ljusare, och allt utanför dem är hälften så ljust som lådan – till hälften svart. Håll
-nere uppåtpilen så tar ansiktena över (vid 1.0 ser du bara ansiktena, svarta där de är genomskinliga); håll nere
-nedåtpilen så kommer lådan tillbaka (vid 0.0 finns bara den begränsade lådan kvar).
+Vid 0,5 är ansiktena mycket ljusare, och allt utanför dem är hälften så ljust som lådan – till hälften svart. Håll
+nere uppåtpilen så tar ansiktena över (vid 1,0 ser du bara ansiktena, svarta där de är genomskinliga); håll nere
+nedåtpilen så kommer lådan tillbaka (vid 0,0 finns bara den begränsade lådan kvar).
 
 Grattis – du har texturerat ditt första objekt. I nästa kapitel börjar vi flytta runt det med transformationer.

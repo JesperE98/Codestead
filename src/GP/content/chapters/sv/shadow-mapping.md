@@ -19,32 +19,32 @@ passet och djuptexturen som det ritar i.
 
 :::opengl
 Du fortsätter i ditt program från *Gammakorrigering* och gör om det till learnopengls scen: ett stort trägolv
-(`planeVertices`, 50 × 50 enheter på y = -0.5, `wood.png` upprepad 25 gånger) och tre träkuber som ritas av
+(`planeVertices`, 50 × 50 enheter på y = -0,5, `wood.png` upprepad 25 gånger) och tre träkuber som ritas av
 learnopengls `renderScene(const Shader &shader)` med `renderCube()`: en som svävar på (0, 1.5, 0), en på (2, 0, 1) och
 en liten vriden på (-1, 0, 2). Ljuset står på `lightPos` (-2, 4, -1). `shadow_mapping.vs/.fs` belyser scenen:
-ljusfärgen 0.3, ambient, diffust och Blinn-Phong-spekulärt, kombinerat som
+ljusfärgen 0,3, ambient, diffust och Blinn-Phong-spekulärt, kombinerat som
 `(ambient + (1.0 - shadow) * (diffuse + specular)) * color` – med `float shadow = 0.0;` tills vidare. `renderQuad()`,
 en fyrhörning som täcker fönstret, finns redan. De nya shadrarna `shadow_mapping_depth.vs/.fs`, `debug_quad.vs` och
 `debug_quad_depth.fs` används från första uppgiften.
 :::
 :::vulkan
 Du fortsätter i ditt program från *Gammakorrigering* och gör om det till learnopengls scen: ett stort trägolv (vertex
-0..5: 50 × 50 enheter på y = -0.5, `textures/wood.png` upprepad 25 gånger) och tre träkuber (en kub, vertex 6..41,
+0..5: 50 × 50 enheter på y = -0,5, `textures/wood.png` upprepad 25 gånger) och tre träkuber (en kub, vertex 6..41,
 ritad tre gånger): en som svävar på (0, 1.5, 0), en på (2, 0, 1) och en liten vriden på (-1, 0, 2). learnopengls
 `renderScene()` är en hjälpfunktion `renderScene(VkCommandBuffer commandBuffer)` som pushar varje modellmatris (en
 push constant, vertexsteget) och spelar in de fyra draws. Ljuset står på den globala `lightPos` (-2, 4, -1).
-`shaders/shadow_mapping.vert/.frag` belyser scenen: ljusfärgen 0.3, ambient, diffust och Blinn-Phong-spekulärt,
+`shaders/shadow_mapping.vert/.frag` belyser scenen: ljusfärgen 0,3, ambient, diffust och Blinn-Phong-spekulärt,
 kombinerat som `(ambient + (1.0 - shadow) * (diffuse + specular)) * color` – med `float shadow = 0.0;` tills vidare.
 De nya shadrarna `shadow_mapping_depth.vert/.frag`, `debug_quad.vert` och `debug_quad_depth.frag` används från första
 uppgiften.
 :::
 :::d3d12
 Du fortsätter i ditt program från *Gammakorrigering* och gör om det till learnopengls scen: ett stort trägolv (vertex
-0–5: 50 × 50 enheter på y = -0.5, `wood.png` upprepad 25 gånger) och tre träkuber (en kub, vertex 6–41, ritad tre
+0–5: 50 × 50 enheter på y = -0,5, `wood.png` upprepad 25 gånger) och tre träkuber (en kub, vertex 6–41, ritad tre
 gånger): en som svävar på (0, 1.5, 0), en på (2, 0, 1) och en liten vriden på (-1, 0, 2). `PopulateCommandList`
 beräknar fyra `ModelConstants` (modellmatrisen och normalmatrisen för varje objekt) och sätter dem med
 `SetGraphicsRoot32BitConstants(0, …)` före var och en av de fyra draws – learnopengls `renderScene()`. Ljuset står på
-den globala `lightPos` (-2, 4, -1). `shadow_mapping.hlsl` belyser scenen: ljusfärgen 0.3, ambient, diffust och
+den globala `lightPos` (-2, 4, -1). `shadow_mapping.hlsl` belyser scenen: ljusfärgen 0,3, ambient, diffust och
 Blinn-Phong-spekulärt, kombinerat som `(ambient + (1.0f - shadow) * (diffuse + specular)) * color` – med
 `float shadow = 0.0f;` tills vidare. `shadow_mapping_depth.hlsl` och `debug_quad.hlsl` är redan klara; första
 uppgiften kompilerar dem.
@@ -52,7 +52,7 @@ uppgiften kompilerar dem.
 
 Från kameran på (0, 0, 3) ser du golvet och, överst i fönstret, den svävande kuben underifrån. De två andra kuberna
 ligger precis utanför bilden, till vänster och höger om kameran; dem möter du i djupkartan. Bygg och kör programmet:
-golvet är jämnt belyst – svagt, ljusfärgen är bara 0.3 – och ingenting kastar någon skugga.
+golvet är jämnt belyst – svagt, ljusfärgen är bara 0,3 – och ingenting kastar någon skugga.
 
 ## Shadow mapping
 
@@ -82,20 +82,20 @@ För att rendera scenen med skuggor går vi sedan igenom två steg:
   på det stället. Ligger fragmentet längre bort än den närmaste ytan står något mellan det och ljuset: fragmentet ligger i
   skugga.
 
-Säg att ett fragment på golvet får djupet 0.9 i ljusets vy, men att djupkartan har 0.4 på det stället – ovansidan av en
-låda. Eftersom 0.9 är större än 0.4 är fragmentet skymt och ligger i skugga.
+Säg att ett fragment på golvet får djupet 0,9 i ljusets vy, men att djupkartan har 0,4 på det stället – ovansidan av en
+låda. Eftersom 0,9 är större än 0,4 är fragmentet skymt och ligger i skugga.
 
 ```quiz
-I pass 2 får ett golvfragment, transformerat till ljusets vy, djupet 0.9, och djupkartan har 0.4 på dess plats. Vad betyder det?
+I pass 2 får ett golvfragment, transformerat till ljusets vy, djupet 0,9, och djupkartan har 0,4 på dess plats. Vad betyder det?
 - [ ] Fragmentet är belyst: dess djup är större än det lagrade
-- [x] Något ligger närmare ljuset på det stället (djup 0.4), så fragmentet (0.9) är skymt: det ligger i skugga
+- [x] Något ligger närmare ljuset på det stället (djup 0,4), så fragmentet (0,9) är skymt: det ligger i skugga
 - [ ] Fragmentet ligger utanför ljusets vy
 - [ ] Djupkartan rensades inte
 ---
 Djupkartan lagrar det närmaste djup som ljuset ser i varje riktning. Ett fragment som ligger längre från ljuset än den närmaste ytan ligger bakom den – i dess skugga.
 ```
 
-![Shadow mappingens två pass](images/shadow-map-idea.webp "Pass 1 lagrar det närmaste djupet längs var och en av ljusets strålar i depth map. I pass 2 har golvpunkten P djupet 0.9 sett från ljuset, men depth map håller 0.4 där, lådans ovansida: P ligger i skugga, Q är belyst.")
+![Shadow mappingens två pass](images/shadow-map-idea.webp "Pass 1 lagrar det närmaste djupet längs var och en av ljusets strålar i depth map. I pass 2 har golvpunkten P djupet 0,9 sett från ljuset, men depth map håller 0,4 där, lådans ovansida: P ligger i skugga, Q är belyst.")
 
 ## Djupkartan
 
@@ -347,7 +347,7 @@ vi en view-matris och en projektionsmatris, precis som för kameran.
 
 Eftersom vi modellerar en riktad ljuskälla är alla dess ljusstrålar parallella. Därför använder vi en ortografisk
 projektionsmatris för ljuskällan, där perspektivet inte förvränger något. Ljuset står på `lightPos`, tittar mot origo,
-och dess ortografiska låda är 20 × 20 enheter bred kring siktlinjen, från 1.0 till 7.5 enheter framför ljuset. Eftersom en
+och dess ortografiska låda är 20 × 20 enheter bred kring siktlinjen, från 1,0 till 7,5 enheter framför ljuset. Eftersom en
 projektionsmatris indirekt bestämmer vad som syns (det som inte klipps bort) vill du se till att projektionsfrustumets
 storlek rymmer de objekt som du vill ha i djupkartan. Objekt eller fragment som inte finns i djupkartan kastar inga
 skuggor.
@@ -410,7 +410,7 @@ transformationsmatris för ljusrummet som transformerar varje vektor i världsru
 Varför använder det riktade ljuset en ortografisk projektion för sin djupkarta?
 - [ ] För att ortografiska djupkartor inte behöver något djuptest
 - [x] Ett riktat ljus strålar är parallella; en ortografisk projektion saknar perspektiv, så den renderar scenen längs parallella strålar
-- [ ] För att en perspektivprojektion inte kan ha near-planet 1.0
+- [ ] För att en perspektivprojektion inte kan ha near-planet 1,0
 - [ ] För att djupkartan ska kunna vara mindre än fönstret
 ---
 En ortografisk projektion projicerar längs parallella linjer – som solljus. Ett ljus i en punkt, som lyser åt alla håll därifrån, behöver i stället en perspektivprojektion (se slutet av kapitlet).
@@ -719,7 +719,7 @@ barriärer, och debugfyrhörningens draw.
 
 Bygg och kör: i stället för scenen visar fönstret **djupkartan** – grå överallt, kartan på 1024 × 1024 utsträckt till
 fönstret. Golvet är en lodrät gradient: vitt överst, där det ligger bortom far-planet (där ritades ingenting och det
-rensade djupet 1.0 står kvar), mellangrått i mitten, mörkare nedåt där det kommer närmare ljuset, och sedan vitt igen i
+rensade djupet 1,0 står kvar), mellangrått i mitten, mörkare nedåt där det kommer närmare ljuset, och sedan vitt igen i
 ett band längst ned: den delen av golvet ligger framför near-planet och klipptes bort. Den svävande kuben är den
 mörkaste fläcken, närmast ljuset; kuben på (2, 0, 1) är ljusare än golvet runt den, och den lilla vridna kuben ligger
 mellan de två.
@@ -803,7 +803,7 @@ shadern.
 :::
 
 Huvudshadern som vi renderar scenen med använder Blinn-Phongs belysningsmodell. I fragment shadern beräknar vi sedan ett
-värde `shadow` som är 1.0 när fragmentet ligger i skugga och 0.0 när det inte gör det. De resulterande diffusa och
+värde `shadow` som är 1,0 när fragmentet ligger i skugga och 0,0 när det inte gör det. De resulterande diffusa och
 spekulära komponenterna multipliceras sedan med den här skuggkomponenten. Eftersom skuggor sällan är helt mörka (på grund
 av ljusspridning) håller vi den ambienta komponenten utanför skuggmultiplikationen – det är
 `(ambient + (1.0 - shadow) * (diffuse + specular)) * color`, som redan finns i shadern.
@@ -813,7 +813,7 @@ i clip space, till normaliserade enhetskoordinater (NDC). När vi skriver en ver
 positionsutdatan i vertex shadern gör rastreraren automatiskt en perspektivdivision, alltså omvandlar
 clip space-koordinater i intervallet [-w,w] till [-1,1] genom att dividera x-, y- och z-komponenten med vektorns
 w-komponent. Eftersom `FragPosLightSpace` i clip space inte skickas till fragment shadern genom den utdatan måste vi göra
-perspektivdivisionen själva. (Med en ortografisk projektion förblir w 1.0, så divisionen ändrar ingenting – men den gör
+perspektivdivisionen själva. (Med en ortografisk projektion förblir w 1,0, så divisionen ändrar ingenting – men den gör
 ingen skada och gör att funktionen fungerar för perspektivprojektioner också.)
 
 Eftersom djupet i djupkartan ligger i intervallet [0,1] och vi också vill använda de projicerade koordinaterna för att
@@ -845,7 +845,7 @@ float ShadowCalculation(vec4 fragPosLightSpace)
 :::vulkan
 I Vulkan (med `GLM_FORCE_DEPTH_ZERO_TO_ONE`) är NDC z redan 0..1 – samma intervall som djupbilden lagrar – så bara x och
 y avbildas med `* 0.5 + 0.5`. Och y behöver ingen vändning: i djuppasset hamnade NDC y = -1 på bildens rad 0 (Vulkans
-framebuffer-y pekar nedåt), och slagningens v = -1 × 0.5 + 0.5 = 0 läser också rad 0. De två stämmer överens:
+framebuffer-y pekar nedåt), och slagningens v = -1 × 0,5 + 0,5 = 0 läser också rad 0. De två stämmer överens:
 
 ```glsl
 float ShadowCalculation(vec4 fragPosLightSpace) {
@@ -866,7 +866,7 @@ float ShadowCalculation(vec4 fragPosLightSpace) {
 :::
 :::d3d12
 I Direct3D är NDC z redan 0..1 – samma intervall som djupkartan lagrar – så bara x och y blir texturkoordinater. Och y
-vänds: Direct3D:s textur-v = 0 är render targetens översta rad, som är NDC y = +1. Alltså v = -y * 0.5 + 0.5:
+vänds: Direct3D:s textur-v = 0 är render targetens översta rad, som är NDC y = +1. Alltså v = -y * 0,5 + 0,5:
 
 ```hlsl
 float ShadowCalculation(float4 fragPosLightSpace)
@@ -899,7 +899,7 @@ av om `currentDepth` är större än `closestDepth`, och i så fall ligger fragm
 :::opengl
 ```quiz
 Varför avbildar OpenGL:s `ShadowCalculation` också z med `* 0.5 + 0.5`, inte bara x och y?
-- [ ] För att djupkartan rensades till 0.5
+- [ ] För att djupkartan rensades till 0,5
 - [ ] För att djuptexturen lagrar värden från -1 till 1
 - [ ] För att biasen behöver positiva värden
 - [x] OpenGL:s NDC z går från -1 till 1, men djuptexturen lagrar fönsterdjupet 0..1 – fragmentets z måste ligga i samma intervall som de lagrade djupen
@@ -993,7 +993,7 @@ shadow mapping som vi behöver fixa för bättre resultat. Det är dem vi fokuse
 
 Den här artefakten kallas *shadow acne* (skuggakne). Vi kan förklara den genom att titta på djupkartan: eftersom shadow
 mapen har begränsad upplösning kan flera fragment sampla samma värde ur djupkartan när de ligger förhållandevis långt från
-ljuskällan. En texel i vår djupkarta på 1024 × 1024 täcker 20/1024 ≈ 0.02 enheter av golvet sett från ljuset, vilket är
+ljuskällan. En texel i vår djupkarta på 1024 × 1024 täcker 20/1024 ≈ 0,02 enheter av golvet sett från ljuset, vilket är
 flera pixlar i fönstret.
 
 Varje texel i djupkartan lagrar ett djup, mätt i texelns mitt – tänk dig den som en liten platt platta, hållen vinkelrätt
@@ -1003,10 +1003,10 @@ ljuset än det lagrade värdet är belysta, de som ligger lite längre bort anse
 Det är randmönstret: golvet skuggar sig självt.
 
 Vi kan lösa problemet med ett litet trick som kallas *shadow bias*, där vi helt enkelt förskjuter ytans djup (eller shadow
-mapens) med ett litet biasvärde så att fragmenten inte felaktigt hamnar bakom ytan. En fast bias som 0.005 löser problemet
+mapens) med ett litet biasvärde så att fragmenten inte felaktigt hamnar bakom ytan. En fast bias som 0,005 löser problemet
 till stor del, men ytor som lutar brant mot ljuset kan fortfarande få shadow acne. Ett robustare sätt är att låta biasen
-bero på ytans vinkel mot ljuset: något vi kan lösa med skalärprodukten. Här har vi en största bias på 0.05 och en minsta
-på 0.005 utifrån ytans normal och ljusriktningen. På så sätt får ytor som golvet, som är nästan vinkelräta mot ljuskällan,
+bero på ytans vinkel mot ljuset: något vi kan lösa med skalärprodukten. Här har vi en största bias på 0,05 och en minsta
+på 0,005 utifrån ytans normal och ljusriktningen. På så sätt får ytor som golvet, som är nästan vinkelräta mot ljuskällan,
 en liten bias, medan ytor som kubens sidor får en mycket större.
 
 ```quiz
@@ -1105,13 +1105,13 @@ felaktiga resultat. Med normala biasvärden kan man dock i allmänhet undvika pe
 
 En annan visuell avvikelse, som du kanske gillar eller ogillar, är att områden utanför ljusets synliga frustum räknas som
 skuggade fast de (oftast) inte är det. Det händer eftersom projicerade koordinater utanför ljusets frustum är större än
-1.0 och därför samplar djuptexturen utanför dess normala intervall [0,1]. Beroende på texturens wrappningsmetod får vi
+1,0 och därför samplar djuptexturen utanför dess normala intervall [0,1]. Beroende på texturens wrappningsmetod får vi
 felaktiga djupresultat som inte bygger på verkliga djupvärden från ljuskällan. Med den upprepning (repeat) vi har använt
 hittills upprepas djupkartans innehåll: långt borta, utanför ljusets låda på 20 × 20, skulle du se kopior av kubernas
 skuggor och mörka områden där ingen skugga hör hemma.
 
-Det vi hellre vill ha är att alla koordinater utanför djupkartans intervall har djupet 1.0, vilket betyder att de aldrig
-hamnar i skugga (eftersom inget objekt har ett djup större än 1.0). Det gör vi genom att ange en kantfärg (border colour)
+Det vi hellre vill ha är att alla koordinater utanför djupkartans intervall har djupet 1,0, vilket betyder att de aldrig
+hamnar i skugga (eftersom inget objekt har ett djup större än 1,0). Det gör vi genom att ange en kantfärg (border colour)
 och sätta djupkartans wrappning till clamp to border.
 
 :::opengl
@@ -1148,12 +1148,12 @@ har tre kantfärger att välja mellan: transparent svart, opakt svart och opakt 
 ```
 :::
 
-Nu returnerar texturfunktionen alltid djupet 1.0 när vi samplar utanför djupkartans koordinatintervall [0,1], vilket ger
-skuggvärdet 0.0.
+Nu returnerar texturfunktionen alltid djupet 1,0 när vi samplar utanför djupkartans koordinatintervall [0,1], vilket ger
+skuggvärdet 0,0.
 
 Det verkar finnas ett fall kvar: fragment som ligger längre bort än ljusets far-plan. Deras projicerade z är större än
-1.0, så de är större än alla lagrade djup – även kantens 1.0 – och hamnar i skugga. Lösningen är ganska enkel: vi tvingar
-skuggvärdet till 0.0 så fort den projicerade vektorns z-koordinat är större än 1.0. Allt bortom far-planet i ljusets
+1,0, så de är större än alla lagrade djup – även kantens 1,0 – och hamnar i skugga. Lösningen är ganska enkel: vi tvingar
+skuggvärdet till 0,0 så fort den projicerade vektorns z-koordinat är större än 1,0. Allt bortom far-planet i ljusets
 ortografiska frustum räknas alltså som belyst.
 
 :::opengl
@@ -1194,13 +1194,13 @@ borta; efter den är hela det golvet belyst. Det betyder att bara den del av dju
 skuggor, medan allt utanför har inga – vilket är vad vi vill i den här scenen.
 
 ```quiz
-Varför stoppar en vit kantfärg (djup 1.0) översampling utanför djupkartan?
+Varför stoppar en vit kantfärg (djup 1,0) översampling utanför djupkartan?
 - [ ] Vitt gör golvet ljusare utanför kartan
 - [ ] Kantfärgen slår av djuptestet
-- [x] Slagningar utanför kartan returnerar djupet 1.0, far-planet; inget fragment inne i frustumet ligger längre bort än så, så inget räknas som skuggat
+- [x] Slagningar utanför kartan returnerar djupet 1,0, far-planet; inget fragment inne i frustumet ligger längre bort än så, så inget räknas som skuggat
 - [ ] Den får samplern att upprepa kartans kanttexlar
 ---
-Med `REPEAT` läser en slagning utanför kartan någon orelaterad texel i kartan. Med kanten på 1.0 är det lagrade "närmaste djupet" utanför kartan så långt bort det går. Fragment bortom far-planet (z > 1.0) skulle fortfarande förlora den jämförelsen, och därför sätter `ShadowCalculation` också skuggan till 0.0 för dem.
+Med `REPEAT` läser en slagning utanför kartan någon orelaterad texel i kartan. Med kanten på 1,0 är det lagrade "närmaste djupet" utanför kartan så långt bort det går. Fragment bortom far-planet (z > 1,0) skulle fortfarande förlora den jämförelsen, och därför sätter `ShadowCalculation` också skuggan till 0,0 för dem.
 ```
 
 ### PCF
@@ -1302,10 +1302,10 @@ upplösningsartefakter, men i allmänhet ger det här bra resultat för de flest
 
 ```quiz
 Med 3 × 3-PCF:n hittar ett fragment på skuggans kant 6 av de 9 samplen i skugga. Vilket värde får dess `shadow`?
-- [ ] 1.0 – ett sampel i skugga räcker
-- [ ] 0.0 – mittsamplet avgör
-- [ ] 0.5 – PCF känner bara till belyst och halvbelyst
-- [x] 6 / 9 ≈ 0.67: dess diffusa och spekulära ljus minskas till en tredjedel
+- [ ] 1,0 – ett sampel i skugga räcker
+- [ ] 0,0 – mittsamplet avgör
+- [ ] 0,5 – PCF känner bara till belyst och halvbelyst
+- [x] 6 / 9 ≈ 0,67: dess diffusa och spekulära ljus minskas till en tredjedel
 ---
 PCF tar medelvärdet av de binära testresultaten för närliggande texlar. Längs kanten ändras andelen skymda sampel gradvis från 0 till 1, vilket gör den hårda trappan till en mjuk övergång.
 ```

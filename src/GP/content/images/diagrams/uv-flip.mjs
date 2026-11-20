@@ -1,7 +1,9 @@
 // Model, "A note on texture orientation" (after its quiz): the unlit planet of the task "draw-model", drawn by the
-// simulator from the OpenGL program – with one flip (aiProcess_FlipUVs), as the chapter does, the white north pole
-// is at the top; with a second flip (stbi_set_flip_vertically_on_load(true) as well, as learnopengl's backpack
-// program does) the two cancel out and the texture is upside down: the ice is at the south pole.
+// simulator from the OpenGL program – with one flip (aiProcess_FlipUVs), as the chapter does, the texture is upright
+// (an ocean right below the white cap, a small round sea to its right); with a second flip
+// (stbi_set_flip_vertically_on_load(true) as well, as learnopengl's backpack program does) the two cancel out and the
+// texture is upside down: land below the cap, a long strait down the right side. Both poles are white, so the cap
+// looks the same.
 import { C, PAD, W, perLanguage, svg, t, text } from "./style.mjs";
 import { L, crop } from "./_lighting.mjs";
 

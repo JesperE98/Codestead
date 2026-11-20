@@ -222,7 +222,7 @@ Vilken rad gör triangeln helt röd?
 - [ ] `FragColor = vec4(255.0f, 0.0f, 0.0f, 255.0f);`
 - [ ] `FragColor = vec4(0.0f, 0.0f, 1.0f, 1.0f);`
 ---
-Färgvärden i en shader går från 0.0 till 1.0, i ordningen röd, grön, blå, alfa. 255 är intervallet för 8-bitars pixelvärden, inte för färger i shaders; `(0, 0, 1)` vore blått.
+Färgvärden i en shader går från 0,0 till 1,0, i ordningen röd, grön, blå, alfa. 255 är intervallet för 8-bitars pixelvärden, inte för färger i shaders; `(0, 0, 1)` vore blått.
 ```
 :::
 :::vulkan
@@ -249,7 +249,7 @@ Vilken rad gör triangeln helt röd?
 - [x] `outColor = vec4(1.0, 0.0, 0.0, 1.0);`
 - [ ] `outColor = vec4(0.0, 0.0, 1.0, 1.0);`
 ---
-Färgvärden i en shader går från 0.0 till 1.0, i ordningen röd, grön, blå, alfa. 255 är intervallet för 8-bitars pixelvärden, inte för färger i shaders; `(0, 0, 1)` vore blått.
+Färgvärden i en shader går från 0,0 till 1,0, i ordningen röd, grön, blå, alfa. 255 är intervallet för 8-bitars pixelvärden, inte för färger i shaders; `(0, 0, 1)` vore blått.
 ```
 :::
 :::d3d12
@@ -274,7 +274,7 @@ Vilken rad gör triangeln helt röd?
 - [x] `return float4(1.0f, 0.0f, 0.0f, 1.0f);`
 - [ ] `return float4(255.0f, 0.0f, 0.0f, 255.0f);`
 ---
-Färgvärden i en shader går från 0.0 till 1.0, i ordningen röd, grön, blå, alfa. 255 är intervallet för 8-bitars pixelvärden, inte för färger i shaders; `(0, 0, 1)` vore blått.
+Färgvärden i en shader går från 0,0 till 1,0, i ordningen röd, grön, blå, alfa. 255 är intervallet för 8-bitars pixelvärden, inte för färger i shaders; `(0, 0, 1)` vore blått.
 ```
 :::
 

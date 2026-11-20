@@ -216,7 +216,7 @@ de tre API:erna skiljer sig åt. När du är klar kontrollerar provet i slutet a
 :::opengl
 - **Texturobjekt**: genereras, binds till `GL_TEXTURE_2D`, konfigureras med `glTexParameteri` (wrapping, filtrering –
   lagras i texturobjektet) och fylls med `glTexImage2D`; `glGenerateMipmap` skapar dess mipmaps.
-- **Att vända bilden**: OpenGL förväntar sig texturkoordinat 0.0 på y-axeln längst ned i bilden, medan bilder lagrar
+- **Att vända bilden**: OpenGL förväntar sig texturkoordinat 0,0 på y-axeln längst ned i bilden, medan bilder lagrar
   den översta raden först; `stbi_set_flip_vertically_on_load(true)` vänder dem.
 - **sampler2D**: uniform-typen för en 2D-textur i GLSL; `texture(sampler, coords)` samplar den.
 - **Texturenhet**: en plats som en textur binds till (`glActiveTexture(GL_TEXTURE0 + n)`, sedan `glBindTexture`); en
@@ -309,7 +309,7 @@ de tre API:erna skiljer sig åt. När du är klar kontrollerar provet i slutet a
 - **Högerhänt system**: +x åt höger, +y uppåt, +z mot dig; kameran tittar längs -z i vyrummet.
 - **Kedjan**: `projection · view · model · position` (med kolumnvektorer, läses från höger till vänster).
 - **Djupbuffert** (z-buffert) och **djuptestning**: per pixel djupet för det hittills närmaste fragmentet, rensat till
-  1.0 (fjärrplanet) varje bildruta; ett fragment som ligger längre bort än det lagrade värdet kastas.
+  1,0 (fjärrplanet) varje bildruta; ett fragment som ligger längre bort än det lagrade värdet kastas.
 
 :::opengl
 - **OpenGL:s NDC**: x, y och z går alla från -1 till 1; y pekar uppåt. `glm::perspective` och `glm::ortho` ger det
@@ -326,7 +326,7 @@ de tre API:erna skiljer sig åt. När du är klar kontrollerar provet i slutet a
   setet); dess *innehåll* läses när GPU:n kör kommandona, så varje draw-anrop i en bildruta ser samma värden.
 - **Push constant för model-matrisen**: spelas in i command buffern, så varje draw-anrop får sin egen.
 - **Djupbild**: du skapar djupbufferten själv: en bild i ett djupformat, dess view, ett djup-attachment i render
-  passen och framebuffers, pipelinens depth-stencil-tillstånd, och ett rensningsvärde på 1.0.
+  passen och framebuffers, pipelinens depth-stencil-tillstånd, och ett rensningsvärde på 1,0.
 :::
 :::d3d12
 - **Direct3Ds NDC**: djupet går från 0 till 1; y pekar uppåt, som i OpenGL. Kursen använder DirectXMaths högerhänta

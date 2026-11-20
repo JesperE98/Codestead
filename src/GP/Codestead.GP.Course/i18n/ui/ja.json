@@ -382,6 +382,7 @@
   "viz.step": "ステップ {n}／{total}",
   "viz.loading": "シーンを読み込んでいます…",
   "viz.start": "シーンを開始",
+  "viz.goTo": "「{chapter}」のシーンへ移動",
   "viz.model": "モデル",
   "viz.modeData": "実データ",
   "viz.modeConcept": "コンセプト",

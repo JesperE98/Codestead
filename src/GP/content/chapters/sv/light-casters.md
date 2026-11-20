@@ -24,8 +24,8 @@ Två saker ändras också – gör dem före den första uppgiften. Scenen får 
 `cubePositions` från *Coordinate Systems* och en `for`-loop som ritar var och en med sin egen modellmatris (roterad
 20° · i, ingenting snurrar med tiden). Och kameran är **tillbaka i (0, 0, 3)** och tittar längs -z (`cameraPos`,
 `cameraFront`, `yaw = -90.0f`, `pitch = 0.0f`), så att alla tio behållarna syns och behållare 0 fyller mitten av
-fönstret. Ljuset är fortfarande punktljuset från *Lighting maps* i `lightPos` (1.2, 1.0, 2.0), med ambient 0.2,
-diffuse 0.5, specular 1.0 och shininess 64.
+fönstret. Ljuset är fortfarande punktljuset från *Lighting maps* i `lightPos` (1.2, 1.0, 2.0), med ambient 0,2,
+diffuse 0,5, specular 1,0 och shininess 64.
 :::
 :::vulkan
 Du fortsätter i ditt program från *Ljuskartor* (utan emissionsövningen): diffuse map på binding 0, specular map på
@@ -39,7 +39,7 @@ Två saker ändras också – gör dem före den första uppgiften. Scenen får 
 (roterad 20° · i, ingenting snurrar med tiden) och ritar den. Och kameran är **tillbaka i (0, 0, 3)** och tittar längs
 -z (`cameraPos`, `cameraFront`, `yaw = -90`, `pitch = 0`), så att alla tio behållarna syns och behållare 0 fyller
 mitten av fönstret. Ljuset är fortfarande punktljuset från *Lighting maps* i `lightPos` (1.2, 1.0, 2.0), som
-`updateUniformBuffer()` sätter med ambient 0.2, diffuse 0.5, specular 1.0 och shininess 64.
+`updateUniformBuffer()` sätter med ambient 0,2, diffuse 0,5, specular 1,0 och shininess 64.
 :::
 :::d3d12
 Du fortsätter i ditt program från *Ljuskartor* (utan emissionsövningen): diffuse map (`t0`) och specular map
@@ -54,7 +54,7 @@ Två saker ändras också – gör dem före den första uppgiften. Scenen får 
 20° · i, ingenting snurrar med tiden) och normalmatris som root constants och ritar den. Och kameran är **tillbaka i
 (0, 0, 3)** och tittar längs -z (`cameraPos`, `cameraFront`, `yaw = -90.0f`, `pitch = 0.0f`), så att alla tio
 behållarna syns och behållare 0 fyller mitten av fönstret. Ljuset är fortfarande punktljuset från *Lighting maps* i
-`lightPos` (1.2, 1.0, 2.0), som `OnUpdate` sätter med ambient 0.2, diffuse 0.5, specular 1.0 och shininess 64.
+`lightPos` (1.2, 1.0, 2.0), som `OnUpdate` sätter med ambient 0,2, diffuse 0,5, specular 1,0 och shininess 64.
 :::
 
 > De tidigare belysningskapitlen placerade kameran åt sidan så att du kunde se både den belysta kuben *och* lampan. I
@@ -347,11 +347,11 @@ Här är `d` avståndet från fragmentet till ljuskällan. För att beräkna dä
 På grund av den kvadratiska termen avtar ljuset mest linjärt tills avståndet blir så stort att den kvadratiska termen
 går om den linjära, och därefter minskar ljusintensiteten mycket snabbare. Resultatet är att ljuset är ganska
 intensivt på nära håll, men snabbt tappar styrka med avståndet tills det till slut tappar styrka i långsammare takt.
-Med värdena vi använder nedan (konstant 1.0, linjär 0.09, kvadratisk 0.032) blir dämpningen:
+Med värdena vi använder nedan (konstant 1,0, linjär 0,09, kvadratisk 0,032) blir dämpningen:
 
 | Avstånd `d` | 0 | 1 | 5 | 10 | 20 | 50 |
 |---|---|---|---|---|---|---|
-| `F_att` | 1.0 | 0.89 | 0.44 | 0.20 | 0.06 | 0.01 |
+| `F_att` | 1,0 | 0,89 | 0,44 | 0,20 | 0,06 | 0,01 |
 
 Du ser att ljuset har högst intensitet när avståndet är litet, men så snart avståndet växer minskar intensiteten
 avsevärt, och den når långsamt 0 vid ett avstånd på omkring 50 eller mer. Det är precis vad vi vill ha.
@@ -368,30 +368,30 @@ bra utgångspunkter för de flesta ljus, med tack till Ogre3D:s wiki:
 
 | Avstånd | Konstant | Linjär | Kvadratisk |
 |---|---|---|---|
-| 7 | 1.0 | 0.7 | 1.8 |
-| 13 | 1.0 | 0.35 | 0.44 |
-| 20 | 1.0 | 0.22 | 0.20 |
-| 32 | 1.0 | 0.14 | 0.07 |
-| 50 | 1.0 | 0.09 | 0.032 |
-| 65 | 1.0 | 0.07 | 0.017 |
-| 100 | 1.0 | 0.045 | 0.0075 |
-| 160 | 1.0 | 0.027 | 0.0028 |
-| 200 | 1.0 | 0.022 | 0.0019 |
-| 325 | 1.0 | 0.014 | 0.0007 |
-| 600 | 1.0 | 0.007 | 0.0002 |
-| 3250 | 1.0 | 0.0014 | 0.000007 |
+| 7 | 1,0 | 0,7 | 1,8 |
+| 13 | 1,0 | 0,35 | 0,44 |
+| 20 | 1,0 | 0,22 | 0,20 |
+| 32 | 1,0 | 0,14 | 0,07 |
+| 50 | 1,0 | 0,09 | 0,032 |
+| 65 | 1,0 | 0,07 | 0,017 |
+| 100 | 1,0 | 0,045 | 0,0075 |
+| 160 | 1,0 | 0,027 | 0,0028 |
+| 200 | 1,0 | 0,022 | 0,0019 |
+| 325 | 1,0 | 0,014 | 0,0007 |
+| 600 | 1,0 | 0,007 | 0,0002 |
+| 3250 | 1,0 | 0,0014 | 0,000007 |
 
 Som du ser hålls den konstanta termen `K_c` på `1.0` i alla fall. Den linjära termen `K_l` är oftast ganska liten för
 att täcka större avstånd, och den kvadratiska termen `K_q` är ännu mindre. Experimentera gärna lite med värdena för att
 se deras effekt i din implementation. I vår miljö räcker ett avstånd på 32 till 100 i allmänhet för de flesta ljus.
 
 ```quiz
-Med konstant 1.0, linjär 0.09 och kvadratisk 0.032 – ungefär hur mycket av ljusets styrka når ett fragment 10 enheter från ljuset?
+Med konstant 1,0, linjär 0,09 och kvadratisk 0,032 – ungefär hur mycket av ljusets styrka når ett fragment 10 enheter från ljuset?
 - [ ] Ungefär 90 % – den kvadratiska termen spelar bara roll bortom 50 enheter
-- [x] Ungefär 20 % – 1.0 / (1.0 + 0.9 + 3.2) ≈ 0.2
+- [x] Ungefär 20 % – 1,0 / (1,0 + 0,9 + 3,2) ≈ 0,2
 - [ ] Ungefär 50 % – den linjära termen halverar den var tionde enhet
 ---
-Vid d = 10 är nämnaren 1.0 + 0.09 · 10 + 0.032 · 100 = 5.1, så F_att ≈ 0.196. På det här avståndet dominerar redan den kvadratiska termen (3.2) över den linjära (0.9).
+Vid d = 10 är nämnaren 1,0 + 0,09 · 10 + 0,032 · 100 = 5,1, så F_att ≈ 0,196. På det här avståndet dominerar redan den kvadratiska termen (3,2) över den linjära (0,9).
 ```
 
 ### Att implementera dämpning
@@ -608,7 +608,7 @@ specular-färgerna:
 Gör nu uppgiften **point-light**: positionen kommer tillbaka i stället för riktningen, structen får de tre termerna,
 shadern dämpningen, och lampan ritas igen (med den här kameran syns den inte, som sagt). När du bygger och kör den
 lyses behållarna nära ljuset upp som förut – lite mörkare, eftersom även behållare 0, ungefär 2 enheter från ljuset,
-får en dämpning på cirka 0.75 – medan behållarna längre bak tonar bort. Den avlägsna behållaren högst upp i fönstret,
+får en dämpning på cirka 0,75 – medan behållarna längre bak tonar bort. Den avlägsna behållaren högst upp i fönstret,
 ungefär 17 enheter från ljuset, är nästan svart.
 
 :::opengl
@@ -865,12 +865,12 @@ vi vill att vektorerna ska peka mot ljuskällan i stället för från den). Se t
 > för theta mellan `0.976` och `1.0` gör att fragmentet lyses upp som om det vore inne i strålkastarens ljus.
 
 ```quiz
-`light.cutOff` innehåller cos(12.5°) ≈ 0.976. Vilka fragment lyser `theta > light.cutOff` upp?
-- [x] De som ligger mindre än 12.5° från strålkastarens riktning: ju mindre vinkel, desto större cosinus
-- [ ] Bara de som ligger exakt 12.5° bort, där theta är lika med gränsvärdet
-- [ ] De som ligger mer än 12.5° från strålkastarens riktning, eftersom deras skalärprodukt är större
+`light.cutOff` innehåller cos(12,5°) ≈ 0,976. Vilka fragment lyser `theta > light.cutOff` upp?
+- [x] De som ligger mindre än 12,5° från strålkastarens riktning: ju mindre vinkel, desto större cosinus
+- [ ] Bara de som ligger exakt 12,5° bort, där theta är lika med gränsvärdet
+- [ ] De som ligger mer än 12,5° från strålkastarens riktning, eftersom deras skalärprodukt är större
 ---
-Mellan 0° och 90° minskar cosinus när vinkeln växer: 0° ger 1.0, 12.5° ger 0.976. Så "vinkeln är mindre än gränsvinkeln" blir "cosinus är större än gränsens cosinus" – och shadern behöver aldrig den dyra arcus cosinus.
+Mellan 0° och 90° minskar cosinus när vinkeln växer: 0° ger 1,0 och 12,5° ger 0,976. Så "vinkeln är mindre än gränsvinkeln" blir "cosinus är större än gränsens cosinus" – och shadern behöver aldrig den dyra arcus cosinus.
 ```
 
 Inne i `if`-satsen gör shadern belysningen som förut, med dämpad diffuse och specular – men inte ambient-termen:
@@ -962,18 +962,18 @@ Här är ε (epsilon) cosinusskillnaden mellan den inre (ϕ) och den yttre konen
 strålkastarens intensitet i det aktuella fragmentet.
 
 Det är lite svårt att föreställa sig hur formeln fungerar, så låt oss prova den med några exempelvärden. Med en inre
-kon på 12.5° (ϕ = 0.9763) och en yttre kon på 17.5° (γ = 0.9537) blir ε = 0.9763 − 0.9537 = 0.0226:
+kon på 12,5° (ϕ = 0,9763) och en yttre kon på 17,5° (γ = 0,9537) blir ε = 0,9763 − 0,9537 = 0,0226:
 
 | θ i grader | θ (cosinus) | (θ − γ) / ε | begränsat |
 |---|---|---|---|
-| 0 | 1.0000 | 2.05 | 1.0 |
-| 10 | 0.9848 | 1.38 | 1.0 |
-| 12.5 | 0.9763 | 1.00 | 1.0 |
-| 14 | 0.9703 | 0.73 | 0.73 |
-| 15 | 0.9659 | 0.54 | 0.54 |
-| 16 | 0.9613 | 0.33 | 0.33 |
-| 17.5 | 0.9537 | 0.00 | 0.0 |
-| 20 | 0.9397 | −0.62 | 0.0 |
+| 0 | 1,0000 | 2,05 | 1,0 |
+| 10 | 0,9848 | 1,38 | 1,0 |
+| 12,5 | 0,9763 | 1,00 | 1,0 |
+| 14 | 0,9703 | 0,73 | 0,73 |
+| 15 | 0,9659 | 0,54 | 0,54 |
+| 16 | 0,9613 | 0,33 | 0,33 |
+| 17,5 | 0,9537 | 0,00 | 0,0 |
+| 20 | 0,9397 | −0,62 | 0,0 |
 
 Som du ser interpolerar vi i grunden mellan den yttre och den inre cosinusen utifrån värdet θ. Om du fortfarande inte
 riktigt ser vad som händer, oroa dig inte – du kan helt enkelt ta formeln för given och återvända hit när du är mycket
@@ -1023,12 +1023,12 @@ av intensiteten, så att belysningen alltid har lite ljus – men nu när `else`
 alla tre termerna med dämpningen igen, som för punktljuset.
 
 ```quiz
-Ett fragment ligger 5° från ficklampans riktning. Dess `(theta - outerCutOff) / epsilon` blir ungefär 1.9. Vilken intensitet använder shadern?
-- [ ] 0.0 – värden över 1 betyder att fragmentet ligger utanför konen
-- [x] 1.0 – `clamp` begränsar värdet till [0, 1], så allt inne i den inre konen får fullt ljus
-- [ ] 1.9 – fragmentet lyses upp nästan dubbelt så starkt som ljusets diffuse-färg
+Ett fragment ligger 5° från ficklampans riktning. Dess `(theta - outerCutOff) / epsilon` blir ungefär 1,9. Vilken intensitet använder shadern?
+- [ ] 0,0 – värden över 1 betyder att fragmentet ligger utanför konen
+- [x] 1,0 – `clamp` begränsar värdet till [0, 1], så allt inne i den inre konen får fullt ljus
+- [ ] 1,9 – fragmentet lyses upp nästan dubbelt så starkt som ljusets diffuse-färg
 ---
-Inne i den inre konen ger formeln värden över 1, utanför den yttre konen negativa värden. `clamp` gör dem till exakt 1.0 och 0.0, och bara den mjuka zonen mellan 12.5° och 17.5° får värdena däremellan.
+Inne i den inre konen ger formeln värden över 1, utanför den yttre konen negativa värden. `clamp` gör dem till exakt 1,0 och 0,0, och bara den mjuka zonen mellan 12,5° och 17,5° får värdena däremellan.
 ```
 
 Se till att lägga till värdet `outerCutOff` i structen `Light` och sätta det i programmet:
@@ -1149,7 +1149,7 @@ bygger och kör den tonar fläckens kant ut mjukt: hörnen på behållare 0, som
 zonen och är halvt upplysta. Behållarna utanför konen är nästan svarta, eftersom de där nu bara får det *dämpade*
 omgivande ljuset.
 
-![Hårda och mjuka kanter](images/soft-edges.webp "Behållare 0 med den hårda kanten från uppgiften spotlight och den mjuka kanten från uppgiften soft-edges, ritad av kursens simulator, och intensiteten över θ: 1 innanför 12.5°, 0 utanför 17.5° och däremellan en mjuk övergång.")
+![Hårda och mjuka kanter](images/soft-edges.webp "Behållare 0 med den hårda kanten från uppgiften spotlight och den mjuka kanten från uppgiften soft-edges, ritad av kursens simulator, och intensiteten över θ: 1 innanför 12,5°, 0 utanför 17,5° och däremellan en mjuk övergång.")
 
 Ahhh, det där är mycket bättre. Lek med den inre och den yttre gränsvinkeln och försök skapa en strålkastare som passar
 dina behov bättre. I ditt program kan du gå runt med ficklampan och titta på behållarna den träffar.

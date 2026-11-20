@@ -85,11 +85,11 @@ lättare att fejka djup än höjd på platta ytor: teglen stannar där fyrhörni
 Sedan förskjutningen. Vyriktningen `viewDir` pekar från fragmentet mot kameran, i tangentrymden – där z är ytans normal
 och x, y går längs texturens u och v. En stråle från kameran färdas åt motsatt håll, så för att sjunka till djupet d rör
 den sig *mot* `viewDir.xy` – med `viewDir.xy / viewDir.z * d`: ju mindre `viewDir.z`, desto flackare vinkel, och desto
-längre åt sidan färdas strålen innan den når det djupet. Därav subtraktionen, och divisionen. `heightScale` (0.1 i
-projektet; learnopengl ändrar det med tangenterna Q och E) skalar hur djupt djupkartans 1.0 går, i texturenheter.
+längre åt sidan färdas strålen innan den når det djupet. Därav subtraktionen, och divisionen. `heightScale` (0,1 i
+projektet; learnopengl ändrar det med tangenterna Q och E) skalar hur djupt djupkartans 1,0 går, i texturenheter.
 
 ```quiz
-Djupkartan är vit (1.0) i fogarna och svart (0.0) på teglens ovansidor. Vad händer med ett fragment på en tegelstens ovansida?
+Djupkartan är vit (1,0) i fogarna och svart (0,0) på teglens ovansidor. Vad händer med ett fragment på en tegelstens ovansida?
 - [ ] Det förskjuts mest, eftersom svart betyder långt bort
 - [x] Ingenting: dess djup är 0, så förskjutningen `viewDir.xy / viewDir.z * (height * heightScale)` är 0 – teglens ovansidor stannar där fyrhörningen är, och bara djupare delar förskjuts
 - [ ] Det kastas bort
@@ -537,11 +537,11 @@ texturkoordinaterna blandar de två stegen med den vikten.
 ```quiz
 I parallax occlusion mapping är `afterDepth = -0.03` och `beforeDepth = 0.01`. Var hamnar de slutliga texturkoordinaterna?
 - [ ] Exakt på `currentTexCoords`, det första steget under ytan
-- [x] Tre fjärdedelar av vägen tillbaka från `currentTexCoords` till `prevTexCoords`: `weight` = -0.03 / (-0.03 - 0.01) = 0.75, och `finalTexCoords = prevTexCoords * 0.75 + currentTexCoords * 0.25`
+- [x] Tre fjärdedelar av vägen tillbaka från `currentTexCoords` till `prevTexCoords`: `weight` = -0,03 / (-0,03 - 0,01) = 0,75, och `finalTexCoords = prevTexCoords * 0.75 + currentTexCoords * 0.25`
 - [ ] Alltid mitt emellan de två stegen
 - [ ] På `prevTexCoords`, det sista steget ovanför ytan
 ---
-Strålen passerar ytan där djupskillnaden byter tecken. Den var 0.01 ovanför och är 0.03 under, så passagen ligger en fjärdedel av vägen från steget före till steget efter – tre fjärdedelar av vägen tillbaka från det sista steget.
+Strålen passerar ytan där djupskillnaden byter tecken. Den var 0,01 ovanför och är 0,03 under, så passagen ligger en fjärdedel av vägen från steget före till steget efter – tre fjärdedelar av vägen tillbaka från det sista steget.
 ```
 
 :::opengl

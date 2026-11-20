@@ -88,7 +88,8 @@ not created before `draw-model`, so every state runs).
 - **When done:** `model.h`: `void Draw(Shader &shader)` with the loop over `meshes`. `main.cpp`: `// load models` with
   the comment about not flipping and `Model ourModel("models/planet.obj");` after `Shader ourShader(...)`;
   `ourModel.Draw(ourShader);` after `ourShader.setMat4("model", model);`. **The planet appears**, textured, unlit: in
-  the centre the planet (radius ≈ 122 px), white pole at the top, the beige ring around it seen slightly from above, dark
+  the centre the planet (radius ≈ 122 px), white cap at the top with the sea and the lake below it (upright: with two
+  flips both are land, see the check's textureUpright), the beige ring around it seen slightly from above, dark
   grey background. centre ≈ 105,140,60 (land), pole ≈ 235,240,245, sea ≈ 28,70,150, lake ≈ 28,70,150, highlight ≈
   73,125,52 (land), left-edge ≈ 28,70,150, sea-low ≈ 28,71,149, lower-left ≈ 79,128,54, ring-front ≈ 178,153,119,
   ring-left ≈ 79,67,52, ring-right ≈ 82,70,55, gap and background ≈ 13,13,13. (The texture colours are shown unchanged:

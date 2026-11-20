@@ -3,7 +3,7 @@
 Hittills har varje objekt i en scen haft en egen modellmatris, beräknad från grunden varje bildruta: flytta hit, rotera
 dit, skala. Det går bra för några lådor. Det slutar gå bra så fort objekten hör ihop. En måne kretsar kring en planet
 som kretsar kring en sol; ett hjul snurrar på en bil som kör längs en väg; ett svärd sitter i en hand längst ut på en arm
-som svänger från en axel. Du vill beskriva månen *i förhållande till sin planet* – "3.5 enheter åt sidan, lite mindre" –
+som svänger från en axel. Du vill beskriva månen *i förhållande till sin planet* – "3,5 enheter åt sidan, lite mindre" –
 och låta den följa med planeten vart den än tar vägen, utan att räkna ut dess position i världen för hand. Strukturen som
 gör det är en *scengraf*: ett träd av objekt där varje objekts transform är relativ till förälderns.
 
@@ -29,22 +29,22 @@ trädets rot, som saknar förälder, är den globala matrisen den lokala (dess "
 nedåt i trädet multipliceras ytterligare en lokal matris på från höger.
 
 Eftersom förälderns globala matris innehåller dess *skala* och *rotation* följer de med till allt under den. Det är
-precis vad vi vill ha för en måne: om planeten skalas till halva storleken hamnar en måne 3.5 enheter bort i planetens
-rum 1.75 enheter bort i världen, och blir dessutom hälften så stor; om planeten vrider sig svänger månen runt med den.
+precis vad vi vill ha för en måne: om planeten skalas till halva storleken hamnar en måne 3,5 enheter bort i planetens
+rum 1,75 enheter bort i världen, och blir dessutom hälften så stor; om planeten vrider sig svänger månen runt med den.
 
 Projektets scen är en kedja av planeter – kursens planet med ringar, från delen *Modellinläsning* (learnopengl använder
 en egen planetmodell). Roten är planeten i origo, med skala 1. Den har ett barn i den lokala positionen (3.5, 0, 0) med
-den lokala skalan 0.6; det barnet har i sin tur ett barn med samma lokala transform, och så vidare, tio barn djupt.
-learnopengls demo använder (10, 0, 0) och 0.75 för sin större modell.
+den lokala skalan 0,6; det barnet har i sin tur ett barn med samma lokala transform, och så vidare, tio barn djupt.
+learnopengls demo använder (10, 0, 0) och 0,75 för sin större modell.
 
 ```quiz
-Roten ligger i origo med skala 1. Dess barn ligger i den lokala positionen (3.5, 0, 0) med den lokala skalan 0.6, och barnets barn har samma lokala transform. Var ligger det andra barnet i världsrummet?
-- [ ] I x = 7.0: 3.5 + 3.5
-- [x] I x = 5.6: 3.5 + 0.6 · 3.5, eftersom det första barnets skala även skalar dess barns lokala förskjutning
-- [ ] I x = 3.5: alla barn ligger i (3.5, 0, 0)
-- [ ] I x = 2.1: 3.5 · 0.6
+Roten ligger i origo med skala 1. Dess barn ligger i den lokala positionen (3.5, 0, 0) med den lokala skalan 0,6, och barnets barn har samma lokala transform. Var ligger det andra barnet i världsrummet?
+- [ ] I x = 7,0: 3,5 + 3,5
+- [x] I x = 5,6: 3,5 + 0,6 · 3,5, eftersom det första barnets skala även skalar dess barns lokala förskjutning
+- [ ] I x = 3,5: alla barn ligger i (3.5, 0, 0)
+- [ ] I x = 2,1: 3,5 · 0,6
 ---
-global(barn 2) = global(barn 1) · local(barn 2). Det första barnets globala matris flyttar 3.5 och skalar med 0.6, så det andra barnets förskjutning på 3.5 blir 2.1 i världen, och det hamnar i 3.5 + 2.1 = 5.6. De följande ligger i 6.86, 7.62, 8.07, … – var och en 0.6 gånger närmare och mindre.
+global(barn 2) = global(barn 1) · local(barn 2). Det första barnets globala matris flyttar 3,5 och skalar med 0,6, så det andra barnets förskjutning på 3,5 blir 2,1 i världen, och det hamnar i 3,5 + 2,1 = 5,6. De följande ligger i 6,86; 7,62; 8,07 … – var och en 0,6 gånger närmare och mindre.
 ```
 
 ![Kedjan av planeter](images/scene-chain.webp "Varje barn ligger 3,5 enheter vid sidan av sin förälder och är 0,6 gånger så stort i förälderns rum; i världen krymper stegen med skalan.")
@@ -542,9 +542,9 @@ Efter `addChild(root, model)` sparar koden `Entity* first = &root.children.back(
 
 Gör nu den andra uppgiften, **entity**: structen och dess tre funktioner, grafen byggd av roten och tio barn,
 uppdaterad en gång och ritad i stället för den enda planeten. Bygg och kör: en kedja av elva planeter med ringar löper åt
-höger, var och en 0.6 gånger så stor som den före och närmare den – de sista är bara prickar. Alla är samma modell med
-var sin modellmatris; grafen räknade ut var var och en ska ligga ur ingenting annat än "3.5 till höger om min förälder,
-0.6 av dess storlek".
+höger, var och en 0,6 gånger så stor som den före och närmare den – de sista är bara prickar. Alla är samma modell med
+var sin modellmatris; grafen räknade ut var var och en ska ligga ur ingenting annat än "3,5 till höger om min förälder,
+0,6 av dess storlek".
 
 ## Dirty-flaggan
 
@@ -670,7 +670,7 @@ En omarkerad entitet under en markerad behöver ändå en ny global matris. Om b
 Nu kan grafen visa vad den är till för: flytta en entitet, och allt som sitter fast i den följer med. Roten vrider sig
 kring sin y-axel med 20 grader per sekund, learnopengls fart. learnopengl adderar `20 * deltaTime` till vinkeln efter
 varje bildruta; kursen sätter i stället vinkeln utifrån tiden – `20 · time` – så att bilden vid en given tidpunkt alltid
-blir densamma (det förväntade resultatet visar den vid 2.0 s, en vinkel på 40°). Sedan uppdateras grafen, **innan** den
+blir densamma (det förväntade resultatet visar den vid 2,0 s, en vinkel på 40°). Sedan uppdateras grafen, **innan** den
 ritas, så att bildrutan visar den här bildrutans matriser.
 
 :::opengl
@@ -711,7 +711,7 @@ inspelningen.
 :::
 
 Gör nu den sista uppgiften, **animate**. Bygg och kör: rotplaneten vrider sig, och hela kedjan svänger runt med den som
-armen på en karusell – vid 2.0 s pekar den 40° in i skärmen, bakåt och åt höger. Du ändrade en rotation; grafen flyttade
+armen på en karusell – vid 2,0 s pekar den 40° in i skärmen, bakåt och åt höger. Du ändrade en rotation; grafen flyttade
 elva planeter. Lägg märke till att barnen vrider sig kring *rotens* axel, inte sin egen: rotationen är en del av rotens
 globala matris, som varje barns globala matris börjar med. För att få varje planet att även snurra kring sin egen axel
 skulle du sätta varje barns lokala rotation också – prova, så rullar kedjan ihop sig, eftersom varje barns rotation läggs

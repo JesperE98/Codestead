@@ -22,7 +22,7 @@ inte särskilt svårt, och att lära sig teknikerna lönar sig garanterat i län
 
 Utgå från ditt program från *Koordinatsystem* i en ny mapp (en texturerad kub) och gör om det till learnopengls
 felsökningsdemo: en träkub (`wood.png`, kursens egen textur – **Spara resursfilerna…** i panelen kopierar den till din
-mapp), 2.5 enheter framför kameran, som vrider sig 10° per sekund kring axeln (1, 1, 1). Det finns ingen vymatris –
+mapp), 2,5 enheter framför kameran, som vrider sig 10° per sekund kring axeln (1, 1, 1). Det finns ingen vymatris –
 kameran står i origo och tittar längs -z – och projektionen är en perspektivprojektion med 45° synfält och ett bortre
 plan på 10. Djuptestet och back-face culling är påslagna.
 

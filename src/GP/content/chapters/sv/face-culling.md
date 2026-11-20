@@ -112,7 +112,7 @@ Det finns en hake: det här fungerar bara om *varje* triangel i kuben angavs mot
 vi har använt sedan kapitlet *Coordinate systems*, gjordes inte med culling i tankarna: sett utifrån går dess fram-,
 vänster- och undersida moturs, men dess bak-, höger- och ovansida medurs. learnopengls kapitel om face culling ger
 därför en ny kub där varje triangel går moturs. Den har samma vertexar och texturkoordinater; i varje triangel på bak-,
-höger- och ovansidan har två hörn bytt plats. För baksidan (z = -0.5):
+höger- och ovansidan har två hörn bytt plats. För baksidan (z = -0,5):
 
 :::opengl
 ```cpp

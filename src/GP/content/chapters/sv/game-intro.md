@@ -144,7 +144,7 @@ Varför flyttar spelet fram sitt tillstånd med den tid som varje bildruta tog (
 - [x] För att bollen och racketen ska röra sig lika fort i pixlar per sekund oavsett om datorn renderar 30 eller 300 bildrutor per sekund
 - [ ] Därför att ett fast steg per bildruta skulle göra spelet deterministiskt
 ---
-En hastighet på 500 pixlar per sekund gånger en bildrutetid på 1/60 s flyttar racketen 8.3 pixlar i den bildrutan; med 1/120 s hälften så långt, dubbelt så ofta. Kursen gör sedan själva bildrutetiden fast (1/60) så att bilderna kan jämföras.
+En hastighet på 500 pixlar per sekund gånger en bildrutetid på 1/60 s flyttar racketen 8,3 pixlar i den bildrutan; med 1/120 s hälften så långt, dubbelt så ofta. Kursen gör sedan själva bildrutetiden fast (1/60) så att bilderna kan jämföras.
 ```
 
 ```quiz

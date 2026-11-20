@@ -94,7 +94,8 @@ jobs:
           python3 packaging/releases_readme.py --repo "$RELEASES_REPO" --tags "$RUNNER_TEMP/tags.txt" --out "$RUNNER_TEMP/README.md"
 
   # The tests run once; the packaging jobs below only build. Codestead GP's TaskTests run in parallel jobs by course
-  # part (gp-tasks, as in ci.yml; ts/packages/gp-course/test/CiTests.test.ts checks that the lists cover every part).
+  # parts and chapters (gp-tasks, as in ci.yml; ts/packages/gp-course/test/CiTests.test.ts checks that every lesson is in
+  # exactly one job).
   test:
     runs-on: ubuntu-latest
     defaults:
@@ -112,19 +113,26 @@ jobs:
       - run: npm test
 
   gp-tasks:
-    name: GP tasks (${{ matrix.parts }})
+    name: GP tasks (${{ matrix.shard.name }})
     strategy:
       fail-fast: false
       matrix:
-        parts:
-          - 'start,getting-started,lighting,model-loading,advanced-opengl'
-          - 'advanced-lighting'
-          - 'pbr'
-          - 'in-practice'
-          - 'guest-articles'
+        # About 7 minutes of tests each (measured on CI, November 2026): the heavy chapters (bloom, ssao, specular-ibl,
+        # area-lights, render-text, powerups, deferred-shading …) are spread over the jobs. `chapters` narrows the parts
+        # to some chapters, or leaves some out with "!"; CiTests.test.ts checks that every lesson is in exactly one job.
+        shard:
+          - { name: 'getting started … advanced OpenGL, PBR', parts: 'start,getting-started,lighting,model-loading,advanced-opengl,pbr', chapters: '!specular-ibl' }
+          - { name: 'specular-ibl, deferred-shading', parts: 'pbr,advanced-lighting', chapters: 'specular-ibl,deferred-shading' }
+          - { name: 'advanced lighting, bloom', parts: 'advanced-lighting', chapters: '!ssao,!point-shadows,!deferred-shading' }
+          - { name: 'ssao, point-shadows', parts: 'advanced-lighting', chapters: 'ssao,point-shadows' }
+          - { name: 'render-text, powerups', parts: 'in-practice', chapters: 'render-text,powerups' }
+          - { name: 'in practice', parts: 'in-practice', chapters: '!render-text,!powerups' }
+          - { name: 'area-lights, tessellation', parts: 'guest-articles', chapters: 'area-lights,tessellation,tessellation-height-map' }
+          - { name: 'guest articles', parts: 'guest-articles', chapters: '!area-lights,!tessellation,!tessellation-height-map' }
     runs-on: ubuntu-latest
     env:
-      CODESTEAD_GP_PARTS: ${{ matrix.parts }}
+      CODESTEAD_GP_PARTS: ${{ matrix.shard.parts }}
+      CODESTEAD_GP_CHAPTERS: ${{ matrix.shard.chapters }}
     defaults:
       run:
         working-directory: ts

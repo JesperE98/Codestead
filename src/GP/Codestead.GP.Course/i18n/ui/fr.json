@@ -382,6 +382,7 @@
   "viz.step": "Étape {n} sur {total}",
   "viz.loading": "Chargement de la scène…",
   "viz.start": "Lancer la scène",
+  "viz.goTo": "Aller à la scène dans « {chapter} »",
   "viz.model": "Modèle",
   "viz.modeData": "Données réelles",
   "viz.modeConcept": "Concept",

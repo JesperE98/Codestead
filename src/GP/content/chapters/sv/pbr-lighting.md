@@ -68,9 +68,9 @@ till integralen, eftersom ljus då kan komma från alla håll.
 ## Ditt program
 
 Du fortsätter i programmet som du förberedde i slutet av förra kapitlet: learnopengls scen för PBR-belysning. 7 × 7
-sfärer med radien 1, 2.5 enheter isär, på z = 0, med `metallic = row / 7` (nedersta raden 0, översta 0.857) och
-`roughness = clamp(col / 7, 0.05, 1.0)` (vänstra kolumnen 0.05, högra 0.857); varje sfär har albedot (0.5, 0.0, 0.0)
-och ao 1.0. Strävheten kläms till minst 0.05 eftersom helt släta ytor (strävhet 0.0) brukar se lite konstiga ut med
+sfärer med radien 1 och 2,5 enheter isär, på z = 0, med `metallic = row / 7` (nedersta raden 0, översta 0,857) och
+`roughness = clamp(col / 7, 0.05, 1.0)` (vänstra kolumnen 0,05, högra 0,857); varje sfär har albedot (0.5, 0.0, 0.0)
+och ao 1,0. Strävheten kläms till minst 0,05 eftersom helt släta ytor (strävhet 0,0) brukar se lite konstiga ut med
 direkt ljus: ett punktljus högdager skulle bli en oändligt liten punkt. Fyra punktljus hänger på (-10, 10, 10), (10,
 10, 10), (-10, -10, 10) och (10, -10, 10), vart och ett med färgen (300, 300, 300). learnopengl ritar också en liten
 sfär vid varje ljus; med kursens kamera hamnar de utanför bilden, så kursen ritar dem inte.
@@ -205,10 +205,10 @@ lightColors[4]` och `camPos` – `float4`, eftersom varje element i en HLSL-arra
 :::
 
 ```quiz
-Ljusen har färgen (300, 300, 300) – mycket mer än de tidigare kapitlens 1.0. Varför blir inte varje sfär vit?
+Ljusen har färgen (300, 300, 300) – mycket mer än de tidigare kapitlens 1,0. Varför blir inte varje sfär vit?
 - [ ] Eftersom shadern delar varje ljusfärg med 255
 - [ ] Eftersom bara ett av de fyra ljusen används per sfär
-- [x] Eftersom radiansen avtar med kvadraten på avståndet: ett ljus på (-10, 10, 10) ligger ungefär 17.3 enheter från rutnätets mitt, och 1 / 17.3² ≈ 1/300 för tillbaka det till ungefär 1.0
+- [x] Eftersom radiansen avtar med kvadraten på avståndet: ett ljus på (-10, 10, 10) ligger ungefär 17,3 enheter från rutnätets mitt, och 1 / 17.3² ≈ 1/300 för tillbaka det till ungefär 1,0
 - [ ] Eftersom fönstret kan lagra värden upp till 300
 ---
 `attenuation = 1.0 / (distance * distance)` är ett punktljus fysikaliskt korrekta avtagande (och det rätta i linjärt rum, som kapitlet Gammakorrigering visade). Med realistisk dämpning måste också ljusets styrka vara realistisk.
@@ -444,7 +444,7 @@ första uppgiften, **lambert**: skriv ljusloopen.
 
 Bygg och kör: sfärerna är **matt röda**, alla 49 likadana – metallic och roughness används inte ännu. Varje sfär är
 ljusare på sidorna som vetter mot ljusen, och sfärerna nära rutnätets hörn är ljusare än den i mitten, eftersom de
-ligger närmare ett ljus: mittsfären ligger ungefär 17 enheter från varje ljus, en hörnsfär bara ungefär 10.6 från det
+ligger närmare ett ljus: mittsfären ligger ungefär 17 enheter från varje ljus, en hörnsfär bara ungefär 10,6 från det
 närmaste. Bara den röda kanalen är belyst (albedot är rent rött), och inget är mättat.
 
 ### Normalfördelningsfunktionen
@@ -527,7 +527,7 @@ och `Lo += (albedo / PI + specular) * radiance * NdotL;` i slutet av loopen.
 :::
 
 Gör nu uppgiften **ndf**. Bygg och kör: **bländande vita högdagrar som växer med strävheten**, likadana i varje rad. I
-vänstra kolumnen (strävhet 0.05) har varje sfär fyra pyttesmå vita prickar – en reflektion per ljus –, i mittkolumnerna
+vänstra kolumnen (strävhet 0,05) har varje sfär fyra pyttesmå vita prickar – en reflektion per ljus –, i mittkolumnerna
 har de vuxit till fyra feta vita fläckar, och sfärerna i högra kolumnen är vita över hela ytan. Det är vad NDF:en är:
 för en slät yta är den enorm där halvvägsvektorn sammanfaller med normalen och nästan noll överallt annars, för en sträv
 yta är den utspridd över hela sfären. Men inget begränsar den ännu: den spekulära termen delas inte med
@@ -535,8 +535,8 @@ normaliseringsfaktorn och det finns ingen Fresnelfaktor, så sfärerna reflekter
 
 ```quiz
 Efter uppgiften ndf är de sträva sfärerna till höger vita över hela ytan. Varför?
-- [x] En sträv ytas NDF är utspridd, så den är stor nästan överallt på sfären; utan nämnaren 4 (ωo · n)(ωi · n), geometrifunktionen och Fresnelfaktorn håller inget det reflekterade ljuset under det ljus som kommer in, och varje kanal klipps vid 1.0
-- [ ] NDF:en ger 1.0 för varje sträv yta, en spegels värde
+- [x] En sträv ytas NDF är utspridd, så den är stor nästan överallt på sfären; utan nämnaren 4 (ωo · n)(ωi · n), geometrifunktionen och Fresnelfaktorn håller inget det reflekterade ljuset under det ljus som kommer in, och varje kanal klipps vid 1,0
+- [ ] NDF:en ger 1,0 för varje sträv yta, en spegels värde
 - [ ] Halvvägsvektorn är inte normerad, så N · H blir större än 1
 - [ ] Strävheten kvadreras två gånger, en gång i main.cpp och en gång i shadern
 ---
@@ -619,7 +619,7 @@ I loopen blir den spekulära termen NDF:en gånger geometrifunktionen, delat med
 Divisionen ger en enda float; när den tilldelas en `float3` kopieras den till de tre kanalerna.
 :::
 
-Observera att vi lägger till 0.0001 i nämnaren för att undvika division med noll om någon skalärprodukt blir 0.0. Gör nu
+Observera att vi lägger till 0,0001 i nämnaren för att undvika division med noll om någon skalärprodukt blir 0,0. Gör nu
 uppgiften **geometry**. Bygg och kör: högdagrarna är **mindre och svagare på de sträva sfärerna**, som nu är rosa i
 stället för vita; mitten av högdagrarna på de släta sfärerna och på dem i mitten är fortfarande vit. Varje sfär
 reflekterar fortfarande som en perfekt spegel i sin högdager – inget beror ännu på vad sfären är gjord av, så raderna
@@ -649,7 +649,7 @@ float3 fresnelSchlick(float cosTheta, float3 F0)
 Fresnel-Schlick-approximationen förväntar sig en parameter F0, som kallas *ytreflektionen vid infallsvinkeln noll*,
 alltså hur mycket ytan reflekterar om man tittar rakt på den. F0 varierar mellan material och är färgad för metaller, som
 vi ser i stora materialdatabaser. I PBR:s metalliska arbetsflöde gör vi det förenklade antagandet att de flesta
-dielektriska ytor ser visuellt korrekta ut med en konstant F0 på 0.04, medan vi anger F0 för metalliska ytor genom
+dielektriska ytor ser visuellt korrekta ut med en konstant F0 på 0,04, medan vi anger F0 för metalliska ytor genom
 albedovärdet. I kod blir det så här, före loopen:
 
 :::opengl vulkan
@@ -667,7 +667,7 @@ albedovärdet. I kod blir det så här, före loopen:
 (`lerp` är HLSL:s `mix`.)
 :::
 
-Som du ser är F0 alltid 0.04 för icke-metalliska ytor. För metalliska ytor varierar vi F0 genom att interpolera linjärt
+Som du ser är F0 alltid 0,04 för icke-metalliska ytor. För metalliska ytor varierar vi F0 genom att interpolera linjärt
 mellan det ursprungliga F0 och albedovärdet utifrån egenskapen metallic. I loopen räknas F ut med halvvägs- och
 vyvektorn och multipliceras in i den spekulära termen. Eftersom Fresnelvärdet direkt motsvarar kS kan vi sedan använda F
 för att beteckna det spekulära bidraget från allt ljus som träffar ytan. Ur kS räknar vi sedan ut andelen brutet ljus kD:
@@ -763,16 +763,16 @@ fragmentets slutliga belysta färg – ditt program har den redan efter loopen:
 Gör nu uppgiften **fresnel**. Bygg och kör: **nu skiljer sig raderna åt**. Den nedersta raden (icke-metall) behåller sin
 röda diffusa färg med små vitaktiga högdagrar – ett dielektrikums reflektion är inte färgad. Uppåt (metall) försvinner
 det diffusa ljuset och högdagrarna får albedots röda färg; den översta raden är nästan svart så när som på sina röda
-högdagrar. Bilden är dock mörk och hård: färgerna är linjära och klipps vid 1.0.
+högdagrar. Bilden är dock mörk och hård: färgerna är linjära och klipps vid 1,0.
 
 ```quiz
 Varför är sfärerna i de översta raderna så mörka utom i sina högdagrar efter uppgiften fresnel?
-- [ ] Eftersom F0 = 0.04 för metaller, så att de bara reflekterar 4 % av ljuset
+- [ ] Eftersom F0 = 0,04 för metaller, så att de bara reflekterar 4 % av ljuset
 - [ ] Eftersom geometrifunktionen skuggar alla mikrofasetter hos metaller
 - [ ] Eftersom ljusen sitter under rutnätet och bara når de nedersta raderna
 - [x] Eftersom `kD *= 1.0 - metallic` tar bort deras diffusa ljus: metaller absorberar allt brutet ljus, så en (nästan) ren metall visar bara sin spekulära reflektion, färgad av F0 = albedo
 ---
-Den översta raden har metallic = 6/7, så bara 1/7 av dess diffusa ljus finns kvar. Dess reflektioner är röda eftersom F0 blandas mot albedot; den nedersta radens högdagrar är vita eftersom ett dielektrikums F0 är samma 0.04 för alla färger.
+Den översta raden har metallic = 6/7, så bara 1/7 av dess diffusa ljus finns kvar. Dess reflektioner är röda eftersom F0 blandas mot albedot; den nedersta radens högdagrar är vita eftersom ett dielektrikums F0 är samma 0,04 för alla färger.
 ```
 
 ![Sfärerna efter varje uppgift](images/pbr-steps.webp "De 7 × 7 sfärerna efter uppgifterna lambert, ndf, geometry, fresnel och tone-map, ritade av kursens simulator.")
@@ -783,7 +783,7 @@ Hittills har vi antagit att alla belysningsberäkningar sker i linjärt rum, och
 gammakorrigera i slutet av shadern. Att räkna ut belysningen i linjärt rum är oerhört viktigt, eftersom PBR kräver att
 alla indata är linjära. Tar man inte hänsyn till det blir belysningen fel. Dessutom vill vi att ljusens indata ska ligga
 nära sina fysikaliska motsvarigheter, så att deras radians eller färgvärden kan variera kraftigt över ett stort omfång.
-Därför kan Lo snabbt bli riktigt stort, och då kläms det mellan 0.0 och 1.0 av standardutdata med lågt dynamiskt omfång
+Därför kan Lo snabbt bli riktigt stort, och då kläms det mellan 0,0 och 1,0 av standardutdata med lågt dynamiskt omfång
 (LDR). Det löser vi genom att tonmappa (eller exponeringsmappa) Lo från högt dynamiskt omfång (HDR) till LDR på rätt sätt
 före gammakorrigeringen:
 
@@ -833,7 +833,7 @@ Uppgiften tone-map lägger till `color = color / (color + 1.0)` och sedan `color
 - [ ] Båda behövs bara för att ljusen är vita; med färgade ljus kunde färgen skrivas som den är
 - [ ] Ordningen spelar ingen roll: båda funktionerna är linjära
 ---
-Belysningsmatematiken behöver linjära värden och är inte begränsad av 1.0. Reinhard är inte linjär, så den måste se de linjära värdena; gammakodningen måste komma efter allt annat, annars skulle senare steg arbeta på kodade värden.
+Belysningsmatematiken behöver linjära värden och är inte begränsad av 1,0. Reinhard är inte linjär, så den måste se de linjära värdena; gammakodningen måste komma efter allt annat, annars skulle senare steg arbeta på kodade värden.
 ```
 
 ## Fullständig PBR-shader för direkt belysning
@@ -1106,8 +1106,8 @@ eller två nivåer (kapitlet *Spekulär IBL* visar hur mipnivåer görs för han
 ### Större sfärer
 
 De 7 × 7 små sfärerna skulle visa lite av materialet. Uppgiften ritar i stället ett **3 × 3-rutnät av stora sfärer**:
-`nrRows = 3`, `nrColumns = 3`, `spacing = 6.0`, var och en skalad med 2.4 och vriden 90° kring y-axeln, så att
-texturernas mitt – u = 0.5, där plåtarnas spår korsar varandra med fyra nitar runt korset – vetter mot kameran.
+`nrRows = 3`, `nrColumns = 3`, `spacing = 6.0`, var och en skalad med 2,4 och vriden 90° kring y-axeln, så att
+texturernas mitt – u = 0,5, där plåtarnas spår korsar varandra med fyra nitar runt korset – vetter mot kameran.
 (learnopengls texturerade demo behåller rutnätet med 7 × 7 och använder ett ljus med styrkan 150 på (0, 0, 10); kursen
 behåller sina fyra ljus.)
 
@@ -1140,7 +1140,7 @@ Uppgiften textured läser albedot med `pow(…, 2.2)`, men metallic, roughness o
 - [ ] De andra mapparna omvandlas av samplern, eftersom de har mipmaps
 - [ ] `pow(…, 2.2)` gör albedot ljusare för att kompensera för det saknade ambienta ljuset
 ---
-Bara bilder av färger, gjorda genom att titta på en skärm, bär skärmens kurva. Att omvandla en strävhetsmap skulle ändra materialet: strävheten 0.5 skulle bli ungefär 0.22.
+Bara bilder av färger, gjorda genom att titta på en skärm, bär skärmens kurva. Att omvandla en strävhetsmap skulle ändra materialet: strävheten 0,5 skulle bli ungefär 0,22.
 ```
 
 Gör nu den sista uppgiften, **textured**. Bygg och kör: nio stora sfärer av **nitat stål med rost**. Genom mitten av

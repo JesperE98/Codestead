@@ -110,7 +110,7 @@ Låt oss försöka implementera ett sådant materialsystem i shadrarna.
 Du fortsätter i ditt program från *Grundläggande ljussättning*. Döp om den belysta kubens shadrar till `materials.vs`
 och `materials.fs` (`main.cpp` bygger `lightingShader` av dem), och ta bort det rörliga ljuset från det kapitlets
 övning igen: lampan står kvar på `lightPos` (1.2, 1.0, 2.0). Fragment shadern har fortfarande
-uniform-variablerna `objectColor`, `lightColor`, `lightPos` och `viewPos`, och räknar ut ambient (styrka 0.1), diffus
+uniform-variablerna `objectColor`, `lightColor`, `lightPos` och `viewPos`, och räknar ut ambient (styrka 0,1), diffus
 och spekulär belysning (styrka 0.5, exponent 32). Kameran tittar på kubens vänstra och främre sida och på lampan.
 :::
 :::vulkan
@@ -419,13 +419,13 @@ Gör nu den första uppgiften, **material**: lägg till structen `Material`, anv
 
 Kuben är alldeles för ljus! Ljusfärgen är fortfarande vit, (1.0, 1.0, 1.0), med full styrka för alla tre
 komponenterna – och den ambienta komponenten använder nu hela `material.ambient`. Förut skalades det ambienta ljuset
-med en ambient styrka på 0.1; nu visar en sida som ljuset inte når, som kubens vänstra sida, hela korallfärgen, och
+med en ambient styrka på 0,1; nu visar en sida som ljuset inte når, som kubens vänstra sida, hela korallfärgen, och
 den belysta framsidan är nästan vit där den diffusa och den spekulära delen läggs ovanpå.
 
 ```quiz
 Varför är kubens vänstra sida (som är vänd bort från ljuset) klart korallfärgad i stället för mörk efter uppgiften **material**?
 - [ ] Den diffusa termen räknas nu med materialets färg, så alla sidor får diffust ljus
-- [x] Den ambienta termen är nu `lightColor * material.ambient`: vitt ljus gånger hela korallfärgen, utan styrkan 0.1
+- [x] Den ambienta termen är nu `lightColor * material.ambient`: vitt ljus gånger hela korallfärgen, utan styrkan 0,1
 - [ ] Materialet vänder på den vänstra sidans normaler
 ---
 Den vänstra sidan får inget diffust eller spekulärt ljus (`diff` är 0 där), så den visar bara den ambienta termen. Med vitt ljus på full styrka är den termen hela `material.ambient` – hela korallfärgen. Ljusets styrka per komponent är det vi måste styra härnäst.
@@ -644,7 +644,7 @@ Det är learnopengls värden; de exakta talen är en smaksak, så länge den amb
 Gör nu uppgiften **light**: lägg till structen `Light`, låt den ersätta `lightPos` och `lightColor`, använd dess
 intensiteter i de tre termerna och sätt dem från programmet. Bygg och kör: kuben ser normalt belyst ut igen,
 korallfärgad med en mörk vänstersida och en vitaktig högdager på framsidan – högdagern är vit eftersom ljusets spekulära
-färg är vit, dämpad av materialets spekulära färg 0.5.
+färg är vit, dämpad av materialets spekulära färg 0,5.
 
 ```quiz
 Med `light.ambient` = (0.2, 0.2, 0.2) och `material.ambient` = (1.0, 0.5, 0.31), vilken färg får en sida som bara nås av ambient ljus?
@@ -652,7 +652,7 @@ Med `light.ambient` = (0.2, 0.2, 0.2) och `material.ambient` = (1.0, 0.5, 0.31),
 - [ ] (1.0, 0.5, 0.31) – materialets ambienta färg
 - [ ] (1.2, 0.7, 0.51) – ljusets ambienta del adderad till materialets färg
 ---
-Ljuskomponenterna multiplicerar ljusets intensitet med materialets färg, komponent för komponent: 0.2 × 1.0, 0.2 × 0.5, 0.2 × 0.31. Det är den vänstra sidan: en femtedel av korallfärgen, mörk men inte svart.
+Ljuskomponenterna multiplicerar ljusets intensitet med materialets färg, komponent för komponent: 0,2 × 1,0; 0,2 × 0,5; 0,2 × 0,31. Det är den vänstra sidan: en femtedel av korallfärgen, mörk men inte svart.
 ```
 
 ## Olika ljusfärger
@@ -730,7 +730,7 @@ ljusfärgen – att låta den följa ljuset är ett trevligt extra om du vill.
 
 ```quiz
 Efter en sekund är ljusfärgen ungefär (0.91, 0.64, 0.96), en blek lila. Varför ser den korallfärgade kuben rödbrun ut och inte lila?
-- [x] Ljuset och materialet multipliceras komponent för komponent: kuben reflekterar 1.0 av det röda, men bara 0.5 av det gröna och 0.31 av det blå
+- [x] Ljuset och materialet multipliceras komponent för komponent: kuben reflekterar 1,0 av det röda, men bara 0,5 av det gröna och 0,31 av det blå
 - [ ] Eftersom `sin` returnerar radianer omvandlas färgen innan den används
 - [ ] Den spekulära delen, som förblir vit, täcker över det lila
 ---
@@ -790,7 +790,7 @@ plast:
 ```
 :::
 
-Shininess 32 är tabellens 0.25 multiplicerat med 128. Resultatet är en mörkt cyanfärgad kub med en gråvit högdager
+Shininess 32 är tabellens 0,25 multiplicerat med 128. Resultatet är en mörkt cyanfärgad kub med en gråvit högdager
 som ser ut som plast. Andra material ur tabellen fungerar på samma sätt.
 
 ```quiz
@@ -799,7 +799,7 @@ Varför sätter övningen med cyanfärgad plast alla tre ljusintensiteterna till
 - [ ] Eftersom plast behöver mer ljus än det korallfärgade materialet för att synas
 - [x] Tabellens materialvärden innehåller redan hur starkt varje komponent ska synas; med ljus på full intensitet kommer de ut oförändrade
 ---
-Tabellen gjordes för ett vitt ljus på full styrka: dess ambienta värden är redan mycket mörkare än dess diffusa. Vårt ljus 0.2 och 0.5 skulle skala ner dem en gång till. Med (1, 1, 1) bestämmer materialet ensamt färgen.
+Tabellen gjordes för ett vitt ljus på full styrka: dess ambienta värden är redan mycket mörkare än dess diffusa. Vårt ljus 0,2 och 0,5 skulle skala ner dem en gång till. Med (1, 1, 1) bestämmer materialet ensamt färgen.
 ```
 
 Med material kan du nu ge varje föremål sitt eget utseende. I nästa kapitel går vi ett steg längre och ger olika

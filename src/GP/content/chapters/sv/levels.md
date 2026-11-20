@@ -414,7 +414,7 @@ Init-funktionen går igenom vart och ett av de laddade talen och lägger till et
 utifrån det bearbetade talet. Varje blocks storlek (`unit_width` och `unit_height`) räknas ut automatiskt utifrån det
 totala antalet block, så att varje block passar perfekt inom skärmens gränser: ytans bredd delat med antalet kolumner,
 dess höjd med antalet rader. För bana ett med 15 kolumner och 8 rader på en yta av 800 × 300 pixlar är ett block
-800 / 15 ≈ 53.3 pixlar brett och 300 / 8 = **37.5** pixlar högt. Positionen för blocket i kolumn x och rad y är
+800 / 15 ≈ 53,3 pixlar brett och 300 / 8 = **37,5** pixlar högt. Positionen för blocket i kolumn x och rad y är
 (unit_width · x, unit_height · y) – dess övre vänstra hörn, som sprite-renderaren förväntar sig.
 
 Här laddar vi spelobjekten med två nya texturer: en blocktextur och en textur för solida block. De solida blocken får en
@@ -436,7 +436,7 @@ Bana ett har 15 tal per rad och 8 rader, och laddas in på en yta av 800 × 300 
 - [ ] På (5 · 53.33, 4 · 37.5) ≈ (266.7, 150)
 - [ ] På (4 · 53.33, 5 · 75) ≈ (213.3, 375)
 ---
-x räknar kolumnerna och skalas med `unit_width` = 800 / 15, y raderna med `unit_height` = 300 / 8. Raderna 0–3 innehåller färgerna (y 0 … 150), rad 4 är tom, stenarna ligger i rad 5 på y 187.5 … 225.
+x räknar kolumnerna och skalas med `unit_width` = 800 / 15, y raderna med `unit_height` = 300 / 8. Raderna 0–3 innehåller färgerna (y 0 … 150), rad 4 är tom, stenarna ligger i rad 5 på y 187,5 … 225.
 ```
 
 För att rita en bana ritar vi vart och ett av dess block som inte har förstörts – kollisionskapitlen kommer att sätta
@@ -720,10 +720,10 @@ den med A och D i `ProcessInput`:
 
 Här flyttar vi spelarens racket åt vänster eller höger beroende på vilken tangent användaren trycker på (observera att
 vi multiplicerar hastigheten med delta time). Om racketens x-värde vore mindre än 0 skulle den ha flyttats utanför
-vänsterkanten, så vi flyttar bara racketen åt vänster om dess x-värde är större än vänsterkantens x-position (0.0). Vi
+vänsterkanten, så vi flyttar bara racketen åt vänster om dess x-värde är större än vänsterkantens x-position (0,0). Vi
 gör detsamma när racketen passerar högerkanten, men då måste vi jämföra högerkantens position med racketens högra kant
 (dra av racketens bredd från högerkantens x-position). Observera att testet görs *före* förflyttningen: en racket på
-x = 3 flyttas ändå 8.3 pixlar åt vänster, till x = −5.3, och stannar först då. Racketen kan sticka ut ur fönstret med
+x = 3 flyttas ändå 8,3 pixlar åt vänster, till x = −5,3, och stannar först då. Racketen kan sticka ut ur fönstret med
 upp till en bildrutas rörelse – learnopengls enkla kontroll, tillräckligt bra här.
 
 Gör nu uppgiften **player**: konstanterna, den globala variabeln, racketen i `Init`, dess rörelse i `ProcessInput` och
@@ -736,14 +736,14 @@ den där; i ditt eget program flyttar A och D den.
 :::
 :::vulkan
 70 ritanrop per bildruta: bakgrund, 68 block, racket. Jämförd pixel för pixel med OpenGL-versionen är bilden densamma
-utom längs blockens kanter på y = 37.5, 112.5 och 187.5: där går en blockkant exakt genom mittpunkterna i en rad pixlar,
+utom längs blockens kanter på y = 37,5; 112,5 och 187,5: där går en blockkant exakt genom mittpunkterna i en rad pixlar,
 och Vulkans top-left-rasteriseringsregel (med y nedåt) ger de pixlarna till blocket under, där OpenGL:s (med y uppåt)
 ger dem till blocket över. Ingen av dem har fel; båda reglerna ser till att en pixel på en gemensam kant ritas exakt en
 gång.
 :::
 :::d3d12
 70 ritanrop per bildruta: bakgrund, 68 block, racket. Direct3D:s top-left-rasteriseringsregel avgör som Vulkans: längs
-blockens kanter på y = 37.5, 112.5 och 187.5, som går exakt genom mittpunkterna i en rad pixlar, går de pixlarna till
+blockens kanter på y = 37,5; 112,5 och 187,5, som går exakt genom mittpunkterna i en rad pixlar, går de pixlarna till
 blocket under, där OpenGL ger dem till blocket över. Ingen av dem har fel; båda reglerna ser till att en pixel på en
 gemensam kant ritas exakt en gång.
 :::

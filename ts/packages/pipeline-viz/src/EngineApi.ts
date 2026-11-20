@@ -46,5 +46,21 @@ export interface SceneHosts {
   code: HTMLElement;
 }
 
-/** Mounts a scene. Rejects when it cannot (no WebGL, the slide failed); `onLost`: it stopped working later (context lost). */
-export type MountScene = (hosts: SceneHosts, options: EngineOptions, slideStep: number, animate: boolean, onLost: () => void) => Promise<MountedScene>;
+/**
+ * Where the links of a slide lead in the app (the overview's stages: each is one of the visualizer's slides). A stage
+ * whose slide `has` no destination is not a link.
+ */
+export interface SceneLinks {
+  /** Does the app have a place for this slide (the scene in the course that shows it)? */
+  has(slide: string): boolean;
+  /** The link's tooltip: where it leads. */
+  title(slide: string): string;
+  /** Follows the link. */
+  go(slide: string): void;
+}
+
+/**
+ * Mounts a scene. Rejects when it cannot (no WebGL, the slide failed); `onLost`: it stopped working later (context lost);
+ * `links`: where the slide's links lead (none: they are not links).
+ */
+export type MountScene = (hosts: SceneHosts, options: EngineOptions, slideStep: number, animate: boolean, onLost: () => void, links?: SceneLinks | null) => Promise<MountedScene>;

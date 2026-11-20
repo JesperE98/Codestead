@@ -55,13 +55,13 @@ delen vad du har lärt dig.
 
 ## Gammakorrigering
 
-- **Gamma**: en bildskärm visar ett värde v med en ljusstyrka på ungefär v upphöjt till **2.2**. Värdet 0.5 syns som
-  0.5^2.2 ≈ 0.218 av vitt.
+- **Gamma**: en bildskärm visar ett värde v med en ljusstyrka på ungefär v upphöjt till **2,2**. Värdet 0,5 syns som
+  0,5^2,2 ≈ 0,218 av vitt.
 - **Linjärt rum och sRGB-rum**: belysningsmatematiken – att lägga ihop ljus, skala med `diff`, dämpning – förutsätter
   att dubbla värdet betyder dubbelt så mycket ljus (linjärt). Färgerna vi väljer på en skärm, och bilderna som grafiker
-  gör, ligger i det icke-linjära **sRGB**-rummet (ungefär en gamma på 2.2).
-- **Gammakorrigering**: höj den slutliga färgen till **1/2.2** innan den når skärmen (0.5 blir 0.73, som skärmen visar
-  som 0.5). Den görs **exakt en gång, som sista steg**; mellanresultat från flera pass förblir linjära.
+  gör, ligger i det icke-linjära **sRGB**-rummet (ungefär en gamma på 2,2).
+- **Gammakorrigering**: höj den slutliga färgen till **1/2,2** innan den når skärmen (0,5 blir 0,73, som skärmen visar
+  som 0,5). Den görs **exakt en gång, som sista steg**; mellanresultat från flera pass förblir linjära.
 - **Två sätt**: i shadern (`pow(color, vec3(1.0/2.2))`), eller av hårdvaran, som kodar varje färg som skrivs till ett
   sRGB-render target. Aldrig båda: bilden skulle korrigeras två gånger och se urblekt ut.
 - **sRGB-texturer**: färgtexturer är sRGB-kodade. Lästa som om de vore linjära och sedan gammakorrigerade blir de
@@ -109,7 +109,7 @@ delen vad du har lärt dig.
   blandas inte). Djuppasset behöver ingen färg, ingen belysning och ingen textur – bara hörnen transformerade till
   ljusrymden – och en egen viewport i djupkartans storlek.
 - **Ljusrummets transformation**: `lightSpaceMatrix = lightProjection * lightView`, en vy från ljuset mot origo och, för
-  ett **riktat ljus** med parallella strålar, en **ortografisk** projektion: en låda på 20 × 20 enheter från 1.0 till 7.5
+  ett **riktat ljus** med parallella strålar, en **ortografisk** projektion: en låda på 20 × 20 enheter från 1,0 till 7,5
   enheter framför ljuset. Bara det som lådan innehåller kastar skuggor.
 - **ShadowCalculation**: positionen i ljusrymden efter perspektivdivisionen (w är 1 för en ortografisk projektion, men
   divisionen gör funktionen rätt även för perspektiviska), omvandlad till texturkoordinater och ett djup 0..1;
@@ -123,7 +123,7 @@ delen vad du har lärt dig.
   framsidorna bortplockade hjälper för solida föremål – men inte för ett enskilt plan som golvet, så det används inte
   här.
 - **Översampling**: utanför djupkartans koordinater 0..1 returnerar en upprepande karta orelaterade djup. En kantfärg med
-  djupet 1.0 (clamp to border) gör de områdena belysta; fragment bortom det bortre planet (projicerat z > 1.0) får
+  djupet 1,0 (clamp to border) gör de områdena belysta; fragment bortom det bortre planet (projicerat z > 1,0) får
   `shadow = 0.0`.
 - **PCF** (percentage-closer filtering): jämför mot de 3 × 3 texlarna runt positionen (en texel = 1 / kartans storlek)
   och ta medelvärdet av de nio resultaten: mjuka kanter. Det är jämförelserna som medelvärdesbildas, inte djupen.
@@ -175,7 +175,7 @@ delen vad du har lärt dig.
   ut varje triangel sex gånger (högst 18 hörn), varje gång med en sidas ljusmatris och den sidans index som lagret den
   hamnar i. Klippningen kastar det som en sida inte kan se.
 - **De sex matriserna**: en perspektivprojektion med **90° synfält** och bildförhållandet 1 – exakt en sida per frustum,
-  inga luckor eller överlapp – near 1.0, far 25.0; sex `lookAt` mot +X, -X, +Y, -Y, +Z, -Z (sidornas ordning) med upp
+  inga luckor eller överlapp – near 1,0, far 25,0; sex `lookAt` mot +X, -X, +Y, -Y, +Z, -Z (sidornas ordning) med upp
   (0, -1, 0) för de fyra sidoytorna och (0, 0, 1) / (0, 0, -1) för ±Y: en cube map-sidas första rad är dess överkant, och
   de här upp-vektorerna lagrar varje sida så som en uppslagning läser den. De är desamma i alla API:er.
 - **Det lagrade värdet**: fragment shadern skriver `distance(fragment, ljus) / far_plane` som sitt djup. Ett avstånd är
@@ -183,9 +183,9 @@ delen vad du har lärt dig.
   av tidig djuptestning.)
 - **Uppslagningen**: cube mapen samplas med `fragToLight = fragPos - lightPos` (vilken längd som helst; den pekar från
   ljuset till fragmentet), det lagrade värdet multipliceras med `far_plane` och jämförs med `length(fragToLight)`. Biasen
-  är nu i världsenheter: 0.05.
+  är nu i världsenheter: 0,05.
 - **PCF**: 20 förskjutningsriktningar – kubens 8 hörn och 12 kantmitter – skalade med
-  `diskRadius = (1.0 + (viewDistance / far_plane)) / 25.0` (mjukare skuggor längre från betraktaren), bias 0.15. Ett
+  `diskRadius = (1.0 + (viewDistance / far_plane)) / 25.0` (mjukare skuggor längre från betraktaren), bias 0,15. Ett
   rutnät på 4 × 4 × 4 förskjutningar skulle ta 64 sampel, många av dem överflödiga.
 - **Scenen**: ett rum sett inifrån (normalerna vända i vertex shadern) med fem kuber och ett ljus i mitten; learnopengl
   flyttar ljuset med tiden, kursen håller det stilla.
@@ -267,8 +267,8 @@ delen vad du har lärt dig.
 - **Displacement mapping** flyttar hörn efter en höjdkarta – verklig relief, men många hörn. **Parallax mapping** flyttar
   bara **texturkoordinaterna**, i fragment shadern, så att ett fragment visar den punkt som synstrålen skulle träffa på
   reliefen.
-- **Djupkarta**: en inverterad höjdkarta – vit där ytan är djup (fogarna), svart vid ytan; `heightScale` (0.1) anger hur
-  djupt 1.0 är.
+- **Djupkarta**: en inverterad höjdkarta – vit där ytan är djup (fogarna), svart vid ytan; `heightScale` (0,1) anger hur
+  djupt 1,0 är.
 - **Förskjutningen**: `texCoords - viewDir.xy / viewDir.z * (height * heightScale)`, med synriktningen i tangentrymden,
   där x och y går längs texturens u och v. Divisionen gör att förskjutningen växer vid flacka vinklar; att utelämna den
   är *parallax mapping med offset limiting*.
@@ -304,9 +304,9 @@ delen vad du har lärt dig.
 
 ## HDR
 
-- **LDR** (low dynamic range): en färgbuffert med 8 bitar lagrar 0.0 till 1.0 per kanal; allt ljusare begränsas, och
+- **LDR** (low dynamic range): en färgbuffert med 8 bitar lagrar 0,0 till 1,0 per kanal; allt ljusare begränsas, och
   stora ljusa områden blir ett enda platt vitt.
-- **HDR** (high dynamic range): färger får överstiga 1.0 medan scenen renderas, så ljus kan ha realistiska styrkor –
+- **HDR** (high dynamic range): färger får överstiga 1,0 medan scenen renderas, så ljus kan ha realistiska styrkor –
   ljuset i tunnelns ände har 200.
 - **Flyttals-framebuffer**: en färgbuffert med **16-bitars halvprecisionsflyttal** per kanal (upp till 65504, ungefär
   tre värdesiffror), RGBA i alla API:er – flyttals-targets med tre kanaler är inte portabla.
@@ -314,7 +314,7 @@ delen vad du har lärt dig.
   **tone-mappar** den till 0..1 och gammakorrigerar den. Gammakorrigeringen flyttar ut ur belysningsshadern: den måste
   komma efter tone mappingen, som allra sista steg.
 - **Tone mapping**: att omvandla HDR till LDR utan att förlora detaljer. **Reinhard**: `hdrColor / (hdrColor + 1.0)` –
-  1 → 0.5, 3 → 0.75, 200 → 0.995; varje värde stannar under 1.0 och behåller sin ordning, små värden ändras knappt.
+  1 → 0,5; 3 → 0,75; 200 → 0,995; varje värde stannar under 1,0 och behåller sin ordning, små värden ändras knappt.
 - **Exponering**: `1.0 - exp(-hdrColor * exposure)`. En **hög** exponering visar detaljerna i mörka områden (de ljusa
   trängs ihop nära vitt); en **låg** exponering visar detaljerna i ljusa områden (de mörka sjunker mot svart).
   learnopengl ändrar den med Q och E; kursen byter koden i uppgifterna.
@@ -355,10 +355,10 @@ delen vad du har lärt dig.
 - **Flera render targets** (MRT): en fragment shader med flera utdata, som var och en skrivs till sin egen färgbuffert i
   ett och samma pass.
 - **Ljusa delar**: **luminansen** `dot(color, vec3(0.2126, 0.7152, 0.0722))` (ögat är känsligast för grönt, minst för
-  blått) över **1.0** – det som fönstret inte kan visa. Med LDR skulle en lägre tröskel få varje vit vägg att glöda.
+  blått) över **1,0** – det som fönstret inte kan visa. Med LDR skulle en lägre tröskel få varje vit vägg att glöda.
 - **Gaussisk blur**: vikter från den klockformade gausskurvan, så att närliggande sampel väger mest. Den är
   **separerbar**: ett horisontellt pass och sedan ett vertikalt ger hela 2D-bluren – 9 + 9 = 18 sampel i stället för 81
-  för en kärna med 9 tappar. Fem vikter, från 0.2270270270 för mitten ner till 0.0162162162 fyra texlar bort, summerar
+  för en kärna med 9 tappar. Fem vikter, från 0,2270270270 för mitten ner till 0,0162162162 fyra texlar bort, summerar
   till 1 (de övriga räknas två gånger).
 - **Ping-pong-framebuffers**: ett pass kan inte läsa texturen det ritar till, så två buffertar turas om – varje pass
   läser den ena och skriver den andra. learnopengl gör **10 pass** (horisontellt först): fem par av horisontellt och
@@ -417,7 +417,7 @@ delen vad du har lärt dig.
   ritas forward efter belysningspasset, djuptestat mot geometripassets djup.
 - **Ljusvolymer**: ett ljus **radie** är där dess dämpade ljusstyrka sjunker under 5/256: att lösa
   `Imax · 1 / (1 + Kl·d + Kq·d²) = 5/256` ger
-  `(-linear + sqrt(linear² - 4·quadratic·(constant - (256/5)·Imax))) / (2·quadratic)`, här ungefär 3.5 till 5.1. Att
+  `(-linear + sqrt(linear² - 4·quadratic·(constant - (256/5)·Imax))) / (2·quadratic)`, här ungefär 3,5 till 5,1. Att
   hoppa över ljus bortom den gör bilden lite mörkare – varje överhoppat ljus bidrar med mindre än 5/256, men 32 av dem
   blir märkbara.
 - **Varför `if`-satsen sparar lite**: en GPU kör fragmenten i en grupp i takt, så en loop kostar varje ljus där ett
@@ -462,9 +462,9 @@ delen vad du har lärt dig.
 - **Normalorienterad halvsfär**: samplen ligger i en halvsfär på normalens sida, så att en plan yta inte skymmer sig
   själv (en hel sfär gör allt grått).
 - **Vyrymd**: G-bufferten lagrar positioner och normaler i **vyrymden**, så det lagrade z är djupet att jämföra;
-  albedot är ett enkelt 0.95.
+  albedot är ett enkelt 0,95.
 - **Samplingskärnan**: 32 sampel (learnopengl 64 – kursen ritar sina kontroller och förväntade resultat på CPU:n), z ≥
-  0, var och en skalad med `lerp(0.1, 1.0, (i / 32)²)`: fler sampel nära fragmentet. Radie 0.5, bias 0.025.
+  0, var och en skalad med `lerp(0.1, 1.0, (i / 32)²)`: fler sampel nära fragmentet. Radie 0,5, bias 0,025.
 - **Slumpmässiga rotationer av kärnan**: en **brustextur** på 4 × 4 med slumpvektorer i xy-planet, upprepad över
   fönstret med repeat och närmaste-sampling. Med normalen ger den en TBN-matris (Gram-Schmidt), så varje pixel i ett
   block på 4 × 4 vrider kärnan olika: få sampel, inga band – men ett regelbundet brusmönster.
@@ -515,7 +515,7 @@ delen vad du har lärt dig.
 | Target med bara djup | FBO, `GL_DEPTH_COMPONENT`-textur, `glDrawBuffer(GL_NONE)` | djup-image + render pass utan färg | `R32_TYPELESS`, D32-DSV + R32-SRV, PSO utan pixel shader |
 | Läsbart efter passet | sköts av drivrutinen | `storeOp`, `finalLayout`, subpass dependency | transition barrier |
 | Ljusrymdens NDC → djupkarta | `xyz * 0.5 + 0.5` | `xy * 0.5 + 0.5` | `x * 0.5 + 0.5`, `-y * 0.5 + 0.5` |
-| Djup 1.0 utanför kartan | `GL_CLAMP_TO_BORDER` + kantfärg | `CLAMP_TO_BORDER` + `FLOAT_OPAQUE_WHITE` | `BORDER` + `STATIC_BORDER_COLOR_OPAQUE_WHITE` |
+| Djup 1,0 utanför kartan | `GL_CLAMP_TO_BORDER` + kantfärg | `CLAMP_TO_BORDER` + `FLOAT_OPAQUE_WHITE` | `BORDER` + `STATIC_BORDER_COLOR_OPAQUE_WHITE` |
 | Texturstorlek i en shader | `textureSize` | `textureSize` | `GetDimensions` |
 | Skiktad djup-cube map | `glFramebufferTexture`, `gl_Layer` | 6 lager, framebuffer med `layers = 6`, `gl_Layer` | `TEXTURE2DARRAY`-DSV, `SV_RenderTargetArrayIndex` |
 | Skriva djupet | `gl_FragDepth` | `gl_FragDepth` | `SV_Depth` |

@@ -124,7 +124,7 @@ void main()
 Vulkan har ingen `glPointSize` och ingen omkopplare som OpenGL:s `GL_PROGRAM_POINT_SIZE`: när pipelinens topologi är
 `VK_PRIMITIVE_TOPOLOGY_POINT_LIST` kommer varje punkts storlek från vertex shaderns `gl_PointSize`, en `float` med
 punktens bredd och höjd i pixlar. Vertex shadern måste alltså skriva den (om inte enheten har funktionen
-`maintenance5` påslagen, som gör 1.0 till standardvärdet). Andra storlekar än 1.0 kräver enhetsfunktionen
+`maintenance5` påslagen, som gör 1,0 till standardvärdet). Andra storlekar än 1,0 kräver enhetsfunktionen
 `largePoints`, och det tillåtna intervallet är enhetsgränsen `pointSizeRange`.
 
 Ett enkelt exempel är att sätta punktstorleken lika med clip space-positionens z-värde, som är lika med vertexens
@@ -288,7 +288,7 @@ Vilka är `gl_FragCoord.x` och `gl_FragCoord.y` för fragmentet i pixeln längst
 - [x] (0.5, 599.5)
 - [ ] (400.0, 300.0)
 ---
-OpenGL:s fönsterkoordinater börjar längst ned till vänster, och ett fragments koordinater är mitten av dess pixel. Fönstrets översta rad är y = 599.5.
+OpenGL:s fönsterkoordinater börjar längst ned till vänster, och ett fragments koordinater är mitten av dess pixel. Fönstrets översta rad är y = 599,5.
 ```
 :::
 :::vulkan
@@ -495,7 +495,7 @@ Indatavariabeln `gl_FragCoord` låter oss läsa skärmkoordinater och hämta det
 ger oss en utdatavariabel som heter `gl_FragDepth` som vi kan använda för att sätta fragmentets djupvärde manuellt i
 shadern.
 
-För att sätta djupvärdet i shadern skriver vi ett värde mellan 0.0 och 1.0 till utdatavariabeln:
+För att sätta djupvärdet i shadern skriver vi ett värde mellan 0,0 och 1,0 till utdatavariabeln:
 
 ```glsl
 gl_FragDepth = 0.0; // this fragment now has a depth value of 0.0
@@ -509,7 +509,7 @@ Indatavariabeln `gl_FragCoord` låter oss läsa skärmkoordinater och hämta det
 ger oss en utdatavariabel som heter `gl_FragDepth` som vi kan använda för att sätta fragmentets djupvärde manuellt i
 shadern – i Vulkan precis som i OpenGL.
 
-För att sätta djupvärdet i shadern skriver vi ett värde mellan 0.0 och 1.0 till utdatavariabeln:
+För att sätta djupvärdet i shadern skriver vi ett värde mellan 0,0 och 1,0 till utdatavariabeln:
 
 ```glsl
 gl_FragDepth = 0.0; // this fragment now has a depth value of 0.0

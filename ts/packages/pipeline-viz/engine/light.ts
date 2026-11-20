@@ -8,7 +8,8 @@
 //     panels' dark glass), which become light;
 //   - lit surfaces (the model, shaded as the visualizer's CPU pipeline shades it) and the visualizer's own shaders that
 //     draw without glow keep their colours: they are what the GPU would draw;
-// and the star field (tagged xrHideInAR) is hidden. Bloom is turned off by mount.ts.
+// and the star field (tagged xrHideInAR) is hidden. Bloom is turned off by mount.ts. A slide that changes a material's
+// blending later (the blending slide's panes turn additive) gets that material changed again, for its new blending.
 
 import { AdditiveBlending, NormalBlending, SRGBColorSpace, ShaderMaterial, type Material, type Object3D, type Scene, type WebGLProgramParametersWithUniforms } from 'three';
 
@@ -38,6 +39,8 @@ type Kind = 'glow' | 'flat' | 'dark';
 
 interface Saved {
   blending: Material['blending'];
+  /** The blending the material got here: another one means the slide changed it since. */
+  applied: Material['blending'];
   transparent: boolean;
   onBeforeCompile: Material['onBeforeCompile'];
   customProgramCacheKey: Material['customProgramCacheKey'];
@@ -69,7 +72,8 @@ export function wrapFragment(source: string, fn: 'csLightFlat' | 'csLightDark' |
 }
 
 function adapt(m: Material, kind: Kind): void {
-  saved.set(m, { blending: m.blending, transparent: m.transparent, onBeforeCompile: m.onBeforeCompile, customProgramCacheKey: m.customProgramCacheKey });
+  const s: Saved = { blending: m.blending, applied: m.blending, transparent: m.transparent, onBeforeCompile: m.onBeforeCompile, customProgramCacheKey: m.customProgramCacheKey };
+  saved.set(m, s);
   const before = m.onBeforeCompile.bind(m);
   const key = m.customProgramCacheKey.bind(m);
   const fn = kind === 'glow' ? 'csLightGlow' : kind === 'flat' ? 'csLightFlat' : 'csLightDark';
@@ -82,21 +86,30 @@ function adapt(m: Material, kind: Kind): void {
     m.blending = NormalBlending;
     m.transparent = true;
   }
+  s.applied = m.blending;
   m.needsUpdate = true;
 }
 
+/** The material as the slide made it (with the blending the slide gave it last). */
 function restore(m: Material): void {
   const s = saved.get(m);
   if (!s) return;
   saved.delete(m);
-  Object.assign(m, s);
+  const blending = m.blending !== s.applied ? m.blending : s.blending;
+  m.transparent = s.transparent;
+  m.onBeforeCompile = s.onBeforeCompile;
+  m.customProgramCacheKey = s.customProgramCacheKey;
+  m.blending = blending;
   m.needsUpdate = true;
 }
 
-/** Keeps a scene's materials in the theme's colours: call it before every frame (new objects appear as slides play). */
-export function themeScene(scene: Scene | Object3D, light: boolean): void {
+/**
+ * Keeps a scene's materials in the theme's colours: call it before every frame (new objects appear as slides play).
+ * `hideStars`: the star field is hidden (in the light theme, also where a step is drawn as in the dark theme).
+ */
+export function themeScene(scene: Scene | Object3D, light: boolean, hideStars = light): void {
   scene.traverse((o) => {
-    if (o.userData.xrHideInAR && light) o.visible = false;
+    if (o.userData.xrHideInAR && hideStars) o.visible = false;
     const mats = (o as { material?: Material | Material[] }).material;
     if (!mats) return;
     for (const m of Array.isArray(mats) ? mats : [mats]) {
@@ -104,10 +117,13 @@ export function themeScene(scene: Scene | Object3D, light: boolean): void {
         if (saved.has(m)) restore(m);
         continue;
       }
-      if (saved.has(m) || (m.userData as { csKind?: string }).csKind === 'none') continue;
+      const s = saved.get(m);
+      if (s && m.blending !== s.applied) restore(m);
+      // (A material left as it is, until the slide changes its blending.)
+      else if (s || (m.userData as { csNone?: number }).csNone === m.blending) continue;
       const kind = kindOf(m);
       if (kind === null) {
-        (m.userData as { csKind?: string }).csKind = 'none';
+        (m.userData as { csNone?: number }).csNone = m.blending;
         continue;
       }
       adapt(m, kind);

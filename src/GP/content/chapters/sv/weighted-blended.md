@@ -27,7 +27,7 @@ igenom alla lager – *revealage*, ungefär "genomsläpp". Den är exakt och ord
 revealage = (1 − α1) · (1 − α2) · … · (1 − αn)
 ```
 
-Två lager med alfa 0.5 släpper igenom 0.5 · 0.5 = 0.25 av bakgrunden, i vilken ordning som helst. Den andra delen är
+Två lager med alfa 0,5 släpper igenom 0,5 · 0,5 = 0,25 av bakgrunden, i vilken ordning som helst. Den andra delen är
 lagrens egen färg. I stället för att nästla dem tar vi ett viktat medelvärde av deras (förmultiplicerade) färger:
 
 ```text
@@ -53,15 +53,15 @@ w = clamp(pow(min(1.0, α * 10.0) + 0.01, 3.0) * 1e8 * pow(1.0 - z * 0.9, 3.0), 
 ```
 
 där `z` är fragmentets fönsterdjup, 0 vid det nära planet och 1 vid det bortre. Alfafaktorn gynnar fragment som täcker
-mer (den mättas vid α = 0.1, så den spelar bara roll för mycket svaga fragment), djupfaktorn faller brant med djupet, och
+mer (den mättas vid α = 0,1, så den spelar bara roll för mycket svaga fragment), djupfaktorn faller brant med djupet, och
 `clamp` håller vikterna inom ett intervall som en 16-bitars float kan summera utan att flöda över alltför snabbt.
 
 ```quiz
-Två genomskinliga lager, båda med alfa 0.5, täcker en pixel. Hur mycket av bakgrunden släpper weighted blended OIT igenom där, och beror det på vilket lager som ritas först?
-- [ ] 0.5, från lagret som ritas sist; ja
+Två genomskinliga lager, båda med alfa 0,5, täcker en pixel. Hur mycket av bakgrunden släpper weighted blended OIT igenom där, och beror det på vilket lager som ritas först?
+- [ ] 0,5, från lagret som ritas sist; ja
 - [ ] 0, eftersom två lager som täcker hälften var täcker allt; nej
-- [x] 0.25 = (1 − 0.5) · (1 − 0.5); nej, en produkt beror inte på faktorernas ordning
-- [ ] 0.25, men bara om det närmare lagret ritas först
+- [x] 0,25 = (1 − 0,5) · (1 − 0,5); nej, en produkt beror inte på faktorernas ordning
+- [ ] 0,25, men bara om det närmare lagret ritas först
 ---
 Revealage är produkten av alla (1 − α): exakt och ordningsoberoende. Approximationen sitter i färgen, det viktade medelvärdet av lagren.
 ```
@@ -73,7 +73,7 @@ till två färgmål samtidigt:
 
 - **ackumuleringsmålet**, RGBA i 16-bitars flyttal, rensat till (0, 0, 0, 0). Fragment shadern skriver `(C · α, α) · w`,
   och blendfunktionen `ONE, ONE` adderar det till det som redan finns. Efter passet innehåller rgb `Σ Ci · αi · wi` och
-  alfa `Σ αi · wi` – täljare och nämnare i medelvärdet. De blir lätt större än 1.0 (vikterna når 3000), därav flyttal.
+  alfa `Σ αi · wi` – täljare och nämnare i medelvärdet. De blir lätt större än 1,0 (vikterna når 3000), därav flyttal.
 - **revealage-målet**, en enda 8-bitarskanal, rensat till 1. Fragment shadern skriver `α`, och blendfunktionen
   `ZERO, ONE_MINUS_SRC_COLOR` gör om det till `dst = 0 · α + dst · (1 − α)`: varje fragment multiplicerar målet med sitt
   `1 − α`. Efter passet innehåller det revealage.
@@ -97,7 +97,7 @@ Bildrutan har då fyra steg, de fyra passen i learnopengls program:
 ![De fyra passen och deras mål](images/wb-passes.webp "Vad varje pass gör med den ogenomskinliga färgen, djupet, ackumuleringsmålet och revealage-målet.")
 
 Du fortsätter i programmet som du förberedde i *OIT: introduktion*: kameran i (0, 0, 5), den röda ogenomskinliga
-fyrhörningen i (0.5, -0.2, 1.0), den gröna (alfa 0.5) i (-0.3, -0.6, 2.0) – närmast – och den blå (alfa 0.5) i (-0.6,
+fyrhörningen i (0.5, -0.2, 1.0), den gröna (alfa 0,5) i (-0.3, -0.6, 2.0) – närmast – och den blå (alfa 0,5) i (-0.6,
 0.5, 0.0) – längst bort, delvis bakom den röda – ritade röd, grön, blå. learnopengls demo lägger de tre fyrhörningarna
 ovanpå varandra mitt i fönstret; kursen sprider ut dem så att varje fall syns.
 
@@ -266,7 +266,7 @@ sista passet använder `createDescriptorSet(opaqueImageView, opaqueImageView, sc
 inte av `screen.frag`).
 
 I `recordCommandBuffer()` börjar det solida passet nu `opaqueRenderPass` med `opaqueFramebuffer` (rensningsvärdena (0,
-0, 0, 0) och djupet 1.0), och efter de genomskinliga fyrhörningarna kommer det sista passet i fönstrets render pass:
+0, 0, 0) och djupet 1,0), och efter de genomskinliga fyrhörningarna kommer det sista passet i fönstrets render pass:
 
 ```cpp
         // use screen shader
@@ -634,11 +634,11 @@ Bygg och kör: den gröna och den blå fyrhörningen är **borta**. De ritas –
 visar bara den röda fyrhörningen mot svart. Nästa pass tar tillbaka dem.
 
 ```quiz
-Revealage-målet rensas till 1 och blendas med faktorerna ZERO (källa) och ONE_MINUS_SRC_COLOR (mål). Shadern skriver fragmentets alfa. Vad innehåller målet när den gröna och den blå fyrhörningen (båda med alfa 0.5) har ritats över samma pixel?
-- [ ] 1.0: källfaktorn ZERO kastar shaderns utdata
-- [x] 0.25: varje fragment multiplicerar målet med 1 − 0.5
-- [ ] 0.5: bara det sista fragmentet räknas
-- [ ] 0.0: alfavärdena summeras till 1
+Revealage-målet rensas till 1 och blendas med faktorerna ZERO (källa) och ONE_MINUS_SRC_COLOR (mål). Shadern skriver fragmentets alfa. Vad innehåller målet när den gröna och den blå fyrhörningen (båda med alfa 0,5) har ritats över samma pixel?
+- [ ] 1,0: källfaktorn ZERO kastar shaderns utdata
+- [x] 0,25: varje fragment multiplicerar målet med 1 − 0,5
+- [ ] 0,5: bara det sista fragmentet räknas
+- [ ] 0,0: alfavärdena summeras till 1
 ---
 Blendingen räknar ut src · 0 + dst · (1 − src). Källfärgen kommer bara in via målfaktorn – så multiplicerar den fasta blendingen målet med (1 − α), i vilken ordning som helst.
 ```
@@ -911,7 +911,7 @@ I överlappet blir resultatet (0, 96, 96), medan rätt sorterad blending (först
 - [ ] Revealage-målet har bara 8 bitar
 - [ ] Kompositpasset dividerar med antalet fragment i stället för med summan av vikterna
 ---
-Med near = 0.1 och far = 100 har en fyrhörning 3 till 5 enheter bort ett fönsterdjup på ungefär 0.97–0.98, och 1e8 · (1 − 0.9z)³ är fortfarande över 100 000 – långt över gränsen. Med lika vikter ger medelvärdet lagren lika stora andelar, där sorterad blending skulle låta det närmare gröna lagret dominera. Det är approximationen.
+Med near = 0,1 och far = 100 har en fyrhörning 3 till 5 enheter bort ett fönsterdjup på ungefär 0,97–0,98, och 1e8 · (1 − 0.9z)³ är fortfarande över 100 000 – långt över gränsen. Med lika vikter ger medelvärdet lagren lika stora andelar, där sorterad blending skulle låta det närmare gröna lagret dominera. Det är approximationen.
 ```
 
 ![Viktfunktionen](images/wb-weight.webp "learnopengls vikt över fönsterdjupet på en logaritmisk skala, före begränsningen (streckad) och efter den: med alfa 0,5 faller den aldrig under 3000, så nära och avlägsna lager väger lika.")
@@ -924,7 +924,7 @@ Weighted blended OIT byter exakthet mot fart, och det är bra att veta var det m
   lager. Viktfunktionen ger närmare lager större vikt, men bara i förhållande till varandra, och bara i det djupintervall
   den är inställd för – som överlappet ovan visar, där `clamp` får två fyrhörningar på olika djup att räknas lika.
   McGuire och Bavoil ger flera viktfunktioner för olika djupintervall; en scen behöver oftast en egen.
-- **Nästan ogenomskinliga lager.** Ett lager med alfa 0.9 framför ett annat borde dölja det nästan helt. I medelvärdet
+- **Nästan ogenomskinliga lager.** Ett lager med alfa 0,9 framför ett annat borde dölja det nästan helt. I medelvärdet
   bidrar det bakre fortfarande med sin viktade andel av färgen – resultatet ser urtvättat ut.
 - **Många överlappande lager.** Summorna växer, och 16-bitarsflyttalen tappar precision eller flödar över (`isinf`-skyddet).
   Vikternas intervall är en kompromiss mellan de två.

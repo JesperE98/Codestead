@@ -264,7 +264,7 @@ bildruta i loopen mäter hur lång tid förra bildrutan tog, hanterar indata, up
 Tiden som en bildruta tar är *delta time*. Olika datorer ritar olika fort – en renderar 60 bildrutor per sekund, en
 annan 144 – och om racketen flyttades ett fast antal pixlar per bildruta skulle den vara mer än dubbelt så snabb på den
 andra. Därför mäter spelet bildrutans längd och flyttar allt med hastighet × tid: en racket med hastigheten 500 pixlar
-per sekund flyttas 500 × 1/60 ≈ 8.3 pixlar i en bildruta på 1/60 sekund, och hälften så långt i en bildruta på 1/120
+per sekund flyttas 500 × 1/60 ≈ 8,3 pixlar i en bildruta på 1/60 sekund, och hälften så långt i en bildruta på 1/120
 sekund. Det är det `dt` som `ProcessInput` och `Update` får. (Kapitlet Kamera använde samma idé för kamerans
 hastighet.)
 
@@ -396,8 +396,8 @@ går lika fort vid alla uppdateringsfrekvenser.
 ```quiz
 Racketen kommer att flyttas `PLAYER_VELOCITY * dt` pixlar per bildruta, med `PLAYER_VELOCITY` = 500. Hur långt flyttas den i kursens bildruta 0 och i bildruta 1 medan en rörelsetangent hålls nere?
 - [ ] 500 pixlar i varje bildruta
-- [x] 0 pixlar i bildruta 0 (deltaTime 0) och 500 / 60 ≈ 8.3 pixlar i bildruta 1
-- [ ] 8.3 pixlar i varje bildruta, bildruta 0 inräknad
+- [x] 0 pixlar i bildruta 0 (deltaTime 0) och 500 / 60 ≈ 8,3 pixlar i bildruta 1
+- [ ] 8,3 pixlar i varje bildruta, bildruta 0 inräknad
 - [ ] 1/60 pixel per bildruta
 ---
 deltaTime är tiden sedan förra bildrutan: 0 i den allra första, exakt 1/60 s efter det i kursen. Med en riktig klocka varierar den lite från bildruta till bildruta, och rörelsen varierar med den – hastigheten i pixlar per sekund förblir densamma.
@@ -507,7 +507,7 @@ Gör nu uppgiften **key-callback**.
 
 **Kursens indata är också deterministiska.** Ingen trycker på tangenter i kursens kontroller och bilder. För att de
 senare kapitlen ska kunna visa när bollen skjuts iväg trycker kursen ned en tangent av sig själv: **mellanslag,
-nedtryckt vid t = 0.5 s och släppt vid t = 0.55 s**, via programmets egen key-callback
+nedtryckt vid t = 0,5 s och släppt vid t = 0,55 s**, via programmets egen key-callback
 :::opengl vulkan
 (`key_callback(window, GLFW_KEY_SPACE, scancode, GLFW_PRESS, 0)` inuti `glfwPollEvents()` i bildruta 30, och släppet
 inuti bildruta 33:s).
@@ -1037,12 +1037,12 @@ del som spelet behöver för att ladda sina resurser, följa tiden och läsa tan
 
 ```quiz
 I vilka bildrutor i kursens spelloop ser `ProcessInput` mellanslag nedhållet?
-- [ ] I varje bildruta från 0.5 s och framåt
+- [ ] I varje bildruta från 0,5 s och framåt
 - [ ] Bara i bildruta 30
 - [ ] I ingen: kursen trycker aldrig på någon tangent
-- [x] I bildrutorna 30, 31 och 32: nedtryckningen kommer vid 0.5 s (bildruta 30, före dess `ProcessInput`), släppet vid 0.55 s (bildruta 33)
+- [x] I bildrutorna 30, 31 och 32: nedtryckningen kommer vid 0,5 s (bildruta 30, före dess `ProcessInput`), släppet vid 0,55 s (bildruta 33)
 ---
-Bildruta n ser tiden n / 60, så 0.5 s är bildruta 30 och 0.55 s är bildruta 33. Den enda skriptade tangenttryckningen är det som skjuter iväg bollen i kapitlet Bollen; fram till dess läser ingenting den.
+Bildruta n ser tiden n / 60, så 0,5 s är bildruta 30 och 0,55 s är bildruta 33. Den enda skriptade tangenttryckningen är det som skjuter iväg bollen i kapitlet Bollen; fram till dess läser ingenting den.
 ```
 
 ## Mer att läsa
