@@ -5,31 +5,38 @@
     "changes": {
       "en": [
         "**Pictures in every chapter**: 65 pictures now explain the hard parts of the course – from the directory tree, the columns of ls -l and where stdout and stderr go, through permissions, links, processes and archives, to package managers, systemd, networks, cron and git. Many show the simulator's real output, and they come in your language. Click a picture to see it larger.",
-        "**One-click updates for the Linux packages**: installed as a .deb, .rpm or Arch package, Codestead Linux now updates itself with one click – it downloads the new version, checks it and installs it with your system's package manager, which asks for your password."
+        "**One-click updates for the Linux packages**: installed as a .deb, .rpm or Arch package, Codestead Linux now updates itself with one click – it downloads the new version, checks it and installs it with your system's package manager, which asks for your password.",
+        "**A more faithful shell**: like a real shell, the simulated terminal now keeps plain variables to itself – only the variables you export reach the programs and scripts you start (bash -c, ./script.sh, env), just as the chapter on variables teaches. The backup group now also exists on Ubuntu and Debian."
       ],
       "sv": [
         "**Bilder i alla kapitel**: 65 bilder förklarar nu kursens svåra delar – från katalogträdet, kolumnerna i ls -l och vart stdout och stderr tar vägen, via rättigheter, länkar, processer och arkiv, till pakethanterare, systemd, nätverk, cron och git. Många visar simulatorns riktiga utdata, och de finns på ditt språk. Klicka på en bild för att se den större.",
-        "**Uppdatering med ett klick för Linuxpaketen**: installerad som .deb-, .rpm- eller Arch-paket uppdaterar Codestead Linux nu sig själv med ett klick – den laddar ner den nya versionen, kontrollerar den och installerar den med systemets pakethanterare, som frågar efter ditt lösenord."
+        "**Uppdatering med ett klick för Linuxpaketen**: installerad som .deb-, .rpm- eller Arch-paket uppdaterar Codestead Linux nu sig själv med ett klick – den laddar ner den nya versionen, kontrollerar den och installerar den med systemets pakethanterare, som frågar efter ditt lösenord.",
+        "**Ett trognare skal**: som ett riktigt skal håller den simulerade terminalen nu vanliga variabler för sig själv – bara variabler du exporterar når programmen och skripten du startar (bash -c, ./skript.sh, env), precis som kapitlet om variabler lär ut. Gruppen backup finns nu också i Ubuntu och Debian."
       ],
       "de": [
         "**Bilder in allen Kapiteln**: 65 Bilder erklären jetzt die schwierigen Stellen des Kurses – vom Verzeichnisbaum, den Spalten von ls -l und dem Weg von stdout und stderr über Rechte, Links, Prozesse und Archive bis zu Paketmanagern, systemd, Netzwerken, cron und git. Viele zeigen die echte Ausgabe des Simulators, und sie sind in deiner Sprache. Klicke auf ein Bild, um es größer zu sehen.",
-        "**Updates mit einem Klick für die Linux-Pakete**: Als .deb-, .rpm- oder Arch-Paket installiert, aktualisiert sich Codestead Linux jetzt mit einem Klick selbst – die neue Version wird heruntergeladen, geprüft und mit der Paketverwaltung deines Systems installiert, die nach deinem Passwort fragt."
+        "**Updates mit einem Klick für die Linux-Pakete**: Als .deb-, .rpm- oder Arch-Paket installiert, aktualisiert sich Codestead Linux jetzt mit einem Klick selbst – die neue Version wird heruntergeladen, geprüft und mit der Paketverwaltung deines Systems installiert, die nach deinem Passwort fragt.",
+        "**Eine echtere Shell**: Wie eine echte Shell behält das simulierte Terminal gewöhnliche Variablen jetzt für sich – nur Variablen, die du exportierst, erreichen die Programme und Skripte, die du startest (bash -c, ./skript.sh, env), genau wie es das Kapitel über Variablen erklärt. Außerdem gibt es die Gruppe backup jetzt auch unter Ubuntu und Debian."
       ],
       "fr": [
         "**Des images dans tous les chapitres** : 65 images expliquent désormais les points difficiles du cours – de l'arborescence des répertoires, des colonnes de ls -l et du chemin de stdout et stderr aux droits, aux liens, aux processus et aux archives, jusqu'aux gestionnaires de paquets, à systemd, aux réseaux, à cron et à git. Beaucoup montrent la vraie sortie du simulateur, et elles sont dans votre langue. Cliquez sur une image pour l'agrandir.",
-        "**Mises à jour en un clic pour les paquets Linux** : installé en paquet .deb, .rpm ou Arch, Codestead Linux se met désormais à jour en un clic – la nouvelle version est téléchargée, vérifiée puis installée avec le gestionnaire de paquets de votre système, qui vous demande votre mot de passe."
+        "**Mises à jour en un clic pour les paquets Linux** : installé en paquet .deb, .rpm ou Arch, Codestead Linux se met désormais à jour en un clic – la nouvelle version est téléchargée, vérifiée puis installée avec le gestionnaire de paquets de votre système, qui vous demande votre mot de passe.",
+        "**Un shell plus fidèle** : comme un vrai shell, le terminal simulé garde désormais les variables ordinaires pour lui – seules les variables que vous exportez parviennent aux programmes et aux scripts que vous lancez (bash -c, ./script.sh, env), comme l'explique le chapitre sur les variables. Le groupe backup existe aussi désormais sous Ubuntu et Debian."
       ],
       "es": [
         "**Imágenes en todos los capítulos**: 65 imágenes explican ahora las partes difíciles del curso: desde el árbol de directorios, las columnas de ls -l y adónde van stdout y stderr, pasando por los permisos, los enlaces, los procesos y los archivos comprimidos, hasta los gestores de paquetes, systemd, las redes, cron y git. Muchas muestran la salida real del simulador, y están en tu idioma. Haz clic en una imagen para verla más grande.",
-        "**Actualizaciones con un clic para los paquetes de Linux**: instalado como paquete .deb, .rpm o de Arch, Codestead Linux ahora se actualiza con un clic: descarga la nueva versión, la comprueba y la instala con el gestor de paquetes de tu sistema, que te pide la contraseña."
+        "**Actualizaciones con un clic para los paquetes de Linux**: instalado como paquete .deb, .rpm o de Arch, Codestead Linux ahora se actualiza con un clic: descarga la nueva versión, la comprueba y la instala con el gestor de paquetes de tu sistema, que te pide la contraseña.",
+        "**Un shell más fiel**: como un shell de verdad, el terminal simulado ahora se guarda para sí las variables normales: solo las variables que exportas llegan a los programas y scripts que arrancas (bash -c, ./script.sh, env), tal como enseña el capítulo sobre variables. Además, el grupo backup ya existe en Ubuntu y Debian."
       ],
       "zh": [
         "**每一章都有了插图**：65 张插图讲解课程的难点——从目录树、ls -l 各列的含义、stdout 和 stderr 的去向，到权限、链接、进程和归档，再到包管理器、systemd、网络、cron 和 git。其中许多展示了模拟器的真实输出，并使用你的语言。点击插图即可放大查看。",
-        "**Linux 软件包一键更新**：以 .deb、.rpm 或 Arch 软件包安装时，Codestead Linux 现在只需点击一次即可自行更新——下载新版本、校验后用系统的软件包管理器安装，系统会要求输入你的密码。"
+        "**Linux 软件包一键更新**：以 .deb、.rpm 或 Arch 软件包安装时，Codestead Linux 现在只需点击一次即可自行更新——下载新版本、校验后用系统的软件包管理器安装，系统会要求输入你的密码。",
+        "**更真实的 shell**：和真正的 shell 一样，模拟终端现在会把普通变量留在自己这里——只有你导出的变量才会传给你启动的程序和脚本（bash -c、./script.sh、env），正如变量一章所讲的那样。Ubuntu 和 Debian 中现在也有 backup 组了。"
       ],
       "ja": [
         "**すべての章に図が入りました**：65 枚の図が、コースのわかりにくい部分を説明します。ディレクトリのツリー、ls -l の各列、stdout と stderr の行き先から、権限、リンク、プロセス、アーカイブ、さらにパッケージマネージャー、systemd、ネットワーク、cron、git まで。多くはシミュレーターの実際の出力を使い、あなたの言語で表示されます。図をクリックすると大きく表示されます。",
-        "**Linux パッケージをワンクリックで更新**：.deb、.rpm、Arch のパッケージとしてインストールした Codestead Linux が、ワンクリックで自分自身を更新するようになりました。新しいバージョンをダウンロードして検証し、システムのパッケージマネージャーでインストールします（パスワードを求められます）。"
+        "**Linux パッケージをワンクリックで更新**：.deb、.rpm、Arch のパッケージとしてインストールした Codestead Linux が、ワンクリックで自分自身を更新するようになりました。新しいバージョンをダウンロードして検証し、システムのパッケージマネージャーでインストールします（パスワードを求められます）。",
+        "**より本物に近いシェル**：本物のシェルと同じように、シミュレートされたターミナルは普通の変数を自分の中だけに保つようになりました。起動するプログラムやスクリプト（bash -c、./script.sh、env）に届くのは export した変数だけで、変数の章で学ぶとおりです。また、Ubuntu と Debian に backup グループができました。"
       ]
     }
   },
