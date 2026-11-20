@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "generated": "2026-11-20T11:58:32Z",
+  "tools": [
+    {
+      "id": "codestead-hub",
+      "name": "Codestead",
+      "description": {
+        "en": "Installs and updates the Codestead tools.",
+        "sv": "Installerar och uppdaterar Codestead-verktygen."
+      },
+      "version": "0.2.8",
+      "assets": {
+        "linux-x64": {
+          "url": "https://github.com/JesperE98/codestead-releases/releases/download/codestead-hub-v0.2.8/codestead-hub-0.2.8-linux-x64.tar.gz",
+          "sha256": "da9b01dd1c06852b470506d637a127ca092fb69333a66e5adb0d523a55317d9c",
+          "size": 45,
+          "executable": "Codestead.Hub"
+        },
+        "win-x64": {
+          "url": "https://github.com/JesperE98/codestead-releases/releases/download/codestead-hub-v0.2.8/codestead-hub-0.2.8-win-x64.zip",
+          "sha256": "1ab09866a8fd14134862945e3c435de3f654d0fa5f798036a9bb1b095468b210",
+          "size": 40,
+          "executable": "Codestead.Hub.exe"
+        }
+      },
+      "nativePackages": {
+        "linux-x64": {
+          "deb": {
+            "file": "codestead-hub_0.2.8_amd64.deb",
+            "sha256": "3f04dea33f6ce3ee2bdd7bf653e978cd6e6deb7d2ac881c1844cf541821fc74e",
+            "size": 38
+          },
+          "rpm": {
+            "file": "codestead-hub-0.2.8-1.x86_64.rpm",
+            "sha256": "02fd77eb22813d3543613f50df30ef03924002486781685d88e929cef410f87a",
+            "size": 41
+          },
+          "arch": {
+            "file": "codestead-hub-0.2.8-1-x86_64.pkg.tar.zst",
+            "sha256": "2cfdd8d886a5b77fcb9cf7a8aaca01b3ba514f4401a78229cb0fd9750da44ba0",
+            "size": 49
+          }
+        }
+      },
+      "releaseNotesUrl": "https://github.com/JesperE98/codestead-releases/releases/tag/codestead-hub-v0.2.8"
+    }
+  ]
+}

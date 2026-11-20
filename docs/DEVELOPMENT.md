@@ -720,6 +720,13 @@ hämtad från release-repot; C#-appens egen Velopack tillämpar uppdateringen, s
 till, TS → TS) och, när det finns en, av dess föregående release – AppImage på Ubuntu och Fedora, Setup.exe på
 Windows Server, med kontroll av att användarens data och framsteg finns kvar (`packaging/upgrade-test.sh`,
 `upgrade-test-windows.ps1`; C#-appens uppdateringsknapp är `packaging/upgrade-driver`, det enda .NET-projektet).
+Får hubben en ny version uppdaterar dessutom dess föregående release, installerad som `.deb` (Ubuntu 24.04), `.rpm`
+(Fedora) och Arch-paket, sig själv till bygget med sin native-uppdatering, som root och som vanlig användare genom
+pkexec (`upgrade-native`, `packaging/native-update-test.sh`; se "Hur apparna uppdateras"). Det gamla paketet hämtas
+från release-repot, inget byggs två gånger; hubben räcker eftersom koden är delad. Har releasen inget sådant paket,
+eller kan dess hubb inte köras så (`--self-update-test` kom i 0.2.7), hoppas fallet över med en notis; får hubben
+ingen ny version från en TypeScript-release listar `plan.py` ett enda `{"skip": …}`-fall, så att jobbet alltid körs
+(publiceringen väntar på det, och ett överhoppat jobb skulle hoppa över publiceringen).
 Därefter publiceras de ändrade produkterna i det offentliga repot
 `JesperE98/codestead-releases` – men bara när båda secrets nedan finns (annars en varning, inget fel):
 
@@ -727,7 +734,16 @@ Därefter publiceras de ändrade produkterna i det offentliga repot
 |---|---|
 | `<id>-v<version>` (t.ex. `codestead-linux-v0.5.0`) | Alla filer för versionen och `SHA256SUMS.txt` |
 | `<id>-latest` | Samma filer utan version i namnet (länkarna i README) och Velopacks uppdateringsflöde |
-| `catalog` | `catalog.json` och `catalog.json.sig`: listan som hubben läser |
+| `catalog` | `catalog.json` och `catalog.json.sig`: listan som hubben läser, och som native-paketen uppdaterar sig efter |
+
+**Katalogen** (`packaging/catalog.py`, en produkt i taget i publiceringsjobbet, efter att produktens release har
+skapats) har för varje verktyg version, beskrivning, ändringslogg, de portabla arkiven (`assets`, som hubben
+installerar) och `nativePackages`: versionens `.deb`, `.rpm` och Arch-paket per processor (`linux-x64`) med filnamn,
+SHA-256 och storlek, räknade på samma filer som releasen får. Flödet signerar filen (ECDSA P-256, `CATALOG_SIGNING_KEY`)
+och kontrollerar signaturen som apparna gör innan den laddas upp. Formatet får bara växa: släppta hubbar hoppar över
+egenskaper de inte känner till (som C#-hubbens System.Text.Json gjorde), så nya egenskaper går att lägga till, men
+befintliga får inte byta namn, typ eller betydelse (`ts/apps/hub/test/CatalogCompatibilityTests.test.ts` läser den
+publicerade katalogen och det nya formatet med hubbens parser).
 
 Release-titlarna kommer från `title` i `packaging/products.json` ("Codestead Linux 0.5.1",
 "Codestead hub 0.1.1"), eftersom alla produkter delar repot. Efter varje publicering skriver flödet om
@@ -759,16 +775,24 @@ Var appen kommer ifrån avgör vem som uppdaterar den (huvudprocessen väljer: `
 **Native-paket.** Appen räknas som installerad av pakethanteraren när den körs från `/opt/<id>/` *och*
 `dpkg-query -W`, `rpm -q` eller `pacman -Q` säger att paketet `<id>` är installerat (sökvägen räcker inte). Då:
 
-1. **Den senaste versionen**: hubben läser den ur sin signerade katalog (samma källa som när den inte kan uppdatera
-   sig själv); Codestead Linux och GP ur Velopacks flöde `releases.linux.json` i `<id>-latest` (det AppImagen
-   uppdaterar från).
-2. **Nedladdningen**: paketet för systemet och processorn (bara x64 byggs) och `SHA256SUMS.txt` ur releasen
-   `<id>-v<version>` – bara över HTTPS från `github.com` och GitHubs nedladdningsvärdar (`objects.githubusercontent.com`,
-   `release-assets.githubusercontent.com`). Omdirigeringarna följs en i taget och bara dit (Electrons `net.fetch` kan
-   inte stanna vid dem, så nedladdningen görs med `net.request` och `redirect: "manual"`). Filen hamnar i en ny
-   privat temporär mapp (`mkdtemp`) som tas bort efteråt.
-3. **Kontrollsumman**: paketets SHA-256 måste stå i releasens `SHA256SUMS.txt` och stämma. Saknas den eller
-   stämmer den inte installeras ingenting.
+1. **Den senaste versionen och paketets SHA-256**: ur den signerade katalogen (`catalog.json` och `catalog.json.sig`
+   i releasen `catalog`; `ts/packages/ui/src/electron/SignedCatalog.ts`). Alla tre apparna – hubben, Codestead Linux
+   och GP – hämtar den själva och kontrollerar signaturen mot den publika nyckeln som är inbyggd i appen
+   (`build/catalog-signing.pub.pem`, som i hubben; därför hör filen till Linux och GP:s `paths` också). Hubben använder
+   aldrig katalogen eller nyckeln från `--catalog`/`--public-key` till sin uppdatering (de gäller röktestets
+   verktygslista). En katalog med fel signatur används inte (ingen uppdatering erbjuds); en äldre, återspelad katalog
+   kan bara nämna äldre versioner, och bara en nyare version än appens erbjuds.
+2. **Nedladdningen**: paketet för systemet och processorn (bara x64 byggs) ur releasen `<id>-v<version>` – bara över
+   HTTPS från `github.com` och GitHubs nedladdningsvärdar (`objects.githubusercontent.com`,
+   `release-assets.githubusercontent.com`), katalogen likaså. Omdirigeringarna följs en i taget och bara dit (Electrons
+   `net.fetch` kan inte stanna vid dem, så nedladdningen görs med `net.request` och `redirect: "manual"`). Filen hamnar
+   i en ny privat temporär mapp (`mkdtemp`) som tas bort efteråt.
+3. **Kontrollsumman**: katalogens `nativePackages` måste ha just den filen (`linux-x64`, paketets sort, filnamnet i
+   releasen) för versionen, och den nedladdade filen måste ha dess SHA-256 (och inte vara större). Saknas posten
+   laddas ingenting ner; stämmer summan inte installeras ingenting. Releasens `SHA256SUMS.txt` används inte längre:
+   den är inte signerad, så den skyddar bara mot trasiga nedladdningar, inte mot någon som kan ändra releasens filer –
+   och som reserv skulle den vara precis den väg en angripare valde. En post som saknar `nativePackages` (skriven
+   före 0.2.8/0.6.9/0.2.9) gäller bara versioner som redan är äldre än apparna med den här koden.
 4. **Installationen**, med programmen ur `/usr/bin`, `/usr/sbin`, `/bin` eller `/sbin` (inte ur `PATH`) och filen
    som argument (inget skal): `pkexec apt-get install -y <fil>` (.deb), `pkexec dnf install -y <fil>` – annars
    `zypper --non-interactive install --allow-unsigned-rpm <fil>` eller `rpm -U <fil>` – (.rpm),
@@ -784,13 +808,17 @@ agent found") eller misslyckas pakethanteraren, visar fönstret varför (paketha
 releasesidan i stället. Det finns ingen inställning eller miljövariabel som pekar uppdateringarna någon annanstans.
 
 **Test i docker** (bara hubben har en testkrok: `--smoke-test --self-update-test` kör uppdateringsknappen utan
-fönster, med katalogen från `--catalog`/`--public-key` som i röktestet). `packaging/native-update-test.sh`
-installerar en äldre hubb som paket i en ren container, låter `/etc/hosts` skicka `github.com` och
+fönster). `packaging/native-update-test.sh` installerar en äldre hubb som paket i en ren container och ändrar
+systemet som en angripare i mitten skulle behöva: `/etc/hosts` skickar `github.com` och
 `objects.githubusercontent.com` till en lokal HTTPS-server (`packaging/native-update-server.cjs`, med ett
-engångs-CA som bara containern litar på) och kontrollerar: som root, fel kontrollsumma, en omdirigering bort från
-GitHub, och som vanlig användare med en låtsas-pkexec som skriver upp sina argument (och en gång låtsas att
-lösenordsrutan stängdes). Efter varje fall: paketets installerade version och att hubben startade om som den nya
-versionen. Två byggen med olika version behövs (testet ingår inte i CI: det kräver två byggen av hubben):
+engångs-CA som bara containern litar på), och den inbyggda katalognyckeln i den installerade hubbens `main.cjs` byts
+(som root) mot en engångsnyckel som serverns katalog är signerad med. Appen har ingen växel för någon annan adress
+eller nyckel. Testet kontrollerar: som root, fel SHA-256 i katalogen, en katalog signerad med en annan nyckel, en
+katalog utan paketet, en omdirigering av paketet bort från GitHub, och som vanlig användare med en låtsas-pkexec som
+skriver upp sina argument (och en gång låtsas att lösenordsrutan stängdes). Efter varje fall: paketets installerade
+version och att hubben startade om som den nya versionen. En gammal hubb före 0.2.8 (kontrollsumman ur
+`SHA256SUMS.txt`, katalogen från `--catalog`/`--public-key`) testas med de kontroller den har – så kör CI:s
+`upgrade-native` testet från föregående release. Lokalt med två byggen:
 
 ```bash
 packaging/build-linux.sh ts/apps/hub codestead-hub Codestead Codestead.Hub 0.2.90 /tmp/hub-old
@@ -799,7 +827,7 @@ packaging/native-update-test.sh /tmp/hub-old /tmp/hub-new deb ubuntu:24.04   # e
 ```
 
 (`NATIVE_UPDATE_DOCKER_ARGS="--tmpfs /opt:exec,size=2g --tmpfs /tmp:exec,size=2g"` lägger containerns stora filer i
-minnet där diskutrymmet är knappt.)
+minnet där diskutrymmet är knappt. Som gammal hubb går också föregående releases paket: lägg det ensamt i en mapp.)
 
 ### Chromiums sandlåda på Linux
 
@@ -926,7 +954,8 @@ går inte att prova i docker (containrar har ingen egen AppArmor): det görs fö
 
 ### Signeringsnyckel för katalogen
 
-Hubben litar bara på en katalog som är signerad med rätt nyckel (ECDSA P-256). Skapa nyckelparet en
+Hubben litar bara på en katalog som är signerad med rätt nyckel (ECDSA P-256), och apparna (hubben, Codestead Linux och
+GP) installerade som native-paket uppdaterar sig bara efter en sådan katalog. Skapa nyckelparet en
 gång, på din egen dator (Git Bash på Windows har `openssl`):
 
 ```bash
@@ -937,7 +966,7 @@ openssl ecparam -name prime256v1 -genkey -noout -out catalog-signing.pem
 openssl ec -in catalog-signing.pem -pubout -out build/catalog-signing.pub.pem
 ```
 
-1. Committa `build/catalog-signing.pub.pem` (den publika nyckeln byggs in i hubben).
+1. Committa `build/catalog-signing.pub.pem` (den publika nyckeln byggs in i alla tre apparna).
 2. Lägg hela innehållet i `catalog-signing.pem` som secret `CATALOG_SIGNING_KEY`
    (Settings → Secrets and variables → Actions).
 3. Spara `catalog-signing.pem` säkert utanför repot, t.ex. i en lösenordshanterare. Committa den aldrig.

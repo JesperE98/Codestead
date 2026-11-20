@@ -2,8 +2,9 @@
 // sends github.com and objects.githubusercontent.com here, and the container trusts the test's throw-away CA, so the
 // hub downloads its update from the real addresses (nothing in the app can point it elsewhere). As GitHub does,
 // https://github.com/<repo>/releases/download/<tag>/<file> redirects to the download host, which serves
-// <release-dir>/<tag>/<file>; while <release-dir>/../redirect-away exists, it redirects to elsewhere.test instead (which
-// serves the same files), which the app must refuse. Every request is logged.
+// <release-dir>/<tag>/<file>; while <release-dir>/../redirect-away exists, it redirects the files it names (one name a
+// line; empty: every file) to elsewhere.test instead (which serves the same files), which the app must refuse. Every
+// request is logged.
 // Run with the installed app's Electron as Node:
 //   ELECTRON_RUN_AS_NODE=1 /opt/<id>/<exe>.bin native-update-server.cjs <release-dir> <cert.pem> <key.pem> <owner/repo>
 "use strict";
@@ -23,7 +24,10 @@ https
     const url = new URL(req.url || "/", `https://${host}`);
     console.log(`${req.method} https://${host}${url.pathname}`);
     if (host === "github.com" && url.pathname.startsWith(releases)) {
-      const to = fs.existsSync(path.join(base, "..", "redirect-away")) ? "elsewhere.test" : "objects.githubusercontent.com";
+      const away = path.join(base, "..", "redirect-away");
+      const names = fs.existsSync(away) ? fs.readFileSync(away, "utf8").split("\n").filter((n) => n !== "") : null;
+      const file = decodeURIComponent(url.pathname.split("/").pop() || "");
+      const to = names !== null && (names.length === 0 || names.includes(file)) ? "elsewhere.test" : "objects.githubusercontent.com";
       res.writeHead(302, { location: `https://${to}${assets}${url.pathname.slice(releases.length)}?test=1` });
       res.end();
       return;
