@@ -74,6 +74,8 @@ describe.skipIf(output === "")("TerminalPictures", () => {
       vi.useFakeTimers({ toFake: ["Date"] });
       vi.setSystemTime(new Date(r.time ?? "2026-10-28T09:30:00Z"));
       const sh = Shell.create(r.distro ?? "ubuntu", r.lang);
+      // The simulator's own hint lines in the picture's language (Shell.lang is the UI language, Swedish by default).
+      sh.lang = r.lang;
       for (const line of r.setup ?? []) sh.execute(sh.world.expand(line));
       const shown = r.commands.map((command) => {
         const typed = sh.world.expand(command);
