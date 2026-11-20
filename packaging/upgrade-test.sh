@@ -175,10 +175,30 @@ watch_restart() {
   ( for _ in $(seq 1 1200); do if restarted; then touch /tmp/restart-seen; exit 0; fi; sleep 0.25; done ) &
   WATCHER=$!
 }
-# Waits until the restarted app has been seen and has finished.
+# The restart as the logs record it, for a smoke test that is over before the process list is read (the hub's takes
+# about a second): the restarted app's SMOKE OK <version> in the update's own output (the C# driver's updater inherits
+# it), or, in Velopack's log after "Package version <version> applied successfully", the restarted TypeScript app's
+# Velopack hook running with --smoke-test.
+restarted_per_log() {
+  local want="$1" log="$2"
+  grep -q "SMOKE OK .* $want " "$log" 2>/dev/null && return 0
+  local vlog
+  for vlog in /tmp/velopack*.log; do
+    [[ -e "$vlog" ]] || continue
+    awk -v want="Package version $want applied successfully" \
+      'index($0, want) { applied = 1; next } applied && /Running with args/ && /--smoke-test/ { found = 1 } END { exit !found }' "$vlog" \
+      && return 0
+  done
+  return 1
+}
+# Waits until the restarted app (version <want>, update output in <log>) has been seen and has finished.
 wait_for_restart() {
-  local i
-  for i in $(seq 1 60); do [[ -e /tmp/restart-seen ]] && break; sleep 1; done
+  local want="$1" log="$2" i
+  for i in $(seq 1 60); do
+    [[ -e /tmp/restart-seen ]] && break
+    restarted_per_log "$want" "$log" && { touch /tmp/restart-seen; break; }
+    sleep 1
+  done
   [[ -e /tmp/restart-seen ]] || { kill "$WATCHER" 2>/dev/null; return 1; }
   for i in $(seq 1 120); do restarted || return 0; sleep 2; done
   fail "the restarted app did not finish its smoke test"
@@ -291,7 +311,7 @@ inside() {
       || { cat /tmp/update1.log; fail "the $old's update did not start"; }
   fi
   wait_for_update "$v1"
-  wait_for_restart || { cat /tmp/update1.log; fail "the updater did not restart the app"; }
+  wait_for_restart "$v1" /tmp/update1.log || { cat /tmp/update1.log; fail "the updater did not restart the app"; }
   cat /tmp/update1.log
   # (Velopack's Node SDK does not pass its output on to the updater: there the restart is only seen as a process.)
   if [[ "$kind" == csharp ]]; then
@@ -357,7 +377,7 @@ PY
       /packaging/ts/update-from-feed.cjs --feed http://127.0.0.1:8472/ --expect "$v2" -- --smoke-test >/tmp/update2.log 2>&1 \
       || { cat /tmp/update2.log; fail "the TypeScript app's update did not start"; }
     wait_for_update "$v2"
-    wait_for_restart || { cat /tmp/update2.log; fail "the updater did not restart the app"; }
+    wait_for_restart "$v2" /tmp/update2.log || { cat /tmp/update2.log; fail "the updater did not restart the app"; }
     cat /tmp/update2.log
     echo "The updater applied $v2 and restarted the app."
     rm -rf "$mnt"
