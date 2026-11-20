@@ -278,6 +278,27 @@ export class Shell {
     walk("/etc/resolv.conf");
     walk("/usr/local/bin/myserver");
     walk(`${home}/${this.world.get("downloads")}`);
+    this.addMissingSystemGroups();
+  }
+
+  /**
+   * System groups that came with a later version (e.g. backup on the Debian family) are added to /etc/group of a
+   * terminal saved before – once, and only when neither the name nor the GID is taken.
+   */
+  private addMissingSystemGroups(): void {
+    const key = "default:systemGroups:2";
+    if (this.flags.get(key) === true) return;
+    this.flags.set(key, true);
+    const root = this.rootUser();
+    const node = this.vfs.tryLookup("/etc/group", root);
+    if (node?.type !== "file") return;
+    const text = node.content ?? "";
+    const taken = new Set(text.split("\n").flatMap((l) => (l === "" ? [] : [`n:${l.split(":")[0]}`, `g:${l.split(":")[2]}`])));
+    const missing = InitfsLib.systemGroups(this.distro).filter((g) => {
+      const [name, , gid] = g.split(":");
+      return !taken.has(`n:${name}`) && !taken.has(`g:${gid}`);
+    });
+    if (missing.length > 0) this.vfs.writeFile("/etc/group", `${text}${text === "" || text.endsWith("\n") ? "" : "\n"}${missing.join("\n")}\n`, root);
   }
 
   snapshot(): ShellSnapshot {

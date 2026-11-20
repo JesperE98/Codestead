@@ -115,6 +115,37 @@ describe("UsersTests", () => {
     expect(t.run("sudo usermod -s /bin/bash nisse").out).toBe("usermod: user 'nisse' does not exist\n");
   });
 
+  itNeeds(["sudo", "groups", "id", "getent"], "gruppen backup finns i Debian-familjen (kapitlet om användare)", () => {
+    const t = new TestShell();
+    t.run("sudo useradd -m -s /bin/bash kim");
+    expect(t.run("sudo usermod -aG backup kim").exitCode).toBe(0);
+    expect(t.run("groups kim").out).toBe("kim : kim backup\n");
+    expect(t.run("id kim").out).toBe("uid=1001(kim) gid=1001(kim) groups=1001(kim),34(backup)\n");
+    expect(t.run("getent group backup").out).toBe("backup:x:34:kim\n");
+    t.run("sudo usermod -G backup kim");
+    expect(t.run("groups kim").out).toBe("kim : kim backup\n");
+    expect(new TestShell("debian").run("getent group backup").out).toBe("backup:x:34:\n");
+    // Arch och Fedora har ingen backup-grupp, men disk (som enhetsfilerna i /dev tillhör) finns överallt.
+    for (const d of ["arch", "fedora"]) {
+      const o = new TestShell(d);
+      expect(o.run("getent group backup").exitCode).toBe(2);
+      expect(o.run("getent group disk").exitCode).toBe(0);
+    }
+  });
+
+  it("system-grupper som saknas läggs till i terminaler sparade innan de fanns", () => {
+    const t = new TestShell();
+    const json = t.sh.snapshotJson().replace("backup:x:34:\\n", "").replace(/,?"default:systemGroups:2":true/, "");
+    expect(json).not.toContain("backup:x:34:");
+    expect(json).not.toContain("default:systemGroups");
+    const old = Shell.restoreJson(json)!;
+    expect(old.vfs.readFile("/etc/group", old.rootUser())).toContain("backup:x:34:\n");
+    // Bara en gång: en grupp som eleven tar bort sedan kommer inte tillbaka.
+    old.execute("sudo groupdel backup");
+    const again = Shell.restoreJson(old.snapshotJson())!;
+    expect(again.vfs.readFile("/etc/group", again.rootUser())).not.toContain("backup:");
+  });
+
   itNeeds(["sudo"], "usermod -L låser och -U låser upp", () => {
     const t = new TestShell();
     t.run("sudo useradd -m kim");
