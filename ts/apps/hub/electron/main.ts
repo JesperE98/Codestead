@@ -1,7 +1,7 @@
 import { type ChildProcess } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { runVelopackHooks, serveSelfUpdate, VelopackSelfUpdate } from "@codestead/ui/electron-main";
+import { appSelfUpdate, detectNativeInstall, launcherOf, type NativeInstall, runVelopackHooks, serveSelfUpdate } from "@codestead/ui/electron-main";
 import { app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, net, shell } from "electron";
 import iconData from "../../../../src/Hub/Codestead.Hub/Assets/icon.png?inline";
 import { Catalog } from "../src/core/Catalog.js";
@@ -58,6 +58,8 @@ let closeToTray = false;
 let instance: SingleInstance | null = null;
 /** The tools started from the hub that still run. */
 const running = new Map<number, ChildProcess>();
+/** Installed as a .deb/.rpm/Arch package (asked of the package manager before the window asks about updates). */
+let nativeInstall: NativeInstall | null = null;
 
 const icon = nativeImage.createFromDataURL(iconData);
 
@@ -164,10 +166,49 @@ async function openExternal(url: string): Promise<void> {
   if (protocol === "https:" || protocol === "http:") await shell.openExternal(url);
 }
 
-/** The packaged app's executable on Linux is a launcher script next to Electron (`<exe>` for `<exe>.bin`). */
-function launcherOf(execPath: string): string {
-  const launcher = execPath.endsWith(".bin") ? execPath.slice(0, -".bin".length) : null;
-  return launcher !== null && existsSync(launcher) ? launcher : execPath;
+/**
+ * The hub's own updates. A native package learns of a new hub from the signed catalog (as the window does when the hub
+ * cannot update itself) and starts again as `relaunchArgs`.
+ */
+function selfUpdate(relaunchArgs: readonly string[], inheritOutput: boolean) {
+  return appSelfUpdate({
+    releasesRepo: HubInfo.releasesRepo,
+    packageId: HubInfo.id,
+    currentVersion: HubInfo.version,
+    nativeInstall,
+    exit: () => app.exit(0),
+    fetch: (url, init) => net.fetch(url, init),
+    latestVersion: async () => (catalog ?? (await catalogClient.load()).catalog).find(HubInfo.id)?.version ?? null,
+    relaunch: { executable: launcherOf(process.execPath), args: relaunchArgs, inheritOutput },
+    log: (line) => console.log(`SELF-UPDATE ${line}`),
+  });
+}
+
+/**
+ * --smoke-test --self-update-test (packaging/native-update-test.sh): the update button of a hub installed as a native
+ * package, without the window – the catalog (--catalog, --public-key, as the smoke test's) names a newer hub, which is
+ * downloaded from its release, checked, installed and started with the same smoke test (its output goes to this one's).
+ */
+async function selfUpdateTest(): Promise<void> {
+  const updater = selfUpdate(
+    args.filter((a) => a !== "--self-update-test" && a !== "--no-sandbox"),
+    true,
+  );
+  console.log(
+    `SELF-UPDATE ${HubInfo.version}: installed as ${nativeInstall?.kind ?? "no native package"}, ` +
+      `canUpdateItself=${updater.canUpdateItself}, asksForPassword=${updater.asksForPassword === true}`,
+  );
+  catalog = (await catalogClient.load()).catalog;
+  const version = await updater.check();
+  if (version === null) throw new Error("no newer hub in the catalog");
+  console.log(`SELF-UPDATE available: ${version}`);
+  let shown: number | null = null;
+  await updater.downloadAndRestart((percent) => {
+    const step = percent < 0 ? -1 : Math.floor(percent / 50);
+    if (step === shown) return;
+    shown = step;
+    console.log(percent < 0 ? "SELF-UPDATE installing" : `SELF-UPDATE downloading ${percent} %`);
+  });
 }
 
 let smokeFinished = false;
@@ -297,8 +338,9 @@ function registerIpc(): void {
     const r = window ? await dialog.showOpenDialog(window, { properties: ["openDirectory"] }) : null;
     return r && !r.canceled ? (r.filePaths[0] ?? null) : null;
   });
-  // The hub's own updates (C#: MainWindow's SelfUpdate): installed with Setup.exe or as an AppImage.
-  serveSelfUpdate(ipcMain, () => new VelopackSelfUpdate(HubInfo.releasesRepo, HubInfo.id, () => app.exit(0)));
+  // The hub's own updates (C#: MainWindow's SelfUpdate): installed with Setup.exe or as an AppImage (Velopack), or as a
+  // native package (the package manager); it starts again without arguments.
+  serveSelfUpdate(ipcMain, () => selfUpdate([], false));
   ipcMain.on(Ipc.smokeTestDone, (_e, ok: boolean, text: string) => smokeTestDone(ok === true, String(text)));
   ipcMain.on(Ipc.quit, () => quit());
 }
@@ -307,6 +349,16 @@ async function main(): Promise<void> {
   if (args.includes("--version")) {
     console.log(HubInfo.version);
     app.exit(0);
+    return;
+  }
+  const native = detectNativeInstall(HubInfo.id);
+  if (options.selfUpdateTest) {
+    await app.whenReady();
+    nativeInstall = await native;
+    await selfUpdateTest().catch((e: unknown) => {
+      console.error(`SELF-UPDATE FAILED: ${messageOf(e)}`);
+      app.exit(1);
+    });
     return;
   }
   // One hub per user: a second start shows the first one (not in the installation tests).
@@ -325,6 +377,7 @@ async function main(): Promise<void> {
     tray.onQuitRequested = quit;
     tray.onOpenRequested = (id) => send(Ipc.openRequested, id);
   }
+  nativeInstall = await native;
   registerIpc();
   createWindow();
   // A later start of the hub shows this one.

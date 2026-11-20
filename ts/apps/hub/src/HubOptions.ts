@@ -5,6 +5,11 @@ import { pathToFileURL } from "node:url";
 export class HubOptions {
   /** --background: started at login – stay in the tray (or minimised) until the user opens the hub. */
   background = false;
+  /**
+   * --self-update-test (only with --smoke-test): install the newer hub that the catalog names as the hub's own update
+   * button would, without the window (packaging/native-update-test.sh).
+   */
+  selfUpdateTest = false;
 
   constructor(
     readonly smokeTest: boolean,
@@ -31,6 +36,7 @@ export class HubOptions {
     const catalog = value("--catalog");
     const o = new HubOptions(smoke, catalog === null ? null : pathToFileURL(isAbsolute(catalog) ? catalog : resolve(cwd, catalog)), value("--public-key"), smoke ? value("--install") : null);
     if (!smoke) o.background = args.includes("--background");
+    o.selfUpdateTest = smoke && args.includes("--self-update-test");
     return o;
   }
 }

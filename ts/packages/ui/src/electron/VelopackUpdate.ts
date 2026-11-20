@@ -49,8 +49,8 @@ export function updateFeedUrl(releasesRepo: string, packageId: string): string {
 
 /**
  * An app's own updates. Installed with Setup.exe (Windows) or as an AppImage, it updates itself with Velopack from the
- * release "<id>-latest" in the releases repository. Installed as a .deb/.rpm/Arch package (or by the hub), something
- * else owns the files, so {@link canUpdateItself} is false.
+ * release "<id>-latest" in the releases repository. Installed as a .deb/.rpm/Arch package (NativePackageUpdate.ts) or
+ * by the hub, Velopack does not own the files, so {@link canUpdateItself} is false.
  */
 export class VelopackSelfUpdate implements SelfUpdate {
   private readonly manager: Velopack.UpdateManager | null = null;
@@ -111,6 +111,7 @@ export function serveSelfUpdate(ipc: SelfUpdateIpcMain, create: () => SelfUpdate
   let updater: SelfUpdate | null = null;
   const get = () => (updater ??= create());
   ipc.on(SelfUpdateChannels.canUpdateItself, (e) => void (e.returnValue = get().canUpdateItself));
+  ipc.on(SelfUpdateChannels.asksForPassword, (e) => void (e.returnValue = get().asksForPassword === true));
   ipc.handle(SelfUpdateChannels.check, () => get().check());
   ipc.handle(SelfUpdateChannels.download, (e) => get().downloadAndRestart((percent) => e.sender.send(SelfUpdateChannels.progress, percent)));
 }

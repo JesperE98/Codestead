@@ -46,7 +46,7 @@ describe("SelfUpdateTests", () => {
       .split("\n")
       .map((l) => l.trim())
       .filter((l) => l !== "" && !l.startsWith("//"));
-    const firstStatement = code.findIndex((l) => !/^(import\b|from\b|[\w$, {}]+\} from\b|type\b.*from\b)/.test(l) && !/^[\w$]+,?$/.test(l) && l !== "}");
+    const firstStatement = code.findIndex((l) => !/^(import\b|from\b|[\w$, {}]*\} from\b|type\b.*from\b)/.test(l) && !/^(type )?[\w$]+,?$/.test(l) && l !== "}");
     expect(code[firstStatement], `${app}/electron/main.ts`).toBe("runVelopackHooks();");
   });
 

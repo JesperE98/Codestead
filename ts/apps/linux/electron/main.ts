@@ -4,9 +4,19 @@
 
 import * as os from "node:os";
 import * as path from "node:path";
-import { app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, shell, type IpcMainEvent } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, net, shell, type IpcMainEvent } from "electron";
 import { storageDirectory } from "@codestead/ui";
-import { runVelopackHooks, serveSelfUpdate, VelopackSelfUpdate } from "@codestead/ui/electron-main";
+import {
+  appSelfUpdate,
+  detectNativeInstall,
+  type FetchLike,
+  latestFromVelopackFeed,
+  launcherOf,
+  type NativeInstall,
+  runVelopackHooks,
+  serveSelfUpdate,
+  updateFeedUrl,
+} from "@codestead/ui/electron-main";
 import iconDataUrl from "../../../../src/Linux/Codestead.Linux/Assets/icon.png";
 import { ProductInfo } from "../src/ProductInfo.js";
 import { type AppInfo, Channels, type FileFilter } from "./api.js";
@@ -48,6 +58,9 @@ function start(): void {
   app.setName(ProductInfo.name);
   const storage = new FileStorage(storageDirectory(ProductInfo.toolId, { platform: process.platform, env: process.env, home: os.homedir() }));
   let window: BrowserWindow | null = null;
+  /** Installed as a .deb/.rpm/Arch package: asked of the package manager before the window asks about updates. */
+  let nativeInstall: NativeInstall | null = null;
+  const nativeDetected = detectNativeInstall(ProductInfo.toolId);
 
   const info: AppInfo = { name: ProductInfo.name, version: ProductInfo.version, smokeTest, storageDirectory: storage.directory };
   const fromOurWindow = (e: { sender: Electron.WebContents }) => window !== null && e.sender === window.webContents;
@@ -79,8 +92,21 @@ function start(): void {
     const r = await dialog.showOpenDialog(window, { title: typeof title === "string" ? title : undefined, properties: ["openDirectory", "createDirectory"] });
     return r.canceled ? null : (r.filePaths[0] ?? null);
   });
-  // The app's own updates (C#: the learning window's SelfUpdate): installed with Setup.exe or as an AppImage.
-  serveSelfUpdate(ipcMain, () => new VelopackSelfUpdate(ProductInfo.releasesRepo, ProductInfo.toolId, () => app.exit(0)));
+  // The app's own updates (C#: the learning window's SelfUpdate): installed with Setup.exe or as an AppImage (Velopack),
+  // or as a .deb/.rpm/Arch package (the package manager, with the version of the AppImage's update feed).
+  const fetch: FetchLike = (url, init) => net.fetch(url, init);
+  serveSelfUpdate(ipcMain, () =>
+    appSelfUpdate({
+      releasesRepo: ProductInfo.releasesRepo,
+      packageId: ProductInfo.toolId,
+      currentVersion: ProductInfo.version,
+      nativeInstall,
+      exit: () => app.exit(0),
+      fetch,
+      latestVersion: () => latestFromVelopackFeed(fetch, updateFeedUrl(ProductInfo.releasesRepo, ProductInfo.toolId), ProductInfo.toolId),
+      relaunch: { executable: launcherOf(process.execPath) },
+    }),
+  );
   ipcMain.on(Channels.quit, (_e, code: unknown) => app.exit(typeof code === "number" ? code : 0));
   ipcMain.on(Channels.smokeResult, (_e, ok: unknown, text: unknown) => {
     if (!smokeTest) return;
@@ -95,7 +121,8 @@ function start(): void {
     app.exit(1);
   };
 
-  void app.whenReady().then(() => {
+  void Promise.all([app.whenReady(), nativeDetected]).then(([, native]) => {
+    nativeInstall = native;
     // No menu bar (the window has its own top bar); macOS needs its app and edit menus for quitting and copy/paste.
     Menu.setApplicationMenu(
       process.platform === "darwin" ? Menu.buildFromTemplate([{ role: "appMenu" }, { role: "editMenu" }, { role: "windowMenu" }]) : null,
