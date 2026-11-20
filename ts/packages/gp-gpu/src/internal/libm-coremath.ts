@@ -1,7 +1,8 @@
 // sin, cos, tan, asin, acos, atan and atan2, correctly rounded: a translation of the CORE-MATH project's
 // src/binary64/{sin,cos,tan,asin,acos,atan,atan2}/*.c and atan2/tint.h (https://core-math.gitlabpages.inria.fr/,
 // https://gitlab.inria.fr/core-math/core-math, taken from its GitHub mirror https://github.com/nak5124/core-math,
-// commit 018fa97cbdacf59924b899a9dfa422d532cb2bb7). The tables are in libm-coremath-data.ts.
+// commit 018fa97cbdacf59924b899a9dfa422d532cb2bb7;
+// the same commit is in the official repository, checked 2026-11-20, so the files are the official ones). The tables are in libm-coremath-data.ts.
 //
 // The results are correctly rounded (to nearest), so they do not depend on how the arithmetic is arranged; the
 // translation follows the C code operation by operation, with C's fma (__builtin_fma) as libm-fma.ts's exact fma and
