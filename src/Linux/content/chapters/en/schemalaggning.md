@@ -67,6 +67,8 @@ How often does `0 */2 * * * command` run?
 Minute 0 and every second hour: 00:00, 02:00, 04:00 …
 ```
 
+![When two crontab lines run](images/cron-times.webp "The first line runs the job every ten minutes of every hour, the second at 07:00 on days 1 to 5 of the week, Monday to Friday. Sunday is 0 or 7.")
+
 ## Installing jobs
 
 `crontab -e` opens your crontab in a text editor and installs it when you save.
@@ -140,6 +142,8 @@ anywhere. Why?
 Output from cron jobs is not shown in any terminal. Real cron tries to email
 it, and most computers have no mail – so it is lost.
 ```
+
+![Your terminal and a cron job](images/cron-env.webp "A cron job runs with /bin/sh, without your ~/.bashrc and with a short PATH. Its output is lost unless the line sends it to a file.")
 
 ## The system's own jobs
 

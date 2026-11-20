@@ -96,6 +96,8 @@ lsblk -f
 Repare no `sdb1`: um sistema de arquivos `vfat` com o rótulo `USBSTICK`
 que não está montado em lugar nenhum. É o pendrive que vamos conectar.
 
+![Discos, partições e sistemas de arquivos](images/disk-layout.webp "lsblk -f neste computador: o disco sda tem três partições, cada uma com seu sistema de arquivos e seu ponto de montagem. O pendrive sdb tem uma partição FAT que ainda não está montada.")
+
 ## Sistemas de arquivos diferentes
 
 Existem muitos sistemas de arquivos, com pontos fortes diferentes:
@@ -217,6 +219,8 @@ aparecem no diretório:
 ls -l /mnt/usb
 df -h /mnt/usb
 ```
+
+![Três sistemas de arquivos em uma árvore](images/mount-tree.webp "Depois da montagem, os arquivos do pendrive aparecem em /mnt/usb. O sistema de arquivos raiz está montado em / e a partição EFI em /boot/efi – uma árvore só, sem letras de unidade.")
 
 A partir daqui o pendrive funciona como qualquer outro diretório. Copie um
 arquivo para o seu diretório pessoal:

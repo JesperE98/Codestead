@@ -90,6 +90,8 @@ scp -r {{documents}} srv:backup
 कोलन भूलना बहुत आसान है!
 ```
 
+![scp किस तरफ़ copy करता है](images/scp-copy.webp "Source पहले आता है और target आख़िर में; HOST:PATH server पर होता है। Colon के बिना srv बस एक file का नाम है, और copy आपके अपने computer पर ही रहती है।")
+
 ## Sync में रखना – `rsync`
 
 बहुत सारी files के लिए, या किसी ऐसी चीज़ के लिए जिसे आप बार-बार copy करते हैं
@@ -133,6 +135,8 @@ $ ls /tmp/x
 ---
 Slash के बिना directory ख़ुद `/tmp/x` के अंदर copy हो गई।
 ```
+
+![Slash के साथ और बिना rsync](images/rsync-slash.webp "Slash के बिना rsync directory को ही /tmp/x के अंदर copy करता है। Slash के साथ वह सिर्फ़ उसके अंदर की चीज़ें copy करता है।")
 
 ### SSH के ऊपर और `--delete`
 

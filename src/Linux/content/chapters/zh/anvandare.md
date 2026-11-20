@@ -19,6 +19,8 @@ id
 | `1`–`999` | 用于服务和程序的**系统用户** |
 | `1000` 及以上 | **普通用户**——也就是人。第一个普通用户得到 1000。 |
 
+![UID 范围及其中的用户](images/uid-ranges.webp "UID 区分了 root、系统用户和普通用户。这些是模拟器 /etc/passwd 中的用户；你在本章后面创建的 kim 会得到 1001。")
+
 ## 用户列表——`/etc/passwd`
 
 所有用户都列在文本文件 `/etc/passwd` 中，每个用户占一行：
@@ -204,6 +206,8 @@ groups kim
 ---
 不加 `-a` 时，列表会被设置成你输入的内容，一个不多一个不少。如果用 `sudo usermod -aG backup kim`，kim 就会保留其他组。
 ```
+
+![usermod -aG 与 usermod -G](images/usermod-ag.webp "kim 的主组不受影响。-aG 把 backup 添加到附加组中，而不带 -a 的 -G 会用 backup 替换掉所有附加组。")
 
 `gpasswd` 也能做同样的事，而且还能移除成员：
 

@@ -135,6 +135,8 @@ Failed to start myserver.service: Interactive authentication required.
 | `systemctl enable --now X` | الاثنان معًا. |
 | `systemctl disable X` | لا تبدأ عند الإقلاع (و`--now` يوقفها أيضًا). |
 
+![start و enable](images/start-enable.webp "لخدمة متوقفة: يشغّلها start الآن لكن ليس بعد إعادة التشغيل، ويجعلها enable تبدأ عند الإقلاع لكن ليس الآن، ويفعل enable --now الأمرين معًا.")
+
 ينشئ `enable` رابطًا في مجلد يحمل اسم الهدف (target) المذكور في القسم
 `[Install]` من ملف الوحدة، وهو عادةً `multi-user.target.wants`:
 
@@ -255,6 +257,8 @@ journalctl --since today -u myserver
 أو رقم أصغر (`warning` رقمها 4).
 ```
 
+![أولويات السجل journal](images/journal-priorities.webp "يعرض -p الأولوية التي تختارها وكل أولوية أشد منها، أي ذات الأرقام الأصغر: يعرض -p err من 0 إلى 3، و-p warning من 0 إلى 4.")
+
 ## استكشاف أخطاء خدمة لا تبدأ
 
 أعدّ أحدهم الخدمة **reportd** على هذا الحاسوب، لكن فيها خللًا ما. وهذه هي
@@ -356,6 +360,8 @@ sudo systemctl daemon-reload
 للملفات في `/etc/systemd/system` الأولوية، ولا يُكتب فوقها عندما تُحدَّث الحزمة.
 ويجعل `daemon-reload` الأمر systemd يحمّل ملف الوحدة المعدَّل من جديد.
 ```
+
+![أين توجد ملفات الوحدات](images/unit-files.webp "تضع الحزم ملفات وحداتها في /usr/lib/systemd/system، أما ملفاتك فتوضع في /etc/systemd/system ولها الأولوية. ينشئ enable رابطًا في multi-user.target.wants، ويبدأ systemd وحداته عند الإقلاع.")
 
 ## ما أسماء الخدمات؟
 

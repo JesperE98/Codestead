@@ -39,6 +39,8 @@ bonana
 不加 `g` 时，只有该行中的第一个 `a` 会被替换。
 ```
 
+![sed 的 s 命令的各个部分](images/sed-substitute.webp "不带 g 标志时，s 只替换每行的第一个匹配；带上 g 就会替换所有匹配。")
+
 `i` 标志让搜索不区分大小写，就像 `grep -i` 一样：
 
 ```sh
@@ -148,6 +150,8 @@ cat ~/fruits-copy.txt
 awk '{print $3}' ~/{{documents}}/server.log
 ```
 
+![awk 把一行拆成字段](images/awk-fields.webp "awk 按空格拆分每一行，不管有几个空格：$1 是第一个字段，$NF 是最后一个，NF 是字段数，$0 是整行。")
+
 程序写在 `{ }` 里，并对每一行运行一次。一定要把 awk 程序放在**单**引号中——否则 shell 会以为 `$3` 是一个 shell 变量，在 awk 启动之前就把它替换掉。
 
 awk 非常适合放在管道中使用。每个级别各有多少行？
@@ -218,6 +222,8 @@ awk 中的变量不需要声明——它们的初始值是 0。`END { }` 块在�
 ```sh
 awk -F, 'NR > 1 {{{sumVar}} += $3} END {print {{sumVar}}}' ~/{{documents}}/{{grades}}
 ```
+
+![awk 如何对一列求和](images/awk-sum.webp "花括号里的部分对标题行之后的每一行运行，把字段 3 加到变量上。END 在最后一行之后运行一次，并打印出总和。")
 
 `{{sumVar}} += $3` 的意思是“把第 3 个字段加到 {{sumVar}} 上”。如果同时统计行数（`count++` 会让 count 加 1），就可以算出平均值：
 

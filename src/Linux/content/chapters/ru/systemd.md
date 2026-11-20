@@ -146,6 +146,8 @@ Failed to start myserver.service: Interactive authentication required.
 | `systemctl enable --now X` | И то и другое сразу. |
 | `systemctl disable X` | Не запускать при загрузке (`--now` заодно останавливает её). |
 
+![start и enable](images/start-enable.webp "Для остановленной службы: start запускает её сейчас, но не после перезагрузки, enable запускает её при загрузке, но не сейчас, а enable --now делает и то и другое.")
+
 `enable` создаёт ссылку в каталоге, названном по target из раздела
 `[Install]` юнит-файла, обычно `multi-user.target.wants`:
 
@@ -269,6 +271,8 @@ journalctl --since today -u myserver
 же или меньшим числом (`warning` – это 4).
 ```
 
+![Приоритеты журнала](images/journal-priorities.webp "-p показывает выбранный приоритет и все более серьёзные, то есть с меньшими номерами: -p err показывает 0–3, а -p warning 0–4.")
+
 ## Диагностика службы, которая не запускается
 
 Кто-то настроил на этом компьютере службу **reportd**, но с ней что-то не
@@ -376,6 +380,8 @@ sudo systemctl daemon-reload
 обновлении пакета. `daemon-reload` заставляет systemd заново загрузить
 изменённый юнит-файл.
 ```
+
+![Где лежат юнит-файлы](images/unit-files.webp "Пакеты кладут свои юнит-файлы в /usr/lib/systemd/system; ваши собственные лежат в /etc/systemd/system и имеют приоритет. enable создаёт ссылку в multi-user.target.wants, юниты из которого systemd запускает при загрузке.")
 
 ## Как называются службы?
 

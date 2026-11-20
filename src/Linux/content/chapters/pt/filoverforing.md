@@ -92,6 +92,8 @@ Sem os dois-pontos, `srv` é só um nome de arquivo, e o `scp` copia localmente,
 como o `cp`. É fácil esquecer os dois-pontos!
 ```
 
+![Para que lado o scp copia](images/scp-copy.webp "A origem vem primeiro e o destino por último; HOST:CAMINHO fica no servidor. Sem os dois-pontos, srv é só um nome de arquivo e a cópia fica no seu computador.")
+
 ## Mantendo sincronizado – `rsync`
 
 Para muitos arquivos, ou para algo que você copia de novo e de novo (backups!),
@@ -135,6 +137,8 @@ $ ls /tmp/x
 ---
 Sem a barra, o próprio diretório foi copiado para dentro de `/tmp/x`.
 ```
+
+![rsync com e sem a barra](images/rsync-slash.webp "Sem a barra, o rsync copia o próprio diretório para dentro de /tmp/x. Com a barra, copia só o que está dentro dele.")
 
 ### Via SSH e `--delete`
 

@@ -46,6 +46,8 @@ bonana
 Utan `g` byts bara det första `a`:et på raden.
 ```
 
+![Delarna av sed:s s-kommando](images/sed-substitute.webp "Utan flaggan g ersätter s bara den första träffen på varje rad; med g ersätter det alla träffar.")
+
 Flaggan `i` gör sökningen skiftlägesokänslig, precis som `grep -i`:
 
 ```sh
@@ -175,6 +177,8 @@ Som standard skiljs fälten åt av mellanslag (hur många som helst). I
 awk '{print $3}' ~/{{documents}}/server.log
 ```
 
+![awk delar en rad i fält](images/awk-fields.webp "awk delar varje rad vid mellanslagen, hur många de än är: $1 är första fältet, $NF det sista, NF antalet fält och $0 hela raden.")
+
 Programmet står inom `{ }` och körs för varje rad. Skriv alltid
 awk-programmet inom **enkla** citattecken – annars tror skalet att `$3` är en
 skalvariabel och byter ut den innan awk ens startar.
@@ -258,6 +262,8 @@ sätt att summera en kolumn:
 ```sh
 awk -F, 'NR > 1 {summa += $3} END {print summa}' ~/{{documents}}/{{grades}}
 ```
+
+![Hur awk summerar en kolumn](images/awk-sum.webp "Delen inom klamrarna körs för varje rad efter rubrikraden och lägger till fält 3 i variabeln. END körs en gång, efter sista raden, och skriver ut summan.")
 
 `summa += $3` betyder "lägg till fält 3 till summa". Räknar du samtidigt
 antalet rader (`antal++` ökar med 1) kan du räkna ut medelvärdet:

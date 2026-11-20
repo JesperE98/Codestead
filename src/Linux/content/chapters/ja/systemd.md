@@ -144,6 +144,8 @@ systemd について最もよくある誤解がこれです。**`start` と `ena
 | `systemctl enable --now X` | 両方を一度に行う。 |
 | `systemctl disable X` | ブート時に起動しないようにする（`--now` を付けると停止もする）。 |
 
+![start と enable](images/start-enable.webp "止まっているサービスの場合、start はいますぐ起動しますが再起動後は止まっています。enable はブート時に起動するようにしますが、いますぐには起動しません。enable --now は両方を行います。")
+
 `enable` は、ユニットファイルの `[Install]` セクションに書かれたターゲットに
 ちなんだ名前のディレクトリ、ふつうは `multi-user.target.wants` にリンクを
 作ります。
@@ -269,6 +271,8 @@ journalctl --since today -u myserver
 それより小さいものすべてを表示します（`warning` は 4 です）。
 ```
 
+![journal の優先度](images/journal-priorities.webp "-p は選んだ優先度と、それより重大なもの（番号が小さいもの）をすべて表示します。-p err は 0〜3、-p warning は 0〜4 です。")
+
 ## 起動しないサービスのトラブルシューティング
 
 誰かがこのコンピューターに **reportd** というサービスを設定しましたが、
@@ -376,6 +380,8 @@ sudo systemctl daemon-reload
 上書きされません。`daemon-reload` で、systemd は変更されたユニットファイルを
 もう一度読み込みます。
 ```
+
+![ユニットファイルの置き場所](images/unit-files.webp "パッケージのユニットファイルは /usr/lib/systemd/system に、自分のものは /etc/systemd/system に置かれ、こちらが優先されます。enable は multi-user.target.wants にリンクを作り、systemd はブート時にそこにあるユニットを起動します。")
 
 ## サービスの名前は？
 

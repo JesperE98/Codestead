@@ -68,6 +68,8 @@ Com que frequência `0 */2 * * * command` é executado?
 Minuto 0 e uma hora sim, outra não: 00:00, 02:00, 04:00 …
 ```
 
+![Quando duas linhas do crontab rodam](images/cron-times.webp "A primeira linha roda a tarefa a cada dez minutos, toda hora; a segunda às 07:00 nos dias 1 a 5 da semana, de segunda a sexta. Domingo é 0 ou 7.")
+
 ## Instalando tarefas
 
 O `crontab -e` abre a sua crontab em um editor de texto e a instala quando
@@ -143,6 +145,8 @@ A saída das tarefas do cron não aparece em nenhum terminal. O cron de verdade
 tenta enviá-la por e-mail, e a maioria dos computadores não tem e-mail
 configurado – então ela se perde.
 ```
+
+![Seu terminal e uma tarefa do cron](images/cron-env.webp "Uma tarefa do cron roda com /bin/sh, sem o seu ~/.bashrc e com um PATH curto. A saída se perde se a linha não a mandar para um arquivo.")
 
 ## As tarefas do próprio sistema
 

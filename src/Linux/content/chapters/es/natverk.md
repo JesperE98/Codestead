@@ -111,6 +111,8 @@ $ ip route | grep default | cut -d' ' -f3
 La tercera palabra de la línea `default` es la dirección de la puerta de enlace.
 ```
 
+![La red de casa y sus rutas](images/home-network.webp "Todo lo que está en 192.168.1.0/24, el servidor y el router, se alcanza directamente. Todo lo demás sigue la ruta por defecto a través de la puerta de enlace 192.168.1.1 hacia internet.")
+
 ## ping: ¿se puede alcanzar?
 
 `ping` envía pequeños paquetes de prueba y mide cuánto tardan las respuestas.
@@ -247,6 +249,8 @@ nombre:
 El orden (primero el archivo, luego el DNS) lo determina la línea
 `hosts: files dns` de `/etc/nsswitch.conf`.
 
+![getent y dig buscan server.lan](images/hosts-dns.webp "getent pregunta como lo hace el sistema, primero en /etc/hosts y luego al DNS, así que encuentra server.lan. dig solo pregunta al DNS, que no conoce el nombre, y no muestra nada.")
+
 ```quiz
 ¿Por qué `sudo echo '192.168.1.10 server.lan' >> /etc/hosts` da
 *Permission denied*?
@@ -294,6 +298,8 @@ sudo ss -tulpn
 Si el servidor de prácticas `myserver` del capítulo de procesos está en
 marcha, lo verás aquí en el puerto 8080. El comando antiguo `netstat -tulpn`
 (de *net-tools*) hace lo mismo.
+
+![Los puertos de tu ordenador](images/ports.webp "La dirección lleva al ordenador, el puerto a un programa dentro de él. sshd escucha en el 22 y myserver en el 8080; en el puerto 80 no escucha nadie, así que curl no puede conectarse ahí.")
 
 ## Descargar de la web: curl y wget
 

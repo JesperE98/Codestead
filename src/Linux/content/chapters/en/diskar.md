@@ -94,6 +94,8 @@ lsblk -f
 Notice `sdb1`: a `vfat` file system labelled `USBSTICK` that is not mounted
 anywhere. That is the USB stick we are going to plug in.
 
+![Disks, partitions and file systems](images/disk-layout.webp "lsblk -f on this computer: the disk sda has three partitions, each with its own file system and mount point. The USB stick sdb has one FAT partition that is not mounted yet.")
+
 ## Different file systems
 
 There are many file systems, with different strengths:
@@ -211,6 +213,8 @@ you can add `-t vfat`. Now the stick's files appear in the directory:
 ls -l /mnt/usb
 df -h /mnt/usb
 ```
+
+![Three file systems in one tree](images/mount-tree.webp "After the mount the stick's files appear under /mnt/usb. The root file system is mounted on / and the EFI partition on /boot/efi – one tree, no drive letters.")
 
 From here on the stick works like any other directory. Copy a file to your
 home directory:

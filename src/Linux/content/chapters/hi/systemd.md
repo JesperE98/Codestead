@@ -140,6 +140,8 @@ systemd के बारे में यह सबसे आम ग़लतफ
 | `systemctl enable --now X` | दोनों एक साथ। |
 | `systemctl disable X` | Boot पर start नहीं होगी (`--now` इसे रोक भी देता है)। |
 
+![start और enable](images/start-enable.webp "रुकी हुई service के लिए: start उसे अभी चलाता है पर reboot के बाद नहीं, enable उसे boot पर start कराता है पर अभी नहीं, और enable --now दोनों करता है।")
+
 `enable` एक directory में link बनाता है जिसका नाम unit file के `[Install]` section
 वाले target पर होता है, आम तौर पर `multi-user.target.wants`:
 
@@ -261,6 +263,8 @@ Journal की हर line की एक **priority** होती है। `-p
 उसी या उससे छोटी संख्या वाली हर चीज़ (`warning` 4 है)।
 ```
 
+![Journal की priorities](images/journal-priorities.webp "-p आपकी चुनी priority और उससे ज़्यादा गंभीर सभी priorities दिखाता है, यानी छोटे number वाली: -p err 0 से 3 दिखाता है और -p warning 0 से 4।")
+
 ## Start न होने वाली service की troubleshooting
 
 किसी ने इस computer पर service **reportd** set up की है, लेकिन कुछ गड़बड़ है। इसे
@@ -365,6 +369,8 @@ sudo systemctl daemon-reload
 वे ओवरराइट नहीं होतीं। `daemon-reload` से systemd बदली हुई यूनिट फ़ाइल को फिर से
 लोड करता है।
 ```
+
+![Unit files कहाँ रहती हैं](images/unit-files.webp "Packages अपनी unit files /usr/lib/systemd/system में रखते हैं; आपकी अपनी /etc/systemd/system में जाती हैं और उन्हें प्राथमिकता मिलती है। enable multi-user.target.wants में एक link बनाता है, जिसकी units को systemd boot पर start करता है।")
 
 ## सर्विसों के नाम क्या हैं?
 

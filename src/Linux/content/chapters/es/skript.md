@@ -129,6 +129,8 @@ llamado `test`):
 if [ -f ~/.bashrc ]; then echo "El archivo existe"; else echo "El archivo no existe"; fi
 ```
 
+![if mira el código de salida](images/if-exit.webp "if ejecuta el comando y mira su código de salida: 0 significa verdadero y ejecuta la parte then; cualquier otro valor significa falso y ejecuta la parte else.")
+
 ¡Los espacios dentro de `[ ]` son obligatorios! Escrito en varias líneas, como
 en un script, tiene este aspecto:
 
@@ -273,6 +275,8 @@ done
 
 `exit 1` termina el script con el código de salida 1, para que quien llamó al
 script pueda ver que algo salió mal.
+
+![Las partes de backup.sh](images/script-anatomy.webp "El shebang dice qué programa ejecuta el script. Sin argumentos, el script termina con código de salida 1; si no, el bucle toma un argumento cada vez y envía sus mensajes de error a stderr.")
 
 ## Consejos para escribir buenos scripts
 

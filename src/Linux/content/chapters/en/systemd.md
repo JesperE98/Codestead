@@ -143,6 +143,8 @@ This is the most common misunderstanding about systemd: **`start` and
 | `systemctl enable --now X` | Both at once. |
 | `systemctl disable X` | Don't start at boot (`--now` stops it too). |
 
+![start and enable](images/start-enable.webp "For a stopped service: start runs it now but not after a reboot, enable makes it start at boot but not now, and enable --now does both.")
+
 `enable` creates a link in a directory named after the target in the
 `[Install]` section of the unit file, usually `multi-user.target.wants`:
 
@@ -266,6 +268,8 @@ Which priorities does `journalctl -p warning` show?
 everything with the same or a lower number (`warning` is 4).
 ```
 
+![The journal's priorities](images/journal-priorities.webp "-p shows the priority you choose and every more severe one, the ones with lower numbers: -p err shows 0 to 3 and -p warning 0 to 4.")
+
 ## Troubleshooting a service that won't start
 
 Someone has set up the service **reportd** on this computer, but something
@@ -371,6 +375,8 @@ Files in `/etc/systemd/system` take precedence, and they aren't overwritten
 when the package is updated. `daemon-reload` makes systemd load the changed
 unit file again.
 ```
+
+![Where the unit files live](images/unit-files.webp "Packages put their unit files in /usr/lib/systemd/system; yours go in /etc/systemd/system and take precedence. enable makes a link in multi-user.target.wants, whose units systemd starts at boot.")
 
 ## What are the services called?
 

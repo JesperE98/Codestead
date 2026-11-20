@@ -111,6 +111,8 @@ $ ip route | grep default | cut -d' ' -f3
 `default` の行の 3 番目の単語がゲートウェイのアドレスです。
 ```
 
+![家庭のネットワークとその経路](images/home-network.webp "192.168.1.0/24 の中にあるもの（サーバーとルーター）には直接届きます。それ以外はすべてデフォルトルートに従い、ゲートウェイ 192.168.1.1 を通ってインターネットへ出ていきます。")
+
 ## ping – 届くかどうか
 
 `ping` は小さなテストパケットを送り、応答が返ってくるまでの時間を測ります。
@@ -250,6 +252,8 @@ getent hosts server.lan
 この順序（まずファイル、次に DNS）は、`/etc/nsswitch.conf` の
 `hosts: files dns` という行で決められています。
 
+![server.lan を引く getent と dig](images/hosts-dns.webp "getent はシステムと同じ順で調べます（まず /etc/hosts、次に DNS）。だから server.lan が見つかります。dig は DNS にしか聞かず、DNS はこの名前を知らないので、何も表示しません。")
+
 ```quiz
 `sudo echo '192.168.1.10 server.lan' >> /etc/hosts` が *Permission denied* に
 なるのはなぜですか？
@@ -297,6 +301,8 @@ sudo ss -tulpn
 プロセスの章で使った練習用サーバー `myserver` が動いていれば、ここで
 ポート 8080 に表示されます。古いコマンド `netstat -tulpn`（*net-tools*）も
 同じことをします。
+
+![あなたのコンピューターのポート](images/ports.webp "アドレスはコンピューターを、ポートはその上のプログラムを指します。sshd は 22 で、myserver は 8080 で待ち受けています。80 番ポートでは何も待ち受けていないので、curl は接続できません。")
 
 ## Web から取ってくる: curl と wget
 

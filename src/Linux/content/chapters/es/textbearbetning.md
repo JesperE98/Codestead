@@ -48,6 +48,8 @@ bonana
 Sin `g`, solo se sustituye la primera `a` de la línea.
 ```
 
+![Las partes del comando s de sed](images/sed-substitute.webp "Sin el flag g, s solo sustituye la primera coincidencia de cada línea; con g sustituye todas.")
+
 La flag `i` hace que la búsqueda no distinga mayúsculas de minúsculas, igual
 que `grep -i`:
 
@@ -180,6 +182,8 @@ Por defecto, los campos están separados por espacios (los que haya). En
 awk '{print $3}' ~/{{documents}}/server.log
 ```
 
+![awk divide una línea en campos](images/awk-fields.webp "awk divide cada línea por los espacios, haya los que haya: $1 es el primer campo, $NF el último, NF el número de campos y $0 la línea entera.")
+
 El programa va entre `{ }` y se ejecuta para cada línea. Pon siempre el
 programa de awk entre comillas **simples**; si no, la shell cree que `$3` es
 una variable de la shell y la sustituye antes incluso de que awk arranque.
@@ -267,6 +271,8 @@ una forma sencilla de sumar una columna:
 ```sh
 awk -F, 'NR > 1 {{{sumVar}} += $3} END {print {{sumVar}}}' ~/{{documents}}/{{grades}}
 ```
+
+![Cómo suma awk una columna](images/awk-sum.webp "La parte entre llaves se ejecuta para cada línea después de la cabecera y suma el campo 3 a la variable. END se ejecuta una vez, después de la última línea, e imprime la suma.")
 
 `{{sumVar}} += $3` significa «suma el campo 3 a {{sumVar}}». Si a la vez cuentas
 las líneas (`cantidad++` incrementa `cantidad` en 1), puedes calcular la media:

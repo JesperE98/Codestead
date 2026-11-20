@@ -27,6 +27,8 @@ que recordar números. Algunos números importantes:
 | `1`–`999` | **Usuarios del sistema** para servicios y programas |
 | `1000` en adelante | **Usuarios normales**: personas. El primero recibe el 1000. |
 
+![Los rangos de UID y sus usuarios](images/uid-ranges.webp "El UID distingue a root, a los usuarios del sistema y a las personas. Estos son los usuarios del /etc/passwd del simulador; kim, que crearás más adelante en el capítulo, recibirá el 1001.")
+
 ## La lista de usuarios – `/etc/passwd`
 
 Todos los usuarios están en el archivo de texto `/etc/passwd`, una línea por
@@ -269,6 +271,8 @@ después?
 Sin `-a`, la lista pasa a ser exactamente lo que escribes. Con
 `sudo usermod -aG backup kim`, kim habría conservado los demás grupos.
 ```
+
+![usermod -aG y usermod -G](images/usermod-ag.webp "El grupo principal de kim no cambia. -aG añade backup a los grupos secundarios, mientras que -G sin -a los sustituye todos por backup.")
 
 `gpasswd` hace lo mismo y además puede quitar miembros:
 
