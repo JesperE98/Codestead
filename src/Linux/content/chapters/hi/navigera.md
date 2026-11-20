@@ -32,6 +32,8 @@ distributions में एक जैसी है।
 लॉग फ़ाइलें `/var/log` में जाती हैं। सेटिंग्स `/etc` में रहती हैं और प्रोग्राम `/usr/bin` में।
 ```
 
+![Root से शुरू होने वाला directory tree](images/fs-tree.webp "सब कुछ एक ही tree में रहता है, जो root / से शुरू होता है। आपकी home directory, ~, /home/ के बाद आपका user name है।")
+
 ## मैं कहाँ हूँ? – `pwd`
 
 `pwd` (*print working directory*) वह directory दिखाता है जिसमें आप अभी हैं:
@@ -54,6 +56,8 @@ ls /etc
 ```sh
 ls -l
 ```
+
+![ls -l के columns](images/ls-long.webp "आपकी home directory की एक directory और एक file पर दिखाया गया है कि ls -l के columns का क्या मतलब है। Permissions आगे के एक chapter में आएँगी।")
 
 जिन files के नाम dot से शुरू होते हैं, वे **hidden** होती हैं और default रूप से
 नहीं दिखतीं। अक्सर ये settings files होती हैं, जैसे `.bashrc`। `-a` (*all*)
@@ -107,6 +111,8 @@ Paths दो तरह के होते हैं:
 कोई `{{user}}` नहीं है।
 ```
 
+![एक absolute और एक relative path](images/paths.webp "/home से दोनों paths एक ही directory तक ले जाते हैं: absolute path root से शुरू होता है, relative path वहाँ से जहाँ आप हैं।")
+
 कुछ ख़ास नाम जानने लायक़ हैं:
 
 | नाम | मतलब |
@@ -130,6 +136,8 @@ $ pwd
 ---
 `..` ऊपर वाली डायरेक्टरी है, इसलिए `/usr/bin` से आप `/usr` में पहुँचते हैं।
 ```
+
+![. .. ~ / और cd - कहाँ ले जाते हैं](images/dots.webp "cd /etc और cd /var/log के बाद आप /var/log में हैं। वहाँ से . है /var/log, .. है /var, ~ है आपकी home directory, / है root, और cd - आपको वापस /etc ले जाता है।")
 
 ## Tab completion
 

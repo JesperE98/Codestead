@@ -172,3 +172,14 @@ describe("LinuxToolTests", () => {
     }
   });
 });
+
+describe("LinuxTool – kapitlens bilder", () => {
+  it("ger bilden på elevens språk, annars den engelska eller den gemensamma", () => {
+    const { tool } = open();
+    expect(tool.picture("images/fs-tree.webp", "sv")).toMatch(/images\/sv\/fs-tree\.webp$/);
+    // Russian file names are the English ones: the picture without words is the English one.
+    expect(tool.picture("images/file-ops.webp", "ru")).toMatch(/images\/en\/file-ops\.webp$/);
+    expect(tool.picture("images/log-lines.webp", "ja")).toMatch(/images\/log-lines\.webp$/);
+    expect(tool.picture("images/no-such-picture.webp", "en")).toBeNull();
+  });
+});

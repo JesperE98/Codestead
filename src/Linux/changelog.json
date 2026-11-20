@@ -1,5 +1,32 @@
 [
   {
+    "version": "0.6.8",
+    "date": "2026-11-20",
+    "changes": {
+      "en": [
+        "**Pictures in the chapters**: the first chapters – from Welcome to Redirection and pipes – now have pictures that explain the hard parts, such as the directory tree, what the columns of ls -l mean, how the shell expands wildcards and where stdout and stderr go. Click a picture to see it larger."
+      ],
+      "sv": [
+        "**Bilder i kapitlen**: de första kapitlen – från Välkommen till Omdirigering och pipes – har nu bilder som förklarar det svåra, som katalogträdet, vad kolumnerna i ls -l betyder, hur skalet expanderar jokertecken och vart stdout och stderr tar vägen. Klicka på en bild för att se den större."
+      ],
+      "de": [
+        "**Bilder in den Kapiteln**: Die ersten Kapitel – vom Willkommen bis zu Umleitungen und Pipes – haben jetzt Bilder, die das Schwierige erklären, etwa den Verzeichnisbaum, was die Spalten von ls -l bedeuten, wie die Shell Wildcards erweitert und wohin stdout und stderr gehen. Klicke auf ein Bild, um es größer zu sehen."
+      ],
+      "fr": [
+        "**Des images dans les chapitres** : les premiers chapitres – de la Bienvenue aux Redirections et pipes – ont désormais des images qui expliquent les points difficiles, comme l'arborescence des répertoires, le sens des colonnes de ls -l, la façon dont le shell développe les caractères génériques et où vont stdout et stderr. Cliquez sur une image pour l'agrandir."
+      ],
+      "es": [
+        "**Imágenes en los capítulos**: los primeros capítulos –de la Bienvenida a Redirecciones y pipes– tienen ahora imágenes que explican lo difícil, como el árbol de directorios, qué significan las columnas de ls -l, cómo expande la shell los comodines y adónde van stdout y stderr. Haz clic en una imagen para verla más grande."
+      ],
+      "zh": [
+        "**章节中加入了插图**：前几章（从欢迎到重定向和管道）现在配有解释难点的插图，例如目录树、ls -l 各列的含义、shell 如何展开通配符，以及 stdout 和 stderr 去了哪里。点击插图即可放大查看。"
+      ],
+      "ja": [
+        "**章に図が入りました**：最初の章（ようこそ からリダイレクトとパイプまで）に、ディレクトリのツリー、ls -l の各列の意味、シェルによるワイルドカードの展開、stdout と stderr の行き先など、わかりにくい部分を説明する図が付きました。図をクリックすると大きく表示されます。"
+      ]
+    }
+  },
+  {
     "version": "0.6.7",
     "date": "2026-11-19",
     "changes": {

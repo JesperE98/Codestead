@@ -48,6 +48,8 @@ Le terminal ne fait qu'afficher le texte. Le shell (ici bash) lit ce que vous
 tapez et l'exécute.
 ```
 
+![Terminal, shell, noyau et matériel](images/shell-layers.webp "Vous tapez dans le terminal, le shell (bash) lit la commande et l'exécute, et le noyau permet aux programmes de se partager le matériel. Une distribution rassemble tous ces logiciels.")
+
 ## L'invite de commande
 
 Quand le shell attend une commande, il affiche une **invite** (*prompt*). Dans
@@ -100,6 +102,8 @@ Dans la commande `ls -l /etc`, quelle partie est l'**option** ?
 `ls` est la commande, `-l` modifie son comportement, et `/etc` est l'argument
 – ce sur quoi `ls` doit travailler.
 ```
+
+![Les parties d'une ligne de commande](images/command-line.webp "L'invite indique qui vous êtes et où vous êtes ; viennent ensuite la commande, ses options et ses arguments.")
 
 Essayez `echo` avec un texte de votre choix :
 

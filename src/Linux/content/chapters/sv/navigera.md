@@ -32,6 +32,8 @@ Ett program skriver en loggfil. I vilken katalog räknar du med att hitta den?
 Loggfiler hamnar i `/var/log`. Inställningar finns i `/etc` och program i `/usr/bin`.
 ```
 
+![Katalogträdet från roten](images/fs-tree.webp "Allt finns i ett enda träd som börjar i roten /. Din hemkatalog, ~, är /home/ följt av ditt användarnamn.")
+
 ## Var är jag? – `pwd`
 
 `pwd` (*print working directory*) visar katalogen du står i just nu:
@@ -54,6 +56,8 @@ Med flaggan `-l` får du ett långt format med mer information:
 ```sh
 ls -l
 ```
+
+![Kolumnerna i ls -l](images/ls-long.webp "Vad kolumnerna i ls -l betyder, för en katalog och en fil i din hemkatalog. Rättigheterna kommer i ett senare kapitel.")
 
 Filer vars namn börjar med en punkt är **dolda** och visas inte som standard.
 Ofta är det inställningsfiler, som `.bashrc`. Flaggan `-a` (*all*) visar dem:
@@ -106,6 +110,8 @@ så den fungerar varifrån som helst. `/{{user}}/{{documents}}` börjar i roten,
 inte finns någon `{{user}}`.
 ```
 
+![En absolut och en relativ sökväg](images/paths.webp "Från /home leder båda sökvägarna till samma katalog: den absoluta utgår från roten, den relativa från där du står.")
+
 Några specialnamn är bra att kunna:
 
 | Namn | Betyder |
@@ -129,6 +135,8 @@ $ pwd
 ---
 `..` är katalogen ovanför, så från `/usr/bin` hamnar du i `/usr`.
 ```
+
+![Vart . .. ~ / och cd - leder](images/dots.webp "Efter cd /etc och cd /var/log står du i /var/log. Därifrån är . /var/log, .. är /var, ~ är din hemkatalog, / är roten och cd - tar dig tillbaka till /etc.")
 
 ## Tab-komplettering
 

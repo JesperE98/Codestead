@@ -100,6 +100,8 @@ Welcher Befehl zeigt jede Zeile in `server.log`, die **nicht** `INFO` enthält?
 - [x] `grep -v INFO {{documents}}/server.log`
 ```
 
+![Zeilen, die head, tail und grep auswählen](images/log-lines.webp "head zeigt die ersten Zeilen von server.log, tail die letzten und grep WARN die Zeilen mit WARN – nicht die mit warn in Kleinbuchstaben.")
+
 ## Sortieren – `sort` und `uniq`
 
 `sort` sortiert Zeilen alphabetisch (`-n` für Zahlen, `-r` für umgekehrte
@@ -116,6 +118,8 @@ Warum wird `uniq` fast immer nach `sort` verwendet?
 - [x] `uniq` entfernt nur Zeilen, die mit der Zeile direkt darüber identisch sind, also müssen gleiche Zeilen nebeneinanderstehen
 - [ ] `sort` entfernt Duplikate und `uniq` fügt sie wieder ein
 ```
+
+![uniq ohne und mit sort](images/sort-uniq.webp "uniq allein entfernt nichts, weil gleiche Zeilen nicht direkt untereinander stehen. Nach sort tun sie das, und uniq behält von jeder eine.")
 
 ## Felder herausschneiden – `cut`
 
@@ -136,6 +140,8 @@ Feld übrig bleiben soll. Hier sind die Fächer – Feld 2 – aus der CSV-Datei
 ```sh
 cut -d, -f2 ~/{{documents}}/{{grades}}
 ```
+
+![cut holt Feld 2 heraus](images/cut-fields.webp "-d, teilt jede Zeile an den Kommas, und -f2 behält das zweite Feld.")
 
 In `/etc/passwd` sind die Felder durch Doppelpunkte getrennt, und Feld 1 ist
 der Benutzername, also listet `cut -d: -f1 /etc/passwd` alle Benutzer auf.

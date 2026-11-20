@@ -100,6 +100,8 @@ Which command removes the directory `{{old}}` *only* if it is empty?
 `rm -r` removes the directory and everything inside.
 ```
 
+![What cp, mv and rm do](images/file-ops.webp "cp makes a second file, mv renames a file or moves it into a directory, and rm deletes it for good.")
+
 ## Wildcards
 
 The shell can expand patterns into several file names before the command
@@ -134,6 +136,8 @@ $ ls {{documents}}/?r*
 `?` is exactly one character, so the second letter of the name must be `r`.
 That's true of `{{fruits}}` and `{{grades}}`, but not of `server.log`.
 ```
+
+![How the shell expands a pattern](images/glob.webp "The shell replaces the pattern with the matching file names before ls runs. The table shows which practice files three patterns match.")
 
 ## Spaces in file names
 

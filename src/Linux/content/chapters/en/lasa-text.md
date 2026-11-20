@@ -99,6 +99,8 @@ Which command shows every line in `server.log` that does **not** contain `INFO`?
 - [x] `grep -v INFO {{documents}}/server.log`
 ```
 
+![Lines picked by head, tail and grep](images/log-lines.webp "head shows the first lines of server.log, tail the last ones, and grep WARN the lines that contain WARN – not the one with warn in lower case.")
+
 ## Sorting – `sort` and `uniq`
 
 `sort` sorts lines alphabetically (`-n` for numbers, `-r` for reverse order).
@@ -115,6 +117,8 @@ Why is `uniq` almost always used after `sort`?
 - [x] `uniq` only removes lines identical to the line directly above, so identical lines must be next to each other
 - [ ] `sort` removes duplicates and `uniq` puts them back
 ```
+
+![uniq without and with sort](images/sort-uniq.webp "uniq alone removes nothing, because equal lines are not next to each other. After sort they are, and uniq keeps one of each.")
 
 ## Cutting out fields – `cut`
 
@@ -135,6 +139,8 @@ field to keep. Here are the subjects – field 2 – from the CSV file:
 ```sh
 cut -d, -f2 ~/{{documents}}/{{grades}}
 ```
+
+![cut picks out field 2](images/cut-fields.webp "-d, splits each line at the commas, and -f2 keeps the second field.")
 
 In `/etc/passwd`, the fields are separated by colons and field 1 is the user
 name, so `cut -d: -f1 /etc/passwd` lists all the users.

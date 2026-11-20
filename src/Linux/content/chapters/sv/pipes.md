@@ -15,6 +15,8 @@ Varje program har tre standardströmmar:
 
 Med *omdirigering* och *pipes* kan du skicka strömmarna någon annanstans.
 
+![stdin, stdout och stderr](images/streams.webp "Ett program läser stdin (0) från tangentbordet och skriver stdout (1) och stderr (2) till skärmen.")
+
 ## Till en fil – `>` och `>>`
 
 `>` skickar stdout till en fil i stället för skärmen. Filen skapas om den inte
@@ -94,6 +96,8 @@ Du kör `ls /{{missing}} > fel.txt`. Var hamnar felmeddelandet?
 Filen `/dev/null` är ett "svart hål" – allt som skrivs dit försvinner. Det är
 praktiskt för att tysta fel. Med `2>&1` skickas stderr samma väg som stdout.
 
+![Vart > 2> och 2>&1 skickar strömmarna](images/redirect.webp "> skickar bara stdout till filen, så felmeddelandet hamnar ändå på skärmen. 2> fångar stderr, och > fil 2>&1 skickar båda till samma fil.")
+
 ## Pipes – `|`
 
 En **pipe** skickar stdout från ett kommando direkt in som stdin i nästa.
@@ -113,6 +117,8 @@ sort {{documents}}/{{fruits}} | uniq -c | sort -rn
 
 Läs det steg för steg: sortera frukterna, räkna hur många av varje (`uniq -c`)
 och sortera sedan numeriskt med flest först (`sort -rn`).
+
+![Utdata från varje steg i en pipeline](images/pipeline.webp "Varje pipe skickar ett kommandos stdout till nästa kommandos stdin: sort lägger likadana frukter intill varandra, uniq -c räknar dem och sort -rn sätter de vanligaste först.")
 
 Hur många filer och kataloger finns det i `/etc`? Räkna dem med en pipe:
 

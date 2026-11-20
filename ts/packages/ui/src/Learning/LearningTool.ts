@@ -201,7 +201,7 @@ export interface LearningTool {
 
   /**
    * A picture or animation of the chapters' texts (`![alt](images/name.webp)`) in the learner's language: its
-   * bytes (or a URL), or null (the picture is left out). Codestead Linux has none.
+   * bytes (or a URL), or null (the picture is left out).
    */
   picture?(path: string, lang: string): Uint8Array | string | null;
 

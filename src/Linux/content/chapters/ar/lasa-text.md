@@ -97,6 +97,8 @@ grep -n WARN {{documents}}/server.log
 - [x] `grep -v INFO {{documents}}/server.log`
 ```
 
+![الأسطر التي يختارها head وtail وgrep](images/log-lines.webp "يعرض head الأسطر الأولى من server.log، ويعرض tail الأخيرة، ويعرض grep WARN الأسطر التي تحتوي على WARN – لا السطر الذي فيه warn بأحرف صغيرة.")
+
 ## الترتيب – `sort` و`uniq`
 
 يرتّب `sort` الأسطر أبجديًا (`-n` للأرقام، و`-r` للترتيب العكسي). أما `uniq`
@@ -113,6 +115,8 @@ sort {{documents}}/{{fruits}}
 - [x] لأن `uniq` لا يحذف إلا الأسطر المطابقة للسطر الذي فوقها مباشرة، لذا يجب أن تكون الأسطر المتطابقة متجاورة
 - [ ] لأن `sort` يحذف التكرارات و`uniq` يعيدها
 ```
+
+![uniq دون sort ومعه](images/sort-uniq.webp "لا يحذف uniq وحده شيئًا، لأن الأسطر المتطابقة ليست متجاورة. وبعد sort تصبح متجاورة، فيُبقي uniq سطرًا واحدًا من كل نوع.")
 
 ## اقتطاع الحقول – `cut`
 
@@ -132,6 +136,8 @@ CSV اختصار لـ *comma-separated values* (قيم مفصولة بفواصل
 ```sh
 cut -d, -f2 ~/{{documents}}/{{grades}}
 ```
+
+![يستخرج cut الحقل 2](images/cut-fields.webp "يقسم -d, كل سطر عند الفواصل، ويُبقي -f2 الحقل الثاني.")
 
 في `/etc/passwd` تُفصل الحقول بنقطتين رأسيتين، والحقل 1 هو اسم المستخدم، لذا
 فإن `cut -d: -f1 /etc/passwd` يسرد كل المستخدمين.

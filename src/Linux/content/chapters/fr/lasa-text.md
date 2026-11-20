@@ -102,6 +102,8 @@ Quelle commande affiche toutes les lignes de `server.log` qui ne contiennent **p
 - [x] `grep -v INFO {{documents}}/server.log`
 ```
 
+![Les lignes choisies par head, tail et grep](images/log-lines.webp "head affiche les premières lignes de server.log, tail les dernières, et grep WARN les lignes qui contiennent WARN – pas celle avec warn en minuscules.")
+
 ## Trier – `sort` et `uniq`
 
 `sort` trie les lignes par ordre alphabétique (`-n` pour les nombres, `-r`
@@ -119,6 +121,8 @@ Pourquoi utilise-t-on presque toujours `uniq` après `sort` ?
 - [x] `uniq` ne supprime que les lignes identiques à la ligne juste au-dessus, donc les lignes identiques doivent se suivre
 - [ ] `sort` supprime les doublons et `uniq` les remet
 ```
+
+![uniq sans et avec sort](images/sort-uniq.webp "uniq seul ne supprime rien, car les lignes identiques ne se suivent pas. Après sort, elles se suivent, et uniq en garde une de chaque.")
 
 ## Découper des champs – `cut`
 
@@ -140,6 +144,8 @@ peut en extraire un. `-d` choisit le séparateur (*delimiter*) et `-f` le champ
 ```sh
 cut -d, -f2 ~/{{documents}}/{{grades}}
 ```
+
+![cut extrait le champ 2](images/cut-fields.webp "-d, découpe chaque ligne aux virgules, et -f2 garde le deuxième champ.")
 
 Dans `/etc/passwd`, les champs sont séparés par des deux-points et le champ 1
 est le nom d'utilisateur, donc `cut -d: -f1 /etc/passwd` liste tous les

@@ -9,6 +9,7 @@ export * as LanguagesLib from "./LanguagesLib.js";
 export * as UiStrings from "./UiStrings.js";
 export * as I18nLib from "./I18n.js";
 export * as RenderLib from "./Render.js";
+export * as PicturesLib from "./Pictures.js";
 export * as ChaptersLib from "./Chapters.js";
 export * as ProgressLib from "./Progress.js";
 export type { ProgressCount } from "./Progress.js";

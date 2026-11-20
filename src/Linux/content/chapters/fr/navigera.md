@@ -33,6 +33,8 @@ Les fichiers journaux vont dans `/var/log`. Les réglages se trouvent dans
 `/etc` et les programmes dans `/usr/bin`.
 ```
 
+![L'arborescence depuis la racine](images/fs-tree.webp "Tout se trouve dans une seule arborescence qui commence à la racine /. Votre répertoire personnel, ~, est /home/ suivi de votre nom d'utilisateur.")
+
 ## Où suis-je ? – `pwd`
 
 `pwd` (*print working directory*) affiche le répertoire dans lequel vous vous
@@ -56,6 +58,8 @@ L'option `-l` donne un format long avec plus d'informations :
 ```sh
 ls -l
 ```
+
+![Les colonnes de ls -l](images/ls-long.webp "Ce que signifient les colonnes de ls -l, sur un répertoire et un fichier de votre répertoire personnel. Les permissions viennent dans un chapitre suivant.")
 
 Les fichiers dont le nom commence par un point sont **cachés** et ne sont pas
 affichés par défaut. Ce sont souvent des fichiers de réglages, comme
@@ -110,6 +114,8 @@ donc il fonctionne de partout. `/{{user}}/{{documents}}` part de la racine, où 
 pas de `{{user}}`.
 ```
 
+![Un chemin absolu et un chemin relatif](images/paths.webp "Depuis /home, les deux chemins mènent au même répertoire : l'absolu part de la racine, le relatif de là où vous êtes.")
+
 Quelques noms spéciaux à connaître :
 
 | Nom | Signifie |
@@ -134,6 +140,8 @@ $ pwd
 `..` est le répertoire au-dessus, donc depuis `/usr/bin` vous arrivez dans
 `/usr`.
 ```
+
+![Où mènent . .. ~ / et cd -](images/dots.webp "Après cd /etc puis cd /var/log, vous êtes dans /var/log. De là, . est /var/log, .. est /var, ~ votre répertoire personnel, / la racine, et cd - vous ramène dans /etc.")
 
 ## La complétion avec Tab
 

@@ -100,6 +100,8 @@ O `rmdir` se recusa a remover um diretório que ainda tenha algo dentro.
 O `rm -r` remove o diretório e tudo o que há dentro dele.
 ```
 
+![O que cp, mv e rm fazem](images/file-ops.webp "cp cria um segundo arquivo, mv renomeia um arquivo ou o move para um diretório, e rm o apaga de vez.")
+
 ## Curingas
 
 O shell consegue expandir padrões em vários nomes de arquivo antes de o
@@ -134,6 +136,8 @@ $ ls {{documents}}/?????.*
 Cada `?` é exatamente um caractere, então o nome antes do ponto precisa ter
 cinco caracteres. Só `notas` tem – `frutas` e `server` são mais longos.
 ```
+
+![Como o shell expande um padrão](images/glob.webp "O shell troca o padrão pelos nomes de arquivo correspondentes antes de o ls rodar. A tabela mostra quais arquivos de prática correspondem a três padrões.")
 
 ## Espaços em nomes de arquivo
 

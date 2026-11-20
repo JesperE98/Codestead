@@ -15,6 +15,8 @@ programs को आपस में *जोड़ना*।
 
 *Redirection* और *pipes* से आप इन streams को कहीं और भेज सकते हैं।
 
+![stdin, stdout और stderr](images/streams.webp "Program keyboard से stdin (0) पढ़ता है और stdout (1) और stderr (2) screen पर लिखता है।")
+
 ## File में – `>` और `>>`
 
 `>` stdout को screen की जगह एक file में भेजता है। File मौजूद न हो तो बन जाती
@@ -96,6 +98,8 @@ File `/dev/null` एक "black hole" है – उसमें जो कुछ
 है। Errors को चुप कराने के लिए यह बहुत काम का है। `2>&1` से stderr को भी वहीं
 भेजा जाता है जहाँ stdout जा रहा है।
 
+![> 2> और 2>&1 streams को कहाँ भेजते हैं](images/redirect.webp "> सिर्फ़ stdout को file में भेजता है, इसलिए error message फिर भी screen पर आता है। 2> stderr को पकड़ता है, और > file 2>&1 दोनों को एक ही file में भेजता है।")
+
 ## Pipes – `|`
 
 एक **pipe** एक command का stdout सीधे अगले command के stdin में भेज देता है। यही
@@ -115,6 +119,8 @@ sort {{documents}}/{{fruits}} | uniq -c | sort -rn
 
 इसे step by step पढ़िए: फलों को sort करो, गिनो कि हर फल कितनी बार है
 (`uniq -c`), और फिर numbers के हिसाब से sort करो, सबसे बड़ा पहले (`sort -rn`)।
+
+![Pipes की कड़ी के हर step का output](images/pipeline.webp "हर pipe एक command का stdout अगले command के stdin में भेजता है: sort एक जैसे फलों को साथ लाता है, uniq -c उन्हें गिनता है, और sort -rn सबसे ज़्यादा वाले को सबसे ऊपर रखता है।")
 
 `/etc` में कितनी फ़ाइलें और डायरेक्टरी हैं? पाइप से गिनिए:
 

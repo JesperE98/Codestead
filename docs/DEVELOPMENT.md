@@ -204,7 +204,7 @@ ts/
 │   │                            World.ts (elevens dator på elevens språk), Packages/ (paketdatabasen), ShellI18n.ts,
 │   │                            Commands/<Grupp>/ (alla kommandon, en mapp per grupp)
 │   ├── linux-content/           Linux-kursen: kapitel och uppgifter (Chapters/, ChapterDefinitions.ts, Checks.ts),
-│   │                            Linux-spelet (Game/), språk, UI-texterna
+│   │                            Linux-spelet (Game/), språk, UI-texterna, kapitlens bilder (Pictures.ts)
 │   ├── gp-gpu/                  Codestead GP:s simulerade GPU (se "Codestead GP")
 │   ├── gp-course/               Codestead GP:s kurs
 │   └── pipeline-viz/            Render Pipeline Visualizers scener i GP:s kapitel (se "Scener ur visualiseraren")
@@ -217,7 +217,9 @@ src/
 ├── Linux/
 │   ├── content/
 │   │   ├── chapters/<språk>/    Kapiteltexterna (markdown), ett språk per katalog
-│   │   └── i18n/<språk>/        Översatta titlar och uppgiftstexter
+│   │   ├── i18n/<språk>/        Översatta titlar och uppgiftstexter
+│   │   └── images/              Kapitlens bilder ([<språk>/]namn.webp) och diagrams/, verktyget som ritar dem
+│   │                            (se "Bilder i Codestead Linux")
 │   ├── Codestead.Content/i18n/ui/   Appens UI-texter
 │   ├── Codestead.Shell/         Simulatorns texter (i18n/) och elevens dator på varje språk (world/)
 │   ├── Codestead.Linux/Assets/  Appens ikon
@@ -410,6 +412,8 @@ visa API:ts kod för steget – i det API eleven valt, på svenska eller engelsk
 visualiserarens) ritas från källkod i repot: en fil `<namn>.mjs` per bild, som `make.mjs` gör till `images/<variant>.webp`. Hjälpmoduler för en kursdels bilder
 heter `_<namn>.mjs` och ritas inte själva.
 Kursdelen Getting started (*Setting up your IDE* … *Camera*) har sådana bilder och är förlagan för de andra delarna.
+Codestead Linux ritar sina bilder med samma `style.mjs` och `to_webp.py` (se "Bilder i Codestead Linux"): en ändring
+här ändrar båda kursernas bilder.
 
 ```sh
 cd ts && npm ci        # Inter (appens typsnitt) och vitest
@@ -528,6 +532,8 @@ det den förstår kan ge en annan bild än en riktig körning. Nya kapitel
      ett kommando med samma utskrift som första raden ger på en ny dator (`ISandbox.outputOf`). Prov
      visar också terminalen, eftersom de har `try`-frågor.
      Ett kapitel utan kontrollfrågor låses upp med knappen "Jag har läst kapitlet".
+   - **Bilder**: `![alt](images/namn.webp "bildtext")` som ett eget stycke, på alla språk på samma ställe; se
+     "Bilder i Codestead Linux".
    - **Källor**: `src/Linux/content/references/mitt-kapitel.json` med
      `[{ "title": ..., "url": "https://...", "publisher": ... }]`. Bara officiella webbplatser
      (listan finns i [verification/README.md](verification/README.md)); testerna säger nej till andra.
@@ -542,6 +548,79 @@ det den förstår kan ge en annan bild än en riktig körning. Nya kapitel
 
 Behövs ett nytt kommando lägger du det i `ts/packages/linux-shell/src/Commands/`. Ska det installeras med
 pakethanteraren lägger du också till ett paket i `ts/packages/linux-shell/src/Packages/PackagesLib.Catalog.ts`.
+
+## Bilder i Codestead Linux
+
+Kapitlen i Codestead Linux har bilder på samma sätt som Codestead GP:s (se "Bilder i kapitlen" och "Stilguide för
+bilderna" ovan – stilguiden gäller här också, med undantagen nedan). Kursdelarna *Kom igång* och *Grunderna*
+(valkommen, navigera, filer, lasa-text, pipes) har bilder och är förlagan för de andra delarna.
+
+**I texten** är en bild ett eget stycke, `![alt](images/namn.webp "bildtext")`, på alla elva språk på samma ställe
+(efter samma kontrollfråga eller kodblock). Bildtexten är en eller två meningar utan markdown (inga `` ` ``, `*`, `_`,
+`[`, `]` och inga citattecken), alt några ord. Lägg bilden efter stycket som förklarar saken, men **efter
+kontrollfrågan** om bilden visar svaret. En bild som bara gäller en familj läggs inuti `:::debian` / `:::arch` /
+`:::redhat`-blocket (och använder `familyBadge` – ett neutralt märke med familjens namn, aldrig en distributions logga).
+Sammanfattningar och prov har inga bilder.
+
+**Filerna** ligger i `src/Linux/content/images/`: `<språk>/namn.webp` för en bild med ord eller med elevens filnamn i,
+`namn.webp` för en som är likadan på alla språk. Saknas språkets bild visas den engelska (`en/`). Appen hittar dem med
+`PicturesLib` (`ts/packages/linux-content/src/Pictures.ts`, en Vite-glob med `?url`: varje bild blir en fil i den byggda
+appen och laddas först när den visas) och `LinuxTool.picture`; textvyn visar dem och förstorar dem vid klick som i GP.
+`PictureTests` (`ts/packages/linux-content/test`) kräver att varje bild finns för varje språk som visar den och är en
+WebP, att alla språk visar samma bilder i samma ordning som engelskan, att varje bild har alt och bildtext, att varje
+bildfil används och att varje bild har en källa `images/diagrams/<namn>.mjs`.
+
+**Verktyget** (`src/Linux/content/images/diagrams/`) ritar varje bild från en källa `<namn>.mjs`, på alla elva språk på
+en gång:
+
+```sh
+cd ts && npm ci && cd ..                               # Inter och vitest (simulatorn)
+npm ci --prefix src/Linux/content/images/diagrams     # typsnitten för arabiska, hindi, kinesiska och japanska
+node src/Linux/content/images/diagrams/make.mjs [namn …] [--preview <mapp>]
+```
+
+- `style.mjs` återanvänder GP:s `style.mjs` (färger, kort, `box`, `arrow`, `badge` …) och lägger till det Linux behöver:
+  `LANGS`, `perLanguage("x")` (en variant per språk) och `shared("x")` (en gemensam bild), `tr(v, tabell)`,
+  `world(lang)`/`fill(v, "{{documents}}")` (elevens namn ur `Codestead.Shell/world/<språk>.json`), `label` (text på
+  variantens språk, arabiska höger till vänster), `tag` (etikett på en pill), `code`, `terminal` (en terminal med
+  simulatorns utskrift), `tree` (ett katalogträd), `folder`, `file` och `familyBadge`. `make.mjs` använder GP:s
+  `to_webp.py` (förlustfri WebP i 2×). Ändras GP:s `style.mjs` eller `to_webp.py` ändras alltså Linux-bilderna också:
+  rita om båda kursernas bilder och titta på dem.
+- **Översättningar**: en källa exporterar `words = { nyckel: { en: "…", sv: "…", de, fr, es, pt, ru, zh, ja, ar, hi } }`
+  (hjälpmoduler som `_pipes.mjs` har gemensamma ord som källorna tar med i sina `words`). `make.mjs` stoppar om ett
+  språk saknas. Använd kapitlets egna termer på varje språk – läs kapitlet på det språket (hindi skriver t.ex. tekniska
+  termer med latinska bokstäver: *home directory*, *shell*). Rita hellre kommandon, sökvägar och symboler (samma på alla
+  språk) än ord. Exempelnamn som kapitlet översätter (`fel.txt`, `fehler.txt` …) står också i `words`; namn ur elevens
+  värld hämtas med `world`.
+- **Simulatorns utskrift**: `terminals = { id: { commands: [...], setup?: [...] } }` (eller en funktion av varianten)
+  körs i simulatorn på en ny dator med elevens värld på variantens språk (`{{platshållare}}` fylls i), med klockan fast
+  på 2026-10-28 09:30 UTC; `R[id].lines` är prompt, kommando och utskrift i terminalens färger, för `terminal()` eller
+  egen layout. `ts/packages/linux-shell/test/TerminalPictures.test.ts` gör jobbet och körs bara med
+  `CODESTEAD_TERMINAL_PICTURES=<mapp>`. Bilderna visar alltså det eleven verkligen ser; rita om dem när simulatorn ändras.
+- **Typsnitt**: Inter (appens egen kopia i `ts/node_modules`) för latinska, grekiska och kyrilliska bokstäver, JetBrains
+  Mono (installerat) för kod, och Noto Sans Arabic, Devanagari, SC och JP (`@fontsource-variable/*` i verktygets egen
+  `package.json`, bara vid byggtid – de hamnar aldrig i appen) under namnet "CS Script" efter Inter och JetBrains Mono,
+  så att de bara används för det de andra inte kan rita. `make.mjs` varnar om ett typsnitt saknas.
+- **Språk som är likadana som engelskan** skrivs inte: har en bild inga ord och samma namn som engelskan (ryska,
+  kinesiska, japanska, arabiska och hindi har de engelska filnamnen) visar appen `en/`.
+- **Kontroller**: `make.mjs` varnar (och avslutar med fel) för text som är bredare än sitt `fit`, text utanför bilden,
+  text under 19 px och saknade typsnitt. `--preview <mapp>` skriver varje bild som PNG på appens ljusa och mörka
+  bakgrund: titta på alla språk, särskilt arabiska (höger till vänster, sammanbundna bokstäver), hindi och japanska.
+
+**Skillnader mot GP:s stilguide**: bilderna visas ca 526 px breda i standardfönstret (0,73 × ritningen), så **all
+text är minst 19 px** (titlar 21 px, `FS` och `FS_TITLE`) och terminaltext 19 px JetBrains Mono (0,6 em per tecken,
+`monoWidth`) – det får plats ungefär 58 tecken på en rad. Arabiska: rader som börjar en ruta placeras med
+`startX(v, vänster, höger)` och `label` (då är "start" högerkanten); en etikett som ska stå på en bestämd sida om något
+får `visual: true`. Kod och sökvägar är alltid vänster till höger. En bild med elevens innehåll (fruktlistan,
+CSV-filen) visar fälten i den ordning terminalen visar raden (på arabiska höger till vänster).
+
+**Lägga till en bild**: läs kapitlet, välj det som är svårt att förstå av text (inte bilder för sakens skull). Börja från
+en liknande källa: `fs-tree.mjs` och `paths.mjs` (katalogträd), `ls-long.mjs`, `dots.mjs` och `glob.mjs` (terminal och
+simulatorns utskrift), `file-ops.mjs` (före/efter, inga ord), `log-lines.mjs` (gemensam bild), `sort-uniq.mjs`,
+`cut-fields.mjs` och `pipeline.mjs` (elevens filer), `streams.mjs` och `redirect.mjs` (strömmar som rör, `_pipes.mjs`).
+Kör `make.mjs <namn> --preview <mapp>`, titta på alla språk, lägg in bilden i kapitlet på alla elva språk och kör
+`npx vitest run packages/linux-content` i `ts/`. Kursdelen *Kom igång* + *Grunderna* (14 bilder, 137 filer) är
+ca 3,5 MB; de flesta filer är 15–45 KB.
 
 ## Elevens dator på elevens språk
 

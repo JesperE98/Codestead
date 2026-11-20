@@ -44,6 +44,8 @@ The terminal only shows the text. The shell (here bash) reads what you type
 and runs it.
 ```
 
+![Terminal, shell, kernel and hardware](images/shell-layers.webp "You type in the terminal, the shell (bash) reads the command and runs it, and the kernel lets the programs share the hardware. A distribution bundles all of this software.")
+
 ## The prompt
 
 When the shell is waiting for a command, it shows a **prompt**. In the
@@ -93,6 +95,8 @@ In the command `ls -l /etc`, which part is the **option**?
 `ls` is the command, `-l` changes how it behaves, and `/etc` is the argument –
 what `ls` should work on.
 ```
+
+![The parts of a command line](images/command-line.webp "The prompt tells you who you are and where you are; after it come the command, its options and its arguments.")
 
 Try `echo` with a text of your own:
 

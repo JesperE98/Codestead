@@ -43,6 +43,8 @@ LTS** चलाता है। डिस्ट्रीब्यूशन म�
 हैं और उसे चलाता है।
 ```
 
+![Terminal, shell, kernel और hardware](images/shell-layers.webp "आप terminal में टाइप करते हैं, shell (bash) command को पढ़कर चलाता है, और kernel programs को hardware आपस में बाँटने देता है। Distribution यह सारा software एक साथ जोड़ता है।")
+
 ## Prompt
 
 जब शेल किसी कमांड का इंतज़ार कर रहा होता है, तो वह एक **prompt** दिखाता है।
@@ -92,6 +94,8 @@ ls       -l        /etc
 `ls` कमांड है, `-l` उसके बर्ताव को बदलता है, और `/etc` आर्ग्युमेंट है – वह चीज़
 जिस पर `ls` को काम करना है।
 ```
+
+![Command line के हिस्से](images/command-line.webp "Prompt बताता है कि आप कौन हैं और कहाँ हैं; उसके बाद command, उसके options और उसके arguments आते हैं।")
 
 `echo` को अपने ख़ुद के टेक्स्ट के साथ आज़माइए:
 

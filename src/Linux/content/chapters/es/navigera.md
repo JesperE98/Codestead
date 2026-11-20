@@ -32,6 +32,8 @@ Un programa escribe un archivo de registro. ¿En qué directorio esperarías enc
 Los archivos de registro van en `/var/log`. La configuración está en `/etc` y los programas en `/usr/bin`.
 ```
 
+![El árbol de directorios desde la raíz](images/fs-tree.webp "Todo vive en un único árbol que empieza en la raíz /. Tu directorio personal, ~, es /home/ seguido de tu nombre de usuario.")
+
 ## ¿Dónde estoy? – `pwd`
 
 `pwd` (*print working directory*) muestra el directorio en el que te
@@ -55,6 +57,8 @@ La opción `-l` da un formato largo con más información:
 ```sh
 ls -l
 ```
+
+![Las columnas de ls -l](images/ls-long.webp "Qué significan las columnas de ls -l, en un directorio y un archivo de tu directorio personal. Los permisos llegan en un capítulo posterior.")
 
 Los archivos cuyo nombre empieza por un punto están **ocultos** y no se
 muestran por defecto. Suelen ser archivos de configuración, como `.bashrc`. La
@@ -108,6 +112,8 @@ así que funciona desde cualquier sitio. `/{{user}}/{{documents}}` parte de la r
 no hay ningún `{{user}}`.
 ```
 
+![Una ruta absoluta y una relativa](images/paths.webp "Desde /home, las dos rutas llevan al mismo directorio: la absoluta parte de la raíz y la relativa, de donde estás.")
+
 Conviene conocer algunos nombres especiales:
 
 | Nombre | Significa |
@@ -131,6 +137,8 @@ $ pwd
 ---
 `..` es el directorio de arriba, así que desde `/usr/bin` acabas en `/usr`.
 ```
+
+![Adónde llevan . .. ~ / y cd -](images/dots.webp "Después de cd /etc y cd /var/log estás en /var/log. Desde ahí, . es /var/log, .. es /var, ~ es tu directorio personal, / es la raíz y cd - te devuelve a /etc.")
 
 ## Autocompletado con Tab
 

@@ -43,6 +43,8 @@ Terminalen visar bara texten. Skalet (här bash) läser det du skriver och kör
 det.
 ```
 
+![Terminal, skal, kärna och hårdvara](images/shell-layers.webp "Du skriver i terminalen, skalet (bash) läser kommandot och kör det, och kärnan låter programmen dela på hårdvaran. En distribution samlar all den här programvaran.")
+
 ## Prompten
 
 När skalet väntar på ett kommando visar det en **prompt**. I terminalen här ser
@@ -91,6 +93,8 @@ Vilken del av kommandot `ls -l /etc` är **flaggan**?
 `ls` är kommandot, `-l` ändrar hur det beter sig och `/etc` är argumentet –
 det som `ls` ska arbeta med.
 ```
+
+![Delarna av en kommandorad](images/command-line.webp "Prompten visar vem du är och var du står; efter den kommer kommandot, dess flaggor och dess argument.")
 
 Prova `echo` med en egen text:
 
