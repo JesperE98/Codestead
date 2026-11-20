@@ -100,6 +100,8 @@ Pattern एक *regular expression* होता है। कुछ उदा�
 - [x] `grep -v INFO {{documents}}/server.log`
 ```
 
+![head, tail और grep कौन-सी lines चुनते हैं](images/log-lines.webp "head server.log की पहली lines दिखाता है, tail आख़िरी, और grep WARN वे lines जिनमें WARN है – छोटे अक्षरों वाली warn वाली line नहीं।")
+
 ## Sort करना – `sort` और `uniq`
 
 `sort` lines को alphabetical order में लगाता है (numbers के लिए `-n`, उल्टे
@@ -116,6 +118,8 @@ sort {{documents}}/{{fruits}}
 - [x] `uniq` सिर्फ़ वे पंक्तियाँ हटाता है जो ठीक ऊपर वाली पंक्ति जैसी हों, इसलिए एक जैसी पंक्तियाँ साथ-साथ होनी चाहिए
 - [ ] `sort` दोहराव हटाता है और `uniq` उन्हें वापस डाल देता है
 ```
+
+![sort के बिना और sort के साथ uniq](images/sort-uniq.webp "अकेला uniq कुछ नहीं हटाता, क्योंकि एक जैसी lines एक-दूसरे के ठीक नीचे नहीं हैं। sort के बाद वे साथ आ जाती हैं, और uniq हर एक की एक line रखता है।")
 
 ## फ़ील्ड काटकर निकालना – `cut`
 
@@ -135,6 +139,8 @@ line एक header है।
 ```sh
 cut -d, -f2 ~/{{documents}}/{{grades}}
 ```
+
+![cut field 2 निकालता है](images/cut-fields.webp "-d, हर line को commas पर बाँटता है, और -f2 दूसरा field रखता है।")
 
 `/etc/passwd` में फ़ील्ड कोलन से अलग होते हैं और फ़ील्ड 1 यूज़रनेम है, इसलिए
 `cut -d: -f1 /etc/passwd` सभी यूज़र्स की सूची दिखाता है।

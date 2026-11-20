@@ -102,6 +102,8 @@ Quelle commande supprime le répertoire `{{old}}` *uniquement* s'il est vide ?
 `rm -r` supprime le répertoire et tout ce qu'il contient.
 ```
 
+![Ce que font cp, mv et rm](images/file-ops.webp "cp crée un deuxième fichier, mv renomme un fichier ou le déplace dans un répertoire, et rm le supprime pour de bon.")
+
 ## Les caractères génériques (wildcards)
 
 Le shell peut développer des motifs en plusieurs noms de fichiers avant que la
@@ -138,6 +140,8 @@ Chaque `?` correspond à exactement un caractère, donc le nom avant le point
 doit faire six caractères. C'est le cas de `fruits` et de `server` –
 `resultats` est plus long.
 ```
+
+![Comment le shell développe un motif](images/glob.webp "Le shell remplace le motif par les noms de fichiers correspondants avant que ls ne s'exécute. Le tableau montre les fichiers d'exercice qui correspondent à trois motifs.")
 
 ## Les espaces dans les noms de fichiers
 

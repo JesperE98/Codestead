@@ -100,6 +100,8 @@ son distintas. `grep -ic WARN` contaría las tres.
 - [x] `grep -v INFO {{documents}}/server.log`
 ```
 
+![Las líneas que eligen head, tail y grep](images/log-lines.webp "head muestra las primeras líneas de server.log, tail las últimas y grep WARN las líneas que contienen WARN, no la que tiene warn en minúsculas.")
+
 ## Ordenar – `sort` y `uniq`
 
 `sort` ordena las líneas alfabéticamente (`-n` para números, `-r` para orden
@@ -116,6 +118,8 @@ sort {{documents}}/{{fruits}}
 - [x] `uniq` solo elimina las líneas idénticas a la línea inmediatamente anterior, así que las líneas iguales tienen que estar juntas
 - [ ] `sort` elimina los duplicados y `uniq` los vuelve a poner
 ```
+
+![uniq sin sort y con sort](images/sort-uniq.webp "uniq solo no elimina nada, porque las líneas iguales no están una junto a otra. Después de sort sí lo están, y uniq deja una de cada.")
 
 ## Recortar campos – `cut`
 
@@ -136,6 +140,8 @@ campo conservar. Aquí están las asignaturas –el campo 2– del archivo CSV:
 ```sh
 cut -d, -f2 ~/{{documents}}/{{grades}}
 ```
+
+![cut saca el campo 2](images/cut-fields.webp "-d, separa cada línea por las comas y -f2 se queda con el segundo campo.")
 
 En `/etc/passwd`, los campos están separados por dos puntos y el campo 1 es el
 nombre de usuario, así que `cut -d: -f1 /etc/passwd` lista todos los usuarios.

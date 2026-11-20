@@ -117,12 +117,12 @@ $ fish -c 'false; echo $status'
 
 ```quiz
 在 fish 中，怎样把 `EDITOR` 设为值为 `nano` 的环境变量？
-- [ ] `export EDITOR=nano`
+- [ ] `set EDITOR nano`
 - [ ] `EDITOR=nano`
 - [x] `set -x EDITOR nano`
 - [ ] `set -e EDITOR nano`
 ---
-`-x` 导出变量；`-e` 删除变量。
+`-x` 导出变量。没有 `-x` 时，它只是一个只存在于 fish 中的普通变量；`-e` 删除变量。
 ```
 
 ```quiz

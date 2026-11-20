@@ -45,6 +45,8 @@ Das Terminal zeigt nur den Text an. Die Shell (hier bash) liest, was du
 tippst, und führt es aus.
 ```
 
+![Terminal, Shell, Kernel und Hardware](images/shell-layers.webp "Du tippst im Terminal, die Shell (bash) liest den Befehl und führt ihn aus, und der Kernel lässt die Programme sich die Hardware teilen. Eine Distribution packt all diese Software zusammen.")
+
 ## Der Prompt
 
 Wenn die Shell auf einen Befehl wartet, zeigt sie einen **Prompt** (eine
@@ -95,6 +97,8 @@ Welcher Teil ist im Befehl `ls -l /etc` die **Option**?
 `ls` ist der Befehl, `-l` ändert sein Verhalten, und `/etc` ist das Argument –
 das, womit `ls` arbeiten soll.
 ```
+
+![Die Teile einer Befehlszeile](images/command-line.webp "Der Prompt zeigt, wer du bist und wo du bist; danach kommen der Befehl, seine Optionen und seine Argumente.")
 
 Probier `echo` mit einem eigenen Text aus:
 

@@ -29,6 +29,8 @@ package manager की जगह नहीं लेते, बल्कि उ�
 इजाज़त दी गई है, जैसे network या आपका downloads folder, न कि आपकी पूरी home
 directory तक।
 
+![Sandbox के साथ और बिना program](images/sandbox.webp "Distribution के package या AppImage से आया program आपकी पूरी home directory तक पहुँचता है। अपने sandbox में चलता Flatpak या snap सिर्फ़ उन्हीं चीज़ों तक पहुँचता है जिनकी उसे इजाज़त है – यहाँ network और downloads folder।")
+
 ```quiz
 कौन-सा फ़ॉर्मैट बैकग्राउंड में अपने-आप अपडेट होता है?
 - [ ] Flatpak
@@ -132,6 +134,8 @@ flatpak list --user
 याद रखिए कि यूज़र इंस्टॉलेशन के अपने रिमोट होते हैं – Flathub को भी `--user` के
 साथ जोड़ना पड़ता है।
 ```
+
+![Flatpak पूरे system के लिए या सिर्फ़ आपके लिए](images/flatpak-user.webp "बिना options के Flatpak /var/lib/flatpak में जाता है और हर user उसे देखता है। --user के साथ वह आपकी home directory में जाता है, सिर्फ़ आप उसे देखते हैं, और user installation के अपने remotes होते हैं।")
 
 ### Update करना और हटाना
 

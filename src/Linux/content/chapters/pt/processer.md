@@ -24,6 +24,8 @@ Todo processo tem um pai. Siga os pais longe o bastante e você chega ao
 processo número 1.
 ```
 
+![A árvore de processos](images/process-tree.webp "Todo processo tem um PID, e o PPID dele é o PID do processo pai, na cor do pai. Seguindo os pais a partir do ps -ef, você passa pelo seu shell e chega ao processo 1, o init.")
+
 ## Os meus processos – `ps`
 
 O `ps` (*process status*) sem opções mostra os processos do seu próprio
@@ -168,6 +170,8 @@ continuar rodando enquanto mantém o seu prompt?
 O `Ctrl+Z` pausa o programa. O `bg` deixa um job parado continuar em
 segundo plano, enquanto o `fg` o traria de volta para o primeiro plano.
 ```
+
+![Primeiro plano, segundo plano e parado](images/job-states.webp "Um comando roda em primeiro plano, ou em segundo plano com & no final. Ctrl+Z para um job em primeiro plano, bg deixa um job parado continuar em segundo plano, fg traz um job para o primeiro plano, e Ctrl+C ou kill o encerram.")
 
 ### Continuar rodando depois do logout – `nohup`
 

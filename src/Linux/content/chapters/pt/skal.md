@@ -44,6 +44,8 @@ bash, zsh, `dash` (que é o `/bin/sh` no Debian e no Ubuntu) e `ash` (em
 sistemas pequenos como o Alpine). O fish deliberadamente **não** é compatível
 com POSIX – é isso que o torna mais simples, mas também diferente.
 
+![sh, bash, zsh e fish em uma linha do tempo](images/shell-family.webp "O bash e o zsh descendem do Bourne shell sh e são compatíveis com POSIX. O fish veio depois e tem sintaxe própria.")
+
 ## Quais shells estão instalados?
 
 O arquivo `/etc/shells` lista os shells que podem ser usados como shells de
@@ -120,6 +122,8 @@ neste momento.
 ```sh
 echo $SHELL
 ```
+
+![O zsh rodando dentro do bash](images/nested-shells.webp "O zsh foi iniciado a partir do bash e roda dentro dele. $0 diz qual shell você está rodando agora, e $SHELL o seu shell de login – que continua sendo o bash.")
 
 ### A maioria das coisas funciona como no bash
 
@@ -468,6 +472,8 @@ contém a linha `count=3`. O que acontece?
 ---
 A linha `#!` decide qual shell executa o script. O fish só o inicia.
 ```
+
+![A linha #! escolhe o shell](images/shebang.webp "O fish só inicia o script. A linha #!/bin/bash faz o bash executá-lo, então a sintaxe do bash funciona mesmo você estando no fish.")
 
 ## Mudando o seu shell padrão com chsh
 

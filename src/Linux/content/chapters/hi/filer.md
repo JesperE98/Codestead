@@ -100,6 +100,8 @@ rm -r {{documents}}-backup
 `rm -r` डायरेक्टरी और उसके अंदर की हर चीज़ हटा देता है।
 ```
 
+![cp, mv और rm क्या करते हैं](images/file-ops.webp "cp एक दूसरी file बनाता है, mv file का नाम बदलता है या उसे किसी directory में ले जाता है, और rm उसे हमेशा के लिए मिटा देता है।")
+
 ## Wildcards
 
 Command चलने से पहले shell patterns को कई file names में बदल (expand कर)
@@ -135,6 +137,8 @@ $ ls {{documents}}/??????.txt
 चाहिए, और उसके बाद `.txt` आना चाहिए। तीनों नाम छह अक्षरों के हैं, लेकिन सिर्फ़
 `{{fruits}}` के अंत में `.txt` है।
 ```
+
+![Shell pattern को कैसे expand करता है](images/glob.webp "ls चलने से पहले ही shell pattern को matching file names से बदल देता है। Table दिखाती है कि तीन patterns किन practice files से match करते हैं।")
 
 ## File names में spaces
 

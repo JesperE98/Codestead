@@ -60,6 +60,8 @@ Cela fonctionne, car le lien se trouve dans votre répertoire personnel et
 `{{documents}}/{{fruits}}` s'y trouve aussi. Un lien `/tmp/f` avec le même
 contenu chercherait `/tmp/{{documents}}/{{fruits}}` – et serait cassé.
 
+![Un lien relatif part de l'endroit où il se trouve](images/symlink-relative.webp "Les deux liens contiennent le même chemin relatif, suivi à partir du répertoire où se trouve chaque lien. Depuis votre répertoire personnel, il mène au fichier ; depuis /tmp, il ne mène nulle part, et ce lien est cassé.")
+
 `readlink` affiche ce que contient un lien, et `realpath` affiche le chemin
 complet, en suivant tous les liens :
 
@@ -145,6 +147,8 @@ toujours là après la suppression de `b.txt`.
 | Si l'original est supprimé | Le lien est cassé | Le fichier survit |
 | Dans `ls -l` | `l` et `->` | Le compteur de liens augmente |
 
+![Noms, inodes et contenu](images/link-kinds.webp "Un lien physique est un nom de plus pour le même inode : le compteur de liens passe à 2. Un lien symbolique a son propre inode, qui contient un nom. Après rm, le fichier survit sous son autre nom, mais le lien symbolique est cassé.")
+
 ```quiz
 Quel type de lien peut pointer vers un répertoire ?
 - [x] Seulement un lien symbolique
@@ -215,6 +219,8 @@ umask
 
 Le umask habituel `0022` retire le droit d'écriture au groupe et aux autres,
 c'est pourquoi vos fichiers reçoivent `644` et vos répertoires `755`.
+
+![Ce que retire le umask 022](images/umask.webp "Les nouveaux fichiers partent de 666 et les nouveaux répertoires de 777. Le umask 022 retire w au groupe et aux autres, ce qui laisse 644 et 755.")
 
 | umask | Nouveaux fichiers | Nouveaux répertoires | Signifie |
 |---|---|---|---|

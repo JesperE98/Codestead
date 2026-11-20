@@ -61,6 +61,8 @@ The capital letter is the default. In the Debian family apt asks `[Y/n]`, so
 there Enter means yes.
 ```
 
+![Enter answers with the capital letter](images/yes-no-default.webp "The capital letter is what Enter answers. apt asks Y/n, so Enter goes on with the installation; dnf asks y/N, so Enter cancels it.")
+
 `dnf remove package` removes a package again.
 
 ## Upgrading the system
@@ -179,6 +181,8 @@ What is the difference between `dnf copr disable` and `dnf copr remove`?
 - [ ] `disable` also uninstalls the packages, `remove` doesn't
 - [ ] There is no difference
 ```
+
+![dnf copr enable, disable and remove](images/copr-states.webp "enable creates the repository's file in /etc/yum.repos.d with enabled=1. disable keeps the file but sets enabled=0, so dnf repolist no longer shows the repository, and remove deletes the file.")
 
 ### RPM Fusion
 

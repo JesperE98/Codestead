@@ -67,6 +67,8 @@ Hur ofta körs `0 */2 * * * kommando`?
 Minut 0 och var andra timme: 00.00, 02.00, 04.00 …
 ```
 
+![När två crontab-rader körs](images/cron-times.webp "Den första raden kör jobbet var tionde minut varje timme, den andra klockan 07.00 på veckodag 1 till 5, måndag till fredag. Söndag är 0 eller 7.")
+
 ## Installera jobb
 
 `crontab -e` öppnar din crontab i en texteditor och installerar den när du
@@ -141,6 +143,8 @@ Utdata från cron-jobb visas inte i någon terminal. Riktig cron försöker
 skicka den som e-post, och de flesta datorer har ingen e-post – så den
 försvinner.
 ```
+
+![Din terminal och ett cron-jobb](images/cron-env.webp "Ett cron-jobb körs med /bin/sh, utan din ~/.bashrc och med en kort PATH. Utdata försvinner om inte raden skickar dem till en fil.")
 
 ## Systemets egna jobb
 

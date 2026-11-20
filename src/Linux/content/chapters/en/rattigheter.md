@@ -61,6 +61,8 @@ sum of r = 4, w = 2 and x = 1:
 | `644` | `rw-r--r--` | Ordinary files |
 | `600` | `rw-------` | Secret files |
 
+![Permissions as digits](images/perm-octal.webp "Each set of three becomes one digit: r counts 4, w 2, x 1 and a dash 0. So rwxr-xr-x is 755 and rw-r--r-- is 644.")
+
 ```sh
 chmod 644 {{notes}}
 ```
@@ -167,3 +169,5 @@ sudo only applies to the command (`echo`). The redirection is handled by your
 shell, which runs as you. `tee` is the program that writes the file, so it's
 `tee` that needs sudo.
 ```
+
+![Who opens the file](images/sudo-tee.webp "In the first line your own shell, running as you, opens /etc/file for > and is refused, so echo never runs. In the second, tee runs as root and opens /etc/hosts itself.")

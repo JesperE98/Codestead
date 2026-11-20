@@ -145,6 +145,8 @@ Un commit guarda lo que hay en el índice. Los otros tres cambios se quedan en e
 árbol de trabajo hasta que los añadas.
 ```
 
+![Árbol de trabajo, índice e historial](images/git-areas.webp "git add pone el README.md modificado en el índice, y git commit guarda el índice como un commit nuevo en el historial, en .git.")
+
 ## `git status` es tu brújula
 
 El comando que más vas a ejecutar es `git status`. Te dice dónde está cada
@@ -254,6 +256,8 @@ significa que las líneas 1–3 de la versión antigua corresponden a las línea
 `git diff` compara el árbol de trabajo con el índice, es decir, lo que
 *todavía no* has añadido. Para ver lo que está en el índice esperando a entrar
 en un commit, escribe `git diff --staged`.
+
+![Qué compara git diff](images/git-diff.webp "git diff compara el árbol de trabajo con el índice. git diff --staged compara el índice con el último commit.")
 
 Añade el cambio y haz un commit. La opción `-a` ejecuta `git add` en todos los
 archivos que git ya sigue, así que basta con un solo paso:
@@ -460,6 +464,8 @@ Fast-forward
 Entonces git solo tiene que mover `main` hacia delante hasta el mismo commit
 que `{{newDesign}}`.
 
+![Las ramas como etiquetas en commits](images/git-branches.webp "Una rama es una etiqueta que apunta a un commit. Después de git switch main, el árbol de trabajo es como el último commit de main, y git merge adelanta main hasta el commit de la rama: un fast-forward.")
+
 Si las dos ramas tienen commits nuevos, git hace una **fusión a tres bandas**
 (*three-way merge*): compara las dos ramas con su antecesor común y crea un
 nuevo *merge commit* con dos padres. `git log --oneline --graph --all` muestra
@@ -617,6 +623,8 @@ El remoto suele llamarse `origin`, y un flujo de trabajo típico es así:
 `git pull` al empezar, luego editar, `git add` y `git commit`, y por último
 `git push`. GitHub y GitLab usan una clave SSH o un token de acceso para
 identificarte, no una contraseña.
+
+![Tu repositorio y su remoto](images/git-remote.webp "origin solo tiene el historial, no un árbol de trabajo. git push envía allí tus commits nuevos, git fetch solo trae commits nuevos a .git, y git pull además los fusiona en tu árbol de trabajo.")
 
 Todo esto necesita red, y el simulador no la tiene. Pero `clone`, `push` y
 `pull` funcionan igual de bien entre dos repositorios del mismo ordenador, así

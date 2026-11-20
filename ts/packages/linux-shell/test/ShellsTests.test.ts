@@ -318,6 +318,30 @@ describe("ShellsTests", () => {
     expect(s.sh.env.get("frukt") ?? null).toBeNull();
   });
 
+  itNeeds(shells("bash", "env", "exit", "export"), "fish: set -x och set -gx exporterar, set -u tar bort exporten", () => {
+    const s = withShells();
+    s.run("vanlig=1; export exp=2");
+    s.run("fish");
+    // fish är ett nytt program: det får bara bashs miljövariabler.
+    expect(s.run("echo [$vanlig] [$exp]").out).toBe("[] [2]\n");
+    s.run("set p1 ett; set -x p2 två; set -gx p3 tre");
+    expect(s.run("bash -c 'echo [$p1] [$p2] [$p3]'").out).toBe("[] [två] [tre]\n");
+    expect(s.run("env").out).not.toContain("p1=");
+    expect(s.run("set -x").out).toContain("p2 två\n");
+    expect(s.run("set -x").out).not.toContain("p1 ett");
+    // En exporterad variabel förblir exporterad när den får ett nytt värde, tills set -u.
+    s.run("set p2 fyra");
+    expect(s.run("bash -c 'echo [$p2]'").out).toBe("[fyra]\n");
+    s.run("set -u p2 fem");
+    expect(s.run("bash -c 'echo [$p2]'; echo $p2").out).toBe("[]\nfem\n");
+    s.run("set -Ux UNIV u");
+    expect(s.sh.vfs.readFile("/home/elev/.config/fish/fish_variables", s.sh.rootUser())).toContain("SETUVAR --export UNIV:u\n");
+    s.run("exit");
+    expect(s.run("echo [$p3]").out).toBe("[]\n");
+    // zsh som startas från bash får också bara miljövariablerna.
+    expect(s.run("zsh -c 'echo [$vanlig] [$exp]'").out).toBe("[] [2]\n");
+  });
+
   itNeeds(shells("echo", "seq", "test", "true", "false"), "loopar, villkor, funktioner och $status", () => {
     const s = withShells();
     s.run("fish");

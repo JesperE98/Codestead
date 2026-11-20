@@ -21,6 +21,8 @@
 **Red Hat परिवार** (dnf)। इनमें से हर अध्याय हमेशा उसी परिवार के किसी
 डिस्ट्रीब्यूशन पर चलता है, इसलिए आप तीनों कर सकते हैं।
 
+![Distributions की तीन families](images/distro-families.webp "हर family का अपना पैकेज मैनेजर और अपना package format है। Ubuntu, Debian पर आधारित है, Linux Mint, Ubuntu पर, और Rocky Linux व AlmaLinux, RHEL के clone हैं, जो Fedora पर आधारित है।")
+
 ## हर जगह क्या एक जैसा है?
 
 - **Linux kernel** – हालाँकि अलग-अलग versions में।
@@ -79,6 +81,8 @@ Debian परिवार इस समूह को `sudo` कहता है;
 - [ ] Fedora
 ```
 
+![Time line पर releases के तीन तरीक़े](images/release-models.webp "Ubuntu LTS हर दूसरे साल आता है, Fedora हर छह महीने में, और Arch में versions होते ही नहीं – बस updates की लगातार धारा।")
+
 ## मैं कौन-सा distribution चला रहा हूँ?
 
 File `/etc/os-release` सभी modern distributions पर मौजूद होती है और नाम व
@@ -125,6 +129,8 @@ Windows और macOS पर आप अक्सर प्रोग्राम �
 - [x] पैकेज मैनेजर निर्भरता को अपने-आप इंस्टॉल कर देता है
 - [ ] पैकेज इंस्टॉल हो जाता है, लेकिन जब तक आप दूसरा डाउनलोड न करें, काम नहीं करता
 ```
+
+![रिपॉज़िटरी, पैकेज मैनेजर और कंप्यूटर](images/packages.webp "पैकेज मैनेजर प्रोग्राम को डिस्ट्रीब्यूशन की हस्ताक्षरित रिपॉज़िटरी से लाता है – और उसकी निर्भरता को भी साथ में: htop को ncurses लाइब्रेरी चाहिए, इसलिए दोनों इंस्टॉल होते हैं।")
 
 ### एक ही प्रोग्राम, अलग-अलग नाम
 

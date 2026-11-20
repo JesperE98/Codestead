@@ -23,6 +23,8 @@ env
 export EDITOR=nano
 ```
 
+![export 的作用](images/env-export.webp "你创建的变量只存在于你的 shell 中。用 export 之后它就成了环境变量，shell 启动的每个程序都会得到它的一份副本。")
+
 ```quiz
 哪一行会创建值为 `blue` 的变量 `COLOR`？
 - [ ] `COLOR = blue`
@@ -64,6 +66,8 @@ echo $PATH
 ```sh
 echo $PATH | tr ':' '\n'
 ```
+
+![shell 如何找到 ls](images/path-lookup.webp "PATH 是一串用冒号分隔的目录。shell 依次在其中查找，运行找到的第一个 ls，也就是 /usr/bin/ls，所以根本不会去 /bin 里找。")
 
 `which` 显示程序是在哪里找到的。有些命令（比如 `cd`）根本不是文件，而是*内置*在 shell 中的——`type` 会告诉你一个名字到底是什么：
 

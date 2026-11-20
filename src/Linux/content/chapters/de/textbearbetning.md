@@ -49,6 +49,8 @@ bonana
 Ohne `g` wird nur das erste `a` in der Zeile ersetzt.
 ```
 
+![Die Teile des s-Befehls von sed](images/sed-substitute.webp "Ohne das Flag g ersetzt s nur den ersten Treffer in jeder Zeile; mit g ersetzt es alle Treffer.")
+
 Das Flag `i` macht die Suche unabhängig von Groß- und Kleinschreibung, genau wie
 `grep -i`:
 
@@ -182,6 +184,8 @@ Standardmäßig werden Felder durch Leerzeichen getrennt (beliebig viele). In
 awk '{print $3}' ~/{{documents}}/server.log
 ```
 
+![awk zerlegt eine Zeile in Felder](images/awk-fields.webp "awk zerlegt jede Zeile an den Leerzeichen, egal wie viele es sind: $1 ist das erste Feld, $NF das letzte, NF die Anzahl der Felder und $0 die ganze Zeile.")
+
 Das Programm steht innerhalb von `{ }` und läuft für jede Zeile. Setze das
 awk-Programm immer in **einfache** Anführungszeichen – sonst hält die Shell
 `$3` für eine Shell-Variable und ersetzt sie, bevor awk überhaupt startet.
@@ -269,6 +273,8 @@ eine einfache Möglichkeit, eine Spalte zu summieren:
 ```sh
 awk -F, 'NR > 1 {{{sumVar}} += $3} END {print {{sumVar}}}' ~/{{documents}}/{{grades}}
 ```
+
+![Wie awk eine Spalte summiert](images/awk-sum.webp "Der Teil in geschweiften Klammern läuft für jede Zeile nach der Kopfzeile und addiert Feld 3 zur Variablen. END läuft einmal, nach der letzten Zeile, und gibt die Summe aus.")
 
 `{{sumVar}} += $3` bedeutet „addiere Feld 3 zu {{sumVar}}“. Zählst du
 gleichzeitig die Zeilen (`anzahl++` erhöht `anzahl` um 1), kannst du den

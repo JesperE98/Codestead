@@ -68,6 +68,8 @@ Wie oft läuft `0 */2 * * * command`?
 Minute 0 und jede zweite Stunde: 00:00, 02:00, 04:00 …
 ```
 
+![Wann zwei crontab-Zeilen laufen](images/cron-times.webp "Die erste Zeile führt den Job in jeder Stunde alle zehn Minuten aus, die zweite um 07:00 an den Wochentagen 1 bis 5, Montag bis Freitag. Sonntag ist 0 oder 7.")
+
 ## Jobs installieren
 
 `crontab -e` öffnet deine crontab in einem Texteditor und installiert sie,
@@ -145,6 +147,8 @@ Die Ausgabe von cron-Jobs wird in keinem Terminal angezeigt. Das echte cron
 versucht, sie per E-Mail zu verschicken, und die meisten Rechner haben keine
 Mail – also geht sie verloren.
 ```
+
+![Dein Terminal und ein cron-Job](images/cron-env.webp "Ein cron-Job läuft mit /bin/sh, ohne deine ~/.bashrc und mit einem kurzen PATH. Seine Ausgabe geht verloren, wenn die Zeile sie nicht in eine Datei schickt.")
 
 ## Die eigenen Jobs des Systems
 

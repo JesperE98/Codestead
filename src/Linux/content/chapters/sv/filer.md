@@ -100,6 +100,8 @@ Vilket kommando tar bort katalogen `{{old}}` *bara* om den är tom?
 `rm -r` tar bort katalogen och allt som finns i den.
 ```
 
+![Vad cp, mv och rm gör](images/file-ops.webp "cp gör en fil till, mv byter namn på en fil eller flyttar in den i en katalog, och rm tar bort den för gott.")
+
 ## Jokertecken
 
 Skalet kan expandera mönster till flera filnamn innan kommandot körs:
@@ -132,6 +134,8 @@ $ ls {{documents}}/?????.*
 Varje `?` är exakt ett tecken, så namnet före punkten måste vara fem tecken
 långt. Det gäller bara `{{grades}}` – `{{fruits}}` och `server.log` har längre namn.
 ```
+
+![Hur skalet expanderar ett mönster](images/glob.webp "Skalet byter ut mönstret mot de filnamn som matchar innan ls körs. Tabellen visar vilka övningsfiler tre mönster matchar.")
 
 ## Mellanslag i filnamn
 

@@ -61,6 +61,8 @@ dnf が `Is this ok [y/N]` と聞いてきて、Enter だけを押しました�
 Enter は yes という意味になります。
 ```
 
+![Enter は大文字の答えになる](images/yes-no-default.webp "大文字が Enter を押したときの答えです。apt は Y/n と聞くので Enter でインストールが続き、dnf は y/N と聞くので Enter で取り消されます。")
+
 `dnf remove パッケージ` で、パッケージをまた削除できます。
 
 ## システムをアップグレードする
@@ -181,6 +183,8 @@ dnf copr list
 - [ ] `disable` はパッケージもアンインストールするが、`remove` はしない
 - [ ] 違いはない
 ```
+
+![dnf copr の enable、disable、remove](images/copr-states.webp "enable は /etc/yum.repos.d にリポジトリのファイルを enabled=1 で作ります。disable はファイルを残したまま enabled=0 にするので dnf repolist に表示されなくなり、remove はファイルを削除します。")
 
 ### RPM Fusion
 

@@ -25,6 +25,8 @@ id
 | `1`–`999` | Services और programs के लिए **system users** |
 | `1000` और ऊपर | **सामान्य users** – इंसान। पहले वाले को 1000 मिलता है। |
 
+![UID की ranges और उनके users](images/uid-ranges.webp "UID से root, system users और इंसानों में फ़र्क होता है। ये simulator की /etc/passwd के users हैं; kim, जिसे आप इस chapter में आगे बनाएँगे, को 1001 मिलेगा।")
+
 ## Users की list – `/etc/passwd`
 
 सारे users text file `/etc/passwd` में list होते हैं, हर user के लिए एक line:
@@ -256,6 +258,8 @@ supplementary groups की list ठीक वही set हो जाती ह
 `-a` के बिना सूची ठीक वही सेट हो जाती है जो आप टाइप करते हैं।
 `sudo usermod -aG backup kim` से kim के बाक़ी समूह बने रहते।
 ```
+
+![usermod -aG और usermod -G](images/usermod-ag.webp "kim का primary group नहीं बदलता। -aG backup को supplementary groups में जोड़ता है, जबकि -a के बिना -G उन सबकी जगह सिर्फ़ backup रख देता है।")
 
 `gpasswd` भी यही करता है और members को हटा भी सकता है:
 

@@ -19,6 +19,8 @@
 
 **沙盒**（sandbox）的意思是，程序只能访问它被允许访问的东西，比如网络或你的下载文件夹，而不是你的整个主目录。
 
+![有沙盒和没有沙盒的程序](images/sandbox.webp "来自发行版软件包的程序或 AppImage 可以访问你的整个主目录。处在沙盒中的 Flatpak 或 snap 只能访问被允许的东西——这里是网络和下载文件夹。")
+
 ```quiz
 哪种格式会在后台自动更新？
 - [ ] Flatpak
@@ -108,6 +110,8 @@ flatpak list --user
 ---
 记住，用户级安装有它自己的 remote——Flathub 也要用 `--user` 再添加一次。
 ```
+
+![为整个系统安装 Flatpak，还是只为你自己](images/flatpak-user.webp "不加选项时，Flatpak 会装到 /var/lib/flatpak，所有用户都能看到。加上 --user 后，它会装到你的主目录中，只有你能看到，而且用户级安装有它自己的 remote。")
 
 ### 更新和卸载
 

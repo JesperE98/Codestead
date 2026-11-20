@@ -200,7 +200,7 @@ function gecosName(g: G): string {
 }
 
 export function identity(g: G, r: Repo | null, strict = true): Ident | null {
-  const email = getConfig(g, r, "user.email") ?? g.sh.env.get("EMAIL") ?? null;
+  const email = getConfig(g, r, "user.email") ?? g.sh.envVar("EMAIL");
   const cfgName = getConfig(g, r, "user.name");
   const name = cfgName !== null && cfgName !== "" ? cfgName : gecosName(g);
   if (email === null || email === "") {

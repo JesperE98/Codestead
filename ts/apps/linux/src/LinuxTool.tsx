@@ -4,7 +4,7 @@
 
 import type { ProductMeta } from "@codestead/common";
 import { type CommandFacts, CourseChapter, type GameRules, type Reference } from "@codestead/learning";
-import { type Chapter, ChaptersLib, CommandInfo, I18nLib, LinuxGame, ProgressLib, RenderLib, UiStrings } from "@codestead/linux-content";
+import { type Chapter, ChaptersLib, CommandInfo, I18nLib, LinuxGame, PicturesLib, ProgressLib, RenderLib, UiStrings } from "@codestead/linux-content";
 import { type Distro, DistrosLib, type ExecResult, Shell, ShellSandbox, UtilCmd, World, WorldMigration } from "@codestead/linux-shell";
 import {
   Changelog,
@@ -117,6 +117,14 @@ export class LinuxTool implements LearningTool {
   lessonText(chapterId: string, lang: string): string {
     const chapter = chapterOf(chapterId);
     return RenderLib.preprocess(I18nLib.chapterMarkdown(chapter, lang), this.distroOf(chapter), lang);
+  }
+
+  /**
+   * A picture of the chapters' texts (`![alt](images/fs-tree.webp "caption")`): the one in the learner's language
+   * (images/sv/fs-tree.webp), else the English one, else the shared one – as the URL of the built app's copy.
+   */
+  picture(path: string, lang: string): string | null {
+    return PicturesLib.url(path, lang);
   }
 
   references(chapterId: string): readonly Reference[] {

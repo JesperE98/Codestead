@@ -128,12 +128,12 @@ fish では、最後のコマンドの終了ステータスは `$status` とい�
 
 ```quiz
 fish で、`EDITOR` を値 `nano` の環境変数にするにはどうしますか？
-- [ ] `export EDITOR=nano`
+- [ ] `set EDITOR nano`
 - [ ] `EDITOR=nano`
 - [x] `set -x EDITOR nano`
 - [ ] `set -e EDITOR nano`
 ---
-`-x` は変数をエクスポートし、`-e` は変数を消去します。
+`-x` は変数をエクスポートします。`-x` がなければ fish の中だけにある普通の変数になり、`-e` は変数を消去します。
 ```
 
 ```quiz

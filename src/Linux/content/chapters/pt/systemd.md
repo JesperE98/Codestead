@@ -146,6 +146,8 @@ duas coisas diferentes.**
 | `systemctl enable --now X` | As duas coisas de uma vez. |
 | `systemctl disable X` | Não inicia no boot (`--now` também o para). |
 
+![start e enable](images/start-enable.webp "Para um serviço parado: start o inicia agora, mas não depois de reiniciar, enable faz ele iniciar no boot, mas não agora, e enable --now faz as duas coisas.")
+
 O `enable` cria um link em um diretório com o nome do target da seção
 `[Install]` do arquivo de unit, normalmente `multi-user.target.wants`:
 
@@ -269,6 +271,8 @@ O `-p` mostra a prioridade que você escolhe *e tudo o que for mais grave* – o
 seja, tudo com o mesmo número ou um número menor (`warning` é 4).
 ```
 
+![As prioridades do journal](images/journal-priorities.webp "-p mostra a prioridade escolhida e todas as mais graves, as de número menor: -p err mostra de 0 a 3 e -p warning de 0 a 4.")
+
 ## Investigando um serviço que não inicia
 
 Alguém configurou o serviço **reportd** neste computador, mas algo está
@@ -376,6 +380,8 @@ Os arquivos em `/etc/systemd/system` têm prioridade e não são sobrescritos
 quando o pacote é atualizado. O `daemon-reload` faz o systemd carregar de novo
 o arquivo de unit alterado.
 ```
+
+![Onde ficam os arquivos de unit](images/unit-files.webp "Os pacotes colocam seus arquivos de unit em /usr/lib/systemd/system; os seus vão em /etc/systemd/system e têm prioridade. enable cria um link em multi-user.target.wants, cujas units o systemd inicia no boot.")
 
 ## Como os serviços se chamam?
 

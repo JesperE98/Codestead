@@ -1,0 +1,12 @@
+{
+  "name": "codestead-linux-diagrams",
+  "private": true,
+  "description": "Build-time only: the fonts make.mjs draws the Linux chapters' pictures with in Arabic, Hindi, Chinese and Japanese. Not part of any app (npm ci here, see docs/DEVELOPMENT.md).",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@fontsource-variable/noto-sans-arabic": "5.3.0",
+    "@fontsource-variable/noto-sans-devanagari": "5.3.0",
+    "@fontsource-variable/noto-sans-jp": "5.3.1",
+    "@fontsource-variable/noto-sans-sc": "5.3.1"
+  }
+}

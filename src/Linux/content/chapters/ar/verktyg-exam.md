@@ -128,12 +128,12 @@ $ fish -c 'false; echo $status'
 
 ```quiz
 كيف تجعل `EDITOR` متغيّر بيئة بالقيمة `nano` في fish؟
-- [ ] `export EDITOR=nano`
+- [ ] `set EDITOR nano`
 - [ ] `EDITOR=nano`
 - [x] `set -x EDITOR nano`
 - [ ] `set -e EDITOR nano`
 ---
-يصدّر `-x` المتغيّر، أما `-e` فيمحوه.
+يصدّر `-x` المتغيّر. ومن دون `-x` يكون متغيّرًا عاديًا موجودًا داخل fish فقط، أما `-e` فيمحوه.
 ```
 
 ```quiz

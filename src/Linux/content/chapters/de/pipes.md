@@ -16,6 +16,8 @@ Jedes Programm hat drei Standard-Datenströme:
 Mit *Umleitungen* (*Redirection*) und *Pipes* kannst du diese Ströme woandershin
 schicken.
 
+![stdin, stdout und stderr](images/streams.webp "Ein Programm liest stdin (0) von der Tastatur und schreibt stdout (1) und stderr (2) auf den Bildschirm.")
+
 ## In eine Datei – `>` und `>>`
 
 `>` schickt stdout in eine Datei statt auf den Bildschirm. Die Datei wird
@@ -97,6 +99,8 @@ Die Datei `/dev/null` ist ein „schwarzes Loch“ – alles, was hineingeschrie
 wird, verschwindet. Das ist praktisch, um Fehler stummzuschalten. Mit `2>&1`
 wird stderr denselben Weg geschickt wie stdout.
 
+![Wohin > 2> und 2>&1 die Datenströme schicken](images/redirect.webp "> schickt nur stdout in die Datei, deshalb landet die Fehlermeldung trotzdem auf dem Bildschirm. 2> fängt stderr ab, und > Datei 2>&1 schickt beide in dieselbe Datei.")
+
 ## Pipes – `|`
 
 Eine **Pipe** leitet das stdout eines Befehls direkt in das stdin des nächsten.
@@ -117,6 +121,8 @@ sort {{documents}}/{{fruits}} | uniq -c | sort -rn
 Lies es Schritt für Schritt: Sortiere die Früchte, zähle, wie viele es von
 jeder gibt (`uniq -c`), und sortiere dann numerisch mit der größten Zahl zuerst
 (`sort -rn`).
+
+![Die Ausgabe jedes Schritts einer Pipe-Kette](images/pipeline.webp "Jede Pipe schickt die stdout eines Befehls in die stdin des nächsten: sort bringt gleiche Früchte zusammen, uniq -c zählt sie, und sort -rn setzt die häufigsten nach oben.")
 
 Wie viele Dateien und Verzeichnisse gibt es in `/etc`? Zähl sie mit einer Pipe:
 

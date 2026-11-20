@@ -132,12 +132,12 @@ sempre falha.
 ```quiz
 Como você transforma `EDITOR` em uma variável de ambiente com o valor `nano`
 no fish?
-- [ ] `export EDITOR=nano`
+- [ ] `set EDITOR nano`
 - [ ] `EDITOR=nano`
 - [x] `set -x EDITOR nano`
 - [ ] `set -e EDITOR nano`
 ---
-O `-x` exporta a variável; o `-e` a apaga.
+O `-x` exporta a variável. Sem `-x` ela é uma variável comum que só existe no fish, e o `-e` a apaga.
 ```
 
 ```quiz

@@ -32,6 +32,8 @@ gzip kümmert sich immer nur um eine Datei und weiß nichts von Verzeichnissen,
 und ein tar-Archiv allein ist nicht kleiner als die Dateien darin.
 ```
 
+![tar sammelt, gzip komprimiert](images/tar-gzip.webp "tar macht aus dem Verzeichnis eine einzige Datei, größer als die Dateien selbst, weil jede Datei einen 512 Byte großen Header bekommt und das Archiv auf ganze Blöcke aufgefüllt wird. Danach macht gzip sie klein; tar -czf erledigt beides. Die Balken sind maßstabsgetreu.")
+
 | Dateiendung | Was ist das? | Auspacken mit |
 |---|---|---|
 | `.tar` | Archiv, unkomprimiert | `tar -xf` |
@@ -90,6 +92,8 @@ Genau **eine** der Optionen `c`, `x` und `t` muss dabei sein – sie sagt tar,
 Setze `f` immer **zuletzt**, wenn du die Optionen zusammenschreibst, denn der
 Dateiname muss direkt danach kommen. Aus historischen Gründen kannst du den
 Bindestrich auch weglassen: `tar czvf` bedeutet dasselbe wie `tar -czvf`.
+
+![Die Teile von tar -czvf](images/tar-options.webp "c, z, v und f sind zusammengeschriebene Optionen, f als letzte, weil direkt danach der Name des Archivs kommt. Alles nach dem Namen wird eingepackt.")
 
 ```quiz
 Was macht `tar -xzvf backup.tar.gz`?
@@ -203,6 +207,8 @@ Du führst `tar -czf backup.tar.gz -C ~ {{documents}}` aus. Was enthält das Arc
 Mit `-C ~` wechselt tar zuerst in dein Home-Verzeichnis, also beginnen die
 Namen im Archiv bei `{{documents}}/`.
 ```
+
+![Wo die Namen im Archiv beginnen](images/tar-paths.webp "Packst du einen Pfad in deinem Home-Verzeichnis ein, beginnen die Namen mit home und deinem Benutzernamen, weil tar den führenden Schrägstrich entfernt. Mit -C ~ wechselt tar zuerst in dein Home-Verzeichnis, und die Namen beginnen beim eingepackten Verzeichnis.")
 
 ## Einzelne Dateien komprimieren mit `gzip`
 

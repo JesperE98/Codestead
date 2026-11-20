@@ -130,12 +130,12 @@ immer fehl.
 
 ```quiz
 Wie machst du in fish `EDITOR` zu einer Umgebungsvariablen mit dem Wert `nano`?
-- [ ] `export EDITOR=nano`
+- [ ] `set EDITOR nano`
 - [ ] `EDITOR=nano`
 - [x] `set -x EDITOR nano`
 - [ ] `set -e EDITOR nano`
 ---
-`-x` exportiert die Variable; `-e` löscht sie.
+`-x` exportiert die Variable. Ohne `-x` ist sie eine gewöhnliche Variable, die nur in fish existiert, und `-e` löscht sie.
 ```
 
 ```quiz

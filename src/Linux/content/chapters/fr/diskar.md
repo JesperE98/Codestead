@@ -99,6 +99,8 @@ Remarquez `sdb1` : un système de fichiers `vfat` portant l'étiquette
 `USBSTICK` qui n'est monté nulle part. C'est la
 clé USB que nous allons brancher.
 
+![Disques, partitions et systèmes de fichiers](images/disk-layout.webp "lsblk -f sur cet ordinateur : le disque sda a trois partitions, chacune avec son système de fichiers et son point de montage. La clé USB sdb a une partition FAT qui n'est pas encore montée.")
+
 ## Les différents systèmes de fichiers
 
 Il existe de nombreux systèmes de fichiers, avec des points forts différents :
@@ -221,6 +223,8 @@ maintenant dans le répertoire :
 ls -l /mnt/usb
 df -h /mnt/usb
 ```
+
+![Trois systèmes de fichiers dans une arborescence](images/mount-tree.webp "Après le montage, les fichiers de la clé apparaissent sous /mnt/usb. Le système de fichiers racine est monté sur / et la partition EFI sur /boot/efi – une seule arborescence, pas de lettres de lecteur.")
 
 À partir de là, la clé fonctionne comme n'importe quel autre répertoire.
 Copiez un fichier dans votre répertoire personnel :

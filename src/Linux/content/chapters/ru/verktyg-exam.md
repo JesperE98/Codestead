@@ -130,12 +130,12 @@ $ fish -c 'false; echo $status'
 
 ```quiz
 Как в fish сделать `EDITOR` переменной окружения со значением `nano`?
-- [ ] `export EDITOR=nano`
+- [ ] `set EDITOR nano`
 - [ ] `EDITOR=nano`
 - [x] `set -x EDITOR nano`
 - [ ] `set -e EDITOR nano`
 ---
-`-x` экспортирует переменную; `-e` удаляет её.
+`-x` экспортирует переменную. Без `-x` это обычная переменная, которая есть только в fish, а `-e` удаляет её.
 ```
 
 ```quiz

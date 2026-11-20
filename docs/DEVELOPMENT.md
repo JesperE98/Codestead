@@ -195,8 +195,8 @@ ts/
 │   ├── learning/                Lärmotorn utan UI: kursens disposition, XP, nivåer, dagar i rad, utmärkelser,
 │   │                            LearningState (det som sparas i state.json)
 │   ├── ui/                      React: tema och färgsystem, markdown-vy, dialoger, kontrollfrågor (med en ISandbox
-│   │                            som verktyget ger), spelvyer, lagring, "Vad är nytt", självuppdatering (Velopack,
-│   │                            src/electron/) och lärfönstret alla verktyg delar (src/Learning/: LearningWindow,
+│   │                            som verktyget ger), spelvyer, lagring, "Vad är nytt", självuppdatering (Velopack och
+│   │                            native-paket, src/electron/) och lärfönstret alla verktyg delar (src/Learning/: LearningWindow,
 │   │                            LearningTool – det verktyget ger fönstret)
 │   ├── linux-shell/             Den simulerade terminalen (bash, zsh, fish, apt, pacman, dnf, git ...)
 │   │   └── src/                 Shell/ (kommandorader: pipes, omdirigering, sudo, skript, jobb), Parser/ (bash-parsern),
@@ -204,7 +204,7 @@ ts/
 │   │                            World.ts (elevens dator på elevens språk), Packages/ (paketdatabasen), ShellI18n.ts,
 │   │                            Commands/<Grupp>/ (alla kommandon, en mapp per grupp)
 │   ├── linux-content/           Linux-kursen: kapitel och uppgifter (Chapters/, ChapterDefinitions.ts, Checks.ts),
-│   │                            Linux-spelet (Game/), språk, UI-texterna
+│   │                            Linux-spelet (Game/), språk, UI-texterna, kapitlens bilder (Pictures.ts)
 │   ├── gp-gpu/                  Codestead GP:s simulerade GPU (se "Codestead GP")
 │   ├── gp-course/               Codestead GP:s kurs
 │   └── pipeline-viz/            Render Pipeline Visualizers scener i GP:s kapitel (se "Scener ur visualiseraren")
@@ -217,7 +217,9 @@ src/
 ├── Linux/
 │   ├── content/
 │   │   ├── chapters/<språk>/    Kapiteltexterna (markdown), ett språk per katalog
-│   │   └── i18n/<språk>/        Översatta titlar och uppgiftstexter
+│   │   ├── i18n/<språk>/        Översatta titlar och uppgiftstexter
+│   │   └── images/              Kapitlens bilder ([<språk>/]namn.webp) och diagrams/, verktyget som ritar dem
+│   │                            (se "Bilder i Codestead Linux")
 │   ├── Codestead.Content/i18n/ui/   Appens UI-texter
 │   ├── Codestead.Shell/         Simulatorns texter (i18n/) och elevens dator på varje språk (world/)
 │   ├── Codestead.Linux/Assets/  Appens ikon
@@ -410,6 +412,8 @@ visa API:ts kod för steget – i det API eleven valt, på svenska eller engelsk
 visualiserarens) ritas från källkod i repot: en fil `<namn>.mjs` per bild, som `make.mjs` gör till `images/<variant>.webp`. Hjälpmoduler för en kursdels bilder
 heter `_<namn>.mjs` och ritas inte själva.
 Kursdelen Getting started (*Setting up your IDE* … *Camera*) har sådana bilder och är förlagan för de andra delarna.
+Codestead Linux ritar sina bilder med samma `style.mjs` och `to_webp.py` (se "Bilder i Codestead Linux"): en ändring
+här ändrar båda kursernas bilder.
 
 ```sh
 cd ts && npm ci        # Inter (appens typsnitt) och vitest
@@ -528,6 +532,8 @@ det den förstår kan ge en annan bild än en riktig körning. Nya kapitel
      ett kommando med samma utskrift som första raden ger på en ny dator (`ISandbox.outputOf`). Prov
      visar också terminalen, eftersom de har `try`-frågor.
      Ett kapitel utan kontrollfrågor låses upp med knappen "Jag har läst kapitlet".
+   - **Bilder**: `![alt](images/namn.webp "bildtext")` som ett eget stycke, på alla språk på samma ställe; se
+     "Bilder i Codestead Linux".
    - **Källor**: `src/Linux/content/references/mitt-kapitel.json` med
      `[{ "title": ..., "url": "https://...", "publisher": ... }]`. Bara officiella webbplatser
      (listan finns i [verification/README.md](verification/README.md)); testerna säger nej till andra.
@@ -542,6 +548,79 @@ det den förstår kan ge en annan bild än en riktig körning. Nya kapitel
 
 Behövs ett nytt kommando lägger du det i `ts/packages/linux-shell/src/Commands/`. Ska det installeras med
 pakethanteraren lägger du också till ett paket i `ts/packages/linux-shell/src/Packages/PackagesLib.Catalog.ts`.
+
+## Bilder i Codestead Linux
+
+Kapitlen i Codestead Linux har bilder på samma sätt som Codestead GP:s (se "Bilder i kapitlen" och "Stilguide för
+bilderna" ovan – stilguiden gäller här också, med undantagen nedan). Kursdelarna *Kom igång* och *Grunderna*
+(valkommen, navigera, filer, lasa-text, pipes) har bilder och är förlagan för de andra delarna.
+
+**I texten** är en bild ett eget stycke, `![alt](images/namn.webp "bildtext")`, på alla elva språk på samma ställe
+(efter samma kontrollfråga eller kodblock). Bildtexten är en eller två meningar utan markdown (inga `` ` ``, `*`, `_`,
+`[`, `]` och inga citattecken), alt några ord. Lägg bilden efter stycket som förklarar saken, men **efter
+kontrollfrågan** om bilden visar svaret. En bild som bara gäller en familj läggs inuti `:::debian` / `:::arch` /
+`:::redhat`-blocket (och använder `familyBadge` – ett neutralt märke med familjens namn, aldrig en distributions logga).
+Sammanfattningar och prov har inga bilder.
+
+**Filerna** ligger i `src/Linux/content/images/`: `<språk>/namn.webp` för en bild med ord eller med elevens filnamn i,
+`namn.webp` för en som är likadan på alla språk. Saknas språkets bild visas den engelska (`en/`). Appen hittar dem med
+`PicturesLib` (`ts/packages/linux-content/src/Pictures.ts`, en Vite-glob med `?url`: varje bild blir en fil i den byggda
+appen och laddas först när den visas) och `LinuxTool.picture`; textvyn visar dem och förstorar dem vid klick som i GP.
+`PictureTests` (`ts/packages/linux-content/test`) kräver att varje bild finns för varje språk som visar den och är en
+WebP, att alla språk visar samma bilder i samma ordning som engelskan, att varje bild har alt och bildtext, att varje
+bildfil används och att varje bild har en källa `images/diagrams/<namn>.mjs`.
+
+**Verktyget** (`src/Linux/content/images/diagrams/`) ritar varje bild från en källa `<namn>.mjs`, på alla elva språk på
+en gång:
+
+```sh
+cd ts && npm ci && cd ..                               # Inter och vitest (simulatorn)
+npm ci --prefix src/Linux/content/images/diagrams     # typsnitten för arabiska, hindi, kinesiska och japanska
+node src/Linux/content/images/diagrams/make.mjs [namn …] [--preview <mapp>]
+```
+
+- `style.mjs` återanvänder GP:s `style.mjs` (färger, kort, `box`, `arrow`, `badge` …) och lägger till det Linux behöver:
+  `LANGS`, `perLanguage("x")` (en variant per språk) och `shared("x")` (en gemensam bild), `tr(v, tabell)`,
+  `world(lang)`/`fill(v, "{{documents}}")` (elevens namn ur `Codestead.Shell/world/<språk>.json`), `label` (text på
+  variantens språk, arabiska höger till vänster), `tag` (etikett på en pill), `code`, `terminal` (en terminal med
+  simulatorns utskrift), `tree` (ett katalogträd), `folder`, `file` och `familyBadge`. `make.mjs` använder GP:s
+  `to_webp.py` (förlustfri WebP i 2×). Ändras GP:s `style.mjs` eller `to_webp.py` ändras alltså Linux-bilderna också:
+  rita om båda kursernas bilder och titta på dem.
+- **Översättningar**: en källa exporterar `words = { nyckel: { en: "…", sv: "…", de, fr, es, pt, ru, zh, ja, ar, hi } }`
+  (hjälpmoduler som `_pipes.mjs` har gemensamma ord som källorna tar med i sina `words`). `make.mjs` stoppar om ett
+  språk saknas. Använd kapitlets egna termer på varje språk – läs kapitlet på det språket (hindi skriver t.ex. tekniska
+  termer med latinska bokstäver: *home directory*, *shell*). Rita hellre kommandon, sökvägar och symboler (samma på alla
+  språk) än ord. Exempelnamn som kapitlet översätter (`fel.txt`, `fehler.txt` …) står också i `words`; namn ur elevens
+  värld hämtas med `world`.
+- **Simulatorns utskrift**: `terminals = { id: { commands: [...], setup?: [...] } }` (eller en funktion av varianten)
+  körs i simulatorn på en ny dator med elevens värld på variantens språk (`{{platshållare}}` fylls i), med klockan fast
+  på 2026-10-28 09:30 UTC; `R[id].lines` är prompt, kommando och utskrift i terminalens färger, för `terminal()` eller
+  egen layout. `ts/packages/linux-shell/test/TerminalPictures.test.ts` gör jobbet och körs bara med
+  `CODESTEAD_TERMINAL_PICTURES=<mapp>`. Bilderna visar alltså det eleven verkligen ser; rita om dem när simulatorn ändras.
+- **Typsnitt**: Inter (appens egen kopia i `ts/node_modules`) för latinska, grekiska och kyrilliska bokstäver, JetBrains
+  Mono (installerat) för kod, och Noto Sans Arabic, Devanagari, SC och JP (`@fontsource-variable/*` i verktygets egen
+  `package.json`, bara vid byggtid – de hamnar aldrig i appen) under namnet "CS Script" efter Inter och JetBrains Mono,
+  så att de bara används för det de andra inte kan rita. `make.mjs` varnar om ett typsnitt saknas.
+- **Språk som är likadana som engelskan** skrivs inte: har en bild inga ord och samma namn som engelskan (ryska,
+  kinesiska, japanska, arabiska och hindi har de engelska filnamnen) visar appen `en/`.
+- **Kontroller**: `make.mjs` varnar (och avslutar med fel) för text som är bredare än sitt `fit`, text utanför bilden,
+  text under 19 px och saknade typsnitt. `--preview <mapp>` skriver varje bild som PNG på appens ljusa och mörka
+  bakgrund: titta på alla språk, särskilt arabiska (höger till vänster, sammanbundna bokstäver), hindi och japanska.
+
+**Skillnader mot GP:s stilguide**: bilderna visas ca 526 px breda i standardfönstret (0,73 × ritningen), så **all
+text är minst 19 px** (titlar 21 px, `FS` och `FS_TITLE`) och terminaltext 19 px JetBrains Mono (0,6 em per tecken,
+`monoWidth`) – det får plats ungefär 58 tecken på en rad. Arabiska: rader som börjar en ruta placeras med
+`startX(v, vänster, höger)` och `label` (då är "start" högerkanten); en etikett som ska stå på en bestämd sida om något
+får `visual: true`. Kod och sökvägar är alltid vänster till höger. En bild med elevens innehåll (fruktlistan,
+CSV-filen) visar fälten i den ordning terminalen visar raden (på arabiska höger till vänster).
+
+**Lägga till en bild**: läs kapitlet, välj det som är svårt att förstå av text (inte bilder för sakens skull). Börja från
+en liknande källa: `fs-tree.mjs` och `paths.mjs` (katalogträd), `ls-long.mjs`, `dots.mjs` och `glob.mjs` (terminal och
+simulatorns utskrift), `file-ops.mjs` (före/efter, inga ord), `log-lines.mjs` (gemensam bild), `sort-uniq.mjs`,
+`cut-fields.mjs` och `pipeline.mjs` (elevens filer), `streams.mjs` och `redirect.mjs` (strömmar som rör, `_pipes.mjs`).
+Kör `make.mjs <namn> --preview <mapp>`, titta på alla språk, lägg in bilden i kapitlet på alla elva språk och kör
+`npx vitest run packages/linux-content` i `ts/`. Kursdelen *Kom igång* + *Grunderna* (14 bilder, 137 filer) är
+ca 3,5 MB; de flesta filer är 15–45 KB.
 
 ## Elevens dator på elevens språk
 
@@ -597,11 +676,18 @@ språken. `ShellI18nTests` kontrollerar nycklar, platshållare och att inget har
   länkantal och ett gemensamt inodnummer; när en sparad terminal läses in fogas de ihop
   igen. `VfsLib.cloneNode` (cp) ger alltid nya filer utan inodnummer.
 - **umask** finns på filsystemet och sparas med terminalen. Att skriva filer och skapa mappar använder den.
+- **Variabler** (`Shell.ts`): alla skalets variabler ligger i `sh.env` och namnen på de exporterade
+  (miljövariablerna) i `sh.exported`, som sparas med terminalen. Det skalet startar som ett nytt program – `bash -c`,
+  `bash`/`sh`/`./skript.sh` (med eller utan `#!`), zsh och fish, `env KOMMANDO`, `xargs`, cron-jobb – får bara
+  miljövariablerna och inga funktioner (`sh.environment()`, `sh.asChild`), som i bash; `source`/`.`, `( … )` och
+  `$( … )` ser allt. `NAMN=värde kommando` exporterar bara till det kommandot, och program som läser miljön (`env`,
+  `printenv`, `sort` med `LANG`) använder `sh.envVar`. fish:s `set -x` exporterar och `set -u` tar bort exporten.
 - **cron** (`Commands/Cron/`): användarnas crontab ligger i `/var/spool/cron/crontabs`
   (Debian/Ubuntu) eller `/var/spool/cron`. Cron-kommandots tick körs före varje kommandorad och kör de
   jobb vars minut har passerat sedan förra gången (högst en timme bakåt), men bara medan tjänsten
   cron/crond/cronie är igång. Tiden räknas inte medan appen är stängd, precis som en avstängd dator.
-  Systemets egna jobb (`run-parts`) loggas men körs inte.
+  Jobben får cron:s egen korta miljö (`HOME`, `LOGNAME`, `USER`, `SHELL=/bin/sh`, `PATH=/usr/bin:/bin`, `LANG`), inte
+  elevens variabler. Systemets egna jobb (`run-parts`) loggas men körs inte.
 - **Servern** `192.168.1.10` (`serverFor` i `Commands/Ssh/`) är en egen Debian-terminal i minnet. ssh, scp och
   rsync kör mot den, och `~/.ssh/config` (`Host`, `HostName`, `User`, `Port`) läses på samma sätt
   som av OpenSSH. Serverns filer sparas inte när appen stängs.
@@ -657,6 +743,63 @@ lagringsutrymme för artefakter.
 
 GitHub har inga rena Windows 10/11-skrivbordsmaskiner, bara Windows Server. Gå därför igenom
 [RELEASE-CHECKLIST.md](RELEASE-CHECKLIST.md) på en riktig Windows 10/11-dator före en större release.
+
+### Hur apparna uppdateras
+
+Var appen kommer ifrån avgör vem som uppdaterar den (huvudprocessen väljer: `appSelfUpdate` i
+`ts/packages/ui/src/electron/AppSelfUpdate.ts`, som hubben, Codestead Linux och GP använder):
+
+| Installation | Vem uppdaterar | Så går det till |
+|---|---|---|
+| Windows (`Setup.exe`), AppImage | Appen själv med Velopack (`VelopackUpdate.ts`) | Velopacks flöde i `<id>-latest`; Velopack byter version och startar om appen. |
+| `.deb`, `.rpm`, Arch-paket (`/opt/<id>/`) | Appen själv med systemets pakethanterare (`NativePackageUpdate.ts`) | Se nedan. |
+| Hubbens verktyg (tar.gz/zip under hubbens datamapp) | Hubben | Den signerade katalogen; hubben installerar den nya versionen bredvid den gamla (**Gå tillbaka** finns). |
+| Portabla arkivet uppackat för hand, utvecklingsbygge | Ingen | Hubben erbjuder en nyare hubb som nedladdning (releasesidan). |
+
+**Native-paket.** Appen räknas som installerad av pakethanteraren när den körs från `/opt/<id>/` *och*
+`dpkg-query -W`, `rpm -q` eller `pacman -Q` säger att paketet `<id>` är installerat (sökvägen räcker inte). Då:
+
+1. **Den senaste versionen**: hubben läser den ur sin signerade katalog (samma källa som när den inte kan uppdatera
+   sig själv); Codestead Linux och GP ur Velopacks flöde `releases.linux.json` i `<id>-latest` (det AppImagen
+   uppdaterar från).
+2. **Nedladdningen**: paketet för systemet och processorn (bara x64 byggs) och `SHA256SUMS.txt` ur releasen
+   `<id>-v<version>` – bara över HTTPS från `github.com` och GitHubs nedladdningsvärdar (`objects.githubusercontent.com`,
+   `release-assets.githubusercontent.com`). Omdirigeringarna följs en i taget och bara dit (Electrons `net.fetch` kan
+   inte stanna vid dem, så nedladdningen görs med `net.request` och `redirect: "manual"`). Filen hamnar i en ny
+   privat temporär mapp (`mkdtemp`) som tas bort efteråt.
+3. **Kontrollsumman**: paketets SHA-256 måste stå i releasens `SHA256SUMS.txt` och stämma. Saknas den eller
+   stämmer den inte installeras ingenting.
+4. **Installationen**, med programmen ur `/usr/bin`, `/usr/sbin`, `/bin` eller `/sbin` (inte ur `PATH`) och filen
+   som argument (inget skal): `pkexec apt-get install -y <fil>` (.deb), `pkexec dnf install -y <fil>` – annars
+   `zypper --non-interactive install --allow-unsigned-rpm <fil>` eller `rpm -U <fil>` – (.rpm),
+   `pkexec pacman -U --noconfirm <fil>` (Arch). pkexec visar systemets lösenordsruta (polkit); som root körs
+   pakethanteraren direkt. Pakethanterarens transaktion gör att en misslyckad installation lämnar den gamla
+   versionen orörd.
+5. **Omstarten**: ett litet skal väntar tills den gamla processen har slutat och startar sedan appens startskript
+   `/opt/<id>/<exe>` (den nya versionen).
+
+Utan pkexec (eller utan pakethanterare) visar hubben knappen **Ladda ner den nya versionen** som förut, och verktygen erbjuder ingen
+uppdatering. Stängs lösenordsrutan (pkexec 126), finns ingen polkit-agent som kan fråga (127, "No authentication
+agent found") eller misslyckas pakethanteraren, visar fönstret varför (pakethanterarens egen text) och erbjuder
+releasesidan i stället. Det finns ingen inställning eller miljövariabel som pekar uppdateringarna någon annanstans.
+
+**Test i docker** (bara hubben har en testkrok: `--smoke-test --self-update-test` kör uppdateringsknappen utan
+fönster, med katalogen från `--catalog`/`--public-key` som i röktestet). `packaging/native-update-test.sh`
+installerar en äldre hubb som paket i en ren container, låter `/etc/hosts` skicka `github.com` och
+`objects.githubusercontent.com` till en lokal HTTPS-server (`packaging/native-update-server.cjs`, med ett
+engångs-CA som bara containern litar på) och kontrollerar: som root, fel kontrollsumma, en omdirigering bort från
+GitHub, och som vanlig användare med en låtsas-pkexec som skriver upp sina argument (och en gång låtsas att
+lösenordsrutan stängdes). Efter varje fall: paketets installerade version och att hubben startade om som den nya
+versionen. Två byggen med olika version behövs (testet ingår inte i CI: det kräver två byggen av hubben):
+
+```bash
+packaging/build-linux.sh ts/apps/hub codestead-hub Codestead Codestead.Hub 0.2.90 /tmp/hub-old
+packaging/build-linux.sh ts/apps/hub codestead-hub Codestead Codestead.Hub 0.2.91 /tmp/hub-new
+packaging/native-update-test.sh /tmp/hub-old /tmp/hub-new deb ubuntu:24.04   # eller: rpm fedora:latest, arch archlinux:latest
+```
+
+(`NATIVE_UPDATE_DOCKER_ARGS="--tmpfs /opt:exec,size=2g --tmpfs /tmp:exec,size=2g"` lägger containerns stora filer i
+minnet där diskutrymmet är knappt.)
 
 ### Secrets i det här repot
 

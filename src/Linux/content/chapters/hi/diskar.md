@@ -91,6 +91,8 @@ lsblk -f
 `sdb1` पर ध्यान दीजिए: एक `vfat` file system जिसका label `USBSTICK` है और जो कहीं
 mount नहीं है। यही वह USB stick है जिसे हम लगाने वाले हैं।
 
+![Disks, partitions और file systems](images/disk-layout.webp "इस computer पर lsblk -f: disk sda में तीन partitions हैं, हर एक का अपना file system और mount point है। USB stick sdb में एक FAT partition है जो अभी mount नहीं है।")
+
 ## अलग-अलग file systems
 
 File systems बहुत-से हैं, और हर एक की अपनी ख़ूबियाँ हैं:
@@ -206,6 +208,8 @@ sudo mount /dev/sdb1 /mnt/usb
 ls -l /mnt/usb
 df -h /mnt/usb
 ```
+
+![एक tree में तीन file systems](images/mount-tree.webp "Mount के बाद stick की files /mnt/usb के नीचे दिखती हैं। Root file system / पर mount है और EFI partition /boot/efi पर – एक ही tree, कोई drive letter नहीं।")
 
 अब से stick किसी भी दूसरी directory की तरह काम करती है। एक file अपनी home
 directory में copy कीजिए:

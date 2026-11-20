@@ -32,6 +32,8 @@ Um programa grava um arquivo de log. Em qual diretório você esperaria encontr�
 Os arquivos de log ficam em `/var/log`. As configurações ficam em `/etc` e os programas em `/usr/bin`.
 ```
 
+![A árvore de diretórios a partir da raiz](images/fs-tree.webp "Tudo fica em uma única árvore que começa na raiz /. O seu diretório pessoal, ~, é /home/ seguido do seu nome de usuário.")
+
 ## Onde estou? – `pwd`
 
 O `pwd` (*print working directory*) mostra o diretório em que você está:
@@ -54,6 +56,8 @@ A opção `-l` dá um formato longo, com mais informações:
 ```sh
 ls -l
 ```
+
+![As colunas do ls -l](images/ls-long.webp "O que significam as colunas do ls -l, em um diretório e um arquivo do seu diretório pessoal. As permissões vêm em um capítulo mais adiante.")
 
 Arquivos cujo nome começa com um ponto são **ocultos** e não aparecem por
 padrão. Muitas vezes são arquivos de configuração, como o `.bashrc`. A opção
@@ -107,6 +111,8 @@ então funciona de qualquer lugar. `/{{user}}/{{documents}}` começa na raiz, on
 existe nenhum `{{user}}`.
 ```
 
+![Um caminho absoluto e um relativo](images/paths.webp "A partir de /home, os dois caminhos levam ao mesmo diretório: o absoluto parte da raiz, e o relativo, de onde você está.")
+
 Vale a pena conhecer alguns nomes especiais:
 
 | Nome | Significa |
@@ -130,6 +136,8 @@ $ pwd
 ---
 `..` é o diretório acima, então a partir de `/usr/bin` você vai parar em `/usr`.
 ```
+
+![Aonde levam . .. ~ / e cd -](images/dots.webp "Depois de cd /etc e cd /var/log, você está em /var/log. Dali, . é /var/log, .. é /var, ~ é o seu diretório pessoal, / é a raiz, e cd - leva você de volta para /etc.")
 
 ## Completar com Tab
 

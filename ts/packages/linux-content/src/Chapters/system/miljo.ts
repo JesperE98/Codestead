@@ -1,7 +1,7 @@
 // Port of Chapters/system/miljo.cs – the chapter "miljo" (part "system"). Its place in the course is set by defineChapters() in
 // ChapterDefinitions.ts.
 
-import { cmds, env, outLines, ran, re } from "../../Checks.js";
+import { cmds, exported, outLines, ran, re } from "../../Checks.js";
 import { Chapter } from "../../Types/Chapter.js";
 import { ChapterTask } from "../../Types/ChapterTask.js";
 
@@ -29,7 +29,8 @@ export function miljo(): Chapter {
         text: "Skapa miljövariabeln `{{favVar}}` med värdet `linux`.",
         hint: "Inga mellanslag runt likhetstecknet: `export NAMN=värde`.",
         solution: cmds("export {{favVar}}=linux"),
-        check: (c) => env(c, "{{favVar}}") === "linux",
+        // An environment variable: {{favVar}}=linux alone only makes a shell variable (export {{favVar}} after it works too).
+        check: (c) => exported(c, "{{favVar}}") === "linux",
       }),
       new ChapterTask({
         id: "which",

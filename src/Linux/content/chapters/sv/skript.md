@@ -123,6 +123,8 @@ annat falskt. Oftast använder man kommandot `[` (som också heter `test`):
 if [ -f ~/.bashrc ]; then echo "Filen finns"; else echo "Filen saknas"; fi
 ```
 
+![if tittar på slutkoden](images/if-exit.webp "if kör kommandot och tittar på dess slutkod: 0 betyder sant och kör then-delen, allt annat betyder falskt och kör else-delen.")
+
 Mellanslagen innanför `[ ]` är obligatoriska! Skrivet över flera rader, som i
 ett skript, ser det ut så här:
 
@@ -263,6 +265,8 @@ done
 
 `exit 1` avslutar skriptet med slutkoden 1, så att den som anropar skriptet
 ser att något gick fel.
+
+![Delarna av backup.sh](images/script-anatomy.webp "Shebang-raden säger vilket program som kör skriptet. Utan argument slutar skriptet med slutkod 1; annars tar loopen ett argument i taget och skickar sina felmeddelanden till stderr.")
 
 ## Tips för bra skript
 

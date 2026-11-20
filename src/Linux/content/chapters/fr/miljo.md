@@ -27,6 +27,8 @@ On crée une variable avec `NOM=valeur` (sans espace autour du `=` !). Avec
 export EDITOR=nano
 ```
 
+![Ce que fait export](images/env-export.webp "Une variable que vous créez n'existe que dans votre shell. Avec export, elle devient une variable d'environnement, et chaque programme lancé par le shell en reçoit une copie.")
+
 ```quiz
 Quelle ligne crée la variable `COULEUR` avec la valeur `blue` ?
 - [ ] `COULEUR = blue`
@@ -74,6 +76,8 @@ ligne :
 ```sh
 echo $PATH | tr ':' '\n'
 ```
+
+![Comment le shell trouve ls](images/path-lookup.webp "PATH est une liste de répertoires séparés par des deux-points. Le shell les parcourt dans l'ordre et lance le premier ls qu'il trouve, /usr/bin/ls ; il ne regarde donc jamais dans /bin.")
 
 `which` indique où un programme a été trouvé. Certaines commandes, comme
 `cd`, ne sont pas du tout des fichiers mais sont *intégrées* au shell

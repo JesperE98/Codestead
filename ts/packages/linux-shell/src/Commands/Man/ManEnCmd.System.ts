@@ -9,7 +9,7 @@ const bashMan = "NAME\n       bash - GNU Bourne-Again SHell\n\nSYNOPSIS\n       
 
 const sourceMan = "NAME\n       source - read and run commands from a file in the current shell\n\nDESCRIPTION\n       Unlike running a script, source affects your shell: aliases,\n       variables and cd stay in effect afterwards. Often used like this:\n           source ~/.bashrc\n       A dot (.) is a shorter form: . ~/.bashrc";
 
-const envDescription = "DESCRIPTION\n       Environment variables are named values that programs can read, e.g.\n       HOME (your home directory), PATH (where commands are looked up) and USER.";
+const envDescription = "DESCRIPTION\n       Environment variables are named values that programs can read, e.g.\n       HOME (your home directory), PATH (where commands are looked up) and USER.\n       Only variables made environment variables with export are shown;\n       set shows all the shell's variables.";
 
 export function systemPages(): Map<string, ManPage> {
   return new Map<string, ManPage>([
@@ -25,8 +25,11 @@ export function systemPages(): Map<string, ManPage> {
 
 SYNOPSIS
        env
+       env NAME=VALUE... COMMAND [ARGUMENT]...
 
-${envDescription}` }],
+${envDescription}
+
+       env NAME=VALUE COMMAND runs the command with the variable added.` }],
     ["printenv", { summary: "Shows environment variables", man: `NAME
        printenv - show environment variables
 
@@ -34,7 +37,7 @@ SYNOPSIS
        printenv [VARIABLE]...
 
 ${envDescription}` }],
-    ["export", { summary: "Sets an environment variable", man: "NAME\n       export - make a variable available to programs that are started\n\nSYNOPSIS\n       export NAME=VALUE\n\nEXAMPLES\n       export EDITOR=nano\n       export PATH=\"$HOME/bin:$PATH\"\n\nDESCRIPTION\n       Variables set with export only apply to the current session. Put\n       the line in ~/.bashrc if it should apply every time you open a terminal." }],
+    ["export", { summary: "Sets an environment variable", man: "NAME\n       export - make a variable available to programs that are started\n\nSYNOPSIS\n       export NAME=VALUE\n       export NAME\n       export -n NAME\n       export -p\n\nEXAMPLES\n       export EDITOR=nano\n       export PATH=\"$HOME/bin:$PATH\"\n\nDESCRIPTION\n       A variable you create with NAME=value only exists in your shell.\n       export makes it an environment variable: programs and scripts the\n       shell starts (e.g. bash -c '...' or ./script.sh) get a copy of it.\n       export -n removes the export but keeps the variable, and export -p\n       (or just export) lists the environment variables.\n\n       Variables set with export only apply to the current session. Put\n       the line in ~/.bashrc if it should apply every time you open a terminal." }],
     ["unset", { summary: "Removes a variable or function", man: "NAME\n       unset - remove a variable or function\n\nSYNOPSIS\n       unset NAME...\n       unset -f FUNCTION..." }],
     ["alias", { summary: "Creates a shortcut for a command", man: "NAME\n       alias - create command shortcuts\n\nSYNOPSIS\n       alias NAME='COMMAND'\n       alias\n\nEXAMPLES\n       alias ll='ls -la'\n       alias ..='cd ..'\n\nDESCRIPTION\n       Without arguments all aliases are listed. Put aliases in ~/.bashrc\n       to keep them permanently." }],
     ["unalias", { summary: "Removes an alias", man: null }],

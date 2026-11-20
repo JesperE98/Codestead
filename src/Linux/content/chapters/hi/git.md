@@ -143,6 +143,8 @@ commit वही सेव करता है जो index में है। 
 रहते हैं जब तक आप उन्हें add नहीं करते।
 ```
 
+![Working tree, index और history](images/git-areas.webp "git add बदली हुई README.md को index में रखता है, और git commit index को .git की history में एक नए commit के रूप में save करता है।")
+
 ## `git status` आपका compass है
 
 जो command आप सबसे ज़्यादा चलाएँगे, वह है `git status`। यह बताता है कि हर बदलाव
@@ -252,6 +254,8 @@ index c5ea3c9..e243b6c 100644
 `git diff` working tree की तुलना index से करता है – यानी वह जो आपने अभी तक add
 *नहीं* किया है। Index में commit का इंतज़ार कर रही चीज़ें देखने के लिए
 `git diff --staged` टाइप कीजिए।
+
+![git diff किसकी तुलना करता है](images/git-diff.webp "git diff working tree की तुलना index से करता है। git diff --staged index की तुलना सबसे नए commit से करता है।")
 
 बदलाव को add और commit कीजिए। `-a` option उन सारी files पर `git add` चलाता है
 जिन्हें git पहले से follow करता है, इसलिए एक ही step काफ़ी है:
@@ -449,6 +453,8 @@ Fast-forward
 *Fast-forward* का मतलब है कि branch बनने के बाद से `main` नहीं बदली है। तब git को
 बस `main` को आगे बढ़ाकर उसी commit पर ले जाना होता है जिस पर `{{newDesign}}` है।
 
+![Commits पर labels की तरह branches](images/git-branches.webp "Branch एक label है जो किसी commit की ओर इशारा करता है। git switch main के बाद working tree main के सबसे नए commit जैसा दिखता है, और git merge main को branch के commit तक आगे बढ़ा देता है – यही fast-forward है।")
+
 अगर दोनों branches में नए commits हैं, तो git एक **three-way merge** करता है: वह
 दोनों branches की तुलना उनके साझा पूर्वज (common ancestor) से करता है और दो parents
 वाला एक नया *merge commit* बनाता है। `git log --oneline --graph --all` दिखाता है कि
@@ -602,6 +608,8 @@ Remote का नाम आम तौर पर `origin` होता है, �
 करते समय `git pull`, फिर edit, `git add` और `git commit` – और आख़िर में
 `git push`। GitHub और GitLab आपको log in करने के लिए password नहीं, बल्कि SSH key
 या access token इस्तेमाल करते हैं।
+
+![आपकी repository और उसका remote](images/git-remote.webp "origin में सिर्फ़ history है, कोई working tree नहीं। git push आपके नए commits वहाँ भेजता है, git fetch नए commits सिर्फ़ .git में लाता है, और git pull उन्हें आपके working tree में merge भी करता है।")
 
 इस सबके लिए network चाहिए, और simulator में network नहीं है। लेकिन `clone`, `push`
 और `pull` एक ही computer पर दो repositories के बीच भी उतने ही अच्छे से काम करते हैं,

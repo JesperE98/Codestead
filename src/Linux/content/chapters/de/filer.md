@@ -102,6 +102,8 @@ Welcher Befehl entfernt das Verzeichnis `{{old}}` *nur*, wenn es leer ist?
 `rm -r` entfernt das Verzeichnis samt allem, was darin ist.
 ```
 
+![Was cp, mv und rm tun](images/file-ops.webp "cp legt eine zweite Datei an, mv benennt eine Datei um oder verschiebt sie in ein Verzeichnis, und rm löscht sie endgültig.")
+
 ## Wildcards
 
 Die Shell kann Muster in mehrere Dateinamen erweitern, bevor der Befehl
@@ -138,6 +140,8 @@ Jedes `?` steht für genau ein Zeichen, also muss der Name vor dem Punkt fünf
 Zeichen lang sein. Das trifft nur auf `{{grades}}` zu – die Namen der anderen
 Dateien sind länger.
 ```
+
+![Wie die Shell ein Muster erweitert](images/glob.webp "Die Shell ersetzt das Muster durch die passenden Dateinamen, bevor ls läuft. Die Tabelle zeigt, auf welche Übungsdateien drei Muster passen.")
 
 ## Leerzeichen in Dateinamen
 

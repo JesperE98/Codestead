@@ -29,6 +29,8 @@
 
 **POSIX** 是一个描述 `sh` 类 shell 应该如何工作的标准。只使用 POSIX 功能的脚本可以在所有兼容 `sh` 的 shell 中运行：bash、zsh、`dash`（在 Debian 和 Ubuntu 上它就是 `/bin/sh`）以及 `ash`（用在 Alpine 这样的小型系统上）。fish 故意**不**兼容 POSIX——这让它更简单，但也让它与众不同。
 
+![时间线上的 sh、bash、zsh 和 fish](images/shell-family.webp "bash 和 zsh 都源自 Bourne shell，也就是 sh，并且兼容 POSIX。fish 出现得更晚，有自己的语法。")
+
 ## 安装了哪些 shell？
 
 文件 `/etc/shells` 列出了可以用作登录 shell 的 shell：
@@ -94,6 +96,8 @@ ps
 ```sh
 echo $SHELL
 ```
+
+![在 bash 里面运行的 zsh](images/nested-shells.webp "zsh 是从 bash 启动的，在 bash 里面运行。$0 告诉你此刻运行的是哪个 shell，$SHELL 则是你的登录 shell——它仍然是 bash。")
 
 ### 大多数东西和 bash 一样
 
@@ -388,6 +392,8 @@ exit
 ---
 `#!` 行决定了由哪个 shell 来运行脚本。fish 只是启动它。
 ```
+
+![#! 行决定由哪个 shell 运行](images/shebang.webp "fish 只是启动这个脚本。#!/bin/bash 这一行让 bash 来运行它，所以即使你在 fish 中，bash 的语法也能正常工作。")
 
 ## 用 chsh 更改默认 shell
 

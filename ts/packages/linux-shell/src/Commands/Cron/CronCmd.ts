@@ -242,17 +242,17 @@ function runJob(sh: Shell, job: Job, t: number): void {
   ServicesLib.log(sh, t, ident, `(${job.user}) CMD (${job.command})`, { pid, unit });
   if (systemJob) return;
   let output = "";
-  const savedCwd = sh.cwd;
-  const savedEnv = Js.copy(sh.env);
+  // cron's environment: the home directory, /bin/sh, a short PATH and the system's language – not the student's
+  // variables (exported or not) or shell settings.
+  const env = Js.obj<string>();
+  env.set("HOME", user.home);
+  env.set("LOGNAME", user.name);
+  env.set("USER", user.name);
+  env.set("SHELL", "/bin/sh");
+  env.set("PATH", "/usr/bin:/bin");
+  env.set("PWD", user.home);
+  env.set("LANG", sh.world.locale);
   try {
-    // cron's environment: the home directory, /bin/sh and a short PATH – not the student's shell settings.
-    sh.cwd = user.home;
-    sh.env.set("HOME", user.home);
-    sh.env.set("LOGNAME", user.name);
-    sh.env.set("USER", user.name);
-    sh.env.set("SHELL", "/bin/sh");
-    sh.env.set("PATH", "/usr/bin:/bin");
-    sh.env.set("PWD", user.home);
     const io = new IO(
       (s) => (output += s),
       (s) => (output += s),
@@ -260,13 +260,13 @@ function runJob(sh: Shell, job: Job, t: number): void {
       false,
     );
     // The command's % signs would be newlines in real cron; they are rare in exercises and are kept.
-    sh.runAs(job.user, () => sh.runScript(job.command, "sh", [], io));
+    sh.asChild(() => {
+      sh.cwd = user.home;
+      return sh.runAs(job.user, () => sh.runScript(job.command, "sh", [], io));
+    }, env);
   } catch (e) {
     // A job that runs away is stopped, as a real one would be killed eventually.
     if (!(e instanceof LimitError || e instanceof FsError)) throw e;
-  } finally {
-    sh.cwd = savedCwd;
-    sh.env = savedEnv;
   }
   if (output.length > 0)
     ServicesLib.log(sh, t, ident, `(${job.user}) MAIL (mailed ${Js.num(output.length)} bytes of output but got status 0x007f from MTA)`, { pid, prio: 3, unit });

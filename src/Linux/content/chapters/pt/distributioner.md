@@ -22,6 +22,8 @@ Depois deste capítulo vem um capítulo para cada família: a **família Debian*
 deles sempre roda em uma distribuição daquela família, então você pode fazer
 os três.
 
+![As três famílias de distribuições](images/distro-families.webp "Cada família tem o seu próprio gerenciador de pacotes e formato de pacote. O Ubuntu é baseado no Debian, o Linux Mint no Ubuntu, e o Rocky Linux e o AlmaLinux são clones do RHEL, que é baseado no Fedora.")
+
 ## O que é igual em todo lugar?
 
 - **O kernel Linux** – embora em versões diferentes.
@@ -84,6 +86,8 @@ Qual distribuição não tem versões, mas é atualizada continuamente
 - [ ] Fedora
 ```
 
+![Três modelos de lançamento em uma linha do tempo](images/release-models.webp "O Ubuntu LTS sai a cada dois anos, o Fedora a cada seis meses, e o Arch não tem versões – só um fluxo contínuo de atualizações.")
+
 ## Qual distribuição estou usando?
 
 O arquivo `/etc/os-release` existe em todas as distribuições modernas e
@@ -130,6 +134,8 @@ o instala com o gerenciador de pacotes?
 - [x] O gerenciador de pacotes instala a dependência automaticamente
 - [ ] O pacote é instalado, mas não funciona até você baixar o outro
 ```
+
+![Repositório, gerenciador de pacotes e computador](images/packages.webp "O gerenciador de pacotes baixa o programa do repositório assinado da distribuição – e a dependência vem junto: o htop precisa da biblioteca ncurses, então os dois são instalados.")
 
 ### Mesmo programa, nomes diferentes
 

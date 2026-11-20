@@ -149,6 +149,8 @@ C'est le malentendu le plus courant à propos de systemd : **`start` et
 | `systemctl enable --now X` | Les deux à la fois. |
 | `systemctl disable X` | Ne pas démarrer au boot (`--now` l'arrête aussi). |
 
+![start et enable](images/start-enable.webp "Pour un service arrêté : start le lance maintenant mais pas après un redémarrage, enable le fait démarrer au boot mais pas maintenant, et enable --now fait les deux.")
+
 `enable` crée un lien dans un répertoire nommé d'après la target indiquée
 dans la section `[Install]` du fichier d'unit, en général
 `multi-user.target.wants` :
@@ -275,6 +277,8 @@ Quelles priorités `journalctl -p warning` affiche-t-il ?
 – c'est-à-dire tout ce qui a un numéro égal ou inférieur (`warning` vaut 4).
 ```
 
+![Les priorités du journal](images/journal-priorities.webp "-p affiche la priorité choisie et toutes les plus graves, celles aux numéros plus petits : -p err affiche 0 à 3 et -p warning 0 à 4.")
+
 ## Dépanner un service qui refuse de démarrer
 
 Quelqu'un a mis en place le service **reportd** sur cet ordinateur, mais
@@ -384,6 +388,8 @@ Les fichiers de `/etc/systemd/system` ont la priorité, et ils ne sont pas
 écrasés lors de la mise à jour du paquet. `daemon-reload` fait relire à
 systemd le fichier d'unit modifié.
 ```
+
+![Où se trouvent les fichiers d'unit](images/unit-files.webp "Les paquets mettent leurs fichiers d'unit dans /usr/lib/systemd/system ; les vôtres vont dans /etc/systemd/system et ont la priorité. enable crée un lien dans multi-user.target.wants, dont systemd démarre les units au boot.")
 
 ## Comment s'appellent les services ?
 

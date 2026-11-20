@@ -95,6 +95,7 @@ function Page({ w }: { w: MainWindow }) {
 function HubUpdateBanner({ w, version }: { w: MainWindow; version: string }) {
   const install = async () => {
     w.hubUpdateProgress = 0;
+    w.hubUpdateFailed = null;
     w.render();
     try {
       await w.selfUpdate.downloadAndRestart((pct) => {
@@ -102,20 +103,30 @@ function HubUpdateBanner({ w, version }: { w: MainWindow; version: string }) {
         w.render();
       });
     } catch (e) {
+      // Not installed (the password dialog closed, no polkit agent, the package manager failed, …): the download page.
       w.hubUpdateProgress = null;
-      w.overlay.toast(w.t("tool.failed", { error: e instanceof Error ? e.message : String(e) }));
+      w.hubUpdateFailed = e instanceof Error ? e.message : String(e);
       w.render();
     }
   };
+  const download = <Action label={w.t("self.download")} cls="primary" onClick={() => w.openUrl(`https://github.com/${HubInfo.releasesRepo}/releases/tag/${HubInfo.id}-latest`)} />;
   return (
     <div className="hub-banner cs-stack">
       {UiParts.text(w.t("self.available", { name: HubInfo.name, version }), 14.5, FontWeight.SemiBold)}
       {w.hubUpdateProgress !== null ? (
-        UiParts.text(w.t("self.downloading", { percent: w.hubUpdateProgress }), 13)
+        UiParts.text(w.hubUpdateProgress < 0 ? w.t("self.installing") : w.t("self.downloading", { percent: w.hubUpdateProgress }), 13)
+      ) : w.hubUpdateFailed !== null ? (
+        <>
+          {UiParts.text(w.t("self.failed", { error: w.hubUpdateFailed }), 13)}
+          {download}
+        </>
       ) : w.selfUpdate.canUpdateItself ? (
-        <Action label={w.t("self.install")} cls="primary" onClick={() => void install()} />
+        <>
+          <Action label={w.t("self.install")} cls="primary" onClick={() => void install()} />
+          {w.selfUpdate.asksForPassword === true && UiParts.text(w.t("self.password"), 12.5, undefined, "muted")}
+        </>
       ) : (
-        <Action label={w.t("self.download")} cls="primary" onClick={() => w.openUrl(`https://github.com/${HubInfo.releasesRepo}/releases/tag/${HubInfo.id}-latest`)} />
+        download
       )}
     </div>
   );

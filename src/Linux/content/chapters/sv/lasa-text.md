@@ -97,6 +97,8 @@ Vilket kommando visar alla rader i `server.log` som **inte** innehåller `INFO`?
 - [x] `grep -v INFO {{documents}}/server.log`
 ```
 
+![Rader som head, tail och grep väljer](images/log-lines.webp "head visar de första raderna i server.log, tail de sista och grep WARN raderna som innehåller WARN – inte den med warn i små bokstäver.")
+
 ## Sortera – `sort` och `uniq`
 
 `sort` sorterar rader i bokstavsordning (`-n` för siffror, `-r` för omvänd
@@ -113,6 +115,8 @@ Varför används `uniq` nästan alltid efter `sort`?
 - [x] `uniq` tar bara bort rader som är likadana som raden direkt ovanför, så likadana rader måste ligga intill varandra
 - [ ] `sort` tar bort dubbletter och `uniq` lägger tillbaka dem
 ```
+
+![uniq utan och med sort](images/sort-uniq.webp "uniq ensamt tar inte bort något, eftersom likadana rader inte står bredvid varandra. Efter sort gör de det, och uniq behåller en av varje.")
 
 ## Klippa ut fält – `cut`
 
@@ -132,6 +136,8 @@ behållas. Här är ämnena – fält 2 – i CSV-filen:
 ```sh
 cut -d, -f2 ~/{{documents}}/{{grades}}
 ```
+
+![cut plockar ut fält 2](images/cut-fields.webp "-d, delar varje rad vid kommatecknen, och -f2 behåller det andra fältet.")
 
 I `/etc/passwd` skiljs fälten åt av kolon och fält 1 är användarnamnet, så
 `cut -d: -f1 /etc/passwd` listar alla användare.

@@ -89,6 +89,8 @@ Utan kolon är `srv` bara ett filnamn, och `scp` kopierar lokalt som `cp`. Det
 är lätt att glömma kolonet!
 ```
 
+![Åt vilket håll scp kopierar](images/scp-copy.webp "Källan kommer först och målet sist; VÄRD:SÖKVÄG ligger på servern. Utan kolon är srv bara ett filnamn, och kopian hamnar på din egen dator.")
+
 ## Hålla i synk – `rsync`
 
 För många filer, eller något du kopierar om och om igen (säkerhetskopior!), är
@@ -131,6 +133,8 @@ $ ls /tmp/x
 ---
 Utan snedstreck kopierades själva katalogen in i `/tmp/x`.
 ```
+
+![rsync med och utan snedstreck](images/rsync-slash.webp "Utan snedstreck kopierar rsync själva katalogen in i /tmp/x. Med snedstreck kopierar den bara det som ligger i den.")
 
 ### Över SSH och `--delete`
 

@@ -63,6 +63,8 @@ La lettre majuscule est la réponse par défaut. Dans la famille Debian, apt
 demande `[Y/n]`, donc Entrée y signifie oui.
 ```
 
+![Entrée répond avec la majuscule](images/yes-no-default.webp "La majuscule est la réponse donnée par Entrée. apt demande Y/n, donc Entrée poursuit l'installation ; dnf demande y/N, donc Entrée l'annule.")
+
 `dnf remove package` supprime à nouveau un paquet.
 
 ## Mettre à jour le système
@@ -187,6 +189,8 @@ Quelle est la différence entre `dnf copr disable` et `dnf copr remove` ?
 - [ ] `disable` désinstalle aussi les paquets, `remove` non
 - [ ] Il n'y a aucune différence
 ```
+
+![dnf copr enable, disable et remove](images/copr-states.webp "enable crée le fichier du dépôt dans /etc/yum.repos.d avec enabled=1. disable garde le fichier mais met enabled=0, donc dnf repolist n'affiche plus le dépôt, et remove supprime le fichier.")
 
 ### RPM Fusion
 

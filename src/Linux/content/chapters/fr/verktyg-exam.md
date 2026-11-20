@@ -133,12 +133,12 @@ Dans fish, le code de retour de la dernière commande s'appelle `$status` –
 
 ```quiz
 Comment faire de `EDITOR` une variable d'environnement de valeur `nano` dans fish ?
-- [ ] `export EDITOR=nano`
+- [ ] `set EDITOR nano`
 - [ ] `EDITOR=nano`
 - [x] `set -x EDITOR nano`
 - [ ] `set -e EDITOR nano`
 ---
-`-x` exporte la variable ; `-e` l'efface.
+`-x` exporte la variable. Sans `-x`, c'est une variable ordinaire qui n'existe que dans fish, et `-e` l'efface.
 ```
 
 ```quiz

@@ -98,6 +98,8 @@ grep -n WARN {{documents}}/server.log
 - [x] `grep -v INFO {{documents}}/server.log`
 ```
 
+![head、tail、grep が選ぶ行](images/log-lines.webp "head は server.log の最初の行を、tail は最後の行を、grep WARN は WARN を含む行を表示します。小文字の warn の行は含まれません。")
+
 ## 並べ替える – `sort` と `uniq`
 
 `sort` は行をアルファベット順に並べ替えます（数値順なら `-n`、逆順なら `-r`）。
@@ -114,6 +116,8 @@ sort {{documents}}/{{fruits}}
 - [x] `uniq` はすぐ上の行と同じ行しか取り除かないので、同じ行が隣り合っている必要があるから
 - [ ] `sort` が重複を取り除き、`uniq` がそれを元に戻すから
 ```
+
+![sort なしと sort ありの uniq](images/sort-uniq.webp "uniq だけでは何も削除されません。同じ行が隣り合っていないからです。sort の後なら隣り合うので、uniq がそれぞれ 1 行だけ残します。")
 
 ## フィールドを切り出す – `cut`
 
@@ -134,6 +138,8 @@ CSV は *comma-separated values*（カンマ区切りの値）の略です。列
 ```sh
 cut -d, -f2 ~/{{documents}}/{{grades}}
 ```
+
+![cut がフィールド 2 を取り出す](images/cut-fields.webp "-d, で各行をカンマで区切り、-f2 で 2 番目のフィールドを残します。")
 
 `/etc/passwd` ではフィールドがコロンで区切られ、フィールド 1 がユーザー名なので、
 `cut -d: -f1 /etc/passwd` ですべてのユーザーを一覧表示できます。

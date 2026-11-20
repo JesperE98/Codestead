@@ -27,6 +27,8 @@ Eine Variable legst du mit `NAME=value` an (keine Leerzeichen um das `=`!). Mit
 export EDITOR=nano
 ```
 
+![Was export bewirkt](images/env-export.webp "Eine Variable, die du anlegst, gibt es nur in deiner Shell. Mit export wird sie zur Umgebungsvariable, und jedes Programm, das die Shell startet, bekommt eine Kopie davon.")
+
 ```quiz
 Welche Zeile legt die Variable `FARBE` mit dem Wert `blau` an?
 - [ ] `FARBE = blau`
@@ -73,6 +75,8 @@ verwandeln, damit jedes Verzeichnis in `PATH` in einer eigenen Zeile landet:
 ```sh
 echo $PATH | tr ':' '\n'
 ```
+
+![Wie die Shell ls findet](images/path-lookup.webp "PATH ist eine Liste von Verzeichnissen, getrennt durch Doppelpunkte. Die Shell sucht nacheinander darin und führt das erste ls aus, das sie findet, /usr/bin/ls – in /bin sucht sie gar nicht mehr.")
 
 `which` zeigt, wo ein Programm gefunden wurde. Manche Befehle wie `cd` sind gar
 keine Dateien, sondern in die Shell *eingebaut* (*Builtins*) – `type` verrät

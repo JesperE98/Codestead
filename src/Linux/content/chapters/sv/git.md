@@ -143,6 +143,8 @@ En commit sparar det som finns i indexet. De andra tre ändringarna stannar i
 arbetskatalogen tills du lägger till dem.
 ```
 
+![Arbetskatalogen, indexet och historiken](images/git-areas.webp "git add lägger den ändrade README.md i indexet, och git commit sparar indexet som en ny commit i historiken i .git.")
+
 ## `git status` är din kompass
 
 Det kommando du kommer att köra oftast är `git status`. Det berättar var alla
@@ -250,6 +252,8 @@ rad 1–3 i den gamla versionen motsvaras av rad 1–4 i den nya.
 `git diff` jämför arbetskatalogen med indexet – alltså det du *inte* lagt
 till än. Vill du se det som ligger i indexet och väntar på att committas
 skriver du `git diff --staged`.
+
+![Vad git diff jämför](images/git-diff.webp "git diff jämför arbetskatalogen med indexet. git diff --staged jämför indexet med den senaste commiten.")
 
 Lägg till och committa ändringen. Flaggan `-a` gör `git add` på alla filer
 som git redan följer, så det går i ett steg:
@@ -444,6 +448,8 @@ Fast-forward
 *Fast-forward* betyder att `main` inte har ändrats sedan grenen skapades.
 Git behöver då bara flytta fram `main` till samma commit som `{{newDesign}}`.
 
+![Grenar som etiketter på commits](images/git-branches.webp "En gren är en etikett som pekar på en commit. Efter git switch main ser arbetskatalogen ut som mains senaste commit, och git merge flyttar fram main till grenens commit – en fast-forward.")
+
 Har båda grenarna fått nya commits gör git en **trevägssammanfogning**: den
 jämför båda grenarna med deras gemensamma ursprung och skapar en ny
 *merge-commit* med två föräldrar. Med `git log --oneline --graph --all` ser
@@ -598,6 +604,8 @@ Ett fjärr-repo heter oftast `origin`, och ett typiskt arbetsflöde ser ut så
 här: `git pull` när du börjar, sedan ändra, `git add` och `git commit` – och
 till sist `git push`. Till GitHub och GitLab loggar man in med en SSH-nyckel
 eller en åtkomsttoken, inte med lösenord.
+
+![Ditt repo och dess fjärr-repo](images/git-remote.webp "origin har bara historiken, ingen arbetskatalog. git push skickar dina nya commits dit, git fetch hämtar bara nya commits till .git, och git pull slår också ihop dem med din arbetskatalog.")
 
 Allt det här kräver nätverk, och simulatorn har inget. Men `clone`, `push`
 och `pull` fungerar lika bra mellan två repon på samma dator, så du kan prova

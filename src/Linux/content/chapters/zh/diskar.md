@@ -67,6 +67,8 @@ lsblk -f
 
 注意 `sdb1`：一个卷标为 `USBSTICK` 的 `vfat` 文件系统，它没有挂载在任何地方。这就是我们接下来要插入的 U 盘。
 
+![磁盘、分区和文件系统](images/disk-layout.webp "这台计算机上的 lsblk -f：磁盘 sda 有三个分区，每个分区都有自己的文件系统和挂载点。U 盘 sdb 有一个 FAT 分区，还没有挂载。")
+
 ## 不同的文件系统
 
 文件系统有很多种，各有所长：
@@ -169,6 +171,8 @@ sudo mount /dev/sdb1 /mnt/usb
 ls -l /mnt/usb
 df -h /mnt/usb
 ```
+
+![一棵树中的三个文件系统](images/mount-tree.webp "挂载之后，U 盘里的文件出现在 /mnt/usb 下。根文件系统挂载在 /，EFI 分区挂载在 /boot/efi——只有一棵树，没有盘符。")
 
 从现在起，U 盘用起来就和其他目录一样。把一个文件复制到你的主目录：
 

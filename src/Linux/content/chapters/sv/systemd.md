@@ -142,6 +142,8 @@ Det här är den vanligaste missuppfattningen om systemd: **`start` och
 | `systemctl enable --now X` | Båda på en gång. |
 | `systemctl disable X` | Starta inte vid uppstart (`--now` stoppar den också). |
 
+![start och enable](images/start-enable.webp "För en stoppad tjänst: start kör den nu men inte efter omstart, enable gör att den startar vid uppstart men inte nu, och enable --now gör båda.")
+
 `enable` skapar en länk i en katalog som heter som målet i unit-filens
 `[Install]`-del, oftast `multi-user.target.wants`:
 
@@ -262,6 +264,8 @@ Vilka prioriteter visar `journalctl -p warning`?
 med samma eller lägre nummer (`warning` är 4).
 ```
 
+![Journalens prioriteter](images/journal-priorities.webp "-p visar den prioritet du väljer och alla allvarligare, de med lägre nummer: -p err visar 0 till 3 och -p warning 0 till 4.")
+
 ## Felsök en tjänst som inte startar
 
 Någon har satt upp tjänsten **reportd** på den här datorn, men något är
@@ -366,6 +370,8 @@ Filer i `/etc/systemd/system` har företräde, och de skrivs inte över när
 paketet uppdateras. `daemon-reload` får systemd att läsa in den ändrade
 unit-filen igen.
 ```
+
+![Var unit-filerna ligger](images/unit-files.webp "Paketen lägger sina unit-filer i /usr/lib/systemd/system; dina egna hamnar i /etc/systemd/system och har företräde. enable gör en länk i multi-user.target.wants, vars enheter systemd startar vid uppstart.")
 
 ## Vad heter tjänsterna?
 

@@ -94,6 +94,8 @@ Sans les deux-points, `srv` n'est qu'un nom de fichier, et `scp` copie en local
 comme `cp`. Les deux-points s'oublient facilement !
 ```
 
+![Dans quel sens scp copie](images/scp-copy.webp "La source vient en premier et la cible en dernier ; HOST:PATH est sur le serveur. Sans les deux-points, srv n'est qu'un nom de fichier et la copie reste sur votre ordinateur.")
+
 ## Rester synchronisé – `rsync`
 
 Pour beaucoup de fichiers, ou pour quelque chose que vous copiez encore et
@@ -139,6 +141,8 @@ $ ls /tmp/x
 Sans la barre oblique, c'est le répertoire lui-même qui a été copié dans
 `/tmp/x`.
 ```
+
+![rsync avec et sans la barre oblique](images/rsync-slash.webp "Sans la barre oblique, rsync copie le répertoire lui-même dans /tmp/x. Avec la barre oblique, il ne copie que son contenu.")
 
 ### Via SSH et `--delete`
 

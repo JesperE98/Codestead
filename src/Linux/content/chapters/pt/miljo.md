@@ -27,6 +27,8 @@ Você cria uma variável com `NOME=valor` (sem espaços em volta do `=`!). Com o
 export EDITOR=nano
 ```
 
+![O que o export faz](images/env-export.webp "Uma variável que você cria só existe no seu shell. Com o export ela se torna uma variável de ambiente, e cada programa que o shell inicia recebe uma cópia dela.")
+
 ```quiz
 Qual linha cria a variável `COR` com o valor `azul`?
 - [ ] `COR = azul`
@@ -72,6 +74,8 @@ que cada diretório do `PATH` fique em uma linha própria:
 ```sh
 echo $PATH | tr ':' '\n'
 ```
+
+![Como o shell encontra o ls](images/path-lookup.webp "O PATH é uma lista de diretórios separados por dois-pontos. O shell procura neles um depois do outro e executa o primeiro ls que encontra, /usr/bin/ls, então nunca chega a procurar em /bin.")
 
 O `which` mostra onde um programa foi encontrado. Alguns comandos, como o
 `cd`, nem são arquivos: eles são *embutidos* no shell (*builtins*) – o `type`

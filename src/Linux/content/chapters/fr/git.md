@@ -156,6 +156,8 @@ modifications restent dans le répertoire de travail jusqu'à ce que vous les
 ajoutiez.
 ```
 
+![Répertoire de travail, index et historique](images/git-areas.webp "git add place le README.md modifié dans l'index, et git commit enregistre l'index comme un nouveau commit dans l'historique, dans .git.")
+
 ## `git status` est votre boussole
 
 La commande que vous lancerez le plus souvent est `git status`. Elle vous dit
@@ -266,6 +268,8 @@ version correspondent aux lignes 1 à 4 de la nouvelle.
 `git diff` compare le répertoire de travail avec l'index – c'est-à-dire ce que
 vous n'avez *pas encore* ajouté. Pour voir ce qui attend dans l'index d'être
 committé, tapez `git diff --staged`.
+
+![Ce que compare git diff](images/git-diff.webp "git diff compare le répertoire de travail avec l'index. git diff --staged compare l'index avec le dernier commit.")
 
 Ajoutez et committez la modification. L'option `-a` lance `git add` sur tous
 les fichiers que git suit déjà, ce qui ne prend qu'une seule étape :
@@ -479,6 +483,8 @@ Fast-forward
 création de la branche. Git n'a alors qu'à avancer `main` jusqu'au même commit
 que `{{newDesign}}`.
 
+![Les branches comme étiquettes sur des commits](images/git-branches.webp "Une branche est une étiquette qui pointe vers un commit. Après git switch main, le répertoire de travail ressemble au dernier commit de main, et git merge avance main jusqu'au commit de la branche – un fast-forward.")
+
 Si les deux branches ont de nouveaux commits, git fait une **fusion à trois
 points** (*three-way merge*) : il compare les deux branches avec leur ancêtre
 commun et crée un nouveau *commit de fusion* (*merge commit*) avec deux
@@ -640,6 +646,8 @@ typique ressemble à ceci : `git pull` quand vous commencez, puis vous
 modifiez, `git add` et `git commit` – et pour finir `git push`. GitHub et
 GitLab utilisent une clé SSH ou un jeton d'accès pour vous authentifier, pas
 un mot de passe.
+
+![Votre dépôt et son remote](images/git-remote.webp "origin n'a que l'historique, pas de répertoire de travail. git push y envoie vos nouveaux commits, git fetch ne fait que récupérer les nouveaux commits dans .git, et git pull les fusionne aussi dans votre répertoire de travail.")
 
 Tout cela nécessite un réseau, et le simulateur n'en a pas. Mais `clone`,
 `push` et `pull` fonctionnent tout aussi bien entre deux dépôts sur le même

@@ -16,6 +16,8 @@
 
 本章是一个概览。你可以随时在顶部的菜单中切换发行版，然后把任务再做一遍——你马上就会看到它们的区别。本章之后，每个家族各有一章：**Debian 家族**（apt）、**Arch 家族**（pacman）和 **Red Hat 家族**（dnf）。每一章总是运行在该家族的某个发行版上，所以三章你都可以学。
 
+![发行版的三个家族](images/distro-families.webp "每个家族都有自己的包管理器和软件包格式。Ubuntu 基于 Debian，Linux Mint 基于 Ubuntu，而 Rocky Linux 和 AlmaLinux 是 RHEL 的克隆版，RHEL 则基于 Fedora。")
+
 ## 哪些地方到处都一样？
 
 - **Linux 内核**——只是版本不同。
@@ -65,6 +67,8 @@ Debian 家族把这个组叫做 `sudo`；Arch 和 Red Hat 则叫它 `wheel`。
 - [ ] Fedora
 ```
 
+![时间线上的三种发布方式](images/release-models.webp "Ubuntu LTS 每两年发布一次，Fedora 每六个月一次，而 Arch 根本没有版本号——只有源源不断的更新。")
+
 ## 我运行的是哪个发行版？
 
 文件 `/etc/os-release` 存在于所有现代发行版上，它会告诉你发行版的名称和版本：
@@ -101,6 +105,8 @@ cat /etc/os-release
 - [x] 包管理器会自动安装这个依赖
 - [ ] 软件包会被安装，但在你下载另一个软件包之前无法使用
 ```
+
+![软件源、包管理器和计算机](images/packages.webp "包管理器从发行版经过签名的软件源获取程序，并顺带获取它的依赖：htop 需要 ncurses 库，所以两者都会被安装。")
 
 ### 同一个程序，不同的名字
 

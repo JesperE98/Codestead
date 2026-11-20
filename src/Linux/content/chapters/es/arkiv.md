@@ -32,6 +32,8 @@ gzip solo maneja un archivo cada vez y no sabe nada de directorios, y
 un archivador tar por sí solo no es más pequeño que los archivos que contiene.
 ```
 
+![tar reúne, gzip comprime](images/tar-gzip.webp "tar convierte el directorio en un solo archivo, más grande que los propios archivos, porque cada uno recibe una cabecera de 512 bytes y el archivador se rellena hasta completar bloques. Luego gzip lo hace pequeño; tar -czf hace las dos cosas. Las barras están a escala.")
+
 | Extensión | ¿Qué es? | Se descomprime con |
 |---|---|---|
 | `.tar` | Archivador sin comprimir | `tar -xf` |
@@ -89,6 +91,8 @@ inglés):
 Pon siempre la `f` **al final** cuando escribas las opciones juntas, ya que el
 nombre del archivo tiene que ir justo después. Por razones históricas también
 puedes omitir el guion: `tar czvf` significa lo mismo que `tar -czvf`.
+
+![Las partes de tar -czvf](images/tar-options.webp "c, z, v y f son opciones escritas juntas, con f al final, porque el nombre del archivador va justo después. Todo lo que va después del nombre se empaqueta.")
 
 ```quiz
 ¿Qué hace `tar -xzvf backup.tar.gz`?
@@ -203,6 +207,8 @@ Ejecutas `tar -czf backup.tar.gz -C ~ {{documents}}`. ¿Qué contiene el archiva
 `-C ~` hace que tar cambie primero a tu directorio personal, así que los nombres
 del archivador empiezan en `{{documents}}/`.
 ```
+
+![Dónde empiezan los nombres del archivador](images/tar-paths.webp "Si empaquetas una ruta de tu directorio personal, los nombres empiezan por home y tu nombre de usuario, porque tar quita la barra inicial. Con -C ~, tar cambia primero a tu directorio personal y los nombres empiezan en el directorio que empaquetas.")
 
 ## Comprimir archivos sueltos con `gzip`
 

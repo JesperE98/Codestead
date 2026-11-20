@@ -60,6 +60,8 @@ O `apt update` só atualiza a lista. É o `apt upgrade` que instala as versões
 novas.
 ```
 
+![apt update e apt upgrade](images/apt-update-upgrade.webp "O apt update só baixa a lista de versões disponíveis. Depois, o apt upgrade instala as versões novas – aqui, uma versão nova do bash.")
+
 ## Instalando e removendo
 
 ```sh
@@ -164,6 +166,8 @@ O `add-apt-repository` executa `apt update` por você. Quando você mesmo cria o
 arquivo, precisa fazer isso você mesmo.
 ```
 
+![O que acontece ao adicionar um PPA](images/ppa-sources.webp "O add-apt-repository cria um arquivo em /etc/apt/sources.list.d que aponta o apt para o PPA. O apt update lê todos os arquivos dali, e então a lista de pacotes também tem o moonphase.")
+
 Olhe o arquivo:
 
 ```sh
@@ -195,6 +199,8 @@ apt policy moonphase
 e `100` significa “o que já está instalado”. Se o mesmo pacote estiver em
 vários repositórios, o apt escolhe a versão mais alta – então um PPA pode
 substituir um dos pacotes da própria distribuição pela sua própria versão.
+
+![A saída de apt policy moonphase](images/apt-policy.webp "Os três asteriscos marcam a versão instalada, 500 é a prioridade do PPA e 100 indica o que já está instalado.")
 
 ```quiz
 O mesmo pacote está tanto no repositório da distribuição quanto em um PPA que

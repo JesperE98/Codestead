@@ -143,6 +143,8 @@ A commit saves what is in the index. The other three changes stay in the
 working tree until you add them.
 ```
 
+![Working tree, index and history](images/git-areas.webp "git add puts the changed README.md in the index, and git commit saves the index as a new commit in the history in .git.")
+
 ## `git status` is your compass
 
 The command you will run most often is `git status`. It tells you where every
@@ -251,6 +253,8 @@ lines 1–3 of the old version correspond to lines 1–4 of the new one.
 `git diff` compares the working tree with the index – that is, what you have
 *not* added yet. To see what is in the index waiting to be committed, type
 `git diff --staged`.
+
+![What git diff compares](images/git-diff.webp "git diff compares the working tree with the index. git diff --staged compares the index with the latest commit.")
 
 Add and commit the change. The `-a` option runs `git add` on every file git
 already follows, so it takes a single step:
@@ -450,6 +454,8 @@ Fast-forward
 created. Git then only has to move `main` forward to the same commit as
 `{{newDesign}}`.
 
+![Branches as labels on commits](images/git-branches.webp "A branch is a label that points at a commit. After git switch main the working tree looks like main's latest commit, and git merge moves main forward to the branch's commit – a fast-forward.")
+
 If both branches have new commits, git does a **three-way merge**: it
 compares both branches with their common ancestor and creates a new *merge
 commit* with two parents. `git log --oneline --graph --all` shows how the
@@ -606,6 +612,8 @@ The remote is usually called `origin`, and a typical workflow looks like
 this: `git pull` when you start, then edit, `git add` and `git commit` – and
 finally `git push`. GitHub and GitLab use an SSH key or an access token to
 log you in, not a password.
+
+![Your repository and its remote](images/git-remote.webp "origin has only the history, no working tree. git push sends your new commits there, git fetch only fetches new commits into .git, and git pull also merges them into your working tree.")
 
 All of this needs a network, and the simulator doesn't have one. But
 `clone`, `push` and `pull` work just as well between two repositories on the

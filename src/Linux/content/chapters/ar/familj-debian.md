@@ -56,6 +56,8 @@ sudo apt update && sudo apt upgrade
 الإصدارات الجديدة.
 ```
 
+![apt update وapt upgrade](images/apt-update-upgrade.webp "لا يفعل apt update سوى تنزيل قائمة الإصدارات المتاحة. ثم يثبّت apt upgrade الإصدارات الجديدة – هنا إصدار جديد من bash.")
+
 ## التثبيت والإزالة
 
 ```sh
@@ -149,6 +151,8 @@ sudo add-apt-repository ppa:lunatool/moonphase
 بنفسك، فعليك أن تفعل ذلك بنفسك.
 ```
 
+![ماذا تفعل إضافة PPA](images/ppa-sources.webp "ينشئ add-apt-repository ملفًا في /etc/apt/sources.list.d يدلّ apt على الـ PPA. ويقرأ apt update كل الملفات هناك، وبعدها تحتوي قائمة الحزم على moonphase أيضًا.")
+
 انظر إلى الملف:
 
 ```sh
@@ -178,6 +182,8 @@ apt policy moonphase
 تشير `***` إلى الإصدار المثبّت. والرقم `500` هو أولوية المستودع، و`100` يعني «ما
 هو مثبّت أصلًا». وإذا وُجدت الحزمة نفسها في عدة مستودعات، يختار apt الإصدار الأعلى
 – ولذا يستطيع الـ PPA أن يستبدل إحدى حزم التوزيعة نفسها بإصداره الخاص.
+
+![مخرجات apt policy moonphase](images/apt-policy.webp "تشير النجوم الثلاث إلى الإصدار المثبّت، و500 هو أولوية الـ PPA، و100 يعني ما هو مثبّت أصلًا.")
 
 ```quiz
 توجد الحزمة نفسها في مستودع التوزيعة وفي PPA أضفته. أيّ إصدار يختار apt؟

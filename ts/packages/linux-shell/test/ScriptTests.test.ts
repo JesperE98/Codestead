@@ -1,6 +1,8 @@
 // Port of tests/Linux/Codestead.Shell.Tests/ScriptTests.cs (src/shell/script.test.ts).
 
 import { describe, expect } from "vitest";
+import * as UtilCmd from "../src/Commands/Util/UtilCmd.js";
+import { Shell } from "../src/Shell/Shell.js";
 import { TestShell, itNeeds } from "./TestShell.js";
 
 describe("ScriptTests", () => {
@@ -200,6 +202,107 @@ describe("ScriptTests", () => {
     expect(t.run("cat << EOF\nJag är $USER\nEOF").out).toBe("Jag är elev\n");
     expect(t.run("cat << 'EOF'\nJag är $USER\nEOF").out).toBe("Jag är $USER\n");
     expect(t.run('wc -w <<< "ett två tre"').out).toBe("3\n");
+  });
+
+  // ---------- miljövariabler: bara exporterade variabler når program och skript som skalet startar ----------
+
+  itNeeds(["echo", "bash", "export"], "miljövariabler: en vanlig variabel syns inte i bash -c, en exporterad gör det", () => {
+    const t = new TestShell();
+    t.run("x=linux");
+    expect(t.run("echo $x").out).toBe("linux\n");
+    expect(t.run("bash -c 'echo [$x]'").out).toBe("[]\n");
+    expect(t.run("sh -c 'echo [$x]'").out).toBe("[]\n");
+    t.run("export x");
+    expect(t.run("bash -c 'echo [$x]'").out).toBe("[linux]\n");
+    t.run("export EDITOR=nano");
+    expect(t.run("bash -c 'echo $EDITOR'").out).toBe("nano\n");
+    // Det som barnet ändrar kommer inte tillbaka.
+    t.run("bash -c 'x=windows; export NY=1'");
+    expect(t.run("echo $x [$NY]").out).toBe("linux []\n");
+    // Skalets funktioner följer inte heller med.
+    t.run("hej() { echo hej; }");
+    expect(t.run("bash -c hej").out).toBe("bash: hej: command not found\n");
+  });
+
+  itNeeds(["echo", "bash"], "miljövariabler: NAMN=värde kommando exporterar bara till det kommandot", () => {
+    const t = new TestShell();
+    expect(t.run("z=5 bash -c 'echo [$z]'").out).toBe("[5]\n");
+    expect(t.run("echo [$z]").out).toBe("[]\n");
+    expect(t.run("bash -c 'echo [$z]'").out).toBe("[]\n");
+    // En vanlig variabel som finns sedan innan är fortfarande inte exporterad efteråt.
+    t.run("y=1");
+    expect(t.run("y=2 bash -c 'echo [$y]'").out).toBe("[2]\n");
+    expect(t.run("echo $y; bash -c 'echo [$y]'").out).toBe("1\n[]\n");
+    // Och env NAMN=värde kommando gör samma sak.
+    expect(t.run("env A=1 B=2 bash -c 'echo $A$B'").out).toBe("12\n");
+    expect(t.run("env -i bash -c 'echo [$HOME]'").out).toBe("[]\n");
+  });
+
+  itNeeds(["echo", "bash", "export", "unset"], "miljövariabler: export -n, export utan värde och unset", () => {
+    const t = new TestShell();
+    t.run("export y=1");
+    t.run("export -n y");
+    expect(t.run("bash -c 'echo [$y]'; echo $y").out).toBe("[]\n1\n");
+    // export NAMN innan variabeln har ett värde: den exporteras när den får ett.
+    t.run("export q");
+    expect(t.run("export -p | grep ' q'").out).toBe("declare -x q\n");
+    t.run("q=3");
+    expect(t.run("bash -c 'echo [$q]'").out).toBe("[3]\n");
+    // unset tar bort exporten också.
+    t.run("unset q");
+    t.run("q=4");
+    expect(t.run("bash -c 'echo [$q]'").out).toBe("[]\n");
+    expect(t.run("export -z").exitCode).toBe(2);
+    // export i ett delskal ( ... ) stannar där.
+    t.run("(export sub=1)");
+    expect(t.run("bash -c 'echo [$sub]'").out).toBe("[]\n");
+  });
+
+  itNeeds(["env", "printenv", "set", "export", "grep"], "miljövariabler: env och printenv visar bara exporterade, set visar alla", () => {
+    const t = new TestShell();
+    t.run("vanlig=1");
+    t.run("export EXPORTERAD=2");
+    expect(t.run("env | grep -c vanlig").out).toBe("0\n");
+    expect(t.run("env | grep EXPORTERAD").out).toBe("EXPORTERAD=2\n");
+    expect(t.run("printenv vanlig").exitCode).toBe(1);
+    expect(t.run("printenv EXPORTERAD").out).toBe("2\n");
+    expect(t.run("printenv | grep -c vanlig").out).toBe("0\n");
+    expect(t.run("set | grep -E '^(vanlig|EXPORTERAD)='").out).toBe("EXPORTERAD=2\nvanlig=1\n");
+    expect(t.run("export -p | grep -E 'vanlig|EXPORTERAD'").out).toBe('declare -x EXPORTERAD="2"\n');
+    // Inloggningsmiljön är exporterad från början.
+    expect(t.run("env | grep -E '^(HOME|USER|PATH|LANG)='").out).toBe(
+      "HOME=/home/elev\nLANG=sv_SE.UTF-8\nPATH=/usr/local/bin:/usr/bin:/bin\nUSER=elev\n",
+    );
+  });
+
+  itNeeds(["echo", "printf", "chmod", "source"], "miljövariabler: ./skript.sh ser bara exporterade, . skript.sh ser allt", () => {
+    const t = new TestShell();
+    t.run("printf '#!/bin/bash\\necho \"v=[$vanlig] e=[$exp]\"\\nvanlig=ändrad\\n' > x.sh");
+    t.run("printf 'echo \"v=[$vanlig] e=[$exp]\"\\n' > utan-shebang.sh");
+    t.run("chmod +x x.sh utan-shebang.sh");
+    t.run("vanlig=1; export exp=2");
+    expect(t.run("./x.sh").out).toBe("v=[] e=[2]\n");
+    expect(t.run("./utan-shebang.sh").out).toBe("v=[] e=[2]\n");
+    expect(t.run("bash x.sh").out).toBe("v=[] e=[2]\n");
+    expect(t.run("echo $vanlig").out).toBe("1\n");
+    expect(t.run(". ./x.sh").out).toBe("v=[1] e=[2]\n");
+    expect(t.run("echo $vanlig").out).toBe("ändrad\n");
+    expect(t.run("source ./x.sh").out).toBe("v=[ändrad] e=[2]\n");
+  });
+
+  itNeeds(["echo", "bash"], "miljövariabler: terminaler sparade innan exporten fanns har allt exporterat", () => {
+    const t = new TestShell();
+    t.run("gammal=1");
+    const json = JSON.parse(t.sh.snapshotJson()) as Record<string, unknown>;
+    delete json["exported"];
+    const sh = Shell.restoreJson(JSON.stringify(json))!;
+    expect(UtilCmd.stripAnsi(sh.execute("bash -c 'echo [$gammal]'").output)).toBe("[1]\n");
+    sh.execute("ny=2");
+    expect(UtilCmd.stripAnsi(sh.execute("bash -c 'echo [$ny]'").output)).toBe("[]\n");
+    // Och exporten sparas med terminalen.
+    sh.execute("export ny");
+    const again = Shell.restoreJson(sh.snapshotJson())!;
+    expect(UtilCmd.stripAnsi(again.execute("bash -c 'echo [$ny]'; ny2=3; bash -c 'echo [$ny2]'").output)).toBe("[2]\n[]\n");
   });
 
   // ---------- printf ----------

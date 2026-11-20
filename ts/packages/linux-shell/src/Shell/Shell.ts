@@ -110,7 +110,14 @@ export class Shell {
   distro: Distro;
   vfs: VFS;
   cwd: string;
+  /** All the shell's variables, exported or not (see exported). */
   env: Obj<string>;
+  /**
+   * The names of the exported variables – the environment variables. Only these reach the programs and scripts the
+   * shell starts (bash -c, ./script.sh, env ...); `set` shows all of env, `env` only these. A name can be exported
+   * without a value (`export NAME`), as in bash.
+   */
+  exported: Set<string>;
   aliases: Obj<string>;
   history: string[];
   installed: Obj<string>;
@@ -166,6 +173,8 @@ export class Shell {
     this.vfs.joinHardLinks();
     this.cwd = s.cwd;
     this.env = s.env;
+    // Terminals saved before the shell knew exported from plain variables: everything was exported.
+    this.exported = new Set(s.exported ?? s.env.keys());
     this.aliases = s.aliases;
     this.history = s.history;
     this.installed = s.installed;
@@ -199,6 +208,8 @@ export class Shell {
       fs: InitfsLib.buildFs(distro, w),
       cwd: home,
       env,
+      // The login environment is exported, and so is OLDPWD (bash exports it, still unset, at start).
+      exported: [...env.keys(), "OLDPWD"],
       aliases: Js.obj(),
       history: [],
       installed: Js.obj(),
@@ -278,6 +289,27 @@ export class Shell {
     walk("/etc/resolv.conf");
     walk("/usr/local/bin/myserver");
     walk(`${home}/${this.world.get("downloads")}`);
+    this.addMissingSystemGroups();
+  }
+
+  /**
+   * System groups that came with a later version (e.g. backup on the Debian family) are added to /etc/group of a
+   * terminal saved before – once, and only when neither the name nor the GID is taken.
+   */
+  private addMissingSystemGroups(): void {
+    const key = "default:systemGroups:2";
+    if (this.flags.get(key) === true) return;
+    this.flags.set(key, true);
+    const root = this.rootUser();
+    const node = this.vfs.tryLookup("/etc/group", root);
+    if (node?.type !== "file") return;
+    const text = node.content ?? "";
+    const taken = new Set(text.split("\n").flatMap((l) => (l === "" ? [] : [`n:${l.split(":")[0]}`, `g:${l.split(":")[2]}`])));
+    const missing = InitfsLib.systemGroups(this.distro).filter((g) => {
+      const [name, , gid] = g.split(":");
+      return !taken.has(`n:${name}`) && !taken.has(`g:${gid}`);
+    });
+    if (missing.length > 0) this.vfs.writeFile("/etc/group", `${text}${text === "" || text.endsWith("\n") ? "" : "\n"}${missing.join("\n")}\n`, root);
   }
 
   snapshot(): ShellSnapshot {
@@ -288,6 +320,7 @@ export class Shell {
       fs: this.vfs.root,
       cwd: this.cwd,
       env: this.env,
+      exported: [...this.exported],
       aliases: this.aliases,
       history: this.history,
       installed: this.installed,
@@ -544,7 +577,7 @@ export class Shell {
       }
       case "group": {
         if (!node.subshell) return this.exec(node.body, io);
-        const saved = { cwd: this.cwd, env: Js.copy(this.env), functions: Js.copy(this.functions) };
+        const saved = { cwd: this.cwd, env: Js.copy(this.env), exported: new Set(this.exported), functions: Js.copy(this.functions) };
         try {
           return this.exec(node.body, io);
         } catch (e) {
@@ -553,6 +586,7 @@ export class Shell {
         } finally {
           this.cwd = saved.cwd;
           this.env = saved.env;
+          this.exported = saved.exported;
           this.functions = saved.functions;
         }
       }
@@ -649,8 +683,12 @@ export class Shell {
       return this.withRedirects(node.redirects, io, () => (assignments.length > 0 ? this.lastExit : 0));
     }
 
-    const saved = assignments.map((a) => ({ name: a.name, value: this.env.get(a.name) ?? null }));
-    for (const { name, value } of assignments) this.env.set(name, value);
+    // NAME=value command: the variable is set and exported for that command only.
+    const saved = assignments.map((a) => ({ name: a.name, value: this.env.get(a.name) ?? null, exported: this.exported.has(a.name) }));
+    for (const { name, value } of assignments) {
+      this.env.set(name, value);
+      this.exported.add(name);
+    }
     try {
       return this.withRedirects(node.redirects, io, (rio) =>
         this.invoke(
@@ -659,9 +697,10 @@ export class Shell {
         ),
       );
     } finally {
-      for (const { name, value } of saved) {
+      for (const { name, value, exported } of saved) {
         if (value === null) this.env.delete(name);
         else this.env.set(name, value);
+        if (!exported) this.exported.delete(name);
       }
     }
   }
@@ -867,6 +906,43 @@ export class Shell {
     this.env.set(name, value);
   }
 
+  /** `unset NAME`: the variable and its export are gone. */
+  unsetVar(name: string): void {
+    this.env.delete(name);
+    this.exported.delete(name);
+  }
+
+  /** The environment a program or script started by the shell gets: the exported variables that have a value. */
+  environment(): Obj<string> {
+    const env = Js.obj<string>();
+    for (const [k, v] of this.env) if (this.exported.has(k)) env.set(k, v);
+    return env;
+  }
+
+  /** An environment variable as a program started by the shell sees it: null when it is unset or not exported. */
+  envVar(name: string): string | null {
+    return this.exported.has(name) ? (this.env.get(name) ?? null) : null;
+  }
+
+  /**
+   * Runs fn as a new process started by the shell: it gets env (by default the exported variables) and no shell
+   * functions, and what it changes – variables, functions, the working directory – stays there.
+   */
+  asChild<T>(fn: () => T, env: Obj<string> = this.environment()): T {
+    const saved = { cwd: this.cwd, env: this.env, exported: this.exported, functions: this.functions };
+    this.env = env;
+    this.exported = new Set(env.keys());
+    this.functions = Js.obj<Node>();
+    try {
+      return fn();
+    } finally {
+      this.cwd = saved.cwd;
+      this.env = saved.env;
+      this.exported = saved.exported;
+      this.functions = saved.functions;
+    }
+  }
+
   /** Runs code and returns its output (for $(...) and `...`). */
   private captureOutput(code: string, io: Sink): string {
     let ast: Node;
@@ -878,7 +954,7 @@ export class Shell {
       return "";
     }
     let buf = "";
-    const saved = { cwd: this.cwd, env: Js.copy(this.env), functions: Js.copy(this.functions) };
+    const saved = { cwd: this.cwd, env: Js.copy(this.env), exported: new Set(this.exported), functions: Js.copy(this.functions) };
     const savedPending = this.pendingQuestion;
     this.substDepth++;
     try {
@@ -899,6 +975,7 @@ export class Shell {
       const exit = this.lastExit;
       this.cwd = saved.cwd;
       this.env = saved.env;
+      this.exported = saved.exported;
       this.functions = saved.functions;
       this.lastExit = exit;
       this.pendingQuestion = savedPending;
@@ -1375,7 +1452,10 @@ export class Shell {
     const ppid = this.shellStack.at(-1)?.pid ?? ProcsLib.ShellPid;
     const user = this.currentUser();
     this.proc.procs.push(ShellmodeLib.shellProc(pid, ppid, user.name, mode));
-    const saved: ShellFrameSaved = { cwd: this.cwd, env: Js.copy(this.env), aliases: this.aliases, functions: this.functions };
+    const saved: ShellFrameSaved = { cwd: this.cwd, env: Js.copy(this.env), exported: [...this.exported], aliases: this.aliases, functions: this.functions };
+    // The new shell is a new process: it gets the environment variables, not the plain shell variables.
+    this.env = this.environment();
+    this.exported = new Set(this.env.keys());
     // `sudo zsh` gives a shell as root.
     const pushedUser = user.name !== (this.userStack.at(-1) ?? null);
     if (pushedUser) {
@@ -1465,8 +1545,9 @@ export class Shell {
   // =====================================================================================================
 
   /**
-   * Runs a script. By default in a "subshell": cd, variables and functions do not affect the caller.
-   * With inCurrentShell (source) the changes stay.
+   * Runs a script. By default as a new process: it gets only the environment variables (not plain shell variables or
+   * functions), and its cd, variables and functions do not affect the caller. With inCurrentShell (source) it sees
+   * everything and the changes stay.
    */
   runScript(content: string, name: string, args: string[], io: IO, inCurrentShell = false, mode: ShellMode | null = null): number {
     if (this.scriptDepth > 20) {
@@ -1491,7 +1572,14 @@ export class Shell {
       io.err(`${name}: ${e.message}\n`);
       return 2;
     }
-    const saved = { cwd: this.cwd, env: Js.copy(this.env), functions: Js.copy(this.functions) };
+    // A script that is not sourced runs in a new process: it sees only the environment variables (export), and
+    // its variables, functions and cd do not come back.
+    const saved = { cwd: this.cwd, env: this.env, exported: this.exported, functions: this.functions };
+    if (!inCurrentShell) {
+      this.env = this.environment();
+      this.exported = new Set(this.env.keys());
+      this.functions = Js.obj<Node>();
+    }
     this.scriptDepth++;
     if (!inCurrentShell) this.modeOverride.push(mode);
     this.positional.push([name, ...args]);
@@ -1513,6 +1601,7 @@ export class Shell {
       if (!inCurrentShell) {
         this.cwd = saved.cwd;
         this.env = saved.env;
+        this.exported = saved.exported;
         this.functions = saved.functions;
       }
     }
@@ -1530,6 +1619,7 @@ export class Shell {
       if (top.pushedUser === true) this.userStack.pop();
       this.cwd = top.saved.cwd;
       this.env = top.saved.env;
+      this.exported = new Set(top.saved.exported ?? top.saved.env.keys());
       this.aliases = top.saved.aliases;
       this.functions = top.saved.functions;
       this.flags.set(`left:${top.mode}`, true);

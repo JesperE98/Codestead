@@ -32,6 +32,8 @@ A program writes a log file. In which directory would you expect to find it?
 Log files go in `/var/log`. Settings live in `/etc` and programs in `/usr/bin`.
 ```
 
+![The directory tree from the root](images/fs-tree.webp "Everything lives in one tree that starts at the root /. Your home directory, ~, is /home/ followed by your user name.")
+
 ## Where am I? – `pwd`
 
 `pwd` (*print working directory*) shows the directory you are currently in:
@@ -54,6 +56,8 @@ The `-l` option gives you a long format with more information:
 ```sh
 ls -l
 ```
+
+![The columns of ls -l](images/ls-long.webp "What the columns of ls -l mean, on a directory and a file in your home directory. Permissions come in a later chapter.")
 
 Files whose names start with a dot are **hidden** and aren't shown by default.
 They are often settings files, like `.bashrc`. The `-a` (*all*) option shows
@@ -107,6 +111,8 @@ so it works from anywhere. `/{{user}}/{{documents}}` starts at the root, where t
 no `{{user}}`.
 ```
 
+![An absolute and a relative path](images/paths.webp "From /home, both paths lead to the same directory: the absolute one starts at the root, the relative one where you are.")
+
 A few special names are worth knowing:
 
 | Name | Means |
@@ -130,6 +136,8 @@ $ pwd
 ---
 `..` is the directory above, so from `/usr/bin` you end up in `/usr`.
 ```
+
+![Where . .. ~ / and cd - lead](images/dots.webp "After cd /etc and cd /var/log you are in /var/log. From there . is /var/log, .. is /var, ~ is your home directory, / is the root, and cd - takes you back to /etc.")
 
 ## Tab completion
 

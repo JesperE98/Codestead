@@ -27,6 +27,8 @@ Variable `NAME=value` से बनाया जाता है (`=` के आ
 export EDITOR=nano
 ```
 
+![export क्या करता है](images/env-export.webp "आपका बनाया variable सिर्फ़ आपके shell में रहता है। export से वह environment variable बन जाता है, और shell जो भी program चलाता है, उसे उसकी एक copy मिलती है।")
+
 ```quiz
 कौन-सी पंक्ति वेरिएबल `COLOR` को मान `blue` के साथ बनाती है?
 - [ ] `COLOR = blue`
@@ -72,6 +74,8 @@ echo $PATH
 ```sh
 echo $PATH | tr ':' '\n'
 ```
+
+![shell ls को कैसे ढूँढता है](images/path-lookup.webp "PATH colon से अलग की गई directories की list है। shell उनमें एक-एक करके ढूँढता है और जो पहला ls मिलता है, यानी /usr/bin/ls, उसे चलाता है, इसलिए वह /bin में कभी नहीं देखता।")
 
 `which` बताता है कि कोई program कहाँ मिला। कुछ commands, जैसे `cd`, files हैं ही
 नहीं बल्कि shell में *built in* हैं – `type` बताता है कि कोई नाम असल में क्या है:

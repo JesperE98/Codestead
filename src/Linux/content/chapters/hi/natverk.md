@@ -106,6 +106,8 @@ $ ip route | grep default | cut -d' ' -f3
 `default` वाली पंक्ति का तीसरा शब्द गेटवे का पता है।
 ```
 
+![Home network और उसके routes](images/home-network.webp "192.168.1.0/24 में सब कुछ – server और router – सीधे पहुँचा जा सकता है। बाक़ी सब default route से gateway 192.168.1.1 होते हुए internet पर जाता है।")
+
 ## ping – क्या वहाँ तक पहुँचा जा सकता है?
 
 `ping` छोटे test packets भेजता है और नापता है कि जवाब आने में कितना समय लगता है।
@@ -239,6 +241,8 @@ getent hosts server.lan
 क्रम (पहले file, फिर DNS) `/etc/nsswitch.conf` की line `hosts: files dns` से तय
 होता है।
 
+![getent और dig server.lan ढूँढते हुए](images/hosts-dns.webp "getent वैसे ही पूछता है जैसे system – पहले /etc/hosts, फिर DNS – इसलिए उसे server.lan मिल जाता है। dig सिर्फ़ DNS से पूछता है, जो यह नाम नहीं जानता, इसलिए कुछ नहीं छापता।")
+
 ```quiz
 `sudo echo '192.168.1.10 server.lan' >> /etc/hosts` से *Permission denied* क्यों
 मिलता है?
@@ -286,6 +290,8 @@ sudo ss -tulpn
 अगर processes वाले chapter का practice server `myserver` चल रहा है, तो वह आपको
 यहाँ port 8080 पर दिखेगा। पुराना command `netstat -tulpn` (*net-tools* से) भी यही
 काम करता है।
+
+![आपके computer के ports](images/ports.webp "Address computer तक ले जाता है, port उस पर चल रहे किसी program तक। sshd 22 पर और myserver 8080 पर listen करते हैं; port 80 पर कोई listen नहीं करता, इसलिए curl वहाँ connect नहीं कर पाता।")
 
 ## Web से लाना: curl और wget
 

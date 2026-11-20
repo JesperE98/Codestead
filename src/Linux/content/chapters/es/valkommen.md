@@ -46,6 +46,8 @@ La terminal solo muestra el texto. La shell (aquí bash) lee lo que escribes
 y lo ejecuta.
 ```
 
+![Terminal, shell, kernel y hardware](images/shell-layers.webp "Escribes en la terminal, la shell (bash) lee el comando y lo ejecuta, y el kernel permite que los programas compartan el hardware. Una distribución reúne todo ese software.")
+
 ## El prompt
 
 Cuando la shell está esperando un comando, muestra un **prompt** (indicador).
@@ -96,6 +98,8 @@ En el comando `ls -l /etc`, ¿qué parte es la **opción**?
 `ls` es el comando, `-l` modifica su comportamiento y `/etc` es el argumento:
 aquello sobre lo que debe trabajar `ls`.
 ```
+
+![Las partes de una línea de comandos](images/command-line.webp "El prompt te dice quién eres y dónde estás; después vienen el comando, sus opciones y sus argumentos.")
 
 Prueba `echo` con un texto tuyo:
 

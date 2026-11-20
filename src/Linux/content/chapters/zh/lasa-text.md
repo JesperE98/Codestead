@@ -87,6 +87,8 @@ grep -n WARN {{documents}}/server.log
 - [x] `grep -v INFO {{documents}}/server.log`
 ```
 
+![head、tail 和 grep 挑出的行](images/log-lines.webp "head 显示 server.log 的前几行，tail 显示最后几行，grep WARN 显示包含 WARN 的行——但不包括小写 warn 的那一行。")
+
 ## 排序——`sort` 和 `uniq`
 
 `sort` 按字母顺序对行进行排序（`-n` 按数字排序，`-r` 逆序排列）。`uniq` 会删除与*紧邻的上一行*完全相同的行——这就是为什么它几乎总是跟在 `sort` 后面使用：
@@ -101,6 +103,8 @@ sort {{documents}}/{{fruits}}
 - [x] `uniq` 只删除与紧邻的上一行完全相同的行，所以相同的行必须挨在一起
 - [ ] `sort` 删除重复行，`uniq` 再把它们放回去
 ```
+
+![不先 sort 和先 sort 的 uniq](images/sort-uniq.webp "单独使用 uniq 什么也删不掉，因为相同的行并不相邻。sort 之后它们相邻了，uniq 就每种只保留一行。")
 
 ## 截取字段——`cut`
 
@@ -117,6 +121,8 @@ CSV 是 *comma-separated values*（逗号分隔值）的缩写——各列之间
 ```sh
 cut -d, -f2 ~/{{documents}}/{{grades}}
 ```
+
+![cut 取出第 2 个字段](images/cut-fields.webp "-d, 按逗号拆分每一行，-f2 保留第二个字段。")
 
 在 `/etc/passwd` 中，字段之间用冒号分隔，第 1 个字段是用户名，所以 `cut -d: -f1 /etc/passwd` 会列出所有用户。
 

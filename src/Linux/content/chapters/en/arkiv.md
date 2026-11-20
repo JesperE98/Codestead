@@ -31,6 +31,8 @@ gzip only handles one file at a time and knows nothing about directories, and
 a tar archive on its own isn't smaller than the files in it.
 ```
 
+![tar collects, gzip compresses](images/tar-gzip.webp "tar makes one file of the directory, bigger than the files themselves because each file gets a 512-byte header and the archive is padded to whole blocks. gzip then makes it small; tar -czf does both. The bars are drawn to scale.")
+
 | File extension | What is it? | Unpack with |
 |---|---|---|
 | `.tar` | Archive, uncompressed | `tar -xf` |
@@ -86,6 +88,8 @@ do. The rest are modifiers. A common mnemonic:
 Always put `f` **last** when you write the options together, since the file
 name must come right after it. For historical reasons you can also leave out
 the dash: `tar czvf` means the same as `tar -czvf`.
+
+![The parts of tar -czvf](images/tar-options.webp "c, z, v and f are options written together, with f last, because the archive's name comes right after it. Everything after the name gets packed.")
 
 ```quiz
 What does `tar -xzvf backup.tar.gz` do?
@@ -198,6 +202,8 @@ You run `tar -czf backup.tar.gz -C ~ {{documents}}`. What does the archive conta
 `-C ~` makes tar change to your home directory first, so the names in the
 archive start at `{{documents}}/`.
 ```
+
+![Where the names in the archive start](images/tar-paths.webp "Packing a path in your home directory stores names that start with home and your user name, because tar removes the leading slash. With -C ~ tar first changes to your home directory, and the names start at the directory you pack.")
 
 ## Compressing single files with `gzip`
 

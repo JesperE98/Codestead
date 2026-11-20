@@ -16,6 +16,8 @@ Todo programa tiene tres flujos estándar:
 Con las *redirecciones* y las *pipes* (tuberías) puedes enviar estos flujos a
 otro sitio.
 
+![stdin, stdout y stderr](images/streams.webp "Un programa lee stdin (0) del teclado y escribe stdout (1) y stderr (2) en la pantalla.")
+
 ## A un archivo – `>` y `>>`
 
 `>` envía stdout a un archivo en lugar de a la pantalla. El archivo se crea si
@@ -97,6 +99,8 @@ El archivo `/dev/null` es un «agujero negro»: todo lo que se escribe en él
 desaparece. Resulta muy útil para silenciar errores. Con `2>&1`, stderr se
 envía al mismo sitio que stdout.
 
+![Adónde envían los flujos > 2> y 2>&1](images/redirect.webp "> solo envía stdout al archivo, así que el mensaje de error sigue apareciendo en la pantalla. 2> captura stderr, y > archivo 2>&1 envía los dos al mismo archivo.")
+
 ## Pipes – `|`
 
 Una **pipe** envía la stdout de un comando directamente a la stdin del
@@ -116,6 +120,8 @@ sort {{documents}}/{{fruits}} | uniq -c | sort -rn
 
 Léelo paso a paso: ordena las frutas, cuenta cuántas hay de cada una
 (`uniq -c`) y luego ordena numéricamente con la mayor primero (`sort -rn`).
+
+![La salida de cada paso de una cadena de pipes](images/pipeline.webp "Cada pipe envía la stdout de un comando a la stdin del siguiente: sort junta las frutas iguales, uniq -c las cuenta y sort -rn pone primero las más frecuentes.")
 
 ¿Cuántos archivos y directorios hay en `/etc`? Cuéntalos con una pipe:
 

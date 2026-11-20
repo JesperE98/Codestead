@@ -27,6 +27,8 @@ Con `export` se convierte en una variable de entorno:
 export EDITOR=nano
 ```
 
+![Lo que hace export](images/env-export.webp "Una variable que creas solo existe en tu shell. Con export se convierte en una variable de entorno, y cada programa que arranca la shell recibe una copia.")
+
 ```quiz
 ¿Qué línea crea la variable `COLOR` con el valor `blue`?
 - [ ] `COLOR = blue`
@@ -72,6 +74,8 @@ modo que cada directorio de `PATH` quede en su propia línea:
 ```sh
 echo $PATH | tr ':' '\n'
 ```
+
+![Cómo encuentra la shell ls](images/path-lookup.webp "PATH es una lista de directorios separados por dos puntos. La shell busca en ellos uno tras otro y ejecuta el primer ls que encuentra, /usr/bin/ls, así que nunca llega a buscar en /bin.")
 
 `which` muestra dónde se encontró un programa. Algunos comandos, como `cd`, no
 son archivos, sino que están *integrados* en la shell (son *builtins*); `type`

@@ -15,6 +15,8 @@ Every program has three standard streams:
 
 With *redirection* and *pipes* you can send these streams somewhere else.
 
+![stdin, stdout and stderr](images/streams.webp "A program reads stdin (0) from the keyboard and writes stdout (1) and stderr (2) to the screen.")
+
 ## To a file – `>` and `>>`
 
 `>` sends stdout to a file instead of the screen. The file is created if it
@@ -96,6 +98,8 @@ The file `/dev/null` is a "black hole" – anything written to it disappears.
 That's handy for silencing errors. With `2>&1`, stderr is sent the same way as
 stdout.
 
+![Where > 2> and 2>&1 send the streams](images/redirect.webp "> sends only stdout to the file, so the error message still ends up on the screen. 2> catches stderr, and > file 2>&1 sends both to the same file.")
+
 ## Pipes – `|`
 
 A **pipe** sends the stdout of one command straight into the stdin of the
@@ -115,6 +119,8 @@ sort {{documents}}/{{fruits}} | uniq -c | sort -rn
 
 Read it step by step: sort the fruits, count how many there are of each
 (`uniq -c`), and then sort numerically with the largest first (`sort -rn`).
+
+![The output of each step of a pipeline](images/pipeline.webp "Each pipe sends one command's stdout to the next command's stdin: sort puts equal fruits together, uniq -c counts them, and sort -rn puts the most common first.")
 
 How many files and directories are there in `/etc`? Count them with a pipe:
 

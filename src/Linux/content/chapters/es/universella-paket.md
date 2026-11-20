@@ -29,6 +29,8 @@ Un **sandbox** (entorno aislado) significa que el programa solo puede acceder
 a lo que se le ha permitido, por ejemplo la red o tu carpeta de descargas, en
 lugar de a todo tu directorio personal.
 
+![Un programa con y sin sandbox](images/sandbox.webp "Un programa de los paquetes de la distribución o una AppImage accede a todo tu directorio personal. Un Flatpak o un snap en su sandbox solo accede a lo que se le ha permitido: aquí, la red y la carpeta de descargas.")
+
 ```quiz
 ¿Qué formato se actualiza automáticamente en segundo plano?
 - [ ] Flatpak
@@ -135,6 +137,8 @@ flatpak list --user
 Recuerda que la instalación de usuario tiene sus propios remotes: Flathub
 también hay que añadirlo con `--user`.
 ```
+
+![Flatpak para todo el sistema o solo para ti](images/flatpak-user.webp "Sin opciones, un Flatpak se instala en /var/lib/flatpak y todos los usuarios lo ven. Con --user se instala en tu directorio personal, solo lo ves tú, y la instalación de usuario tiene sus propios remotes.")
 
 ### Actualizar y desinstalar
 

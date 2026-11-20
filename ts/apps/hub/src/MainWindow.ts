@@ -35,7 +35,10 @@ export class MainWindow extends Store {
   loading = false;
   checkedAt: Date | null = null;
   hubUpdate: string | null = null;
+  /** The hub's own update: download progress 0..100, -1 while the system installs it, null when not running. */
   hubUpdateProgress: number | null = null;
+  /** Why the hub's own update could not be installed: the banner then offers the download page instead. */
+  hubUpdateFailed: string | null = null;
   /** Tool id → download progress 0..100 (or -1 while unpacking) for running installs. */
   readonly busy = new Map<string, number>();
   readonly errors = new Map<string, string>();

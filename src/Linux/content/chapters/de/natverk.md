@@ -112,6 +112,8 @@ $ ip route | grep default | cut -d' ' -f3
 Das dritte Wort in der `default`-Zeile ist die Adresse des Gateways.
 ```
 
+![Das Heimnetz und seine Routen](images/home-network.webp "Alles in 192.168.1.0/24 – der Server und der Router – wird direkt erreicht. Alles andere nimmt die Standardroute über das Gateway 192.168.1.1 hinaus ins Internet.")
+
 ## ping – ist er erreichbar?
 
 `ping` schickt kleine Testpakete und misst, wie lange die Antworten brauchen.
@@ -249,6 +251,8 @@ Namen:
 Die Reihenfolge (zuerst die Datei, dann DNS) legt die Zeile `hosts: files dns`
 in `/etc/nsswitch.conf` fest.
 
+![getent und dig schlagen server.lan nach](images/hosts-dns.webp "getent fragt wie das System – erst /etc/hosts, dann DNS – und findet deshalb server.lan. dig fragt nur DNS, das den Namen nicht kennt, und gibt nichts aus.")
+
 ```quiz
 Warum ergibt `sudo echo '192.168.1.10 server.lan' >> /etc/hosts`
 *Permission denied*?
@@ -296,6 +300,8 @@ sudo ss -tulpn
 Wenn der Übungsserver `myserver` aus dem Kapitel über Prozesse läuft, siehst du
 ihn hier auf Port 8080. Der ältere Befehl `netstat -tulpn` (aus *net-tools*)
 macht dasselbe.
+
+![Ports auf deinem Rechner](images/ports.webp "Die Adresse führt zum Rechner, der Port zu einem Programm darauf. sshd lauscht auf 22 und myserver auf 8080; auf Port 80 lauscht niemand, deshalb kann curl dort keine Verbindung aufbauen.")
 
 ## Aus dem Web holen: curl und wget
 

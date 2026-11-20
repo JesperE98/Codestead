@@ -32,6 +32,8 @@ Ein Programm schreibt eine Logdatei. In welchem Verzeichnis würdest du sie erwa
 Logdateien landen in `/var/log`. Einstellungen liegen in `/etc` und Programme in `/usr/bin`.
 ```
 
+![Der Verzeichnisbaum ab der Wurzel](images/fs-tree.webp "Alles liegt in einem einzigen Baum, der bei der Wurzel / beginnt. Dein Home-Verzeichnis, ~, ist /home/ gefolgt von deinem Benutzernamen.")
+
 ## Wo bin ich? – `pwd`
 
 `pwd` (*print working directory*) zeigt das Verzeichnis an, in dem du dich
@@ -55,6 +57,8 @@ Die Option `-l` liefert ein langes Format mit mehr Informationen:
 ```sh
 ls -l
 ```
+
+![Die Spalten von ls -l](images/ls-long.webp "Was die Spalten von ls -l bedeuten, an einem Verzeichnis und einer Datei in deinem Home-Verzeichnis. Die Rechte kommen in einem späteren Kapitel.")
 
 Dateien, deren Name mit einem Punkt beginnt, sind **versteckt** und werden
 standardmäßig nicht angezeigt. Oft sind das Einstellungsdateien wie `.bashrc`.
@@ -108,6 +112,8 @@ funktioniert also von überall. `/{{user}}/{{documents}}` beginnt bei der Wurzel
 gibt es kein `{{user}}`.
 ```
 
+![Ein absoluter und ein relativer Pfad](images/paths.webp "Von /home aus führen beide Pfade zum selben Verzeichnis: Der absolute beginnt bei der Wurzel, der relative dort, wo du bist.")
+
 Ein paar besondere Namen solltest du kennen:
 
 | Name | Bedeutet |
@@ -131,6 +137,8 @@ $ pwd
 ---
 `..` ist das Verzeichnis darüber, also landest du von `/usr/bin` aus in `/usr`.
 ```
+
+![Wohin . .. ~ / und cd - führen](images/dots.webp "Nach cd /etc und cd /var/log bist du in /var/log. Von dort ist . /var/log, .. ist /var, ~ dein Home-Verzeichnis, / die Wurzel, und cd - bringt dich zurück nach /etc.")
 
 ## Tab-Vervollständigung
 

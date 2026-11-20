@@ -219,25 +219,37 @@ function systemUsers(distro: Distro): string[] {
   }
 }
 
-/** System groups. The admin group (sudo/wheel) gets the student as a member in buildFs. */
-function systemGroups(distro: Distro): string[] {
+/**
+ * System groups. The admin group (sudo/wheel) gets the student as a member in buildFs. The Debian family has the
+ * static groups of base-passwd (backup, cdrom, plugdev ...), Fedora those of the setup package and Arch those of the
+ * filesystem package (no backup group in either). Shell.addMissingDefaults adds the ones a saved terminal lacks.
+ */
+export function systemGroups(distro: Distro): string[] {
   const admin = `${distro.adminGroup}:x:${distro.adminGid}:`;
   switch (distro.family) {
     case "debian":
       return [
-        "root:x:0:", "daemon:x:1:", "bin:x:2:", "sys:x:3:", "adm:x:4:syslog", "tty:x:5:", "mail:x:8:", "www-data:x:33:",
-        admin, "shadow:x:42:", "users:x:100:", "nogroup:x:65534:", "systemd-network:x:998:", "messagebus:x:101:", "syslog:x:102:",
+        "root:x:0:", "daemon:x:1:", "bin:x:2:", "sys:x:3:", "adm:x:4:syslog", "tty:x:5:", "disk:x:6:", "lp:x:7:", "mail:x:8:",
+        "news:x:9:", "uucp:x:10:", "man:x:12:", "proxy:x:13:", "kmem:x:15:", "dialout:x:20:", "fax:x:21:", "voice:x:22:",
+        "cdrom:x:24:", "floppy:x:25:", "tape:x:26:", admin, "audio:x:29:", "dip:x:30:", "www-data:x:33:", "backup:x:34:",
+        "operator:x:37:", "list:x:38:", "irc:x:39:", "src:x:40:", "shadow:x:42:", "utmp:x:43:", "video:x:44:", "sasl:x:45:",
+        "plugdev:x:46:", "staff:x:50:", "games:x:60:", "users:x:100:", "nogroup:x:65534:", "systemd-journal:x:999:",
+        "systemd-network:x:998:", "messagebus:x:101:", "syslog:x:102:",
       ];
     case "arch":
       return [
         "root:x:0:root", "sys:x:3:bin", "mem:x:8:", "ftp:x:11:", "mail:x:12:", "log:x:19:", "http:x:33:", "tty:x:5:",
-        "bin:x:1:daemon", "daemon:x:2:bin", "dbus:x:81:", "nobody:x:65534:", admin, "adm:x:999:daemon", "users:x:984:",
-        "systemd-network:x:982:",
+        "bin:x:1:daemon", "daemon:x:2:bin", "dbus:x:81:", "nobody:x:65534:", admin, "adm:x:999:daemon", "utmp:x:997:",
+        "audio:x:996:", "disk:x:995:", "input:x:994:", "kmem:x:993:", "kvm:x:992:", "lp:x:991:", "optical:x:990:",
+        "render:x:989:", "storage:x:987:", "uucp:x:986:", "video:x:985:", "users:x:984:", "systemd-network:x:982:",
+        "systemd-journal:x:190:",
       ];
     case "redhat":
       return [
-        "root:x:0:", "bin:x:1:", "daemon:x:2:", "sys:x:3:", "adm:x:4:", "tty:x:5:", "mail:x:12:", admin, "users:x:100:",
-        "nobody:x:65534:", "dbus:x:81:", "systemd-network:x:192:",
+        "root:x:0:", "bin:x:1:", "daemon:x:2:", "sys:x:3:", "adm:x:4:", "tty:x:5:", "disk:x:6:", "lp:x:7:", "mem:x:8:",
+        "kmem:x:9:", admin, "cdrom:x:11:", "mail:x:12:", "man:x:15:", "dialout:x:18:", "floppy:x:19:", "games:x:20:",
+        "tape:x:33:", "video:x:39:", "ftp:x:50:", "lock:x:54:", "audio:x:63:", "users:x:100:", "nobody:x:65534:", "dbus:x:81:",
+        "systemd-network:x:192:", "systemd-journal:x:190:",
       ];
     default:
       throw new Error(`Unknown family: ${distro.family}`);

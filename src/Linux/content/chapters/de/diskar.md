@@ -96,6 +96,8 @@ lsblk -f
 Achte auf `sdb1`: ein `vfat`-Dateisystem mit dem Label `USBSTICK`, das
 nirgends eingehängt ist. Das ist der USB-Stick, den wir gleich einstecken.
 
+![Datenträger, Partitionen und Dateisysteme](images/disk-layout.webp "lsblk -f auf diesem Rechner: Der Datenträger sda hat drei Partitionen, jede mit eigenem Dateisystem und Mountpunkt. Der USB-Stick sdb hat eine FAT-Partition, die noch nicht eingehängt ist.")
+
 ## Verschiedene Dateisysteme
 
 Es gibt viele Dateisysteme mit unterschiedlichen Stärken:
@@ -217,6 +219,8 @@ Sticks im Verzeichnis auf:
 ls -l /mnt/usb
 df -h /mnt/usb
 ```
+
+![Drei Dateisysteme in einem Baum](images/mount-tree.webp "Nach dem Einhängen erscheinen die Dateien des Sticks unter /mnt/usb. Das Root-Dateisystem ist auf / eingehängt und die EFI-Partition auf /boot/efi – ein Baum, keine Laufwerksbuchstaben.")
 
 Ab jetzt funktioniert der Stick wie jedes andere Verzeichnis. Kopiere eine
 Datei in dein Home-Verzeichnis:

@@ -24,6 +24,8 @@ Todo proceso tiene un padre. Si sigues a los padres lo suficiente, acabas en
 el proceso número 1.
 ```
 
+![El árbol de procesos](images/process-tree.webp "Cada proceso tiene un PID, y su PPID es el PID de su padre, en el color del padre. Siguiendo los padres desde ps -ef llegas, a través de tu shell, al proceso 1, init.")
+
 ## Mis procesos – `ps`
 
 `ps` (*process status*) sin opciones muestra los procesos de tu propia
@@ -168,6 +170,8 @@ ejecutándose mientras conservas el prompt?
 `Ctrl+Z` pausa el programa. `bg` deja que un trabajo detenido continúe en
 segundo plano, mientras que `fg` lo traería de vuelta al primer plano.
 ```
+
+![Primer plano, segundo plano y detenido](images/job-states.webp "Un comando se ejecuta en primer plano, o en segundo plano con & al final. Ctrl+Z detiene un trabajo en primer plano, bg deja que un trabajo detenido siga en segundo plano, fg trae un trabajo al primer plano, y Ctrl+C o kill lo terminan.")
 
 ### Seguir después de cerrar la sesión – `nohup`
 

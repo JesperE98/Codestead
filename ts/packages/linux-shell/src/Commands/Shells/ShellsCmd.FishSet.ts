@@ -40,8 +40,10 @@ export const fishSet: CommandDef = ShellsCmd.fishBuiltin("set", (ctx) => {
   }
   const restArgs = ctx.args.slice(i);
   if (restArgs.length === 0) {
-    // Object.entries(sh.env).sort() compares the entries as "key,value" strings.
-    const entries = [...sh.env].sort((x, y) => {
+    // Object.entries(sh.env).sort() compares the entries as "key,value" strings. set -x lists only the exported
+    // variables, set -u only the others.
+    const shown = [...sh.env].filter(([k]) => (flags.has("x") ? sh.exported.has(k) : flags.has("u") ? !sh.exported.has(k) : true));
+    const entries = shown.sort((x, y) => {
       const a = x[0] + "," + x[1];
       const b = y[0] + "," + y[1];
       return a < b ? -1 : a > b ? 1 : 0;
@@ -59,7 +61,7 @@ export const fishSet: CommandDef = ShellsCmd.fishBuiltin("set", (ctx) => {
   if (flags.has("e")) {
     if (flags.has("U")) ShellmodeLib.saveUniversalVar(sh, name, null);
     if (!sh.env.has(name)) return 4;
-    sh.env.delete(name);
+    sh.unsetVar(name);
     return 0;
   }
   // fish has lists; the simulator stores them separated by spaces (PATH lists with colons).
@@ -68,10 +70,14 @@ export const fishSet: CommandDef = ShellsCmd.fishBuiltin("set", (ctx) => {
   const old = oldValue !== undefined && oldValue !== "" ? [oldValue] : [];
   const list = flags.has("a") ? [...old, ...values] : flags.has("p") ? [...values, ...old] : values;
   const value = list.join(sep);
-  if (flags.has("U")) ShellmodeLib.saveUniversalVar(sh, name, value);
+  // -x exports the variable (an environment variable, as bash's export) and -u takes the export away; without
+  // either a variable keeps what it was.
+  const exported = flags.has("x") || (!flags.has("u") && sh.exported.has(name));
+  if (flags.has("U")) ShellmodeLib.saveUniversalVar(sh, name, value, exported);
   // Without -g/-U a new variable in a function is local to the function (like -l).
   const local = flags.has("l") || (!flags.has("g") && !flags.has("U") && sh.funcDepth > 0 && !sh.env.has(name));
-  if (local && sh.declareLocal(name, value)) return 0;
-  sh.setVar(name, value);
+  if (!(local && sh.declareLocal(name, value))) sh.setVar(name, value);
+  if (flags.has("x")) sh.exported.add(name);
+  else if (flags.has("u")) sh.exported.delete(name);
   return 0;
 });

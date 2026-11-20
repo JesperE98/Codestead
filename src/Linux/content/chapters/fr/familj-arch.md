@@ -60,6 +60,8 @@ sudo pacman -Syu
 tout mettre à jour (`u`). Arch est une *rolling release*, vous lancerez donc
 cette commande souvent.
 
+![Comment lire pacman -Syu et pacman -Rs](images/pacman-options.webp "La majuscule est l'opération et les minuscules sont des modificateurs : -Syu synchronise, rafraîchit la base de données et met tout à jour, et -Rs supprime un paquet avec les dépendances dont plus rien n'a besoin.")
+
 > **Important !** Ne lancez jamais simplement `pacman -Sy` suivi de
 > `pacman -S paquet`. Le nouveau paquet pourrait alors avoir besoin de
 > bibliothèques plus récentes que celles que vous avez – une *mise à jour
@@ -74,6 +76,8 @@ Pourquoi ne faut-il pas lancer `pacman -Sy` puis `pacman -S paquet` ?
 ---
 Mettez toujours tout à jour d'un coup avec `-Syu`.
 ```
+
+![Une mise à jour partielle comparée à -Syu](images/partial-upgrade.webp "Après -Sy, la base de données connaît les versions les plus récentes, donc -S installe un nouveau htop qui a besoin d'un ncurses plus récent que le vôtre. -Syu met tout à jour d'un coup.")
 
 ## Installer et supprimer
 
@@ -180,6 +184,8 @@ dans un fichier `.pkg.tar.zst`. `-s` installe les dépendances manquantes et
 `-i` installe le paquet avec pacman une fois terminé. Ne lancez **pas**
 makepkg avec sudo – il refuse de tourner en root et utilise sudo de lui-même
 quand c'est nécessaire.
+
+![De l'AUR à un paquet installé](images/aur-build.webp "git clone ne récupère que la recette de construction. makepkg télécharge le code source et construit un fichier .pkg.tar.zst sur votre ordinateur, et -i l'installe avec pacman.")
 
 ```sh
 ls

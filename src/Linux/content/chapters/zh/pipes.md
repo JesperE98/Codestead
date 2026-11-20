@@ -14,6 +14,8 @@
 
 借助*重定向*和*管道*（pipe），你可以把这些流发送到别的地方。
 
+![stdin、stdout 和 stderr](images/streams.webp "程序从键盘读取 stdin（0），把 stdout（1）和 stderr（2）输出到屏幕。")
+
 ## 写入文件——`>` 和 `>>`
 
 `>` 把 stdout 发送到文件而不是屏幕。如果文件不存在，就会创建它——如果文件已经存在，就会被**覆盖**！
@@ -86,6 +88,8 @@ ls /{{missing}} 2> errors.txt
 
 文件 `/dev/null` 是一个“黑洞”——写进去的任何东西都会消失。用它来屏蔽错误信息非常方便。使用 `2>&1`，stderr 就会被发送到和 stdout 相同的地方。
 
+![>、2> 和 2>&1 把流送到哪里](images/redirect.webp "> 只把 stdout 送进文件，所以错误信息仍然显示在屏幕上。2> 捕获 stderr，而 > 文件 2>&1 把两者都送进同一个文件。")
+
 ## 管道——`|`
 
 **管道**（pipe）把一个命令的 stdout 直接送进下一个命令的 stdin。这正是 Unix 哲学的核心：*只做一件事，并把它做好；让程序彼此协作*。
@@ -101,6 +105,8 @@ sort {{documents}}/{{fruits}} | uniq -c | sort -rn
 ```
 
 一步一步地读：先对水果排序，再统计每种水果有多少个（`uniq -c`），最后按数字排序，最大的排在最前面（`sort -rn`）。
+
+![管道中每一步的输出](images/pipeline.webp "每个管道都把一个命令的 stdout 送到下一个命令的 stdin：sort 把相同的水果排在一起，uniq -c 统计个数，sort -rn 把最常见的排在最前面。")
 
 `/etc` 中有多少个文件和目录？用管道数一数：
 

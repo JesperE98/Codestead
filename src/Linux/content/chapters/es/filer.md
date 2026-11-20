@@ -100,6 +100,8 @@ rm -r {{documents}}-backup
 `rm -r` elimina el directorio y todo lo que hay dentro.
 ```
 
+![Lo que hacen cp, mv y rm](images/file-ops.webp "cp crea un segundo archivo, mv cambia el nombre de un archivo o lo mueve a un directorio, y rm lo borra para siempre.")
+
 ## Comodines
 
 La shell puede expandir patrones en varios nombres de archivo antes de que se
@@ -136,6 +138,8 @@ Cada `?` es exactamente un carácter, así que el nombre antes del punto debe
 tener seis caracteres. `frutas` y `server` los tienen; `calificaciones` es más
 largo.
 ```
+
+![Cómo expande la shell un patrón](images/glob.webp "La shell sustituye el patrón por los nombres de archivo que coinciden antes de que se ejecute ls. La tabla muestra qué archivos de práctica coinciden con tres patrones.")
 
 ## Espacios en los nombres de archivo
 

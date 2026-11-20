@@ -100,6 +100,8 @@ Qual comando mostra todas as linhas do `server.log` que **não** contêm `INFO`?
 - [x] `grep -v INFO {{documents}}/server.log`
 ```
 
+![As linhas que head, tail e grep escolhem](images/log-lines.webp "head mostra as primeiras linhas do server.log, tail as últimas, e grep WARN as linhas que contêm WARN – não a que tem warn em minúsculas.")
+
 ## Ordenando – `sort` e `uniq`
 
 O `sort` ordena linhas em ordem alfabética (`-n` para números, `-r` para ordem
@@ -116,6 +118,8 @@ Por que o `uniq` quase sempre é usado depois do `sort`?
 - [x] O `uniq` só remove as linhas idênticas à linha imediatamente acima, então as linhas iguais precisam estar uma ao lado da outra
 - [ ] O `sort` remove as duplicatas e o `uniq` as coloca de volta
 ```
+
+![uniq sem e com sort](images/sort-uniq.webp "Sozinho, o uniq não remove nada, porque linhas iguais não estão uma ao lado da outra. Depois do sort elas estão, e o uniq mantém uma de cada.")
 
 ## Recortando campos – `cut`
 
@@ -136,6 +140,8 @@ qual campo manter. Aqui estão as matérias – o campo 2 – do arquivo CSV:
 ```sh
 cut -d, -f2 ~/{{documents}}/{{grades}}
 ```
+
+![cut pega o campo 2](images/cut-fields.webp "-d, divide cada linha nas vírgulas, e -f2 fica com o segundo campo.")
 
 No `/etc/passwd`, os campos são separados por dois-pontos e o campo 1 é o nome
 de usuário, então `cut -d: -f1 /etc/passwd` lista todos os usuários.

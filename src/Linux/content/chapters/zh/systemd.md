@@ -114,6 +114,8 @@ Failed to start myserver.service: Interactive authentication required.
 | `systemctl enable --now X` | 两者同时进行。 |
 | `systemctl disable X` | 开机时不启动（加上 `--now` 还会把它停止）。 |
 
+![start 与 enable](images/start-enable.webp "对于一个已停止的服务：start 让它现在运行，但重启之后就不运行了；enable 让它开机时启动，但现在不启动；enable --now 两者都做。")
+
 `enable` 会在一个目录中创建一个链接，这个目录以单元文件 `[Install]` 部分中指定的 target 命名，通常是 `multi-user.target.wants`：
 
 ```text
@@ -217,6 +219,8 @@ journal 中的每一行都有一个**优先级**（priority）。`-p` 会显示�
 `-p` 会显示你选择的优先级*以及所有更严重的级别*——也就是数字相同或更小的所有级别（`warning` 是 4）。
 ```
 
+![journal 的优先级](images/journal-priorities.webp "-p 显示你选择的优先级以及所有更严重的优先级，也就是编号更小的那些：-p err 显示 0 到 3，-p warning 显示 0 到 4。")
+
 ## 排查无法启动的服务
 
 有人在这台计算机上设置了 **reportd** 服务，但出了点问题。通常的排查步骤如下：
@@ -307,6 +311,8 @@ sudo systemctl daemon-reload
 ---
 `/etc/systemd/system` 中的文件优先，而且软件包更新时它们不会被覆盖。`daemon-reload` 让 systemd 重新加载修改过的单元文件。
 ```
+
+![单元文件放在哪里](images/unit-files.webp "软件包把单元文件放在 /usr/lib/systemd/system；你自己的放在 /etc/systemd/system，并且优先级更高。enable 会在 multi-user.target.wants 中创建一个链接，systemd 开机时会启动其中的单元。")
 
 ## 服务都叫什么名字？
 

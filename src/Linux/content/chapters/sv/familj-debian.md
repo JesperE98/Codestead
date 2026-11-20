@@ -59,6 +59,8 @@ Vad gör `sudo apt update`?
 nya versionerna.
 ```
 
+![apt update och apt upgrade](images/apt-update-upgrade.webp "apt update hämtar bara listan över vilka versioner som finns till paketlistan. apt upgrade installerar sedan de nya versionerna – här en ny version av bash.")
+
 ## Installera och ta bort
 
 ```sh
@@ -157,6 +159,8 @@ därifrån?
 du göra det själv.
 ```
 
+![Vad som händer när du lägger till ett PPA](images/ppa-sources.webp "add-apt-repository skapar en fil i /etc/apt/sources.list.d som pekar apt mot PPA:t. apt update läser alla filer där, och sedan finns moonphase också i paketlistan.")
+
 Titta på filen:
 
 ```sh
@@ -187,6 +191,8 @@ apt policy moonphase
 prioritet och `100` betyder "det som redan är installerat". Finns samma paket
 i flera förråd tar apt den högsta versionen – så ett PPA kan alltså ersätta
 ett av distributionens egna paket med sin egen version.
+
+![Utskriften från apt policy moonphase](images/apt-policy.webp "De tre stjärnorna markerar den installerade versionen, 500 är PPA:ts prioritet och 100 står för det som redan är installerat.")
 
 ```quiz
 Samma paket finns både i distributionens förråd och i ett PPA som du har lagt
