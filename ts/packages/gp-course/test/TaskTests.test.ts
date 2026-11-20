@@ -1,43 +1,28 @@
 // TaskTests.cs: every task of every chapter in every API – starting from the chapter's project and applying the tasks'
 // solutions in order, each task is solved by its own solution, and not before. The end result is the chapter's
-// solution/. Heavy: CI runs the parts in parallel jobs (CODESTEAD_GP_PARTS="lighting,pbr"); for a quick run
-// CODESTEAD_GP_CHAPTERS="textures,camera". A case whose API's reader is not registered yet is skipped.
+// solution/. Heavy: CI runs them in parallel jobs (CODESTEAD_GP_PARTS="lighting,pbr", CODESTEAD_GP_CHAPTERS="bloom" or
+// "!bloom,!ssao", see TaskSelection.ts); for a quick run CODESTEAD_GP_CHAPTERS="textures,camera". A case whose API's
+// reader is not registered yet is skipped.
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { Apis, NoteLevel, Simulator } from "@codestead/gp-gpu";
 import { describe, expect } from "vitest";
 import { CheckContext, Edits, GpCourse, TaskChecks } from "../src/index.js";
 import { Repo, itNeeds } from "./Repo.js";
+import { lessonsToTest } from "./TaskSelection.js";
 
 /** A whole chapter in one API can take minutes (the frames of every step, several times). */
 const Timeout = 60 * 60 * 1000;
 
-function envSet(name: string): ReadonlySet<string> | null {
-  const v = process.env[name];
-  return v !== undefined && v.length > 0 ? new Set(v.split(",").map((s) => s.trim()).filter((s) => s.length > 0)) : null;
-}
-
-/** The course parts to test, from CODESTEAD_GP_PARTS ("lighting,pbr"); unset: all. */
-export const partsToTest = (): ReadonlySet<string> | null => envSet("CODESTEAD_GP_PARTS");
-
-/** For a quick run while writing a chapter: CODESTEAD_GP_CHAPTERS ("textures,camera"); unset: every chapter. */
-export const chaptersToTest = (): ReadonlySet<string> | null => envSet("CODESTEAD_GP_CHAPTERS");
-
-function lessons() {
-  const parts = partsToTest();
-  const only = chaptersToTest();
-  return GpCourse.chapters.filter((c) => c.isLesson && (parts === null || parts.has(c.part)) && (only === null || only.has(c.id)));
-}
-
 function chaptersAndApis(): [string, string][] {
   const data: [string, string][] = [];
-  for (const api of Apis.all) for (const chapter of lessons()) if (existsSync(join(Repo.content, "projects", api.id, chapter.id))) data.push([api.id, chapter.id]);
+  for (const api of Apis.all) for (const chapter of lessonsToTest()) if (existsSync(join(Repo.content, "projects", api.id, chapter))) data.push([api.id, chapter]);
   return data;
 }
 
 function chaptersWithExercises(): [string, string][] {
   const data: [string, string][] = [];
-  for (const api of Apis.all) for (const chapter of lessons()) if (GpCourse.exercises(chapter.id, api.id).length > 0) data.push([api.id, chapter.id]);
+  for (const api of Apis.all) for (const chapter of lessonsToTest()) if (GpCourse.exercises(chapter, api.id).length > 0) data.push([api.id, chapter]);
   return data;
 }
 
