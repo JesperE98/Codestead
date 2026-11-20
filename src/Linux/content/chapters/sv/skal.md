@@ -44,6 +44,8 @@ bash, zsh, `dash` (som är `/bin/sh` i Debian och Ubuntu) och `ash` (i små
 system som Alpine). fish är medvetet **inte** POSIX-kompatibelt – det är det
 som gör det enklare, men också annorlunda.
 
+![sh, bash, zsh och fish på en tidslinje](images/shell-family.webp "bash och zsh härstammar från Bourne-skalet sh och är POSIX-kompatibla. fish kom senare och har en egen syntax.")
+
 ## Vilka skal finns installerade?
 
 Filen `/etc/shells` listar skalen som får användas som inloggningsskal:
@@ -117,6 +119,8 @@ talar om ditt *inloggningsskal*, inte vilket skal du råkar köra just nu.
 ```sh
 echo $SHELL
 ```
+
+![zsh som körs inuti bash](images/nested-shells.webp "zsh startades från bash och körs inuti det. $0 talar om vilket skal du kör just nu, $SHELL ditt inloggningsskal – som fortfarande är bash.")
 
 ### Det mesta är som i bash
 
@@ -457,6 +461,8 @@ innehåller raden `count=3`. Vad händer?
 ---
 Raden `#!` bestämmer vilket skal som kör skriptet. fish startar det bara.
 ```
+
+![Raden #! väljer skalet](images/shebang.webp "fish startar bara skriptet. Raden #!/bin/bash gör att bash kör det, så bash-syntax fungerar fast du sitter i fish.")
 
 ## Byta standardskal med chsh
 

@@ -43,6 +43,8 @@ shell इस्तेमाल करें, वे एक जैसे का�
 जैसे छोटे systems पर)। fish जान-बूझकर POSIX-compatible **नहीं** है – यही उसे आसान
 बनाता है, लेकिन अलग भी।
 
+![Time line पर sh, bash, zsh और fish](images/shell-family.webp "bash और zsh, Bourne shell sh से निकले हैं और POSIX-compatible हैं। fish बाद में आया और उसका अपना syntax है।")
+
 ## कौन-से shells installed हैं?
 
 File `/etc/shells` उन shells की list है जिन्हें login shell के रूप में इस्तेमाल
@@ -117,6 +119,8 @@ variable आपका *login shell* बताता है, न कि वह sh
 ```sh
 echo $SHELL
 ```
+
+![bash के अंदर चलता zsh](images/nested-shells.webp "zsh को bash से start किया गया और वह उसके अंदर चलता है। $0 बताता है कि आप इस समय कौन-सा shell चला रहे हैं, और $SHELL आपका login shell – जो अब भी bash है।")
 
 ### ज़्यादातर चीज़ें bash की तरह ही चलती हैं
 
@@ -453,6 +457,8 @@ Script fish में चलता है, भले ही वहाँ `name=K
 ---
 `#!` पंक्ति तय करती है कि स्क्रिप्ट कौन-सा शेल चलाएगा। fish उसे सिर्फ़ शुरू करता है।
 ```
+
+![#! वाली line shell चुनती है](images/shebang.webp "fish सिर्फ़ script को start करता है। #!/bin/bash वाली line की वजह से bash उसे चलाता है, इसलिए fish में बैठे होने पर भी bash का syntax काम करता है।")
 
 ## chsh से अपना default shell बदलना
 

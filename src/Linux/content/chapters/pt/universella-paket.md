@@ -29,6 +29,8 @@ Uma **sandbox** (caixa de areia) significa que o programa só alcança aquilo
 que recebeu permissão para acessar, por exemplo a rede ou a sua pasta de
 downloads, em vez do seu diretório pessoal inteiro.
 
+![Um programa com e sem sandbox](images/sandbox.webp "Um programa dos pacotes da distribuição ou uma AppImage alcança o seu diretório pessoal inteiro. Um Flatpak ou um snap na sua sandbox só alcança aquilo que recebeu permissão para acessar – aqui, a rede e a pasta de downloads.")
+
 ```quiz
 Qual formato é atualizado automaticamente em segundo plano?
 - [ ] Flatpak
@@ -134,6 +136,8 @@ O que acontece quando você instala um Flatpak com `--user`?
 Lembre-se de que a instalação de usuário tem os próprios remotes – o Flathub
 também precisa ser adicionado com `--user`.
 ```
+
+![Flatpak para o sistema inteiro ou só para você](images/flatpak-user.webp "Sem opções, um Flatpak vai para /var/lib/flatpak e todos os usuários o veem. Com --user, ele vai para o seu diretório pessoal, só você o vê, e a instalação de usuário tem os seus próprios remotes.")
 
 ### Atualizando e removendo
 

@@ -62,6 +62,8 @@ A letra maiúscula é o padrão. Na família Debian, o apt pergunta `[Y/n]`,
 então lá o Enter significa sim.
 ```
 
+![O Enter responde com a letra maiúscula](images/yes-no-default.webp "A letra maiúscula é o que o Enter responde. O apt pergunta Y/n, então o Enter continua a instalação; o dnf pergunta y/N, então o Enter a cancela.")
+
 O `dnf remove pacote` remove um pacote de novo.
 
 ## Atualizando o sistema
@@ -184,6 +186,8 @@ Qual é a diferença entre `dnf copr disable` e `dnf copr remove`?
 - [ ] O `disable` também desinstala os pacotes; o `remove` não
 - [ ] Não há diferença
 ```
+
+![dnf copr enable, disable e remove](images/copr-states.webp "O enable cria o arquivo do repositório em /etc/yum.repos.d com enabled=1. O disable mantém o arquivo, mas define enabled=0, então o dnf repolist não mostra mais o repositório, e o remove apaga o arquivo.")
 
 ### RPM Fusion
 

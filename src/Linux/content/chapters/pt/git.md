@@ -148,6 +148,8 @@ Um commit salva o que está no índice. As outras três alterações ficam no
 diretório de trabalho até você adicioná-las.
 ```
 
+![Diretório de trabalho, índice e histórico](images/git-areas.webp "O git add coloca o README.md alterado no índice, e o git commit salva o índice como um commit novo no histórico, em .git.")
+
 ## O `git status` é a sua bússola
 
 O comando que você vai executar com mais frequência é o `git status`. Ele diz
@@ -258,6 +260,8 @@ nova.
 O `git diff` compara o diretório de trabalho com o índice – ou seja, o que
 você *ainda não* adicionou. Para ver o que está no índice esperando o commit,
 digite `git diff --staged`.
+
+![O que o git diff compara](images/git-diff.webp "O git diff compara o diretório de trabalho com o índice. O git diff --staged compara o índice com o commit mais recente.")
 
 Adicione a alteração e faça o commit. A opção `-a` executa `git add` em todos
 os arquivos que o git já acompanha, então basta um passo:
@@ -466,6 +470,8 @@ Fast-forward
 Então o git só precisa mover `main` para a frente, até o mesmo commit de
 `{{newDesign}}`.
 
+![Branches como etiquetas em commits](images/git-branches.webp "Um branch é uma etiqueta que aponta para um commit. Depois do git switch main, o diretório de trabalho fica como o commit mais recente do main, e o git merge avança o main até o commit do branch – um fast-forward.")
+
 Se os dois branches têm commits novos, o git faz um **merge de três vias**
 (*three-way merge*): ele compara os dois branches com o ancestral comum e cria
 um novo *commit de merge* com dois pais. `git log --oneline --graph --all`
@@ -623,6 +629,8 @@ O remoto normalmente se chama `origin`, e um fluxo de trabalho típico é
 assim: `git pull` quando você começa, depois editar, `git add` e
 `git commit` – e por fim `git push`. O GitHub e o GitLab usam uma chave SSH ou
 um token de acesso para fazer o seu login, não uma senha.
+
+![O seu repositório e o seu remote](images/git-remote.webp "O origin só tem o histórico, sem diretório de trabalho. O git push envia os seus commits novos para lá, o git fetch só busca commits novos para o .git, e o git pull também os mescla no seu diretório de trabalho.")
 
 Tudo isso precisa de rede, e o simulador não tem. Mas `clone`, `push` e
 `pull` funcionam igualmente bem entre dois repositórios no mesmo computador,

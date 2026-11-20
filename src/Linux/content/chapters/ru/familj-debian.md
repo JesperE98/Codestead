@@ -60,6 +60,8 @@ sudo apt update && sudo apt upgrade
 `apt upgrade`.
 ```
 
+![apt update и apt upgrade](images/apt-update-upgrade.webp "apt update только загружает список доступных версий. Затем apt upgrade устанавливает новые версии – здесь новую версию bash.")
+
 ## Установка и удаление
 
 ```sh
@@ -160,6 +162,8 @@ sudo add-apt-repository ppa:lunatool/moonphase
 сами, это нужно сделать самостоятельно.
 ```
 
+![Что происходит при добавлении PPA](images/ppa-sources.webp "add-apt-repository создаёт в /etc/apt/sources.list.d файл, который указывает apt на PPA. apt update читает все файлы оттуда, и после этого в списке пакетов есть и moonphase.")
+
 Посмотрите на файл:
 
 ```sh
@@ -192,6 +196,8 @@ apt policy moonphase
 пакет есть в нескольких репозиториях, apt выбирает самую высокую версию –
 так что PPA может заменить один из собственных пакетов дистрибутива своей
 версией.
+
+![Вывод apt policy moonphase](images/apt-policy.webp "Три звёздочки отмечают установленную версию, 500 – это приоритет PPA, а 100 означает то, что уже установлено.")
 
 ```quiz
 Один и тот же пакет есть и в репозитории дистрибутива, и в добавленном вами

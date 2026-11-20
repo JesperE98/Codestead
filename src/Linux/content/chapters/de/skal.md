@@ -45,6 +45,8 @@ soll. Ein Skript, das nur POSIX-Funktionen benutzt, läuft in jeder
 `/bin/sh` ist) und `ash` (auf kleinen Systemen wie Alpine). fish ist bewusst
 **nicht** POSIX-kompatibel – genau das macht es einfacher, aber auch anders.
 
+![sh, bash, zsh und fish auf einer Zeitleiste](images/shell-family.webp "bash und zsh stammen von der Bourne-Shell sh ab und sind POSIX-kompatibel. fish kam später und hat eine eigene Syntax.")
+
 ## Welche Shells sind installiert?
 
 Die Datei `/etc/shells` listet die Shells auf, die als Login-Shell benutzt
@@ -122,6 +124,8 @@ zufällig ausführst.
 ```sh
 echo $SHELL
 ```
+
+![zsh läuft innerhalb von bash](images/nested-shells.webp "zsh wurde aus bash gestartet und läuft darin. $0 verrät dir die Shell, die gerade läuft, $SHELL deine Login-Shell – und die ist immer noch bash.")
 
 ### Das meiste funktioniert wie in bash
 
@@ -471,6 +475,8 @@ die Zeile `count=3` enthält. Was passiert?
 Die `#!`-Zeile entscheidet, welche Shell das Skript ausführt. fish startet es
 nur.
 ```
+
+![Die #!-Zeile wählt die Shell](images/shebang.webp "fish startet das Skript nur. Die Zeile #!/bin/bash sorgt dafür, dass bash es ausführt, also funktioniert bash-Syntax, obwohl du in fish sitzt.")
 
 ## Die Standard-Shell mit chsh ändern
 

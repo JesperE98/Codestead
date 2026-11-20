@@ -61,6 +61,8 @@ Que fait `sudo apt update` ?
 les nouvelles versions.
 ```
 
+![apt update et apt upgrade](images/apt-update-upgrade.webp "apt update télécharge seulement la liste des versions disponibles. apt upgrade installe ensuite les nouvelles versions – ici une nouvelle version de bash.")
+
 ## Installer et supprimer
 
 ```sh
@@ -170,6 +172,8 @@ installer des paquets ?
 vous-même, vous devez le faire vous-même.
 ```
 
+![Ce que fait l'ajout d'un PPA](images/ppa-sources.webp "add-apt-repository crée dans /etc/apt/sources.list.d un fichier qui indique le PPA à apt. apt update lit tous les fichiers de ce répertoire, et la liste des paquets contient alors aussi moonphase.")
+
 Regardez le fichier :
 
 ```sh
@@ -201,6 +205,8 @@ apt policy moonphase
 `100` signifie « ce qui est déjà installé ». Si le même paquet se trouve dans
 plusieurs dépôts, apt choisit la version la plus élevée – un PPA peut donc
 remplacer l'un des paquets de la distribution par sa propre version.
+
+![La sortie de apt policy moonphase](images/apt-policy.webp "Les trois étoiles marquent la version installée, 500 est la priorité du PPA et 100 désigne ce qui est déjà installé.")
 
 ```quiz
 Le même paquet se trouve à la fois dans le dépôt de la distribution et dans un

@@ -57,6 +57,8 @@ sudo pacman -Syu
 `-Syu` betyder: synkronisera (`S`), uppdatera databasen (`y`) och uppgradera
 allt (`u`). Arch är en *rolling release*, så det här kör du ofta.
 
+![Hur pacman -Syu och pacman -Rs ska läsas](images/pacman-options.webp "Den stora bokstaven är åtgärden och de små är tillägg: -Syu synkar, uppdaterar databasen och uppgraderar allt, och -Rs tar bort ett paket tillsammans med beroenden som inget annat behöver.")
+
 > **Viktigt!** Kör aldrig bara `pacman -Sy` följt av `pacman -S paket`. Då kan
 > det nya paketet kräva nyare bibliotek än de du har – en så kallad
 > *partial upgrade* som kan göra systemet trasigt. Använd alltid `-Syu`.
@@ -69,6 +71,8 @@ Varför ska du inte köra `pacman -Sy` och sedan `pacman -S paket`?
 ---
 Uppgradera alltid allt på en gång med `-Syu`.
 ```
+
+![En partial upgrade jämförd med -Syu](images/partial-upgrade.webp "Efter -Sy känner databasen till de nyaste versionerna, så -S installerar en ny htop som behöver en nyare ncurses än den du har. -Syu uppgraderar allt på en gång.")
 
 ## Installera och ta bort
 
@@ -167,6 +171,8 @@ makepkg -si
 `.pkg.tar.zst`-fil. `-s` installerar beroenden som saknas och `-i`
 installerar paketet med pacman när det är klart. Kör **inte** makepkg med
 sudo – det vägrar köras som root, och använder själv sudo när det behövs.
+
+![Från AUR till ett installerat paket](images/aur-build.webp "git clone hämtar bara byggreceptet. makepkg hämtar källkoden och bygger en .pkg.tar.zst-fil på din dator, och -i installerar den med pacman.")
 
 ```sh
 ls

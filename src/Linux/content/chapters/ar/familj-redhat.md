@@ -59,6 +59,8 @@ sudo dnf install htop
 Enter هناك يعني نعم.
 ```
 
+![يجيب Enter بالحرف الكبير](images/yes-no-default.webp "الحرف الكبير هو الجواب الذي يعطيه Enter. يسأل apt بـ Y/n، فيتابع Enter التثبيت؛ ويسأل dnf بـ y/N، فيلغيه Enter.")
+
 يزيل `dnf remove package` الحزمة مرة أخرى.
 
 ## ترقية النظام
@@ -170,6 +172,8 @@ dnf copr list
 - [ ] يزيل `disable` الحزم أيضًا، أما `remove` فلا
 - [ ] لا يوجد فرق
 ```
+
+![dnf copr enable وdisable وremove](images/copr-states.webp "ينشئ enable ملف المستودع في /etc/yum.repos.d مع enabled=1. ويُبقي disable الملف لكنه يضبط enabled=0، فلا يعود dnf repolist يعرض المستودع، أما remove فيحذف الملف.")
 
 ### RPM Fusion
 

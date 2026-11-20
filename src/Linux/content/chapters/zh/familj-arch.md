@@ -51,6 +51,8 @@ sudo pacman -Syu
 
 `-Syu` 的意思是：同步（`S`）、刷新数据库（`y`）并升级所有软件（`u`）。Arch 是*滚动发布*（rolling release）的，所以你会经常运行这条命令。
 
+![怎样读懂 pacman -Syu 和 pacman -Rs](images/pacman-options.webp "大写字母表示操作，小写字母是修饰符：-Syu 表示同步、刷新数据库并升级所有软件包，-Rs 表示删除软件包，同时删除不再被其他软件需要的依赖。")
+
 > **重要！** 千万不要只运行 `pacman -Sy`，然后接着运行 `pacman -S package`。这样一来，新软件包可能需要比你现有版本更新的库——这就是所谓的*部分升级*（partial upgrade），可能会搞坏你的系统。请始终使用 `-Syu`。
 
 ```quiz
@@ -61,6 +63,8 @@ sudo pacman -Syu
 ---
 请始终用 `-Syu` 一次性升级所有软件。
 ```
+
+![部分升级与 -Syu 的对比](images/partial-upgrade.webp "运行 -Sy 之后，数据库知道了最新的版本，于是 -S 安装了一个新的 htop，它需要比你现有版本更新的 ncurses。-Syu 则会一次性升级所有软件包。")
 
 ## 安装和删除
 
@@ -137,6 +141,8 @@ makepkg -si
 ```
 
 `makepkg` 读取 `PKGBUILD`，下载源代码，构建它，并打包成一个 `.pkg.tar.zst` 文件。`-s` 会安装缺失的依赖，`-i` 则在构建完成后用 pacman 安装这个软件包。**不要**用 sudo 运行 makepkg——它拒绝以 root 身份运行，并会在需要时自己调用 sudo。
+
+![从 AUR 到已安装的软件包](images/aur-build.webp "git clone 只获取构建脚本。makepkg 下载源代码，在你的计算机上构建出一个 .pkg.tar.zst 文件，-i 再用 pacman 安装它。")
 
 ```sh
 ls

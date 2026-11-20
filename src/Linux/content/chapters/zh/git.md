@@ -109,6 +109,8 @@ ls .git
 提交保存的是暂存区中的内容。另外三个修改会留在工作区中，直到你添加它们。
 ```
 
+![工作区、暂存区和历史](images/git-areas.webp "git add 把修改过的 README.md 放进暂存区，git commit 再把暂存区保存为 .git 历史中的一个新提交。")
+
 ## `git status` 是你的指南针
 
 你最常运行的命令就是 `git status`。它会告诉你每一处修改所在的位置——而且经常会建议你下一步该做什么。宁可多运行几次，也不要太少！
@@ -204,6 +206,8 @@ index eb0e5f5..cb4c5c5 100644
 以 `+` 开头的行是新增的（绿色），以 `-` 开头的行是被删除的（红色），其余的行作为上下文显示。`@@ -1,3 +1,4 @@` 表示旧版本的第 1–3 行对应新版本的第 1–4 行。
 
 `git diff` 比较的是工作区和暂存区——也就是你*还没有*添加的内容。要查看已经放进暂存区、等待提交的内容，请输入 `git diff --staged`。
+
+![git diff 比较的是什么](images/git-diff.webp "git diff 比较工作区和暂存区。git diff --staged 比较暂存区和最近一次提交。")
 
 添加并提交这项修改。`-a` 选项会对 git 已经在跟踪的所有文件运行 `git add`，所以一步就能完成：
 
@@ -366,6 +370,8 @@ Fast-forward
 
 *Fast-forward*（快进）表示自从创建分支以来，`main` 没有发生变化。这时 git 只需要把 `main` 向前移动到和 `{{newDesign}}` 相同的提交即可。
 
+![分支就是指向提交的标签](images/git-branches.webp "分支是一个指向某个提交的标签。执行 git switch main 之后，工作区变成 main 最新提交的样子；git merge 则把 main 向前移动到该分支的提交上——这就是快进（fast-forward）。")
+
 如果两个分支都有新的提交，git 就会做**三方合并**（three-way merge）：它把两个分支和它们的共同祖先进行比较，并创建一个新的、有两个父提交的*合并提交*（merge commit）。`git log --oneline --graph --all` 会显示历史是如何分叉、又如何重新汇合的：
 
 ```text
@@ -492,6 +498,8 @@ git commit -m "忽略机密文件和日志"
 | `git remote -v` | 列出远程仓库 |
 
 远程仓库通常叫 `origin`，典型的工作流程是这样的：开始工作时先 `git pull`，然后编辑、`git add` 和 `git commit`——最后 `git push`。GitHub 和 GitLab 用 SSH 密钥或访问令牌（access token）来登录，而不是密码。
+
+![你的仓库和它的远程仓库](images/git-remote.webp "origin 只有历史，没有工作区。git push 把你的新提交发送过去，git fetch 只把新提交取到 .git 里，git pull 则还会把它们合并到你的工作区。")
 
 这一切都需要网络，而模拟器没有网络。不过 `clone`、`push` 和 `pull` 在同一台计算机上的两个仓库之间同样能用，所以你还是可以试一试。把你的项目克隆到一个新目录中：
 

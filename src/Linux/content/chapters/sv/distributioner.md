@@ -11,6 +11,8 @@ Efter det här kapitlet kommer ett kapitel för varje familj:
 (dnf). Vart och ett körs alltid på en distribution från den familjen, så du
 kan göra alla tre.
 
+![Distributionernas tre familjer](images/distro-families.webp "Varje familj har sin egen pakethanterare och sitt eget paketformat. Ubuntu bygger på Debian, Linux Mint på Ubuntu, och Rocky Linux och AlmaLinux är kloner av RHEL, som bygger på Fedora.")
+
 ## Vad är samma överallt?
 
 - **Linuxkärnan** – men i olika versioner.
@@ -69,6 +71,8 @@ Vilken distribution har inga versioner alls, utan uppdateras hela tiden
 - [ ] Fedora
 ```
 
+![Tre sätt att släppa versioner på en tidslinje](images/release-models.webp "Ubuntu LTS kommer vartannat år, Fedora var sjätte månad, och Arch har inga versioner alls – bara en jämn ström av uppdateringar.")
+
 ## Vilken distribution kör jag?
 
 Filen `/etc/os-release` finns i alla moderna distributioner och berättar namn
@@ -114,6 +118,8 @@ installerar det med pakethanteraren?
 - [x] Pakethanteraren installerar beroendet automatiskt
 - [ ] Paketet installeras, men fungerar inte förrän du laddat ner det andra
 ```
+
+![Förråd, pakethanterare och dator](images/packages.webp "Pakethanteraren hämtar programmet från distributionens signerade förråd – och beroendet följer med: htop behöver biblioteket ncurses, så båda installeras.")
 
 ### Samma program, olika namn
 

@@ -30,6 +30,8 @@ Un **bac à sable** (*sandbox*) signifie que le programme ne peut accéder qu'à
 ce qui lui a été autorisé, par exemple le réseau ou votre dossier de
 téléchargements, au lieu de tout votre répertoire personnel.
 
+![Un programme avec et sans bac à sable](images/sandbox.webp "Un programme issu des paquets de la distribution ou une AppImage accède à tout votre répertoire personnel. Un Flatpak ou un snap dans son bac à sable n'accède qu'à ce qui lui a été autorisé – ici le réseau et le dossier de téléchargements.")
+
 ```quiz
 Quel format est mis à jour automatiquement en arrière-plan ?
 - [ ] Flatpak
@@ -136,6 +138,8 @@ Que se passe-t-il quand vous installez un Flatpak avec `--user` ?
 N'oubliez pas que l'installation utilisateur a ses propres remotes – Flathub
 doit aussi être ajouté avec `--user`.
 ```
+
+![Flatpak pour tout le système ou juste pour vous](images/flatpak-user.webp "Sans option, un Flatpak atterrit dans /var/lib/flatpak et tous les utilisateurs le voient. Avec --user, il atterrit dans votre répertoire personnel, vous seul le voyez, et l'installation utilisateur a ses propres remotes.")
 
 ### Mettre à jour et supprimer
 

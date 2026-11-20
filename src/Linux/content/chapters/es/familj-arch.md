@@ -59,6 +59,8 @@ sudo pacman -Syu
 actualizar todo (`u`). Arch es una *rolling release*, así que lo ejecutarás a
 menudo.
 
+![Cómo se leen pacman -Syu y pacman -Rs](images/pacman-options.webp "La mayúscula es la operación y las minúsculas son modificadores: -Syu sincroniza, refresca la base de datos y lo actualiza todo, y -Rs desinstala un paquete junto con las dependencias que ya no necesita nadie.")
+
 > **¡Importante!** Nunca ejecutes solo `pacman -Sy` seguido de
 > `pacman -S paquete`. El paquete nuevo podría necesitar bibliotecas más
 > nuevas que las que tienes: es lo que se llama una *actualización parcial*
@@ -72,6 +74,8 @@ menudo.
 ---
 Actualiza siempre todo a la vez con `-Syu`.
 ```
+
+![Una actualización parcial frente a -Syu](images/partial-upgrade.webp "Después de -Sy, la base de datos conoce las versiones más nuevas, así que -S instala un htop nuevo que necesita un ncurses más nuevo que el que tienes. -Syu lo actualiza todo a la vez.")
 
 ## Instalar y desinstalar
 
@@ -174,6 +178,8 @@ en un archivo `.pkg.tar.zst`. `-s` instala las dependencias que falten e `-i`
 instala el paquete con pacman cuando termina. **No** ejecutes makepkg con
 sudo: se niega a ejecutarse como root y usa sudo por su cuenta cuando hace
 falta.
+
+![Del AUR a un paquete instalado](images/aur-build.webp "git clone solo descarga la receta de compilación. makepkg descarga el código fuente y compila un archivo .pkg.tar.zst en tu ordenador, e -i lo instala con pacman.")
 
 ```sh
 ls

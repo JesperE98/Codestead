@@ -62,6 +62,8 @@ La letra mayúscula es la respuesta por defecto. En la familia Debian, apt
 pregunta `[Y/n]`, así que allí Enter significa que sí.
 ```
 
+![Enter responde con la mayúscula](images/yes-no-default.webp "La mayúscula es lo que responde Enter. apt pregunta Y/n, así que Enter continúa con la instalación; dnf pregunta y/N, así que Enter la cancela.")
+
 `dnf remove paquete` vuelve a desinstalar un paquete.
 
 ## Actualizar el sistema
@@ -183,6 +185,8 @@ actualizaciones.
 - [ ] `disable` también desinstala los paquetes; `remove` no
 - [ ] No hay ninguna diferencia
 ```
+
+![dnf copr enable, disable y remove](images/copr-states.webp "enable crea el archivo del repositorio en /etc/yum.repos.d con enabled=1. disable conserva el archivo pero pone enabled=0, así que dnf repolist ya no muestra el repositorio, y remove borra el archivo.")
 
 ### RPM Fusion
 
