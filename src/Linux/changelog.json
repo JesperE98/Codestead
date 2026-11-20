@@ -4,31 +4,31 @@
     "date": "2026-11-20",
     "changes": {
       "en": [
-        "**Pictures in the chapters**: the first chapters – from Welcome to Redirection and pipes – now have pictures that explain the hard parts, such as the directory tree, what the columns of ls -l mean, how the shell expands wildcards and where stdout and stderr go. Click a picture to see it larger.",
+        "**Pictures in every chapter**: 65 pictures now explain the hard parts of the course – from the directory tree, the columns of ls -l and where stdout and stderr go, through permissions, links, processes and archives, to package managers, systemd, networks, cron and git. Many show the simulator's real output, and they come in your language. Click a picture to see it larger.",
         "**One-click updates for the Linux packages**: installed as a .deb, .rpm or Arch package, Codestead Linux now updates itself with one click – it downloads the new version, checks it and installs it with your system's package manager, which asks for your password."
       ],
       "sv": [
-        "**Bilder i kapitlen**: de första kapitlen – från Välkommen till Omdirigering och pipes – har nu bilder som förklarar det svåra, som katalogträdet, vad kolumnerna i ls -l betyder, hur skalet expanderar jokertecken och vart stdout och stderr tar vägen. Klicka på en bild för att se den större.",
+        "**Bilder i alla kapitel**: 65 bilder förklarar nu kursens svåra delar – från katalogträdet, kolumnerna i ls -l och vart stdout och stderr tar vägen, via rättigheter, länkar, processer och arkiv, till pakethanterare, systemd, nätverk, cron och git. Många visar simulatorns riktiga utdata, och de finns på ditt språk. Klicka på en bild för att se den större.",
         "**Uppdatering med ett klick för Linuxpaketen**: installerad som .deb-, .rpm- eller Arch-paket uppdaterar Codestead Linux nu sig själv med ett klick – den laddar ner den nya versionen, kontrollerar den och installerar den med systemets pakethanterare, som frågar efter ditt lösenord."
       ],
       "de": [
-        "**Bilder in den Kapiteln**: Die ersten Kapitel – vom Willkommen bis zu Umleitungen und Pipes – haben jetzt Bilder, die das Schwierige erklären, etwa den Verzeichnisbaum, was die Spalten von ls -l bedeuten, wie die Shell Wildcards erweitert und wohin stdout und stderr gehen. Klicke auf ein Bild, um es größer zu sehen.",
+        "**Bilder in allen Kapiteln**: 65 Bilder erklären jetzt die schwierigen Stellen des Kurses – vom Verzeichnisbaum, den Spalten von ls -l und dem Weg von stdout und stderr über Rechte, Links, Prozesse und Archive bis zu Paketmanagern, systemd, Netzwerken, cron und git. Viele zeigen die echte Ausgabe des Simulators, und sie sind in deiner Sprache. Klicke auf ein Bild, um es größer zu sehen.",
         "**Updates mit einem Klick für die Linux-Pakete**: Als .deb-, .rpm- oder Arch-Paket installiert, aktualisiert sich Codestead Linux jetzt mit einem Klick selbst – die neue Version wird heruntergeladen, geprüft und mit der Paketverwaltung deines Systems installiert, die nach deinem Passwort fragt."
       ],
       "fr": [
-        "**Des images dans les chapitres** : les premiers chapitres – de la Bienvenue aux Redirections et pipes – ont désormais des images qui expliquent les points difficiles, comme l'arborescence des répertoires, le sens des colonnes de ls -l, la façon dont le shell développe les caractères génériques et où vont stdout et stderr. Cliquez sur une image pour l'agrandir.",
+        "**Des images dans tous les chapitres** : 65 images expliquent désormais les points difficiles du cours – de l'arborescence des répertoires, des colonnes de ls -l et du chemin de stdout et stderr aux droits, aux liens, aux processus et aux archives, jusqu'aux gestionnaires de paquets, à systemd, aux réseaux, à cron et à git. Beaucoup montrent la vraie sortie du simulateur, et elles sont dans votre langue. Cliquez sur une image pour l'agrandir.",
         "**Mises à jour en un clic pour les paquets Linux** : installé en paquet .deb, .rpm ou Arch, Codestead Linux se met désormais à jour en un clic – la nouvelle version est téléchargée, vérifiée puis installée avec le gestionnaire de paquets de votre système, qui vous demande votre mot de passe."
       ],
       "es": [
-        "**Imágenes en los capítulos**: los primeros capítulos –de la Bienvenida a Redirecciones y pipes– tienen ahora imágenes que explican lo difícil, como el árbol de directorios, qué significan las columnas de ls -l, cómo expande la shell los comodines y adónde van stdout y stderr. Haz clic en una imagen para verla más grande.",
+        "**Imágenes en todos los capítulos**: 65 imágenes explican ahora las partes difíciles del curso: desde el árbol de directorios, las columnas de ls -l y adónde van stdout y stderr, pasando por los permisos, los enlaces, los procesos y los archivos comprimidos, hasta los gestores de paquetes, systemd, las redes, cron y git. Muchas muestran la salida real del simulador, y están en tu idioma. Haz clic en una imagen para verla más grande.",
         "**Actualizaciones con un clic para los paquetes de Linux**: instalado como paquete .deb, .rpm o de Arch, Codestead Linux ahora se actualiza con un clic: descarga la nueva versión, la comprueba y la instala con el gestor de paquetes de tu sistema, que te pide la contraseña."
       ],
       "zh": [
-        "**章节中加入了插图**：前几章（从欢迎到重定向和管道）现在配有解释难点的插图，例如目录树、ls -l 各列的含义、shell 如何展开通配符，以及 stdout 和 stderr 去了哪里。点击插图即可放大查看。",
+        "**每一章都有了插图**：65 张插图讲解课程的难点——从目录树、ls -l 各列的含义、stdout 和 stderr 的去向，到权限、链接、进程和归档，再到包管理器、systemd、网络、cron 和 git。其中许多展示了模拟器的真实输出，并使用你的语言。点击插图即可放大查看。",
         "**Linux 软件包一键更新**：以 .deb、.rpm 或 Arch 软件包安装时，Codestead Linux 现在只需点击一次即可自行更新——下载新版本、校验后用系统的软件包管理器安装，系统会要求输入你的密码。"
       ],
       "ja": [
-        "**章に図が入りました**：最初の章（ようこそ からリダイレクトとパイプまで）に、ディレクトリのツリー、ls -l の各列の意味、シェルによるワイルドカードの展開、stdout と stderr の行き先など、わかりにくい部分を説明する図が付きました。図をクリックすると大きく表示されます。",
+        "**すべての章に図が入りました**：65 枚の図が、コースのわかりにくい部分を説明します。ディレクトリのツリー、ls -l の各列、stdout と stderr の行き先から、権限、リンク、プロセス、アーカイブ、さらにパッケージマネージャー、systemd、ネットワーク、cron、git まで。多くはシミュレーターの実際の出力を使い、あなたの言語で表示されます。図をクリックすると大きく表示されます。",
         "**Linux パッケージをワンクリックで更新**：.deb、.rpm、Arch のパッケージとしてインストールした Codestead Linux が、ワンクリックで自分自身を更新するようになりました。新しいバージョンをダウンロードして検証し、システムのパッケージマネージャーでインストールします（パスワードを求められます）。"
       ]
     }
