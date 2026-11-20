@@ -863,8 +863,9 @@ In Direct3D, texture coordinate v = 0 is the top row of the image, and `TextureF
 it is, top row first. So v must be flipped exactly **once**, and that is what `aiProcess_FlipUVs` does: v becomes
 1 − v. learnopengl's OpenGL program flips twice – `aiProcess_FlipUVs` *and* `stbi_set_flip_vertically_on_load(true)` –
 which only suits its backpack model, whose coordinates are stored the other way round. For our planet, one flip makes
-it upright, with the white pole at the top. (`aiProcess_ConvertToLeftHanded` is not used either: the program keeps
-learnopengl's right-handed maths, `XMMatrixLookAtRH` and `XMMatrixPerspectiveFovRH`.)
+it upright: right below the white cap at the top lies an ocean, with a small round sea to its right.
+(`aiProcess_ConvertToLeftHanded` is not used either: the program keeps learnopengl's right-handed maths,
+`XMMatrixLookAtRH` and `XMMatrixPerspectiveFovRH`.)
 :::
 
 ```quiz
@@ -1324,9 +1325,11 @@ GPU measures by running fragments in 2×2 groups. Inside an `if` whose condition
 on the border between the ring and the planet – some of them don't run the `texture()` call, and the result is
 undefined. Sampling both outside the condition is always correct; for two textures the extra sample is cheap.
 
-Now do the task **material-textures**, then build and run. The planet appears textured: blue oceans, green land and the
-white north pole at the top – the texture is upright – with the beige bands of the ring around it, seen from slightly
-above. This is the picture of learnopengl's `model_loading.cpp`: the diffuse texture only, no lighting.
+Now do the task **material-textures**, then build and run. The planet appears textured: blue oceans, green land and a
+white cap at the top, with the beige bands of the ring around it, seen from slightly above. The texture is upright when
+an ocean lies right below the cap, with a small round sea to its right; upside down, there is land below the cap and a
+long, narrow strait winds down the right side (both poles are white, so the cap alone can't tell). This is the picture
+of learnopengl's `model_loading.cpp`: the diffuse texture only, no lighting.
 
 ```quiz
 The planet and the ring have different diffuse maps, but the whole model is one `vkCmdDrawIndexed`. How does a fragment of the ring get the colour of `rings.png`?
@@ -1406,8 +1409,10 @@ void main()
 ```
 
 Now do the task **draw-model**: `Model::Draw`, and the two lines in `main.cpp`. Build and run: the planet appears,
-textured and unlit – blue oceans, green land, the white north pole at the top – with the beige ring around it, seen
-slightly from above. Its near side passes in front of the planet; behind the planet the depth test hides it.
+textured and unlit – blue oceans, green land, a white cap at the top – with the beige ring around it, seen slightly
+from above. Its near side passes in front of the planet; behind the planet the depth test hides it. The texture is
+upright when an ocean lies right below the cap, with a small round sea to its right; upside down, there is land below
+the cap and a long, narrow strait winds down the right side (both poles are white, so the cap alone can't tell).
 
 ```quiz
 The fragment shader samples only `texture_diffuse1`, yet the planet shows `planet_diffuse.png` and the ring `rings.png`. Why?
@@ -1474,8 +1479,10 @@ float4 PSMain(PSInput input) : SV_TARGET
 ```
 
 Now do the task **draw-model**, then build and run: the planet appears, textured and unlit – blue oceans, green land,
-the white north pole at the top – with the beige ring around it, seen slightly from above. Its near side passes in front
-of the planet; behind the planet the depth test hides it.
+a white cap at the top – with the beige ring around it, seen slightly from above. Its near side passes in front of the
+planet; behind the planet the depth test hides it. The texture is upright when an ocean lies right below the cap, with a
+small round sea to its right; upside down, there is land below the cap and a long, narrow strait winds down the right
+side (both poles are white, so the cap alone can't tell).
 
 ```quiz
 When may `LoadAssets` release the textures' upload buffers (`m_model.uploadHeaps.clear()`)?
