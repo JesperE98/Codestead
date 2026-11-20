@@ -23,7 +23,7 @@ till 9, var och en hälften så stor som roten – 101 planeter totalt. learnope
 isär, sedda från (0, 10, 0); kursen behåller förra kapitlets kamera i (3, 6, 12), som tittar nedåt 25°, och färre
 planeter, eftersom kursen ritar sina kontroller och förväntade resultat på CPU:n. Roten fortsätter att vrida sig 20° per
 sekund, som i slutet av förra kapitlet, så hela rutnätet vrider sig kring origo och vilka planeter som syns ändras med
-tiden. De förväntade resultaten visar rutnätet vid 2.0 s, med rutnätet vridet 40°.
+tiden. De förväntade resultaten visar rutnätet vid 2,0 s, med rutnätet vridet 40°.
 
 Du fortsätter i ditt program från *Scengraf*. Bygg och kör det i din IDE: du ser den vridna
 kedjan av planeter.
@@ -551,11 +551,11 @@ modellmatriserna gör dem olika i världen.
 Gör nu den tredje uppgiften, **bounding-sphere**. Inte heller den används ännu.
 
 ```quiz
-En planets avgränsningssfär har radien 2 i modellrummet. Dess globala modellmatris skalar med 0.5 längs x och z och med 1.5 längs y. Vilken radie testar `isOnFrustum` med?
-- [ ] 2 · 0.5 = 1, den minsta skalan, så att sfären förblir snäv
-- [ ] 2 · (0.5 + 0.5 + 1.5) / 3, medelskalan
+En planets avgränsningssfär har radien 2 i modellrummet. Dess globala modellmatris skalar med 0,5 längs x och z och med 1,5 längs y. Vilken radie testar `isOnFrustum` med?
+- [ ] 2 · 0,5 = 1, den minsta skalan, så att sfären förblir snäv
+- [ ] 2 · (0,5 + 0,5 + 1,5) / 3, medelskalan
 - [ ] 2, eftersom skalning inte ändrar en sfär
-- [x] 2 · 1.5 = 3, den största skalan, så att sfären fortfarande omsluter den utsträckta modellen
+- [x] 2 · 1,5 = 3, den största skalan, så att sfären fortfarande omsluter den utsträckta modellen
 ---
 En utsträckt modell får bara plats i en sfär om sfären växer med den största utsträckningen. Längderna av modellmatrisens tre första kolumner (rader i DirectXMath) är skalfaktorerna längs de tre axlarna – föräldrarnas skalor inräknade, eftersom det är den globala matrisen.
 ```
@@ -683,11 +683,11 @@ med `unsigned int total = 0, display = 0;` och `drawSelfAndChild(m_ourEntity, ca
 total);` mellan dem.
 :::
 
-Gör nu den fjärde uppgiften, **cull**. Bygg och kör: rutnätets bakre del är borta. Vid 2.0 s står det **8 / 101** i
+Gör nu den fjärde uppgiften, **cull**. Bygg och kör: rutnätets bakre del är borta. Vid 2,0 s står det **8 / 101** i
 titeln: bara åtta planeter ritas, roten och de närmaste, vars avgränsningssfärer når närmare än 15 enheter – bland dem en
 planet vars mittpunkt ligger 16 enheter bort men vars sfär ändå sticker in innanför det bortre planet. Planeterna 17, 20
 eller 42 enheter bort sorteras bort, fast projektionen skulle ha visat dem. Scenen är animerad, så antalen ändras med tiden: vid
-1.0 s står det 10 / 101 här – siffrorna i kapitlet är de vid 2.0 s, den tid som uppgiftskontrollerna tittar på.
+1,0 s står det 10 / 101 här – siffrorna i kapitlet är de vid 2,0 s, den tid som uppgiftskontrollerna tittar på.
 
 ```quiz
 `drawSelfAndChild` besöker en entitets barn även när entiteten själv sorteras bort. Varför?

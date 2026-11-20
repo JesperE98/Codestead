@@ -613,7 +613,7 @@ swapChainDesc.SampleDesc.Count = 1;
 - `BufferCount = FrameCount`, och `FrameCount` är 2: en buffert syns på skärmen (front buffern) medan du ritar i
   den andra (back buffern) – precis den dubbelbuffring som beskrivs ovan.
 - `Width` och `Height` är buffertarnas storlek: fönstrets klientyta på 800×600.
-- `DXGI_FORMAT_R8G8B8A8_UNORM` lagrar 8 bitar per kanal, som värden från 0.0 till 1.0 som skrivs oförändrade – så
+- `DXGI_FORMAT_R8G8B8A8_UNORM` lagrar 8 bitar per kanal, som värden från 0,0 till 1,0 som skrivs oförändrade – så
   `(0.2, 0.3, 0.3)` ser likadant ut som i OpenGL.
 - `DXGI_USAGE_RENDER_TARGET_OUTPUT` säger att buffertarna ska renderas till.
 - `DXGI_SWAP_EFFECT_FLIP_DISCARD` väljer *flip-modellen*: vid `Present` byter buffertarna roller i stället för att
@@ -804,8 +804,8 @@ Viewporten är satt med `glViewport(0, 0, 800, 600)`. Var hamnar en behandlad pu
 - [ ] (600, 150)
 - [ ] (-400, 300)
 ---
-Viewporten avbildar x från -1…1 på 0…800 och y från -1…1 på 0…600: x = (-0.5 + 1) / 2 × 800 = 200 och
-y = (0.5 + 1) / 2 × 600 = 450 (räknat från nedre vänstra hörnet).
+Viewporten avbildar x från -1…1 på 0…800 och y från -1…1 på 0…600: x = (-0,5 + 1) / 2 × 800 = 200 och
+y = (0,5 + 1) / 2 × 600 = 450 (räknat från nedre vänstra hörnet).
 ```
 :::
 :::vulkan
@@ -956,7 +956,7 @@ glClear(GL_COLOR_BUFFER_BIT);
 
 Observera att vi också anger färgen som skärmen ska rensas med, med `glClearColor`. När vi anropar `glClear` och
 rensar färgbufferten fylls hela färgbufferten med den färg som `glClearColor` har ställt in. De fyra värdena är
-rött, grönt, blått och alfa, vart och ett mellan 0.0 och 1.0; resultatet är en mörk grönblå färg.
+rött, grönt, blått och alfa, vart och ett mellan 0,0 och 1,0; resultatet är en mörk grönblå färg.
 
 Som du kanske minns från kapitlet om OpenGL är `glClearColor` en *tillståndssättande* funktion (state-setting) och
 `glClear` en *tillståndsanvändande* funktion (state-using), eftersom den hämtar rensningsfärgen från det aktuella

@@ -1,22 +1,22 @@
 # HDR
 
-Ljusstyrka och färgvärden kläms som standard till intervallet 0.0 till 1.0 när de lagras i en framebuffer. Det här till
+Ljusstyrka och färgvärden kläms som standard till intervallet 0,0 till 1,0 när de lagras i en framebuffer. Det här till
 synes oskyldiga påståendet har fått oss att alltid ange ljus- och färgvärden någonstans i det intervallet och försöka få
 dem att passa in i scenen. Det fungerar hyggligt och ger godtagbara resultat, men vad händer om vi går in i ett riktigt
-ljust område med flera starka ljuskällor vars sammanlagda bidrag överstiger 1.0? Svaret är att alla fragment med en
-ljusstyrka eller färgsumma över 1.0 kläms till 1.0, och det är inte vackert att se på: en stor del av bilden blir en
+ljust område med flera starka ljuskällor vars sammanlagda bidrag överstiger 1,0? Svaret är att alla fragment med en
+ljusstyrka eller färgsumma över 1,0 kläms till 1,0, och det är inte vackert att se på: en stor del av bilden blir en
 platt vit (eller platt gul, eller platt röd) yta, och varje detalj i den går förlorad.
 
 ![Det här har du byggt i slutet av kapitlet](images/results/hdr.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
 
-Eftersom många fragments färgvärden kläms till 1.0 får alla ljusa fragment exakt samma vita färgvärde i stora områden.
+Eftersom många fragments färgvärden kläms till 1,0 får alla ljusa fragment exakt samma vita färgvärde i stora områden.
 Mycket detaljer försvinner och bilden ser falsk ut. En lösning vore att sänka ljuskällornas styrka och se till att inget
-område i scenen blir ljusare än 1.0. Det är ingen bra lösning, eftersom den tvingar oss att använda orealistiska
-belysningsparametrar. Ett bättre sätt är att låta färgvärdena tillfälligt överstiga 1.0 och som ett sista steg
-omvandla dem tillbaka till det ursprungliga intervallet 0.0 till 1.0, utan att detaljer går förlorade.
+område i scenen blir ljusare än 1,0. Det är ingen bra lösning, eftersom den tvingar oss att använda orealistiska
+belysningsparametrar. Ett bättre sätt är att låta färgvärdena tillfälligt överstiga 1,0 och som ett sista steg
+omvandla dem tillbaka till det ursprungliga intervallet 0,0 till 1,0, utan att detaljer går förlorade.
 
-Bildskärmar (andra än HDR-skärmar) kan bara visa färger i intervallet 0.0 till 1.0, men någon sådan gräns finns inte i
-belysningsekvationerna. Genom att låta fragmentens färger överstiga 1.0 får vi ett mycket större omfång av färgvärden att
+Bildskärmar (andra än HDR-skärmar) kan bara visa färger i intervallet 0,0 till 1,0, men någon sådan gräns finns inte i
+belysningsekvationerna. Genom att låta fragmentens färger överstiga 1,0 får vi ett mycket större omfång av färgvärden att
 arbeta med, ett så kallat *högt dynamiskt omfång* (high dynamic range, HDR). Med högt dynamiskt omfång kan ljusa saker
 vara riktigt ljusa, mörka saker riktigt mörka, och detaljer synas i båda.
 
@@ -29,25 +29,25 @@ styrs av scenens ljusstyrka.
 
 HDR-rendering fungerar ungefär så. Vi tillåter ett mycket större omfång av färgvärden att rendera till och samlar på så
 sätt ett stort omfång av mörka och ljusa detaljer i scenen, och till sist omvandlar vi alla HDR-värden tillbaka till det
-*låga dynamiska omfånget* (low dynamic range, LDR) 0.0 till 1.0. Den omvandlingen från HDR- till LDR-värden kallas *tone
+*låga dynamiska omfånget* (low dynamic range, LDR) 0,0 till 1,0. Den omvandlingen från HDR- till LDR-värden kallas *tone
 mapping*, och det finns en stor samling tone mapping-algoritmer som försöker bevara så mycket som möjligt av
 HDR-detaljerna under omvandlingen. De har ofta en exponeringsparameter som väljer att gynna mörka eller ljusa områden.
 
 För realtidsrendering innebär högt dynamiskt omfång inte bara att vi kan gå utanför LDR-intervallet [0.0, 1.0] och bevara
 fler detaljer, utan också att vi kan ange en ljuskällas intensitet efter dess verkliga intensitet. Solen har till
 exempel en mycket högre intensitet än något som en ficklampa, så varför inte ställa in solen därefter (en diffus
-ljusstyrka på 100.0, säg)? Det låter oss ställa in en scens belysning med mer realistiska parametrar, något som inte vore
-möjligt med LDR-rendering, eftersom värdena då direkt skulle klämmas till 1.0.
+ljusstyrka på 100,0, säg)? Det låter oss ställa in en scens belysning med mer realistiska parametrar, något som inte vore
+möjligt med LDR-rendering, eftersom värdena då direkt skulle klämmas till 1,0.
 
-Tekniken är densamma i alla API:er: rita scenen i en färgbuffer som kan hålla värden över 1.0, och rita sedan den buffern
+Tekniken är densamma i alla API:er: rita scenen i en färgbuffer som kan hålla värden över 1,0, och rita sedan den buffern
 på fönstret med en shader som tone mappar den. Den andra halvan har du byggt förut – kapitlet *Framebuffers* med sitt
 off-screen-mål och sin skärmfyrhörning. Det nya är färgbufferns format och vad skärmfyrhörningens shader gör med den.
 
 Utgå från ditt program från *Punktskuggor* i en ny mapp (det har kuben och de belysta träväggarna) och gör om det till
 learnopengls HDR-scen: en lång tunnel av trä – kuben på 2 × 2 × 2 skalad med (2.5, 2.5, 27.5) och flyttad till z = 25,
-så att den går från z = -2.5 till z = 52.5 och är 5 enheter bred och hög – belyst av fyra punktljus. Tre av dem är
-svaga och färgade och hänger nära kameran: (-1.4, -1.9, 9) rött med styrkan 0.1, (0, -1.8, 4) blått med 0.2, (0.8,
--1.7, 6) grönt med 0.1. Det fjärde, på (0, 0, 49.5), 3 enheter framför tunnelns bortre ände, är vitt med styrkan
+så att den går från z = -2,5 till z = 52,5 och är 5 enheter bred och hög – belyst av fyra punktljus. Tre av dem är
+svaga och färgade och hänger nära kameran: (-1.4, -1.9, 9) rött med styrkan 0,1, (0, -1.8, 4) blått med 0,2, (0.8,
+-1.7, 6) grönt med 0,1. Det fjärde, på (0, 0, 49.5), 3 enheter framför tunnelns bortre ände, är vitt med styrkan
 **200** – långt mer än vad en 8-bitarsfärg kan hålla. Kameran står inne i tunneln på (0, 0, 5). Vi ser kuben inifrån,
 så dess normaler vänds i vertex shadern (`inverse_normals` – rummet i kapitlet *Punktskuggor* gjorde samma sak med
 `reverse_normals`), och face culling är avstängt. Trätexturen läses som en sRGB-textur, som i kapitlet
@@ -57,7 +57,7 @@ Belysningen är learnopengls: inget omgivningsljus, bara diffust ljus, kvadratis
 (den rätta när belysningen sker i linjärt rum), ingen spekulär reflex. Två val skiljer sig från learnopengls program:
 
 - **Kameran tittar längs +z, in i tunneln** (en yaw på +90°; kamerans framåtvektor är (0, 0, 1)). learnopengls demo
-  börjar på samma position, men dess kamera tittar längs -z, på tunnelns närmaste gavel 7.5 enheter bort, som är nästan
+  börjar på samma position, men dess kamera tittar längs -z, på tunnelns närmaste gavel 7,5 enheter bort, som är nästan
   svart; du skulle behöva vända dig om med musen för att se något. Här ligger tunneln och dess ljusa ände rakt fram.
 - **Fyra ljus, inte sexton.** learnopengls shader deklarerar `Light lights[16]` och sätter fyra; de andra tolv är noll
   och bidrar inte med något. Kursen deklarerar exakt fyra, så att de explicita API:erna kan lägga exakt fyra ljus i sin
@@ -143,26 +143,26 @@ förrän du behöver den.
 Bygg och kör programmet i din IDE: du tittar längs tunneln, vars brädor löper mot en liten kvadrat mitt i fönstret –
 den bortre änden. Nära kameran är väggarna mycket mörka (bara en svag röd ton i nedre högra hörnet, från det röda
 ljuset); mot änden blir de ljusare. Och själva änden är **platt vit**: ljuset med styrkan 200 gör färgen där långt
-ljusare än 1.0, fönstret lagrar 0.0 till 1.0 per kanal, och allt däröver kapas vid 1.0. Träets brädor är borta från
-den kvadraten – bara längs dess kanter, där träets blå kanal fortfarande är under 1.0, finns lite gult kvar.
+ljusare än 1,0, fönstret lagrar 0,0 till 1,0 per kanal, och allt däröver kapas vid 1,0. Träets brädor är borta från
+den kvadraten – bara längs dess kanter, där träets blå kanal fortfarande är under 1,0, finns lite gult kvar.
 
 ```quiz
 Belysningsshadern räknar fram färgen (3.5, 2.4, 1.2) för ett fragment vid tunnelns ände och skriver den i fönstret, vars färgbuffer har 8 bitar per kanal. Vad lagras?
 - [ ] (3.5, 2.4, 1.2): färgbuffern lagrar det shadern skriver
-- [x] (1.0, 1.0, 1.0): varje kanal kläms till 1.0 – färgen blir vit, och grannfragmentet, med (3.1, 2.2, 1.1), blir exakt samma vita
-- [ ] (1.0, 0.69, 0.34): färgen skalas så att dess största kanal blir 1.0
-- [ ] (0.5, 0.34, 0.17): värden över 1.0 slår runt
+- [x] (1.0, 1.0, 1.0): varje kanal kläms till 1,0 – färgen blir vit, och grannfragmentet, med (3.1, 2.2, 1.1), blir exakt samma vita
+- [ ] (1.0, 0.69, 0.34): färgen skalas så att dess största kanal blir 1,0
+- [ ] (0.5, 0.34, 0.17): värden över 1,0 slår runt
 ---
-En normaliserad 8-bitarskanal lagrar 0 till 255 för 0.0 till 1.0, och omvandlingen klämmer. Varje fragment som är ljusare än 1.0 i alla kanaler blir samma vita – det är de förlorade detaljerna.
+En normaliserad 8-bitarskanal lagrar 0 till 255 för 0,0 till 1,0, och omvandlingen klämmer. Varje fragment som är ljusare än 1,0 i alla kanaler blir samma vita – det är de förlorade detaljerna.
 ```
 
 ## Flyttals-framebuffers
 
 För att implementera HDR-rendering behöver vi ett sätt att hindra att färgvärdena kläms efter varje körning av fragment
-shadern. När en framebuffers färgbuffer använder ett flyttalsformat kan den lagra flyttal utanför standardintervallet 0.0
-till 1.0. Det är perfekt för rendering med högt dynamiskt omfång!
+shadern. När en framebuffers färgbuffer använder ett flyttalsformat kan den lagra flyttal utanför standardintervallet 0,0
+till 1,0. Det är perfekt för rendering med högt dynamiskt omfång!
 
-Fönstrets färgbuffer använder 8 bitar per färgkomponent, normaliserat: 256 steg mellan 0.0 och 1.0. En flyttalsbuffer
+Fönstrets färgbuffer använder 8 bitar per färgkomponent, normaliserat: 256 steg mellan 0,0 och 1,0. En flyttalsbuffer
 med 32 bitar per komponent (en vanlig `float`) kunde lagra vilket värde vi vill, men tar fyra gånger så mycket minne. 16
 bitar per komponent – ett flyttal med *halv precision* – räcker oftast: det lagrar värden upp till 65504 med ungefär tre
 värdesiffror, vilket är gott och väl för färger. Alla tre API:er har formatet: fyra 16-bitars flyttal per texel, rött,
@@ -180,7 +180,7 @@ alls – fyra kanaler är vad alla tre API:er kan lita på.
 Planen är densamma som i kapitlet *Framebuffers*, i två pass: först renderar vi den belysta scenen i flyttalsfärgbuffern,
 och sedan visar vi den färgbuffern på en fyrhörning som fyller skärmen. Belysningsshadern skriver nu sitt resultat
 oförändrat – linjärt och oklippt – och skärmfyrhörningens shader läser tillbaka det som en textur. Eftersom texturen
-håller flyttal överlever värdena över 1.0 resan.
+håller flyttal överlever värdena över 1,0 resan.
 
 Och gammakorrigeringen? Tone mapping – nästa avsnitt – arbetar med linjära färger, precis som belysningen; gammakorrigeringen
 måste komma efter den, som allra sista steg innan färgen hamnar i fönstret. Så `pow(…, 1.0 / 2.2)` flyttar från
@@ -489,8 +489,8 @@ Varför behöver skärmfyrhörningen ett eget pipeline state object, `m_hdrPipel
 
 Bygg och kör: **ingenting ändras**. Den bortre änden är lika platt vit som förut. Det är väntat: flyttalsbuffern håller
 nu de sanna färgerna, 200-ljuset och allt, men skärmfyrhörningens shader skriver dem oförändrade (bara gammakorrigerade)
-i 8-bitarsfönstret – där de kläms, precis som förut. Att behålla värdena räcker inte; något måste avbilda dem på 0.0
-till 1.0.
+i 8-bitarsfönstret – där de kläms, precis som förut. Att behålla värdena räcker inte; något måste avbilda dem på 0,0
+till 1,0.
 
 ## Tone mapping
 
@@ -503,8 +503,8 @@ En av de enklare tone mapping-algoritmerna är *Reinhard tone mapping*, som dela
 mapped = hdrColor / (hdrColor + 1.0)
 ```
 
-Den avbildar 0 på 0, 1 på 0.5, 3 på 0.75, 200 på 0.995 – varje värde från 0 till oändligheten hamnar någonstans under
-1.0, och ordningen bevaras: en ljusare färg förblir ljusare. Och små värden ändrar den nästan inte alls, eftersom
+Den avbildar 0 på 0, 1 på 0,5; 3 på 0,75; 200 på 0,995 – varje värde från 0 till oändligheten hamnar någonstans under
+1,0, och ordningen bevaras: en ljusare färg förblir ljusare. Och små värden ändrar den nästan inte alls, eftersom
 x / (x + 1) ≈ x när x är litet. Kurvan fördelar alla ljusa värden jämnt över LDR.
 
 :::opengl
@@ -542,12 +542,12 @@ Gör nu uppgiften **reinhard**.
 
 ```quiz
 Reinhard tone mapping räknar `hdrColor / (hdrColor + 1.0)` per kanal. Vilket påstående stämmer?
-- [ ] Den avbildar 1.0 på 1.0, så allt upp till 1.0 förblir som det var
-- [ ] Den klämmer värdena över 1.0 mjukare, men värden över 10 blir ändå 1.0
+- [ ] Den avbildar 1,0 på 1,0, så allt upp till 1,0 förblir som det var
+- [ ] Den klämmer värdena över 1,0 mjukare, men värden över 10 blir ändå 1,0
 - [ ] Den behöver bildrutans ljusaste värde att dela med
-- [x] Varje värde från 0 till oändligheten hamnar under 1.0, ordningen bevaras (200 → 0.995, 3 → 0.75, 1 → 0.5), och små värden ändras knappt (0.05 → 0.048)
+- [x] Varje värde från 0 till oändligheten hamnar under 1,0, ordningen bevaras (200 → 0,995; 3 → 0,75; 1 → 0,5), och små värden ändras knappt (0,05 → 0,048)
 ---
-Inget värde når någonsin 1.0, så inga två olika ljusa färger smälter ihop till samma vita. Priset: värden kring 1.0 blir märkbart mörkare (0.5), och därför vinner de ljusa delarna detaljer medan scenen som helhet blir lite mörkare.
+Inget värde når någonsin 1,0, så inga två olika ljusa färger smälter ihop till samma vita. Priset: värden kring 1,0 blir märkbart mörkare (0,5), och därför vinner de ljusa delarna detaljer medan scenen som helhet blir lite mörkare.
 ```
 
 Bygg och kör: **den bortre änden visar sitt trä igen** – brädorna är tillbaka i den ljusa kvadraten, varma och
@@ -573,13 +573,13 @@ En förhållandevis enkel tone mapping-algoritm med exponering ser ut så här:
 mapped = 1.0 - exp(-hdrColor * exposure)
 ```
 
-Även den här kurvan börjar i 0, stiger brant och närmar sig 1.0 utan att någonsin nå dit. Exponeringen skalar indata: en
+Även den här kurvan börjar i 0, stiger brant och närmar sig 1,0 utan att någonsin nå dit. Exponeringen skalar indata: en
 **högre exponering** skjuter de mörka värdena upp längs kurvans branta del och gör dem ljusare och mer synliga, medan
-de ljusa värdena trängs ihop nära 1.0; en **lägre exponering** gör de mörka partierna mörkare, mot svart, men sprider ut
-de ljusa värdena över kurvan och tar fram detaljerna i de ljusa delarna. Med exponeringen 1.0 blir resultatet nära
-Reinhards – lite ljusare (1.0 avbildas på 0.63 i stället för 0.5).
+de ljusa värdena trängs ihop nära 1,0; en **lägre exponering** gör de mörka partierna mörkare, mot svart, men sprider ut
+de ljusa värdena över kurvan och tar fram detaljerna i de ljusa delarna. Med exponeringen 1,0 blir resultatet nära
+Reinhards – lite ljusare (1,0 avbildas på 0,63 i stället för 0,5).
 
-![Tone mapping-kurvor](images/tone-curves.webp "Vad fönstrets klippning, Reinhards kurva och exponeringskurvan med exponeringarna 0.1, 1.0 och 5.0 gör av HDR-värden från 0 till 6.")
+![Tone mapping-kurvor](images/tone-curves.webp "Vad fönstrets klippning, Reinhards kurva och exponeringskurvan med exponeringarna 0,1; 1,0 och 5,0 gör av HDR-värden från 0 till 6.")
 
 :::opengl
 Exponeringen är en uniform, satt från en global variabel i `main.cpp` (`float exposure = 1.0f;`) innan fyrhörningen
@@ -699,27 +699,27 @@ kommer nära vitt, kanterna och skenet runt den blir också lite ljusare. Resten
 learnopengl ändrar exponeringen medan programmet kör, med tangenterna Q och E (och slår av och på HDR med mellanslag).
 Här byter uppgifterna koden i stället, så prova själv andra värden för den globala `exposure`:
 
-- **5.0**: de mörka väggarna nära kameran blir tydligt synliga – brädorna, det röda ljusets röda ton – medan den bortre
+- **5,0**: de mörka väggarna nära kameran blir tydligt synliga – brädorna, det röda ljusets röda ton – medan den bortre
   änden och skenet runt den mättas till ljust vitt igen. En hög exponering visar de mörka delarna.
-- **0.1**: väggarna sjunker ner i svart, men den bortre änden visar sina brädor i full detalj, utan någon ljus fläck kvar.
+- **0,1**: väggarna sjunker ner i svart, men den bortre änden visar sina brädor i full detalj, utan någon ljus fläck kvar.
   En låg exponering visar de ljusa delarna.
 
 ```quiz
-Vad gör en högre exponering (5.0 i stället för 1.0) med exponerings-tone mapping?
+Vad gör en högre exponering (5,0 i stället för 1,0) med exponerings-tone mapping?
 - [ ] Den gör att den ljusa bortre änden visar fler detaljer
 - [x] Den gör de mörka tunnelväggarna ljusare, så att deras detaljer syns, medan den ljusa änden trängs ihop nära vitt igen
-- [ ] Ingenting: kurvan når aldrig 1.0
+- [ ] Ingenting: kurvan når aldrig 1,0
 - [ ] Den gör hela bilden mörkare
 ---
 Exponeringen multiplicerar HDR-färgen före kurvan. Mörka värden flyttas upp längs kurvans branta början; ljusa värden skjuts ut till den platta änden, där de ser likadana ut. En nattscen vill ha hög exponering, en solig låg.
 ```
 
-![Tre exponeringar](images/hdr-exposure.webp "Tunneln med exponeringarna 0.1, 1.0 och 5.0, ritad av kursens simulator: en låg exponering visar den ljusa änden, en hög de mörka väggarna.")
+![Tre exponeringar](images/hdr-exposure.webp "Tunneln med exponeringarna 0,1; 1,0 och 5,0, ritad av kursens simulator: en låg exponering visar den ljusa änden, en hög de mörka väggarna.")
 
 ```quiz
 Varför flyttar gammakorrigeringen från belysningsshadern till skärmfyrhörningens shader?
 - [ ] Flyttalsbuffern lagrar gammakorrigerade färger automatiskt
-- [ ] Gammakorrigering fungerar bara på värden över 1.0
+- [ ] Gammakorrigering fungerar bara på värden över 1,0
 - [x] Tone mapping, liksom belysning, förutsätter linjära färger, och gammakorrigeringen måste vara sista steget innan färgen hamnar i fönstret – alltså kommer den efter tone mappingen
 - [ ] Skärmfyrhörningens shader körs färre gånger, vilket gör den snabbare
 ---
@@ -740,7 +740,7 @@ eller mörkare i ljusa, som det mänskliga ögat.
 Den verkliga nyttan med HDR-rendering syns först i stora och komplexa scener med tunga belysningsalgoritmer. Tunneln är
 en enkel scen, men den visar redan huvudpoängen: ett ljus 200 gånger starkare än vitt, som en LDR-renderare bara kan visa
 som en vit klump. Eftersom HDR-rendering gör det möjligt att arbeta med realistiska ljusintensiteter är det också grunden
-för de senare teknikerna i kursen: bloom, i nästa kapitel, använder ljusstyrkan över 1.0 för att avgöra vad som ska
+för de senare teknikerna i kursen: bloom, i nästa kapitel, använder ljusstyrkan över 1,0 för att avgöra vad som ska
 glöda.
 
 :::vulkan

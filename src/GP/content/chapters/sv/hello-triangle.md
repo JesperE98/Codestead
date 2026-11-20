@@ -229,7 +229,7 @@ Fönstret är 800×600 och viewporten täcker hela det. Vilken av de här vertex
 - [ ] (0.0, 0.0, 0.0)
 - [x] (1.2, 0.0, 0.0)
 ---
-Bara koordinater mellan -1.0 och 1.0 ligger inom normalized device coordinates; x = 1.2 ligger till höger om fönstrets kant och klipps bort. (0, 0) är fönstrets mitt.
+Bara koordinater mellan -1,0 och 1,0 ligger inom normalized device coordinates; x = 1,2 ligger till höger om fönstrets kant och klipps bort. (0, 0) är fönstrets mitt.
 ```
 
 ### Vertex buffer objects

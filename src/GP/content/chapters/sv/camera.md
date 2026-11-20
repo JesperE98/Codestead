@@ -513,7 +513,7 @@ nästa avsnitt.
 
 ## Rörelsehastighet
 
-learnopengls första version av den här koden använder en konstant `cameraSpeed` på 0.05 enheter per bildruta. Det
+learnopengls första version av den här koden använder en konstant `cameraSpeed` på 0,05 enheter per bildruta. Det
 fungerar, men grafikprogram och spel brukar hålla reda på en *deltatime*-variabel som lagrar hur lång tid det tog att
 rendera den senaste bildrutan, och det finns en god anledning till det. I praktiken har folk olika mycket
 datorkraft, och resultatet är att vissa kan rendera många fler bildrutor per sekund än andra. När en användare
@@ -580,7 +580,7 @@ Det här hamnar allra först i `OnUpdate`, före förflyttningskoden. Huvudloope
 `OnRender` när inga fönstermeddelanden väntar, så varje bildruta ser först de tangenter som ändrats sedan förra.
 :::
 
-Nu när vi har `deltaTime` kan vi ta med den när vi räknar ut hastigheterna: `cameraSpeed` är 2.5 × `deltaTime`,
+Nu när vi har `deltaTime` kan vi ta med den när vi räknar ut hastigheterna: `cameraSpeed` är 2,5 × `deltaTime`,
 vilket får kameran att röra sig 2,5 enheter per sekund, hur snabbt bildrutorna än kommer.
 
 Gör nu uppgiften **wasd**. Det förväntade resultatet ändras inte – där trycker ingen på några tangenter. I ditt program
@@ -1133,7 +1133,7 @@ under `lastY`:
 float fov   =  45.0f;
 ```
 
-Eftersom 45 är standardvärdet för fov vill vi begränsa zoomnivån till mellan 1.0 och 45.0. Vi måste också registrera
+Eftersom 45 är standardvärdet för fov vill vi begränsa zoomnivån till mellan 1,0 och 45,0. Vi måste också registrera
 scroll-callbacken, direkt efter callbacken för markörpositionen:
 
 ```cpp
@@ -1173,7 +1173,7 @@ void OnMouseWheel(float yoffset)
 float fov   =  45.0f;
 ```
 
-Eftersom 45 är standardvärdet för fov vill vi begränsa zoomnivån till mellan 1.0 och 45.0.
+Eftersom 45 är standardvärdet för fov vill vi begränsa zoomnivån till mellan 1,0 och 45,0.
 :::
 
 Nu måste vi skicka perspektivprojektionsmatrisen till GPU:n varje bildruta, men den här gången med variabeln `fov`

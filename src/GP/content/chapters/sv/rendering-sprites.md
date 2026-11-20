@@ -53,7 +53,7 @@ space, där y pekar *uppåt*, till koordinater där y pekar nedåt. Vulkans clip
 fönstrets överkant), så här ger den vanliga ordningen samma resultat, och det behövs inget `proj[1][1] *= -1` heller.
 Resultatet är att scenens övre vänstra koordinat ligger på (0, 0) och skärmens nedre högra del på koordinaten
 (800, 600), precis som skärmkoordinater; världskoordinaterna motsvarar direkt de pixelkoordinater de hamnar på. (Med
-`GLM_FORCE_DEPTH_ZERO_TO_ONE` hamnar z = 0 på djupet 0.5 – det finns ingen djupbuffer i alla fall.)
+`GLM_FORCE_DEPTH_ZERO_TO_ONE` hamnar z = 0 på djupet 0,5 – det finns ingen djupbuffer i alla fall.)
 :::
 :::d3d12
 ```cpp
@@ -65,7 +65,7 @@ De fyra första argumenten anger i tur och ordning vänster, höger, botten och 
 går alla x-koordinater mellan 0 och 800 till -1 … 1 och alla y-koordinater mellan 0 och 600 till 1 … -1. Resultatet är
 att scenens övre vänstra koordinat ligger på (0, 0) och skärmens nedre högra del på koordinaten (800, 600), precis som
 skärmkoordinater; världskoordinaterna motsvarar direkt de pixelkoordinater de hamnar på. (Den högerhänta versionen
-avbildar z = 0 på djupet 0.5 – det finns ingen djupbuffer i alla fall.) Precis som vy- och projektionsmatrisen i de
+avbildar z = 0 på djupet 0,5 – det finns ingen djupbuffer i alla fall.) Precis som vy- och projektionsmatrisen i de
 tidigare Direct3D 12-kapitlen skrivs matrisen till constant buffern i `OnUpdate`, lagrad transponerad för HLSL;
 learnopengl sätter den en gång i `Init` som en uniform.
 :::
@@ -600,9 +600,9 @@ multiplicerar vi med spritens storlek). När rotationen är gjord tar vi tillbak
 ordning transformationerna sker med ett hörn av enhetsrektangeln:
 
 1. **skala** till `size` – rektangeln sträcker sig nu från (0, 0) till (size.x, size.y);
-2. **förflytta med -0.5 · size** – dess mitt ligger i origo;
+2. **förflytta med -0,5 · size** – dess mitt ligger i origo;
 3. **rotera** kring z med `rotate` grader – kring sin mitt;
-4. **förflytta med +0.5 · size** – tillbaka till (0, 0) … size, fortfarande vriden;
+4. **förflytta med +0,5 · size** – tillbaka till (0, 0) … size, fortfarande vriden;
 5. **förflytta till `position`** – den oroterade spritens övre vänstra hörn hamnar på `position`.
 
 ![DrawSprites transformationer steg för steg](images/sprite-steps.webp "Enhetsrektangeln med bollens textur genom de fem stegen, numrerade i den ordning de verkar på en vertex; axlarna korsas i origo och y pekar nedåt.")
@@ -630,7 +630,7 @@ Varför förflyttar `DrawSprite` med halva storleken, roterar och förflyttar ti
 - [ ] Därför att en skalad rektangel som roteras utan dem skulle få förvrängd form
 - [x] Därför att en rotation vrider kring origo, som är rektangelns övre vänstra hörn: förflyttningarna flyttar mitten till origo för rotationen och tillbaka igen, så att spriten vrider sig på stället
 ---
-Utan dem skulle en sprite på (200, 200) som vrids 45° svänga runt sitt övre vänstra hörn och hamna halvvägs utanför sin plats. Förflyttningarna med ±0.5 · size är i pixlar eftersom rektangeln redan har skalats till sin storlek.
+Utan dem skulle en sprite på (200, 200) som vrids 45° svänga runt sitt övre vänstra hörn och hamna halvvägs utanför sin plats. Förflyttningarna med ±0,5 · size är i pixlar eftersom rektangeln redan har skalats till sin storlek.
 ```
 
 ![Vridning kring hörnet eller mitten](images/sprite-pivot.webp "Kapitlets sprite vriden 45° utan och med förflyttningarna med halva storleken; den streckade rutan är den ovridna spriten, punkten den punkt den vrids kring. Ritad av kursens simulator.")

@@ -2,14 +2,14 @@
 
 Så fort vi har beräknat scenens slutliga pixelfärger måste vi visa dem på en bildskärm. Förr i den digitala bildens
 barndom var de flesta bildskärmar katodstrålerör (CRT). De hade den fysiska egenskapen att dubbla inspänningen inte gav
-dubbla ljusstyrkan. En dubblad inspänning gav en ljusstyrka enligt ett exponentiellt samband med ungefär exponenten 2.2,
+dubbla ljusstyrkan. En dubblad inspänning gav en ljusstyrka enligt ett exponentiellt samband med ungefär exponenten 2,2,
 bildskärmens så kallade *gamma*. Det råkar (av en slump) också stämma ganska väl med hur människor uppfattar ljusstyrka,
 eftersom vi också upplever ljusstyrka enligt ett liknande (omvänt) potenssamband.
 
 ![Det här har du byggt i slutet av kapitlet](images/results/gamma-correction.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
 
 Föreställ dig två rader med gråtoner från svart till vitt. I den första lägger varje steg till lika mycket till värdet vi
-skickar till bildskärmen: 0.0, 0.1, 0.2 … 1.0. För det mänskliga ögat ser den raden ut som en jämn skala: våra ögon är
+skickar till bildskärmen: 0,0; 0,1; 0,2 … 1,0. För det mänskliga ögat ser den raden ut som en jämn skala: våra ögon är
 känsligare för förändringar i mörka toner än i ljusa, och bildskärmens kurva råkar kompensera för det. I den andra raden
 lägger varje steg till lika mycket *fysiskt* ljus – dubbla värdet betyder dubbelt så många fotoner. Den raden ser fel ut
 för oss: den verkar rusa genom de mörka tonerna och krypa genom de ljusa. Ändå är det den andra raden som är fysikaliskt
@@ -20,62 +20,62 @@ icke-linjärt rum: dubblar du värdet på en färg får du inte dubbelt så myck
 
 Problemet är att alla våra belysningsberäkningar görs i ett linjärt rum: att dubbla ett ljus intensitet, att addera
 bidragen från två ljus eller att skala en färg med `diff` förutsätter allt att resultatet visas som det beräknades. På
-bildskärmen blir dock värdet 0.5 – hälften så ljust, enligt vår matematik – 0.5 upphöjt till 2.2 ≈ 0.218 av full
+bildskärmen blir dock värdet 0,5 – hälften så ljust, enligt vår matematik – 0,5 upphöjt till 2,2 ≈ 0,218 av full
 ljusstyrka. Mörka och mellanljusa färger blir för mörka, och ju mer en färg beror på belysningsmatematik, desto mer fel
 ser den ut. All belysning i de tidigare kapitlen var alltså fysikaliskt felaktig – och vi justerade värden som
 dämpningskonstanterna på känn för att det ändå skulle se godtagbart ut.
 
 ```quiz
-Fragment shadern skriver värdet 0.5 för en pixel och bildskärmen har gamma 2.2. Hur ljus ser pixeln ut, jämfört med vitt?
-- [ ] 0.5 – bildskärmen visar det den får
-- [ ] 0.73
-- [x] Ungefär 0.218: bildskärmen upphöjer värdet till 2.2
-- [ ] 0.25 – bildskärmen kvadrerar värdet
+Fragment shadern skriver värdet 0,5 för en pixel och bildskärmen har gamma 2,2. Hur ljus ser pixeln ut, jämfört med vitt?
+- [ ] 0,5 – bildskärmen visar det den får
+- [ ] 0,73
+- [x] Ungefär 0,218: bildskärmen upphöjer värdet till 2,2
+- [ ] 0,25 – bildskärmen kvadrerar värdet
 ---
-0.5 upphöjt till 2.2 ≈ 0.218. För att synas med halv ljusstyrka skulle pixeln behöva värdet 0.5^(1/2.2) ≈ 0.73 – och det är precis vad gammakorrigering räknar ut.
+0,5 upphöjt till 2,2 ≈ 0,218. För att synas med halv ljusstyrka skulle pixeln behöva värdet 0,5^(1/2,2) ≈ 0,73 – och det är precis vad gammakorrigering räknar ut.
 ```
 
 ## Gammakorrigering
 
 Idén med gammakorrigering är att tillämpa inversen av bildskärmens gamma på den slutliga färgen innan den visas på
-bildskärmen. Tittar vi tillbaka på gammakurvan ser vi att bildskärmen mörkar våra färger med potensen 2.2; om vi först gör
-dem ljusare med den inversa potensen, 1/2.2, tar de två ut varandra och ljuset når vårt öga lika linjärt som vi beräknade
+bildskärmen. Tittar vi tillbaka på gammakurvan ser vi att bildskärmen mörkar våra färger med potensen 2,2; om vi först gör
+dem ljusare med den inversa potensen, 1/2,2, tar de två ut varandra och ljuset når vårt öga lika linjärt som vi beräknade
 det.
 
-![Gammakurvorna](images/gamma-curves.webp "Bildskärmen visar ett värde v som v^2.2, så 0.5 syns som 0.218. Korrigeras det först med potensen 1/2.2 blir 0.5 till 0.73, som bildskärmen visar som 0.5: tillsammans blir de två kurvorna en rak linje.")
+![Gammakurvorna](images/gamma-curves.webp "Bildskärmen visar ett värde v som v^2,2, så 0,5 syns som 0,218. Korrigeras det först med potensen 1/2,2 blir 0,5 till 0,73, som bildskärmen visar som 0,5: tillsammans blir de två kurvorna en rak linje.")
 
 Ett exempel till. Säg att vi återigen har den mörkröda färgen (0.5, 0.0, 0.0). Innan färgen visas på bildskärmen
 tillämpar vi först gammakorrigeringskurvan på färgvärdet. Linjära färger som visas av en bildskärm skalas ungefär med
-potensen 2.2, så inversen kräver att färgerna skalas med potensen 1/2.2. Den gammakorrigerade mörkröda färgen blir alltså
-(0.5, 0.0, 0.0)^(1/2.2) = (0.73, 0.0, 0.0). De korrigerade färgerna skickas sedan till bildskärmen, och färgen visas som
-(0.73)^2.2 = (0.5, 0.0, 0.0). Med gammakorrigering visar bildskärmen alltså äntligen färgerna så som vi linjärt satte dem
+potensen 2,2, så inversen kräver att färgerna skalas med potensen 1/2,2. Den gammakorrigerade mörkröda färgen blir alltså
+(0.5, 0.0, 0.0)^(1/2,2) = (0.73, 0.0, 0.0). De korrigerade färgerna skickas sedan till bildskärmen, och färgen visas som
+(0,73)^2,2 = (0.5, 0.0, 0.0). Med gammakorrigering visar bildskärmen alltså äntligen färgerna så som vi linjärt satte dem
 i programmet.
 
-Gammavärdet 2.2 är ett standardvärde som ungefär motsvarar genomsnittet för de flesta skärmar. Färgrymden som blir
-resultatet av detta gamma på 2.2 kallas **sRGB**-färgrymden (inte 100 % exakt, men nära). Varje bildskärm har sin egen
-gammakurva, men gammavärdet 2.2 ger bra resultat på de flesta. Därför låter spel ofta spelaren ändra spelets
+Gammavärdet 2,2 är ett standardvärde som ungefär motsvarar genomsnittet för de flesta skärmar. Färgrymden som blir
+resultatet av detta gamma på 2,2 kallas **sRGB**-färgrymden (inte 100 % exakt, men nära). Varje bildskärm har sin egen
+gammakurva, men gammavärdet 2,2 ger bra resultat på de flesta. Därför låter spel ofta spelaren ändra spelets
 gammainställning, eftersom den varierar något mellan bildskärmar.
 
 :::opengl
 Du fortsätter i ditt program från *Avancerad belysning* och gör om det till learnopengls scen: förra kapitlets trägolv
-(20 × 20 enheter på y = -0.5, `wood.png` upprepad tio gånger) belyst av fyra punktljus på (-3, 0, 0), (-1, 0, 0), (1,
-0, 0) och (3, 0, 0), vars färger går från svagt grått till vitt: 0.25, 0.50, 0.75 och 1.00. `gamma_correction.fs`
+(20 × 20 enheter på y = -0,5, `wood.png` upprepad tio gånger) belyst av fyra punktljus på (-3, 0, 0), (-1, 0, 0), (1,
+0, 0) och (3, 0, 0), vars färger går från svagt grått till vitt: 0,25; 0,50; 0,75 och 1,00. `gamma_correction.fs`
 beräknar ljuset från vart och ett i en funktion `BlinnPhong()` – diffust och Blinn-Phong-spekulärt (exponent 64),
 gånger ljusets färg, försvagat med avståndet; inget ambient – och multiplicerar golvets färg med summan. Kameran står
 på (0, 0, 3) som tidigare.
 :::
 :::vulkan
 Du fortsätter i ditt program från *Avancerad belysning* och gör om det till learnopengls scen: förra kapitlets trägolv
-(20 × 20 enheter på y = -0.5, `textures/wood.png` upprepad tio gånger) belyst av fyra punktljus på (-3, 0, 0), (-1, 0,
-0), (1, 0, 0) och (3, 0, 0), vars färger går från svagt grått till vitt: 0.25, 0.50, 0.75 och 1.00.
+(20 × 20 enheter på y = -0,5, `textures/wood.png` upprepad tio gånger) belyst av fyra punktljus på (-3, 0, 0), (-1, 0,
+0), (1, 0, 0) och (3, 0, 0), vars färger går från svagt grått till vitt: 0,25; 0,50; 0,75 och 1,00.
 `shaders/gamma_correction.frag` beräknar ljuset från vart och ett i en funktion `BlinnPhong()` – diffust och
 Blinn-Phong-spekulärt (exponent 64), gånger ljusets färg, försvagat med avståndet; inget ambient – och multiplicerar
 golvets färg med summan. Kameran står på (0, 0, 3) som tidigare.
 :::
 :::d3d12
 Du fortsätter i ditt program från *Avancerad belysning* och gör om det till learnopengls scen: förra kapitlets trägolv
-(20 × 20 enheter på y = -0.5, `wood.png` upprepad tio gånger) belyst av fyra punktljus på (-3, 0, 0), (-1, 0, 0), (1,
-0, 0) och (3, 0, 0), vars färger går från svagt grått till vitt: 0.25, 0.50, 0.75 och 1.00. `gamma_correction.hlsl`
+(20 × 20 enheter på y = -0,5, `wood.png` upprepad tio gånger) belyst av fyra punktljus på (-3, 0, 0), (-1, 0, 0), (1,
+0, 0) och (3, 0, 0), vars färger går från svagt grått till vitt: 0,25; 0,50; 0,75 och 1,00. `gamma_correction.hlsl`
 beräknar ljuset från vart och ett i en funktion `BlinnPhong()` – diffust och Blinn-Phong-spekulärt (exponent 64),
 gånger ljusets färg, försvagat med avståndet; inget ambient – och `PSMain` multiplicerar golvets färg med summan.
 (Avståndet heter `lightDistance`: `distance` är en inbyggd funktion i HLSL.) Kameran står på (0, 0, 3) som tidigare.
@@ -211,7 +211,7 @@ att göra det själv i fragment shadern.
 :::opengl
 Det första sättet är förmodligen det enklaste, men ger dig också mindre kontroll. Genom att slå på `GL_FRAMEBUFFER_SRGB`
 säger du åt OpenGL att varje efterföljande ritkommando först ska gammakorrigera färgerna (från linjär till sRGB-färgrymd)
-innan de lagras i färgbuffern/färgbuffrarna. sRGB-färgrymden motsvarar ungefär ett gamma på 2.2 och är en standard för de
+innan de lagras i färgbuffern/färgbuffrarna. sRGB-färgrymden motsvarar ungefär ett gamma på 2,2 och är en standard för de
 flesta enheter. När `GL_FRAMEBUFFER_SRGB` är påslaget gör OpenGL automatiskt gammakorrigering efter varje körning av
 fragment shadern för alla efterföljande framebuffers, även standardframebuffern:
 
@@ -229,7 +229,7 @@ och att bara den sista framebuffern gammakorrigerar innan bilden skickas till bi
 :::vulkan
 Det första sättet är förmodligen det enklaste, men ger dig också mindre kontroll. I Vulkan kodar hårdvaran när ett
 attachment har ett `_SRGB`-format: varje färg som skrivs till det omvandlas från linjär till sRGB (ungefär potensen
-1/2.2). vulkan-tutorials `chooseSwapSurfaceFormat()` väljer `VK_FORMAT_B8G8R8A8_SRGB` med
+1/2,2). vulkan-tutorials `chooseSwapSurfaceFormat()` väljer `VK_FORMAT_B8G8R8A8_SRGB` med
 `VK_COLOR_SPACE_SRGB_NONLINEAR_KHR` – så i vulkan-tutorial blir varje bild gammakorrigerad gratis, utan att författaren
 säger så mycket om det. Kursens projekt väljer i stället `VK_FORMAT_B8G8R8A8_UNORM`:
 
@@ -257,7 +257,7 @@ för post-processing, till exempel) ska mellanresultaten stanna i linjärt rum, 
 :::d3d12
 Det första sättet är förmodligen det enklaste, men ger dig också mindre kontroll. I Direct3D kodar hårdvaran när render
 target-vyn har ett `_SRGB`-format: varje färg som skrivs genom den omvandlas från linjär till sRGB (ungefär potensen
-1/2.2). Swap chainen med flip-modellen (`DXGI_SWAP_EFFECT_FLIP_DISCARD`) kan inte skapas med ett `_SRGB`-format, men dess
+1/2,2). Swap chainen med flip-modellen (`DXGI_SWAP_EFFECT_FLIP_DISCARD`) kan inte skapas med ett `_SRGB`-format, men dess
 buffrar i `DXGI_FORMAT_R8G8B8A8_UNORM` får ha en sRGB-vy: en `D3D12_RENDER_TARGET_VIEW_DESC` med
 `Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB` och `ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D`, som skickas till
 `CreateRenderTargetView` i stället för `nullptr`. Pipeline statens `RTVFormats[0]` måste då också vara `_SRGB`-formatet.
@@ -308,7 +308,7 @@ Swap chains med flip-modellen tar inte `_SRGB`-format, men en sRGB-vy av deras U
 :::
 
 :::opengl
-Gör nu den första uppgiften, **gamma-shader**. I slutet av `gamma_correction.fs` upphöjer du färgen till 1/2.2:
+Gör nu den första uppgiften, **gamma-shader**. I slutet av `gamma_correction.fs` upphöjer du färgen till 1/2,2:
 
 ```glsl
     color *= lighting;
@@ -319,7 +319,7 @@ Gör nu den första uppgiften, **gamma-shader**. I slutet av `gamma_correction.f
 :::
 :::vulkan
 Gör nu den första uppgiften, **gamma-shader**. I slutet av `shaders/gamma_correction.frag` upphöjer du färgen till
-1/2.2:
+1/2,2:
 
 ```glsl
     color *= lighting;
@@ -330,7 +330,7 @@ Gör nu den första uppgiften, **gamma-shader**. I slutet av `shaders/gamma_corr
 :::
 :::d3d12
 Gör nu den första uppgiften, **gamma-shader**. I slutet av `PSMain` i `gamma_correction.hlsl` upphöjer du färgen till
-1/2.2:
+1/2,2:
 
 ```hlsl
     color *= lighting;
@@ -524,15 +524,15 @@ bättre resultat – det är det för breda, platta ljuset från förra uppgifte
 Orsaken till skillnaden är att dämpningsfunktioner ändrar ljusstyrkan, och eftersom vi inte visade vår slutliga utdata i
 linjärt rum valde vi de dämpningsfunktioner som såg bäst ut på bildskärmen, men som inte var fysikaliskt korrekta. Tänk på
 den kvadratiska dämpningsfunktionen: om vi använde den utan gammakorrigering skulle den i praktiken bli
-(1.0 / distance²)^2.2 när den visas på bildskärmen. Det ger en mycket starkare dämpning än vi ursprungligen tänkt oss. Det
+(1,0 / distance²)^2,2 när den visas på bildskärmen. Det ger en mycket starkare dämpning än vi ursprungligen tänkt oss. Det
 förklarar också varför den linjära motsvarigheten är mycket rimligare utan gammakorrigering, eftersom den i praktiken blir
-(1.0 / distance)^2.2 = 1.0 / distance^2.2, vilket liknar den fysikaliska motsvarigheten mycket mer.
+(1,0 / distance)^2,2 = 1,0 / distance^2,2, vilket liknar den fysikaliska motsvarigheten mycket mer.
 
 ```quiz
 Varför såg den linjära dämpningen `1 / d` rätt ut före gammakorrigeringen, och varför är `1 / d²` rätt nu?
 - [ ] För att `1 / d²` inte kan beräknas i en shader utan gammakorrigering
 - [ ] För att sRGB-texturer är mörkare, så ljuset måste nå längre
-- [x] Utan korrigering upphöjer bildskärmen allt till 2.2, så `1 / d` sågs som ungefär `1 / d^2.2` – nära det fysikaliska – medan `1 / d²` blev `1 / d^4.4`; med korrigering visar bildskärmen det vi räknar ut, så det fysikaliska `1 / d²` är rätt
+- [x] Utan korrigering upphöjer bildskärmen allt till 2,2, så `1 / d` sågs som ungefär `1 / d^2.2` – nära det fysikaliska – medan `1 / d²` blev `1 / d^4.4`; med korrigering visar bildskärmen det vi räknar ut, så det fysikaliska `1 / d²` är rätt
 - [ ] För att den kvadratiska termen bara spelar roll för fler än fyra ljus
 ---
 Dämpning ändrar ljusstyrka, och bildskärmens kurva böjer ljusstyrkan. När utdatan väl är gammakorrigerad är det vi räknar ut det som når ögat, och den fysikaliskt korrekta kvadratiska avståndslagen ser rätt ut.
@@ -562,7 +562,7 @@ Gör nu den sista uppgiften, **quadratic**. I `BlinnPhong()` i `gamma_correction
 
 Bygg och kör: ljuset **avtar snabbare** – ljusare rakt under ljusen, mörkare mellan dem och framför dem. Det här är
 learnopengls gammakorrigerade bild. Jämför med hur det började: där var det högra ljusets pöl en mättad orange fläck,
-och de fyra ljusens gråtoner (0.25 till 1.00) såg mer olika ut än de är; nu följer ljusstyrkan ljusens färger och
+och de fyra ljusens gråtoner (0,25 till 1,00) såg mer olika ut än de är; nu följer ljusstyrkan ljusens färger och
 avståndet så som fysiken säger att den ska.
 
 ![Golvet efter varje uppgift](images/gamma-steps.webp "Golvet efter varje uppgift, ritat av kursens simulator: ingen korrigering, bara shaderns korrigering (urblekt), sRGB-texturen och den kvadratiska dämpningen.")

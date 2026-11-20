@@ -21,7 +21,7 @@ varför det inte alltid går att sortera, och vad renderare gör i stället.
 
 En genomskinlig yta släpper igenom en del av ljuset bakifrån. I realtidsgrafik beskriver vi det med ett enda tal per
 fragment, dess *alfa*: hur stor andel av det som ligger bakom som ytan täcker (dess opacitet). Alfa 1 är ogenomskinligt, 0
-är osynligt, 0.5 täcker hälften. När ett fragment med färgen `Cs` och alfa `αs` hamnar på en pixel som redan har färgen
+är osynligt, 0,5 täcker hälften. När ett fragment med färgen `Cs` och alfa `αs` hamnar på en pixel som redan har färgen
 `Cd`, räknar blendingen ut
 
 ```text
@@ -34,7 +34,7 @@ kallas *over*-operatorn: det nya fragmentet läggs *över* det som redan finns. 
 över en ogenomskinlig bakgrund. Med flera lager blir den bara rätt om lagren kommer bakifrån och framåt, eftersom `over`
 inte är kommutativ: `A over B` är inte samma sak som `B over A`.
 
-Ta ett grönt lager (0, 1, 0) och ett blått lager (0, 0, 1), båda med alfa 0.5, över svart. Först grönt, sedan blått
+Ta ett grönt lager (0, 1, 0) och ett blått lager (0, 0, 1), båda med alfa 0,5, över svart. Först grönt, sedan blått
 ovanpå:
 
 ```text
@@ -54,7 +54,7 @@ det närmaste ser man oförtunnat, de bakom genom det. Rätt resultat är allts�
 det närmaste sist.
 
 ```quiz
-Ett grönt och ett blått lager, båda med alfa 0.5, blendas över svart med over-operatorn. Det blå lagret ligger närmast kameran. Vilken ordning ger rätt färg, och vilken färg blir det?
+Ett grönt och ett blått lager, båda med alfa 0,5, blendas över svart med over-operatorn. Det blå lagret ligger närmast kameran. Vilken ordning ger rätt färg, och vilken färg blir det?
 - [ ] Vilken ordning som helst: blendingen adderar färgerna, så resultatet blir (0, 0.5, 0.5) åt båda hållen
 - [ ] Först blått, sedan grönt: (0, 0.5, 0.25)
 - [x] Först grönt, sedan blått: (0, 0.25, 0.5) – lagret längst bort först, det närmare ovanpå
@@ -198,8 +198,8 @@ utgå från något av dina tidigare program, till exempel det från *Blending* �
 på 2 × 2 är vända mot kameran, som står i (0, 0, 5) och tittar längs -z:
 
 - en **röd** ogenomskinlig fyrhörning i (0.5, -0.2, 1.0);
-- en **grön** fyrhörning med alfa 0.5 i (-0.3, -0.6, 2.0) – den närmaste;
-- en **blå** fyrhörning med alfa 0.5 i (-0.6, 0.5, 0.0) – den som ligger längst bort, med sin nedre högra del bakom den
+- en **grön** fyrhörning med alfa 0,5 i (-0.3, -0.6, 2.0) – den närmaste;
+- en **blå** fyrhörning med alfa 0,5 i (-0.6, 0.5, 0.0) – den som ligger längst bort, med sin nedre högra del bakom den
   röda.
 
 learnopengls demo till nästa kapitel lägger alla tre i mitten, där de täcker varandra helt; kursen flyttar isär dem så

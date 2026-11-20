@@ -1593,7 +1593,7 @@ I renderingsloopen sätter vi den med shaderklassens `setFloat`, direkt efter `o
         ourShader.setFloat("xOffset", offset);
 ```
 
-Gör nu uppgiften **offset**. Normaliserade enhetskoordinater går från -1 till 1 över fönstret, så en offset på 0.5
+Gör nu uppgiften **offset**. Normaliserade enhetskoordinater går från -1 till 1 över fönstret, så en offset på 0,5
 är en fjärdedel av fönstrets bredd: 200 pixlar i vårt 800 pixlar breda fönster.
 :::
 :::vulkan
@@ -1634,7 +1634,7 @@ och i `recordCommandBuffer()` ersätts tidskoden och färgen av offseten, som sk
 ```
 
 Includerna `<chrono>` och `<cmath>` behövs inte längre. Gör nu uppgiften **offset**. Normaliserade
-enhetskoordinater går från -1 till 1 över fönstret, så en offset på 0.5 är en fjärdedel av fönstrets bredd:
+enhetskoordinater går från -1 till 1 över fönstret, så en offset på 0,5 är en fjärdedel av fönstrets bredd:
 200 pixlar i vårt 800 pixlar breda fönster.
 :::
 :::d3d12
@@ -1676,7 +1676,7 @@ så `InitAsConstants(sizeof(OffsetConstants) / 4, 0)` deklarerar nu ett 32-bitar
 
 Root parametern behöver ingen ändrad synlighet: `InitAsConstants` gör den synlig för alla shadersteg som standard.
 Includerna `<chrono>` och `<cmath>` behövs inte längre. Gör nu uppgiften **offset**. Koordinaterna i clip space går
-från -1 till 1 över fönstret, så en offset på 0.5 är en fjärdedel av fönstrets bredd: 200 pixlar i vårt 800 pixlar
+från -1 till 1 över fönstret, så en offset på 0,5 är en fjärdedel av fönstrets bredd: 200 pixlar i vårt 800 pixlar
 breda fönster.
 :::
 
@@ -1744,15 +1744,15 @@ Lägg märke till att färgen kommer från *indatapositionen*, före vändningen
 z-koordinater blir rött, grönt och blått i dess färg, och som all utdata från vertex shadern interpoleras de över
 triangeln.
 
-Så varför är ett hörn svart? Våra vertexpositioner går från -0.5 till 0.5, så några av färgkomponenterna är
+Så varför är ett hörn svart? Våra vertexpositioner går från -0,5 till 0,5, så några av färgkomponenterna är
 **negativa**. En färgkomponent kan inte vara mörkare än 0: när fragmentets färg skrivs till fönstrets färgbuffer,
-som lagrar varje komponent som ett normaliserat värde utan tecken mellan 0.0 och 1.0, kläms allt under 0.0 till 0.0
-(och allt över 1.0 till 1.0).
+som lagrar varje komponent som ett normaliserat värde utan tecken mellan 0,0 och 1,0, kläms allt under 0,0 till 0,0
+(och allt över 1,0 till 1,0).
 
 :::opengl
 Vertexen på `(-0.5, -0.5, 0.0)` – den ursprungliga triangelns nedre vänstra hörn, nu det övre vänstra eftersom
 triangeln är upp och ner – har negativt x och negativt y: dess färg blir (0, 0, 0), svart. De andra två hörnen får
-(0.5, 0.0, 0.0), mörkrött (x = 0.5, y = -0.5 klämt till 0), och (0.0, 0.5, 0.0), mörkgrönt. Och eftersom de
+(0.5, 0.0, 0.0), mörkrött (x = 0,5, y = -0,5 klämt till 0), och (0.0, 0.5, 0.0), mörkgrönt. Och eftersom de
 interpolerade värdena förblir negativa en bra bit från det hörnet är ett stort område runt det också svart.
 :::
 :::vulkan
@@ -1764,7 +1764,7 @@ interpolerade värdena förblir negativa en bra bit från det hörnet är ett st
 :::d3d12
 Vertexen på `(-0.5, -0.5, 0.0)` – den ursprungliga triangelns nedre vänstra hörn, nu det övre vänstra eftersom
 triangeln är upp och ner – har negativt x och negativt y: dess färg blir (0, 0, 0), svart. De andra två hörnen får
-(0.5, 0.0, 0.0), mörkrött (x = 0.5, y = -0.5 klämt till 0), och (0.0, 0.5, 0.0), mörkgrönt. Och eftersom de
+(0.5, 0.0, 0.0), mörkrött (x = 0,5, y = -0,5 klämt till 0), och (0.0, 0.5, 0.0), mörkgrönt. Och eftersom de
 interpolerade värdena förblir negativa en bra bit från det hörnet är ett stort område runt det också svart.
 :::
 
@@ -1775,7 +1775,7 @@ Varför är ett av triangelns hörn svart när positionen ges ut som färg?
 - [ ] Offseten skjuter ut hörnet utanför fönstret
 - [ ] Vertex shadern skriver inte längre någon färg för den vertexen
 ---
-Positioner från -0.5 till 0.5 blir färger från -0.5 till 0.5. Färgbuffern lagrar värden mellan 0 och 1, så en vertex med bara noll eller negativa komponenter blir svart – och det blir också området där de interpolerade värdena fortfarande är negativa.
+Positioner från -0,5 till 0,5 blir färger från -0,5 till 0,5. Färgbuffern lagrar värden mellan 0 och 1, så en vertex med bara noll eller negativa komponenter blir svart – och det blir också området där de interpolerade värdena fortfarande är negativa.
 ```
 
 Nu har du sett hela vägen som data tar genom shaderna: från vertex buffern in i vertex shadern, från vertex shadern

@@ -26,10 +26,10 @@ Varje pass behåller det närmaste fragmentet bakom lagret som passet före hitt
 ```
 
 ```quiz
-Tre genomskinliga lager med alfa 0.5, 0.5 och 0.2 täcker en pixel. Vilken revealage räknar weighted blended OIT ut där?
-- [x] 0.2 = 0.5 · 0.5 · 0.8, oavsett i vilken ordning lagren ritas
-- [ ] 0.8, alfa för lagret som ritas sist
-- [ ] 0.25, eftersom det svagaste lagret ignoreras
+Tre genomskinliga lager med alfa 0,5; 0,5 och 0,2 täcker en pixel. Vilken revealage räknar weighted blended OIT ut där?
+- [x] 0,2 = 0,5 · 0,5 · 0,8, oavsett i vilken ordning lagren ritas
+- [ ] 0,8, alfa för lagret som ritas sist
+- [ ] 0,25, eftersom det svagaste lagret ignoreras
 - [ ] Det beror på vilket lager som ligger närmast kameran
 ---
 Revealage är produkten av alla (1 − α) – exakt och oberoende av ordningen. Bara färgen, det viktade medelvärdet, är en approximation.
@@ -46,7 +46,7 @@ Den fasta blendingen räknar ut summan och produkten, så ingen shader behöver 
 ```
 
 ```quiz
-Tentakelns ben `Upper` sitter på y = 1.1 i bindposen. Vilken är dess offsetmatris, och vilken är dess slutliga matris `globalTransform · offset` medan tentakeln står i bindposen?
+Tentakelns ben `Upper` sitter på y = 1,1 i bindposen. Vilken är dess offsetmatris, och vilken är dess slutliga matris `globalTransform · offset` medan tentakeln står i bindposen?
 - [ ] Identiteten; `translate(0, 1.1, 0)`
 - [ ] `translate(0, 1.1, 0)`; `translate(0, 2.2, 0)`
 - [ ] `translate(0, -1.1, 0)`; `translate(0, -1.1, 0)`
@@ -66,21 +66,21 @@ Eulervinklar misslyckas på ett annat sätt: de tre vinklarna ändras oberoende 
 ```
 
 ```quiz
-Tentakelns animation har 1000 ticks per sekund, längden 2000 ticks och nycklar vid 0, 500, 1000, 1500 och 2000. Mellan vilka nycklar interpolerar ett ben efter 2.6 s uppspelning, och med vilken faktor?
-- [ ] 2500 och 3000, faktor 0.2
-- [ ] 0 och 500, faktor 0.6
-- [ ] 1500 och 2000, faktor 0.6
-- [x] 500 och 1000, faktor 0.2
+Tentakelns animation har 1000 ticks per sekund, längden 2000 ticks och nycklar vid 0, 500, 1000, 1500 och 2000. Mellan vilka nycklar interpolerar ett ben efter 2,6 s uppspelning, och med vilken faktor?
+- [ ] 2500 och 3000, faktor 0,2
+- [ ] 0 och 500, faktor 0,6
+- [ ] 1500 och 2000, faktor 0,6
+- [x] 500 och 1000, faktor 0,2
 ---
-2.6 s är 2600 ticks; `fmod(2600, 2000)` = 600, mellan nycklarna vid 500 och 1000: `(600 − 500) / (1000 − 500)` = 0.2.
+2,6 s är 2600 ticks; `fmod(2600, 2000)` = 600, mellan nycklarna vid 500 och 1000: `(600 − 500) / (1000 − 500)` = 0,2.
 ```
 
 ```quiz
-I en scengraf är en planet skalad till 0.5. Dess måne har den lokala positionen (3.5, 0, 0) och den lokala skalan 0.6. Hur långt från planetens mittpunkt ligger månen i världen, och hur stor är den?
-- [ ] 3.5 enheter bort, med skalan 0.6 – lokala värden är världsvärden
-- [x] 1.75 enheter bort, med skalan 0.3 – förälderns skala följer med till barnets position och storlek
-- [ ] 1.75 enheter bort, med skalan 0.6
-- [ ] 7 enheter bort, med skalan 1.2
+I en scengraf är en planet skalad till 0,5. Dess måne har den lokala positionen (3.5, 0, 0) och den lokala skalan 0,6. Hur långt från planetens mittpunkt ligger månen i världen, och hur stor är den?
+- [ ] 3,5 enheter bort, med skalan 0,6 – lokala värden är världsvärden
+- [x] 1,75 enheter bort, med skalan 0,3 – förälderns skala följer med till barnets position och storlek
+- [ ] 1,75 enheter bort, med skalan 0,6
+- [ ] 7 enheter bort, med skalan 1,2
 ---
 `global = parentGlobal · local`: planetens skala gäller allt i dess rum, månens förskjutning också.
 ```
@@ -96,9 +96,9 @@ Oförändrade entiteter ovanför och bredvid behåller sina matriser; uppdaterin
 ```
 
 ```quiz
-En planets begränsningssfär har radien 1.2 i världsrummet. Mittpunktens tecknade avstånd till frustumets fjärrplan (normalen riktad inåt) är −0.8, och den ligger väl innanför de andra fem planen. Ritas planeten?
+En planets begränsningssfär har radien 1,2 i världsrummet. Mittpunktens tecknade avstånd till frustumets fjärrplan (normalen riktad inåt) är −0,8, och den ligger väl innanför de andra fem planen. Ritas planeten?
 - [ ] Nej: ett negativt tecknat avstånd betyder utanför frustumet
-- [x] Ja: sfären ligger på eller framför planet när avståndet är större än −radien, och −0.8 > −1.2 – planeten sticker in i frustumet
+- [x] Ja: sfären ligger på eller framför planet när avståndet är större än −radien, och −0,8 > −1,2 – planeten sticker in i frustumet
 - [ ] Nej: mittpunkten måste ligga innanför varje plan
 - [ ] Bara om dess AABB också säger det
 ---
@@ -227,8 +227,8 @@ En buffert skapades med `glNamedBufferStorage(VBO, size, data, 0)`. Vad lovar de
 
 ```quiz
 Den fysikaliskt baserade bloomen slutar med `hdrColor = mix(hdrColor, bloomColor, 0.04)` i stället för den gamla `hdrColor += bloomColor`. Vad ändras?
-- [ ] Bara ljusstyrkan: `mix` är `+=` skalat med 0.04
-- [ ] Bara pixlar ljusare än 1.0 får bloom
+- [ ] Bara ljusstyrkan: `mix` är `+=` skalat med 0,04
+- [ ] Bara pixlar ljusare än 1,0 får bloom
 - [ ] Bloomen ersätter scenen där den är ljusare
 - [x] Det finns ingen tröskel och inget ljus läggs till: 4 % av varje pixels ljus tas från den och sprids runt den, som när en lins sprider en del av ljuset som passerar
 ---

@@ -152,7 +152,7 @@ du har lärt dig.
   trädet rekursivt.
 - **Pekare in i vektorer**: en `push_back` förbi kapaciteten flyttar elementen och lämnar pekare till dem hängande –
   säkert i kursens loop bara för att varje pekare används före nästa `push_back` i den vektorn.
-- **Kedjan**: tio barn på (3.5, 0, 0) och skala 0.6 vardera – en modell ritad elva gånger med elva modellmatriser.
+- **Kedjan**: tio barn på (3.5, 0, 0) och skala 0,6 vardera – en modell ritad elva gånger med elva modellmatriser.
 - **Dirty-flaggan**: en transform minns om dess lokala värden har ändrats; set-funktionerna sätter den,
   `computeModelMatrix` nollställer den. En ändrad entitet räknar om sig själv och **allt under sig**
   (`forceUpdateSelfAndChild`); en oförändrad letar bara vidare nedåt.
@@ -182,7 +182,7 @@ du har lärt dig.
   **största skalan**. På planets insida när det tecknade avståndet är `> −radien`.
 - **AABB**: mittpunkt och halva storlekar (extents); mot ett plan är dess "radie" längs normalen `Σ extent_i · |n_i|`.
   En vriden låda behöver en ny axelriktad låda runt sig i världsrummet – större än lådan själv.
-- **Rutnätet**: 10 × 10 planeter runt roten, som vrider sig; vid 2.0 s ritas **8 / 101** med fjärrplanet på 15, **37 /
+- **Rutnätet**: 10 × 10 planeter runt roten, som vrider sig; vid 2,0 s ritas **8 / 101** med fjärrplanet på 15, **37 /
   101** med kamerans eget frustum (samma bild), **38 / 101** med AABB:er – en mer än med sfärer, eftersom lådan runt en
   vriden låda sitter löst. Barnen testas även när föräldern cullas (inga hierarkiska volymer).
 - **Vad den inte sparar**: overdraw (skymning), de synliga objektens pixlar, de osynliga delarna av ett synligt objekt.
@@ -212,14 +212,14 @@ du har lärt dig.
 - **En tät ljuslåda**: ljusets view i hörnens mittpunkt, riktad längs −lightDir; den ortografiska lådan från hörnens
   minima och maxima i ljusrummet, med z-intervallet utsträckt med `zMult = 10` så att objekt mellan ljuset och skivan
   inte klipps bort. Räknas om varje bildruta – kaskaderna följer kameran.
-- **En texturarray**: fem lager, djup, närmaste-filtrering, en kant med djupet 1.0 (inget utanför en låda ligger i
+- **En texturarray**: fem lager, djup, närmaste-filtrering, en kant med djupet 1,0 (inget utanför en låda ligger i
   skugga).
 - **Alla kaskader i ett pass**: **instansierade geometry shaders** – geometry shadern körs fem gånger per triangel,
   använder anropets ljusrumsmatris och skickar triangeln till lagret med samma nummer.
 - **Att välja kaskad**: fragmentets djup i view-rummet, `abs((view · pos).z)`, jämförs med delningsavstånden; bortom den
   sista delningen den sista kaskaden. Debugvyn färgar kaskaderna röd, grön, blå …
 - **Skuggor**: kaskadens matris, djupet från det lagret (lagret som tredje texturkoordinat) och en bias skalad per
-  kaskad (delad med kaskadens fjärravstånd · 0.5) – en fast bias skulle lossa skuggorna i stora lådor (*peter panning*).
+  kaskad (delad med kaskadens fjärravstånd · 0,5) – en fast bias skulle lossa skuggorna i stora lådor (*peter panning*).
   **PCF** över 3 × 3 texlar i lagret, texelstorleken från arrayens bredd och höjd.
 - **Vidare**: att blanda över sömmarna mellan kaskader, att **stabilisera** kaskaderna mot flimmer (en omslutande sfär
   och fästning vid hela texlar), tätare z-intervall, ett praktiskt delningsschema, culling per kaskad.
@@ -375,7 +375,7 @@ du har lärt dig.
   halva minnet och bandbredden jämfört med RGBA16F), linjär filtrering, clamp mot kanten; separata texturer, som
   learnopengl gör.
 - **Nedsampling**: **13 bilinjära sampel** från ett område på 6 × 6 texlar – fem överlappande rutor på 2 × 2, de fyra
-  hörnrutorna 0.125 var, den inre rutan 0.5 – så att energin bevaras och små detaljer inte flimrar mellan nivåerna.
+  hörnrutorna 0,125 var, den inre rutan 0,5 – så att energin bevaras och små detaljer inte flimrar mellan nivåerna.
 - **Uppsampling**: ett 3 × 3 **tältfilter** (1 2 1 / 2 4 2 / 1 2 1 / 16) med en radie i **texturkoordinater**
   (`filterRadius = 0.005`), blendat additivt (`ONE, ONE`) i nästa större nivå; nivå 0 blir till slut bloomtexturen.
 - **Ingen tröskel**: `mix(hdrColor, bloomColor, 0.04)` – bloomen *interpoleras*, adderas inte, och energin bevaras som

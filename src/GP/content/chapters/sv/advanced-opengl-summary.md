@@ -29,7 +29,7 @@ har lärt dig.
 - **Skrivskyddad djupbuffert**: testet körs, men inget skrivs – djupets skrivmask.
 - **Djupvärdenas precision**: projektionen gör det lagrade djupet proportionellt mot `1/z`:
   `F_depth = (1/z - 1/near) / (1/far - 1/near)`. Det mesta av intervallet går åt nära det främre planet: med
-  near = 0.1 och far = 100 ligger ett djup på 0.5 bara 0.2 enheter från kameran.
+  near = 0,1 och far = 100 ligger ett djup på 0,5 bara 0,2 enheter från kameran.
 - **Visualisera djupbufferten**: djupet som en gråton visar scenen nästan vit; att **linjärisera** det (invertera
   projektionens djupekvation) ger avståndet från kameran, delat med `far` för att visas.
 - **Z-fighting**: två ytor så nära varandra att djupbufferten inte kan avgöra vilken som ligger framför – de flimrar.
@@ -79,7 +79,7 @@ har lärt dig.
   eller med wrap), INVERT.
 - **Skrivmask**: AND:as med varje värde som skrivs; `0xFF` skriver som det är, `0x00` stänger av stencilskrivning.
 - **Konturer runt föremål**: rita föremålen med funktionen ALWAYS, operationen REPLACE (referens 1) och skrivning på,
-  så att stencilbufferten innehåller 1 där de syns; rita dem sedan uppskalade med 1.1 i en enda färg, med funktionen
+  så att stencilbufferten innehåller 1 där de syns; rita dem sedan uppskalade med 1,1 i en enda färg, med funktionen
   NOT_EQUAL 1, stencilskrivning av och djuptestet av – bara ringen utanför originalen klarar sig. Golvet ritas först
   och får inte skriva till stencilbufferten.
 
@@ -112,7 +112,7 @@ har lärt dig.
 
 ## Blending
 
-- **Alfa**: färgens fjärde komponent, dess opacitet: 1.0 ogenomskinlig, 0.0 helt genomskinlig.
+- **Alfa**: färgens fjärde komponent, dess opacitet: 1,0 ogenomskinlig, 0,0 helt genomskinlig.
 - **Kasta fragment**: för texturer som antingen är helt ogenomskinliga eller helt genomskinliga (gräset) kastar
   shadern fragment vars alfa ligger under en tröskel (`if (texColor.a < 0.1) discard;`). Ett kastat fragment skriver
   varken färg eller djup.
@@ -192,7 +192,7 @@ har lärt dig.
 - **Rendera till en textur**: rita scenen i en egen färgtextur, byt tillbaka till fönstret och rita en **skärmquad** –
   två trianglar angivna i NDC, inga matriser, inget djuptest – texturerad med den.
 - **Post-processing**: effekter på den färdiga bilden i skärmquadens shader: **invertering** (`1.0 - färg`),
-  **gråskala** (viktad: 0.2126 rött, 0.7152 grönt, 0.0722 blått).
+  **gråskala** (viktad: 0,2126 rött, 0,7152 grönt, 0,0722 blått).
 - **Kernel** (faltningsmatris): ett 3×3-rutnät med vikter för en pixel och dess åtta grannar, samplade med
   `offset = 1.0 / 300.0`. Skärpning (vikterna summerar till 1), oskärpa (`1 2 1 / 2 4 2 / 1 2 1`, delat med 16),
   kantdetektering (summa 0: enfärgade ytor blir svarta). Vid kanten avgör samplerns wrapping vilka grannarna är.
@@ -240,7 +240,7 @@ har lärt dig.
   vrida sig men aldrig kommer närmare himlen.
 - **Ritad först**: med djupskrivning av, så att allt som ritas senare täcker den.
 - **En optimering – ritad sist**: vertex shadern sätter `gl_Position = pos.xyww`, så att djupet efter
-  perspektivdivisionen blir 1.0; med djupfunktionen LESS_OR_EQUAL klarar sig himlen bara där inget har ritats, och
+  perspektivdivisionen blir 1,0; med djupfunktionen LESS_OR_EQUAL klarar sig himlen bara där inget har ritats, och
   tidig djuptestning hoppar över dess fragment shader överallt annars.
 - **Environment mapping**: **reflektion** samplar cube mapen med `R = reflect(I, normalize(Normal))`, där `I` är
   riktningen från kameran till fragmentet i world space; **refraktion** använder `refract(I, N, 1.00 / 1.52)`,
@@ -321,7 +321,7 @@ har lärt dig.
 - **Inbyggda variabler**: värden som shaderspråket tillhandahåller: vertex shaderns positionsutdata,
   **punktstorleken**, **vertex-ID:t**, fragmentets fönsterkoordinater och djup (`gl_FragCoord`), om det hör till en
   **framsida**, och dess skrivbara **djup**.
-- **Fönsterkoordinater**: ett fragments x och y är pixelns mitt, t.ex. 0.5 för första kolumnen; att jämföra x med 400
+- **Fönsterkoordinater**: ett fragments x och y är pixelns mitt, t.ex. 0,5 för första kolumnen; att jämföra x med 400
   delar det 800 pixlar breda fönstret i två.
 - **Framsida eller baksida**: talar om för fragment shadern om dess triangel är en fram- eller baksida – enligt samma
   regel som culling; med framsidorna bortkastade ritas bara baksidor (kubernas insidor).
@@ -379,7 +379,7 @@ har lärt dig.
 - **Exploderande föremål**: varje triangel flyttas längs sin ytnormal (den normaliserade kryssprodukten av två kanter)
   med `(sin(time) + 1) / 2 * 2.0`. learnopengl gör det i clip space.
 - **Visualisera normalvektorer**: rita modellen som vanligt, och sedan en gång till med en geometry shader som skickar
-  ut en kort linje (längd 0.2) längs varje vertex normal – ett bra sätt att kontrollera normaler.
+  ut en kort linje (längd 0,2) längs varje vertex normal – ett bra sätt att kontrollera normaler.
 
 :::opengl
 - **Program**: Shader-klassen tar en valfri tredje fil, kompilerad som `GL_GEOMETRY_SHADER` och fäst före länkningen.

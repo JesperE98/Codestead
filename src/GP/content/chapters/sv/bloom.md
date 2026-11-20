@@ -15,7 +15,7 @@ med den glöder kvadraten, och ögat uppfattar den som ett ljus.
 Bloom fungerar bäst tillsammans med HDR-rendering. En vanlig missuppfattning är att HDR är samma sak som bloom, eftersom
 många använder begreppen omväxlande. De är dock helt olika tekniker med olika syften. Det går att implementera bloom med
 vanliga framebuffers med 8 bitars precision, precis som det går att använda HDR utan bloom-effekten. Det är bara så att
-HDR gör bloom effektivare att implementera: med HDR har "ljus" en naturlig betydelse – ljusare än 1.0, det fönstret inte
+HDR gör bloom effektivare att implementera: med HDR har "ljus" en naturlig betydelse – ljusare än 1,0, det fönstret inte
 kan visa – och tröskeln som avgör vad som glöder är lätt att styra.
 
 För att implementera bloom renderar vi en belyst scen som vanligt och tar ut både scenens HDR-färgbuffer och en bild av
@@ -23,7 +23,7 @@ scenen där bara de ljusa områdena syns. Den uttagna ljusbilden blurras sedan, 
 ursprungliga HDR-bilden av scenen. Steg för steg:
 
 1. Rendera scenen i en flyttals-framebuffer, som i förra kapitlet – och skriv samtidigt de fragment vars ljusstyrka
-   överstiger 1.0 i en andra färgbuffer, svart överallt annars.
+   överstiger 1,0 i en andra färgbuffer, svart överallt annars.
 2. Blurra den andra buffern – en gaussisk blur, gjord i flera pass.
 3. Addera den blurrade bilden till scenens HDR-färger, och tone mappa och gammakorrigera sedan summan på fönstret.
 
@@ -36,7 +36,7 @@ gång, och pass som turas om att rita i en buffer och läsa en annan. Alla API:e
 Kapitlets scen är learnopengls bloom-scen: ett trägolv (kuben på 2 × 2 × 2 skalad till en tunn platta på 25 × 1 × 25)
 med sex lådor på och ovanför det, belyst av fyra punktljus som är mycket starkare än i de tidigare kapitlen: vitt (5,
 5, 5) på (0, 0.5, 1.5), rött (10, 0, 0) på (-4, 0.5, -3), blått (0, 0, 15) på (3, 0.5, 1) och grönt (0, 5, 0) på
-(-0.8, 2.4, -1). Varje ljus visas också som en liten kub i sin egen färg – värden långt över 1.0. Kameran är
+(-0.8, 2.4, -1). Varje ljus visas också som en liten kub i sin egen färg – värden långt över 1,0. Kameran är
 learnopengls, på (0, 0, 5) och tittar längs -z. Båda texturerna läses som sRGB-texturer; belysningen är förra
 kapitlets (bara diffust ljus, kvadratisk dämpning, inget omgivningsljus).
 
@@ -44,7 +44,7 @@ kapitlets (bara diffust ljus, kvadratisk dämpning, inget omgivningsljus).
 Du fortsätter i ditt program från *HDR*, som det var i slutet av det kapitlet, med den här scenen: `main.cpp` renderar
 scenen med `bloom.vs` / `bloom.fs` och ljuskuberna med `bloom.vs` / `light_box.fs` i `hdrFBO` – en
 `GL_RGBA16F`-färgtextur, `colorBuffer`, och en djup-renderbuffer – och ritar sedan `colorBuffer` på learnopengls
-`renderQuad()` med `bloom_final.vs` / `bloom_final.fs`, som tone mappar med exponeringskurvan (`exposure` = 1.0) och
+`renderQuad()` med `bloom_final.vs` / `bloom_final.fs`, som tone mappar med exponeringskurvan (`exposure` = 1,0) och
 gammakorrigerar. Färgtexturen klämmer vid kanten (`GL_CLAMP_TO_EDGE`) – learnopengls kommentar säger varför: "we clamp
 to the edge as the blur filter would otherwise sample repeated texture values!". `blur.vs` är klar, `blur.fs` börjar
 med sina uniformer och en tom `main`.
@@ -54,7 +54,7 @@ Du fortsätter i ditt program från *HDR*, som det var i slutet av det kapitlet,
 `recordCommandBuffer()` ritar golvet och de sex lådorna med `graphicsPipeline` (`shaders/bloom.vert` / `.frag`) och
 ljuskuberna med `lightPipeline` (`bloom.vert` / `light_box.frag`) i `hdrRenderPass` – en
 `VK_FORMAT_R16G16B16A16_SFLOAT`-färgbild och en djupbild – och sedan skärmfyrhörningen (vertex 36..41) i fönstret med
-`bloomFinalPipeline` (`bloom_final.frag`), som tone mappar med exponeringskurvan (`ubo.exposure` = 1.0) och
+`bloomFinalPipeline` (`bloom_final.frag`), som tone mappar med exponeringskurvan (`ubo.exposure` = 1,0) och
 gammakorrigerar. Push constants är `struct PushConstants { glm::mat4 model; glm::vec3 lightColor; }` i ett enda
 intervall för vertex- **och** fragmentsteget (modellmatrisen för `bloom.vert`, ljusets färg för `light_box.frag`);
 push constants läggs ut som std430, så `vec3`:n ligger direkt efter `mat4`:n, på offset 64. Varje textur har sitt
@@ -69,7 +69,7 @@ Du fortsätter i ditt program från *HDR*, som det var i slutet av det kapitlet,
 ljuskuberna med `m_lightBoxPipelineState` (`PSMain` i `light_box.hlsl`, `lightColor`) – i en
 `R16G16B16A16_FLOAT`-färgbuffer, `m_colorBuffer` (plats `FrameCount` i RTV-heapen, plats 3 i CBV/SRV-heapen), med
 djupbuffern; sedan ritar den skärmfyrhörningen (vertex 36–41) i back buffern med `m_bloomFinalPipelineState`
-(`bloom_final.hlsl`), som tone mappar med exponeringskurvan (`exposure` = 1.0, en root constant) och gammakorrigerar.
+(`bloom_final.hlsl`), som tone mappar med exponeringskurvan (`exposure` = 1,0, en root constant) och gammakorrigerar.
 Root-parameter 0 håller root constants för det som ritas – `ModelConstants` (modell, normalmatris, `lightColor`: 35
 värden) för scenen, en enda float för den sista fyrhörningen – och är synlig för alla shaders. Skärmfyrhörningens pass
 samplar med den statiska samplern s1: linjär, `D3D12_TEXTURE_ADDRESS_MODE_CLAMP` – learnopengl klämmer sina
@@ -94,17 +94,17 @@ shadern körs en gång, och var och en av dess utdata hamnar i sin egen färgbuf
 Vilka fragment är ljusa? Vi tar färgens *luminans* – dess ljusstyrka så som ögat uppfattar den – och jämför den med en
 tröskel. Ögat är mycket känsligare för grönt än för rött, och minst för blått, så luminansen väger kanalerna olika:
 `dot(color, vec3(0.2126, 0.7152, 0.0722))`, vikterna för sRGB-primärfärgerna (Rec. 709). Först gör vi alltså om
-fragmentfärgen till gråskala på det sättet, och om den överstiger 1.0 – en ljusstyrka fönstret inte kan visa – skriver vi
+fragmentfärgen till gråskala på det sättet, och om den överstiger 1,0 – en ljusstyrka fönstret inte kan visa – skriver vi
 färgen i den andra buffern; annars svart.
 
 ```quiz
 Den blå ljuskuben har färgen (0, 0, 15). Hamnar den i buffern för ljusa färger?
 - [ ] Nej: dess röda och gröna är 0, så dess ljusstyrka är 0
-- [x] Ja, men bara precis: 15 × 0.0722 = 1.08, över tröskeln 1.0 – en blå på 13 skulle förbli svart
+- [x] Ja, men bara precis: 15 × 0,0722 = 1,08, över tröskeln 1,0 – en blå på 13 skulle förbli svart
 - [ ] Ja, med ljusstyrkan 15: den största kanalen räknas
-- [ ] Nej: tröskeln tillämpas efter tone mappingen, och tone mappade värden överstiger aldrig 1.0
+- [ ] Nej: tröskeln tillämpas efter tone mappingen, och tone mappade värden överstiger aldrig 1,0
 ---
-Luminansen väger blått minst. Den gröna kuben (0, 5, 0) har 5 × 0.7152 = 3.6, den röda (10, 0, 0) 2.1, den vita (5, 5, 5) 5.0 – alla klart över 1.0.
+Luminansen väger blått minst. Den gröna kuben (0, 5, 0) har 5 × 0,7152 = 3,6, den röda (10, 0, 0) 2,1, den vita (5, 5, 5) 5,0 – alla klart över 1,0.
 ```
 
 :::opengl
@@ -193,7 +193,7 @@ med `std::array<VkAttachmentDescription, 3> attachments = {colorAttachment, brig
 `createHdrFramebuffer()` skapar den ljusa bilden som färgbilden (`brightColorImage`, `brightColorImageMemory`,
 `brightColorImageView`: flyttalsformatet, färg-attachment + samplad), och framebuffern får tre views i samma ordning:
 `hdrColorImageView, brightColorImageView, hdrDepthImageView`. Render passen rensar tre attachments, så
-`recordCommandBuffer()` skickar tre rensningsvärden: två svarta färger och djupet 1.0.
+`recordCommandBuffer()` skickar tre rensningsvärden: två svarta färger och djupet 1,0.
 
 Det finns ett ställe till som måste känna till antalet färg-attachments: pipelinen. Dess färgblandningstillstånd har en
 `VkPipelineColorBlendAttachmentState` per färg-attachment i subpassen, och antalen måste vara lika. Så `createPipeline`
@@ -375,7 +375,7 @@ Pixel shadern i `bloom.hlsl` returnerar `float4 BrightColor : SV_TARGET1`. Vad m
 Bygg och kör: fönstret visar **bara de ljusa delarna**, tone mappade, mot svart. Ljuskuberna finns där, den vita och den
 gröna; stålramen på lådan precis ovanför det vita ljuset; en ljus kant på den stora lådan nere till vänster, den som
 vetter mot det vita ljuset; och små prickar – ramarnas nitar där ljuset faller på dem. Allt annat är svart. Till och med
-golvets belysta fläck under det vita ljuset förblir svart: den är ljus, men dess luminans stannar under 1.0. Kanterna på
+golvets belysta fläck under det vita ljuset förblir svart: den är ljus, men dess luminans stannar under 1,0. Kanterna på
 de ljusa delarna är fortfarande skarpa.
 
 ## Gaussisk blur
@@ -406,7 +406,7 @@ bort. Summan är 1.0 (mitten en gång, de andra två gånger), så bluren ändra
 binomialkoefficienterna 924, 792, 495, 220 och 66 från rad 12 i Pascals triangel, delade med sin summa 4070 –
 binomialkoefficienter är en god approximation av en gausskurva.) En texel är `1.0` delat med texturens storlek i texlar.
 
-![Blurkärnan](images/bloom-kernel.webp "Kärnans nio vikter, 0.227 i mitten, och de två passen: ett horisontellt och sedan ett vertikalt ger samma blur som 9 × 9-kärnan.")
+![Blurkärnan](images/bloom-kernel.webp "Kärnans nio vikter, 0,227 i mitten, och de två passen: ett horisontellt och sedan ett vertikalt ger samma blur som 9 × 9-kärnan.")
 
 ```quiz
 Varför körs bluren som separata horisontella och vertikala pass?
@@ -751,10 +751,10 @@ i samma enheter som scenens – den hör till scenens HDR-färg, och summan går
 Varför adderas den blurrade ljusstyrkan till scenen före tone mappingen och inte efteråt?
 - [ ] Tone mappingen skulle göra den blurrade texturen svart
 - [ ] Att addera efter tone mappingen går inte i en enda shader
-- [x] Båda är HDR-ljus i samma enheter: deras summa går genom tone mapping-kurvan, som håller den under 1.0 och blandar in skenet mjukt i scenen; adderat efteråt skulle sken plus scen klippas till vitt igen
+- [x] Båda är HDR-ljus i samma enheter: deras summa går genom tone mapping-kurvan, som håller den under 1,0 och blandar in skenet mjukt i scenen; adderat efteråt skulle sken plus scen klippas till vitt igen
 - [ ] Bluren fungerar bara på gammakorrigerade värden
 ---
-En tone mappad färg ligger redan nära 1.0 nära ljusen; att lägga till mer ovanpå skulle klämmas av fönstret – HDR-kapitlets problem en gång till.
+En tone mappad färg ligger redan nära 1,0 nära ljusen; att lägga till mer ovanpå skulle klämmas av fönstret – HDR-kapitlets problem en gång till.
 ```
 
 :::opengl
@@ -926,7 +926,7 @@ lösningen, och learnopengls bloom.
 ## Avslutande tankar
 
 Tröskeln avgör vad som glöder, och HDR gör den naturlig: allt som är ljusare än vad fönstret kan visa. I en LDR-scen
-skulle du behöva en tröskel under 1.0 och skulle se de ljusa delarna av varje vit vägg glöda också.
+skulle du behöva en tröskel under 1,0 och skulle se de ljusa delarna av varje vit vägg glöda också.
 
 Bluren vi använde är learnopengls – en kärna med 9 samplingar, upprepad fem gånger i varje riktning – och dess räckvidd
 är begränsad: skenet når några dussin pixlar, och att göra det bredare kräver fler pass, vart och ett över hela skärmen.
@@ -934,7 +934,7 @@ En vanlig förbättring är att blurra i lägre upplösningar: skala ner den lju
 åttondels storlek, blurra varje nivå och lägg ihop dem igen medan de skalas upp. En blur på några få texlar i en liten
 bild täcker många pixlar i den fulla, så skenet kan bli mycket bredare för mindre arbete. learnopengls gästartikel
 *Physically Based Bloom* bygger en sådan kedja – och tar bort tröskeln helt och adderar i stället lite av hela den
-blurrade scenen, så att ljusa saker inte hoppar från "inget sken" till "sken" när deras ljusstyrka passerar 1.0.
+blurrade scenen, så att ljusa saker inte hoppar från "inget sken" till "sken" när deras ljusstyrka passerar 1,0.
 
 Justera effekten efter smak: tröskeln, antalet blurpass, styrkan som bluren adderas med (en faktor före `+=`). Bloom är
 den första av effekterna som tar HDR-bilden som indata; resten av den här delen bygger på samma idé: rendera i flera

@@ -96,7 +96,7 @@ Förbered det först. Bygg `lightingPipeline` från `shaders/multiple_lights.ver
 behåller `shaders/light_cube.*`); vertex shadern är oförändrad. Börja om `multiple_lights.frag` från början: de två
 samplers, `struct Material { float shininess; };`, uniform-blocket
 `{ mat4 view; mat4 proj; vec3 viewPos; Material material; }`, indata, och en `main()` som räknar ut `norm` och
-`viewDir`, sätter `vec3 result = vec3(0.0);` och skriver ut det med alfa 1.0 – de tre faserna kommer emellan. Ta i C++
+`viewDir`, sätter `vec3 result = vec3(0.0);` och skriver ut det med alfa 1,0 – de tre faserna kommer emellan. Ta i C++
 bort structen `Light` och den globala `lightPos`, låt `UniformBufferObject` sluta med `Material material;`, låt
 `updateUniformBuffer()` sätta bara `viewPos` och `material.shininess` (ljusen kommer i uppgifterna), och ta bort
 lampans ritning ur `recordCommandBuffer()` – uppgifterna ritar fyra av dem.
@@ -107,7 +107,7 @@ Du fortsätter i ditt program från *Ljuskällor*: de tio behållarna, diffuse o
 objektens shaders flyttar till `multiple_lights.hlsl`: `VSMain` är oförändrad; där finns texturerna,
 `struct Material { float shininess; }`, cbuffern `SceneConstantBuffer` med `view`, `projection`, `viewPos` och
 `material` (inget ljus ännu), och en ny `PSMain` som räknar ut `norm` och `viewDir`, sätter
-`float3 result = float3(0.0f, 0.0f, 0.0f);` och returnerar det med alfa 1.0 – de tre faserna kommer emellan. Ta i
+`float3 result = float3(0.0f, 0.0f, 0.0f);` och returnerar det med alfa 1,0 – de tre faserna kommer emellan. Ta i
 `main.cpp` bort C++-structen `Light` och den globala `lightPos`, låt `OnUpdate` sätta bara `viewPos` och
 `material.shininess` (ljusen kommer i uppgifterna), och ta bort lampans ritning ur `PopulateCommandList` – uppgifterna
 ritar fyra av dem.
@@ -609,8 +609,8 @@ flera punktljus utan att duplicera kod. I main-funktionen skapar vi helt enkelt 
 punktljusarrayen och anropar `CalcPointLight` för varje punktljus.
 
 ```quiz
-Vart och ett av de fyra punktljusen har en ambient-styrka på 0.05, och `CalcPointLight` dämpar även ambient-termen. Varför dämpa den här?
-- [ ] Det omgivande ljuset får inte överstiga 0.05 totalt
+Vart och ett av de fyra punktljusen har en ambient-styrka på 0,05, och `CalcPointLight` dämpar även ambient-termen. Varför dämpa den här?
+- [ ] Det omgivande ljuset får inte överstiga 0,05 totalt
 - [ ] Dämpningen gör ambient-termen ljusare nära ljuset, vilket behövs för specular-högdagrarna
 - [x] Med flera ljus lägger varje ljus till sin egen ambient-term; utan dämpning skulle ambient-termerna från alla ljus – även avlägsna – läggas på varandra överallt och bleka ut scenen
 ---
@@ -1135,7 +1135,7 @@ float3 CalcSpotLight(SpotLight light, float3 normal, float3 fragPos, float3 view
 :::
 
 learnopengls ficklampa har inget eget omgivande ljus (solen och punktljusen ger tillräckligt), full styrka för diffuse
-och specular, dämpningen för ett avstånd på 50, och en snävare mjuk kant än förut – från 12.5° till 15°:
+och specular, dämpningen för ett avstånd på 50, och en snävare mjuk kant än förut – från 12,5° till 15°:
 
 :::opengl
 ```cpp
@@ -1213,12 +1213,12 @@ Efter uppgiften **spot-light** ser hörnen på behållare 0 och alla andra behå
 ```
 
 ```quiz
-Mitt på behållare 0 ger de sex ljusen tillsammans en färg vars komponenter kan bli större än 1.0. Vad händer med ett sådant värde?
-- [x] Det begränsas till 1.0 när det skrivs till fönstrets bild, som lagrar normaliserade 8-bitarsvärden – starkt upplysta delar mättas mot vitt
+Mitt på behållare 0 ger de sex ljusen tillsammans en färg vars komponenter kan bli större än 1,0. Vad händer med ett sådant värde?
+- [x] Det begränsas till 1,0 när det skrivs till fönstrets bild, som lagrar normaliserade 8-bitarsvärden – starkt upplysta delar mättas mot vitt
 - [ ] Värdet slår runt och blir mörkt igen
 - [ ] Hela färgen delas med sin största komponent, så att nyansen förblir densamma
 ---
-Fönstrets bild lagrar varje komponent som 0–255, alltså 0.0–1.0. Högre resultat begränsas helt enkelt, och därför blir överkanten av behållare 0:s stålram nästan vit (255 i den blå kanalen). Att hantera ljusstyrka över 1.0 på rätt sätt är ämnet för HDR, mycket senare i learnopengl.
+Fönstrets bild lagrar varje komponent som 0–255, alltså 0,0–1,0. Högre resultat begränsas helt enkelt, och därför blir överkanten av behållare 0:s stålram nästan vit (255 i den blå kanalen). Att hantera ljusstyrka över 1,0 på rätt sätt är ämnet för HDR, mycket senare i learnopengl.
 ```
 
 ### Lamporna
@@ -1332,7 +1332,7 @@ stämningar.
 Det här är ingen uppgift: prova när du är klar med uppgifterna, och bygg och kör programmet för att jämföra.
 Ändra clear-färgen i `glClearColor` och ljusens färger i renderloopen. För en öken kan du till exempel göra allt varmt:
 en gulaktig clear-färg, ett starkt gulvitt riktat ljus och orange punktljus. För en skräckscen: en nästan svart
-clear-färg, ett mycket svagt riktat ljus, dämpade rödaktiga punktljus med kort räckvidd (linear 0.14, quadratic 0.07
+clear-färg, ett mycket svagt riktat ljus, dämpade rödaktiga punktljus med kort räckvidd (linear 0,14, quadratic 0,07
 eller kortare räckvidder ur tabellen i *Light casters*) och en smal ficklampa. Kom ihåg att ge lamporna punktljusens
 färger också om du vill att de ska stämma – det kräver en färguniform i `light_cube.fs`.
 :::
@@ -1341,7 +1341,7 @@ Det här är ingen uppgift: prova när du är klar med uppgifterna, och bygg och
 Ändra clear-färgen (`clearValues[0].color` i `recordCommandBuffer()`) och ljusens färger i `updateUniformBuffer()`. För
 en öken kan du till exempel göra allt varmt: en gulaktig clear-färg, ett starkt gulvitt riktat ljus och orange
 punktljus. För en skräckscen: en nästan svart clear-färg, ett mycket svagt riktat ljus, dämpade rödaktiga punktljus med
-kort räckvidd (linear 0.14, quadratic 0.07 eller kortare räckvidder ur tabellen i *Light casters*) och en smal
+kort räckvidd (linear 0,14, quadratic 0,07 eller kortare räckvidder ur tabellen i *Light casters*) och en smal
 ficklampa. Om du vill att lamporna också ska visa punktljusens färger, ge lampans shader en färg – till exempel i push
 constants.
 :::
@@ -1349,8 +1349,8 @@ constants.
 Det här är ingen uppgift: prova när du är klar med uppgifterna, och bygg och kör programmet för att jämföra.
 Ändra clear-färgen (`clearColor` i `PopulateCommandList`) och ljusens färger i `OnUpdate`. För en öken kan du till
 exempel göra allt varmt: en gulaktig clear-färg, ett starkt gulvitt riktat ljus och orange punktljus. För en skräckscen:
-en nästan svart clear-färg, ett mycket svagt riktat ljus, dämpade rödaktiga punktljus med kort räckvidd (linear 0.14,
-quadratic 0.07 eller kortare räckvidder ur tabellen i *Light casters*) och en smal ficklampa. Om du vill att lamporna
+en nästan svart clear-färg, ett mycket svagt riktat ljus, dämpade rödaktiga punktljus med kort räckvidd (linear 0,14,
+quadratic 0,07 eller kortare räckvidder ur tabellen i *Light casters*) och en smal ficklampa. Om du vill att lamporna
 också ska visa punktljusens färger, ge `light_cube.hlsl` en färg – till exempel i root constants.
 :::
 

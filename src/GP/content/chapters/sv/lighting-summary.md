@@ -12,7 +12,7 @@ delen vad du har lärt dig.
 
 ## Färger
 
-- **Färg**: en vektor med rött, grönt och blått, var och en från 0.0 till 1.0.
+- **Färg**: en vektor med rött, grönt och blått, var och en från 0,0 till 1,0.
 - **Reflekterad färg**: färgen vi ser är ljusets färg multiplicerad komponent för komponent med objektets färg:
   objektet absorberar resten. Ett korallfärgat objekt (1.0, 0.5, 0.31) ser korallfärgat ut i vitt ljus; i ett grönt
   ljus (0.0, 1.0, 0.0) ser det ut som (0.0, 0.5, 0.0), mörkgrönt.
@@ -24,7 +24,7 @@ delen vad du har lärt dig.
 ## Grundläggande ljussättning
 
 - **Phongs ljusmodell**: ljuset på en yta som summan av tre delar: **ambient**, **diffust** och **spekulärt**.
-- **Ambient ljus**: en liten konstant del av ljusets färg (här 0.1 av den), så att inte ens ytor som vänder sig bort
+- **Ambient ljus**: en liten konstant del av ljusets färg (här 0,1 av den), så att inte ens ytor som vänder sig bort
   från ljuset blir helt svarta – en billig ersättning för ljus som studsar runt i scenen (*global illumination*).
 - **Normalvektor**: en enhetsvektor som är vinkelrät mot en yta. Kuben har en per vertex, som ett nytt
   vertexattribut.
@@ -46,8 +46,8 @@ delen vad du har lärt dig.
 ## Material
 
 - **Material**: ytans färger för varje del av ljussättningen – `ambient`, `diffuse` och `specular` – och dess
-  `shininess`. De ersätter den enda objektfärgen och de fasta styrkorna 0.1, 0.5 och 32.
-- **Ljusets egenskaper**: ljusets intensitet för varje del – `ambient` (0.2), `diffuse` (0.5) och `specular` (1.0) i
+  `shininess`. De ersätter den enda objektfärgen och de fasta styrkorna 0,1; 0,5 och 32.
+- **Ljusets egenskaper**: ljusets intensitet för varje del – `ambient` (0,2), `diffuse` (0,5) och `specular` (1,0) i
   learnopengls exempel – plus dess `position`.
 - **Struct**: båda är structar i shadern, `Material material` och `Light light`.
 - **Färgat ljus**: att ändra ljusets färg över tid ändrar också objektets färg, eftersom de två multipliceras.
@@ -71,7 +71,7 @@ delen vad du har lärt dig.
   använder `lightDir = normalize(-light.direction)`.
 - **Punktljus**: ett ljus vid en position som lyser åt alla håll och blir svagare med avståndet.
 - **Dämpning** (attenuation): hur ljuset avtar med avståndet d: `1.0 / (constant + linear * d + quadratic * d²)`. Den
-  konstanta termen 1.0 håller resultatet på högst 1; värdena 1.0, 0.09 och 0.032 täcker ett avstånd på ungefär 50
+  konstanta termen 1,0 håller resultatet på högst 1; värdena 1,0; 0,09 och 0,032 täcker ett avstånd på ungefär 50
   enheter. Ambient, diffust och spekulärt multipliceras alla med den.
 - **Spotlight**: ett ljus vid en position som lyser åt ett håll, inom en kon – här en **ficklampa** vid kameran, som
   pekar dit kameran tittar.

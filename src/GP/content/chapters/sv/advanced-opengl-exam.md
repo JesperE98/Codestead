@@ -8,17 +8,17 @@ rätt för att bli godkänd, och du kan göra provet igen.
 ```quiz
 I kapitlet *Djuptestning* visade sig kuberna och golvet nästan vita när varje fragments djupvärde ritades som en gråton, fast de bara ligger några enheter från kameran. Varför?
 - [ ] Djuptestet misslyckades överallt, så bara clear-färgen fanns kvar
-- [ ] Djupbufferten lagrar avståndet i enheter, som begränsas till 1.0
-- [x] Det lagrade djupet är proportionellt mot 1/z: nästan hela intervallet går åt nära det främre planet, så föremål några enheter bort har redan värden nära 1.0
+- [ ] Djupbufferten lagrar avståndet i enheter, som begränsas till 1,0
+- [x] Det lagrade djupet är proportionellt mot 1/z: nästan hela intervallet går åt nära det främre planet, så föremål några enheter bort har redan värden nära 1,0
 - [ ] En djupbuffert med 32 bitar har för få bitar för mörkare värden
 ---
-Med near = 0.1 och far = 100 ligger ett djup på 0.5 bara 0.2 enheter bort, och den vänstra kubens framsida, 3.5 enheter bort, ligger redan på ungefär 0.97. Att linjärisera djupet – invertera projektionens ekvation – ger det verkliga avståndet.
+Med near = 0,1 och far = 100 ligger ett djup på 0,5 bara 0,2 enheter bort, och den vänstra kubens framsida, 3,5 enheter bort, ligger redan på ungefär 0,97. Att linjärisera djupet – invertera projektionens ekvation – ger det verkliga avståndet.
 ```
 
 ```quiz
 Kubernas undersidor ligger exakt på golvet, och du ser z-fighting där. Vilken ändring minskar också z-fighting i resten av scenen?
 - [ ] Att flytta ut det bortre planet från 100 till 1000
-- [x] Att flytta ut det främre planet från 0.1 så långt som scenen tillåter
+- [x] Att flytta ut det främre planet från 0,1 så långt som scenen tillåter
 - [ ] Att byta djupfunktionen från LESS till LESS_OR_EQUAL
 - [ ] Att rita golvet före kuberna
 ---
@@ -70,7 +70,7 @@ Vilken del av stenciltestet lagras inte i PSO:t, utan sätts på command listen?
 :::
 
 ```quiz
-Med alfablending (`F_source` = källans alfa, `F_destination` = 1 − källans alfa) ritas ett rött fragment (1.0, 0.0, 0.0) med alfa 0.5 över en blå färgbuffert (0.0, 0.0, 1.0). Vilken färg lagras?
+Med alfablending (`F_source` = källans alfa, `F_destination` = 1 − källans alfa) ritas ett rött fragment (1.0, 0.0, 0.0) med alfa 0,5 över en blå färgbuffert (0.0, 0.0, 1.0). Vilken färg lagras?
 - [x] (0.5, 0.0, 0.5)
 - [ ] (1.0, 0.0, 1.0)
 - [ ] (1.0, 0.0, 0.0)
@@ -201,10 +201,10 @@ Om alla nio samplen har färgen c blir resultatet c gånger summan av vikterna: 
 Skyboxen ritas sist, dess vertex shader returnerar `pos.xyww`, och djupfunktionen för den är LESS_OR_EQUAL. Vad vinner man på det jämfört med att rita den först?
 - [ ] Himlen vrider sig med kameran men kommer aldrig närmare
 - [ ] Himlen ritas över alla föremål, som en bakgrundsbild
-- [x] Dess fragment shader körs bara där inget föremål täcker himlen, eftersom dess djup är 1.0 och djuptestet tidigt avvisar resten
+- [x] Dess fragment shader körs bara där inget föremål täcker himlen, eftersom dess djup är 1,0 och djuptestet tidigt avvisar resten
 - [ ] Djupbufferten behöver inte längre rensas
 ---
-z = w ger ett djup på exakt 1.0 efter perspektivdivisionen. Där kuberna har ritats håller deras närmare djup himlen ute; där inget har ritats släpper det rensade 1.0 igenom den – därför måste funktionen inkludera "lika med".
+z = w ger ett djup på exakt 1,0 efter perspektivdivisionen. Där kuberna har ritats håller deras närmare djup himlen ute; där inget har ritats släpper det rensade 1,0 igenom den – därför måste funktionen inkludera "lika med".
 ```
 
 ```quiz

@@ -14,7 +14,7 @@ Phong-modellen ser bra ut, men har några nyanser som vi ska fokusera på i det 
 
 :::opengl
 Utgå från ditt program från *Djuptestning* i en ny mapp (det har ett texturerat golv och kameran) och gör om det till
-learnopengls scen: ett trägolv – planet `planeVertices`, 20 × 20 enheter på y = -0.5 med normalen uppåt och
+learnopengls scen: ett trägolv – planet `planeVertices`, 20 × 20 enheter på y = -0,5 med normalen uppåt och
 texturkoordinater upp till 10, så att `wood.png` upprepas tio gånger (`GL_REPEAT`) – och ett ljus på `lightPos` (0, 0,
 0), en halv enhet ovanför golvet. Kameran står på (0, 0, 3) och tittar längs -z; WASD, musen och scrollhjulet flyttar
 den fortfarande. `advanced_lighting.vs` skickar vidare position, normal och texturkoordinater i ett interface block
@@ -23,7 +23,7 @@ belysningen: ambient `0.05 * color`, diffust, och en spekulär term `vec3(0.3) *
 :::
 :::vulkan
 Utgå från ditt program från *Djuptestning* i en ny mapp (det har ett texturerat golv och kameran) och gör om det till
-learnopengls scen: ett trägolv – `vertices` innehåller learnopengls `planeVertices`, 20 × 20 enheter på y = -0.5 med
+learnopengls scen: ett trägolv – `vertices` innehåller learnopengls `planeVertices`, 20 × 20 enheter på y = -0,5 med
 normalen uppåt och texturkoordinater upp till 10, så att `textures/wood.png` upprepas tio gånger
 (`VK_SAMPLER_ADDRESS_MODE_REPEAT`; v är vänt, som i de tidigare kapitlen) – och ett ljus på den globala `lightPos` (0,
 0, 0), en halv enhet ovanför golvet. Kameran står på (0, 0, 3) och tittar längs -z; WASD, musen och scrollhjulet
@@ -34,7 +34,7 @@ ambient `0.05 * color`, diffust, och en spekulär term `vec3(0.3) * spec` för e
 :::
 :::d3d12
 Utgå från ditt program från *Djuptestning* i en ny mapp (det har ett texturerat golv och kameran) och gör om det till
-learnopengls scen: ett trägolv – en vertex buffer med planet, 20 × 20 enheter på y = -0.5 med normalen uppåt och
+learnopengls scen: ett trägolv – en vertex buffer med planet, 20 × 20 enheter på y = -0,5 med normalen uppåt och
 texturkoordinater upp till 10 (v vänt), så att `wood.png` upprepas tio gånger genom den statiska samplerns
 `D3D12_TEXTURE_ADDRESS_MODE_WRAP` – och ett ljus på den globala `lightPos` (0, 0, 0), en halv enhet ovanför golvet.
 Kameran står på (0, 0, 3) och tittar längs -z; WASD, musen och hjulet flyttar den fortfarande.
@@ -54,21 +54,21 @@ vissa förhållanden, särskilt när glansegenskapen är låg, vilket ger en sto
 sådan högdager skulle du se att dess kant plötsligt klipps av i stället för att tona ut mjukt.
 
 Det beror på att vinkeln mellan view-vektorn och reflektionsvektorn inte får gå över 90 grader. Om vinkeln är större än 90
-grader blir skalärprodukten negativ, och det ger ett spekulärt bidrag på 0.0. Du tänker kanske att det inte är något
+grader blir skalärprodukten negativ, och det ger ett spekulärt bidrag på 0,0. Du tänker kanske att det inte är något
 problem, eftersom vi ändå inte borde få något ljus vid vinklar över 90 grader?
 
 Fel – det gäller bara den diffusa komponenten, där en vinkel över 90 grader mellan normalen och ljuskällan betyder att
-ljuskällan ligger under den belysta ytan, så att ljusets diffusa bidrag ska vara 0.0. Med spekulärt ljus mäter vi
+ljuskällan ligger under den belysta ytan, så att ljusets diffusa bidrag ska vara 0,0. Med spekulärt ljus mäter vi
 däremot inte vinkeln mellan ljuskällan och normalen, utan mellan view-vektorn och reflektionsvektorn. Föreställ dig
 ljuset och kameran tätt ovanför ett plant golv, och en punkt på golvet längre bort, bortom ljuset, som båda ser i flack
 vinkel: reflektionsvektorn pekar bort från betraktaren, mer än 90 grader från blickriktningen – och därför kläms den
-spekulära termen till exakt 0.0, fast fragmentet är belyst och en grov yta fortfarande skulle visa en del reflekterat
+spekulära termen till exakt 0,0, fast fragmentet är belyst och en grov yta fortfarande skulle visa en del reflekterat
 ljus där.
 
 Det blir ett problem när den spekulära exponenten är låg: högdagern breder då ut sig över en stor yta, bred nog att nå
 ställena där vinkeln passerar 90 grader, och där tar den tvärt slut. Med en hög exponent är högdagern redan noll långt
 innan den vinkeln, så avklippningen syns inte. Med exponenten 8 i vårt projekt är kanten mjuk och svår att se;
-learnopengls jämförelsebild använder exponenten 1.0 för att göra den tydlig.
+learnopengls jämförelsebild använder exponenten 1,0 för att göra den tydlig.
 
 ```quiz
 Varför får Phongs spekulära högdager en hård kant på en grov yta (låg exponent)?
@@ -129,7 +129,7 @@ float3 halfwayDir = normalize(lightDir + viewDir);
 
 Själva beräkningen av den spekulära termen blir sedan en avklämd skalärprodukt mellan ytans normal och halvvägsvektorn,
 som ger cosinus för vinkeln mellan dem, och som vi återigen upphöjer till en glansexponent. Eftersom halvvägsvektorn och
-normalen båda är enhetsvektorer är skalärprodukten cosinus för vinkeln mellan dem: 1.0 när de sammanfaller, mindre ju mer
+normalen båda är enhetsvektorer är skalärprodukten cosinus för vinkeln mellan dem: 1,0 när de sammanfaller, mindre ju mer
 de skiljer sig åt.
 
 ```quiz
@@ -296,7 +296,7 @@ Root constants behöver ingen buffer och ingen descriptor: deras värden spelas 
 
 :::opengl
 Gör nu den första uppgiften, **halfway**. I `advanced_lighting.fs` beräknar grenen `if (blinn)` halvvägsvektorn och den
-spekulära termen med den (behåll exponenten 8.0 tills vidare, för att kunna jämföra med Phong):
+spekulära termen med den (behåll exponenten 8,0 tills vidare, för att kunna jämföra med Phong):
 
 ```glsl
     // specular
@@ -322,7 +322,7 @@ bool blinn = true; // Phong (false) or Blinn-Phong (true) specular lighting
 :::
 :::vulkan
 Gör nu den första uppgiften, **halfway**. I `shaders/advanced_lighting.frag` beräknar grenen `if (pc.blinn)`
-halvvägsvektorn och den spekulära termen med den (behåll exponenten 8.0 tills vidare, för att kunna jämföra med Phong):
+halvvägsvektorn och den spekulära termen med den (behåll exponenten 8,0 tills vidare, för att kunna jämföra med Phong):
 
 ```glsl
     // specular
@@ -345,7 +345,7 @@ bool blinn = true; // Phong (false) or Blinn-Phong (true) specular lighting
 :::
 :::d3d12
 Gör nu den första uppgiften, **halfway**. I `PSMain` i `advanced_lighting.hlsl` beräknar grenen `if (blinn)`
-halvvägsvektorn och den spekulära termen med den (behåll exponenten 8.0 tills vidare, för att kunna jämföra med Phong):
+halvvägsvektorn och den spekulära termen med den (behåll exponenten 8,0 tills vidare, för att kunna jämföra med Phong):
 
 ```hlsl
     // specular
@@ -411,8 +411,8 @@ Gör nu uppgiften **shininess**. Ge Blinn-Phong learnopengls exponent, fyra gån
 :::
 
 Bygg och kör: högdagern krymper igen till ungefär samma storlek som Phong-högdagern du började med, men den ligger
-lite längre bak och tonar ut jämnt åt alla håll. Det är learnopengls jämförelse – Phong med exponenten 8.0,
-Blinn-Phong med 32.0. Vill du se båda igen sätter du tillbaka `blinn` till false: Phong-grenen finns kvar i shadern.
+lite längre bak och tonar ut jämnt åt alla håll. Det är learnopengls jämförelse – Phong med exponenten 8,0,
+Blinn-Phong med 32,0. Vill du se båda igen sätter du tillbaka `blinn` till false: Phong-grenen finns kvar i shadern.
 
 ```quiz
 Phong och Blinn-Phong används båda med ett ljus och en betraktare ovanför ett plant golv. När kan vinkeln mellan normalen och halvvägsvektorn överstiga 90°?

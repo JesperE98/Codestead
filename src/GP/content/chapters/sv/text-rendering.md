@@ -407,7 +407,7 @@ ruta, rad för rad:
 En FreeType-bitmapp har en byte per pixel, men raderna ligger `bitmap.pitch` byte isär, vilket kan vara mer än dess
 bredd – därför går kopieringen rad för rad. `createAtlasImage()` (anropas efter `loadFont()`, som
 texturuppladdningarna i de tidigare kapitlen) laddar upp `atlasPixels` en gång via en staging buffer till en bild med
-formatet **`VK_FORMAT_R8_UNORM`**: en 8-bitarskanal, som shadern läser som `.r` från 0.0 till 1.0 – OpenGL:s `GL_RED`.
+formatet **`VK_FORMAT_R8_UNORM`**: en 8-bitarskanal, som shadern läser som `.r` från 0,0 till 1,0 – OpenGL:s `GL_RED`.
 Det finns ingen unpack-justering att ställa in: kopieringens `bufferRowLength` 0 säger åt Vulkan att raderna i buffern
 ligger tätt packade. Samplern är linjär med `VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE`, learnopengls inställningar.
 
@@ -479,7 +479,7 @@ const UINT AtlasHeight = 8 * AtlasCellSize;
 En FreeType-bitmapp har en byte per pixel, men raderna ligger `bitmap.pitch` byte isär, vilket kan vara mer än dess
 bredd – därför går kopieringen rad för rad. Efter FreeType-anropen blir atlasen en textur på samma sätt som varje textur
 i kursen: en `Texture2D`-resurs med formatet **`DXGI_FORMAT_R8_UNORM`** i en default heap – en 8-bitarskanal, som
-shadern läser som `.r` från 0.0 till 1.0, learnopengls `GL_RED` –, en upload buffer på `GetRequiredIntermediateSize`,
+shadern läser som `.r` från 0,0 till 1,0, learnopengls `GL_RED` –, en upload buffer på `GetRequiredIntermediateSize`,
 `UpdateSubresources` med `RowPitch = AtlasWidth` (en byte per texel: ingen justering att bry sig om – learnopengls
 `GL_UNPACK_ALIGNMENT 1`; `UpdateSubresources` lägger ut raderna så som GPU:n vill ha dem), barriären från `COPY_DEST`
 till `PIXEL_SHADER_RESOURCE` och shader resource viewn i plats 1 i CBV/SRV-heapen. Root signaturens statiska sampler är
@@ -694,7 +694,7 @@ anger koordinater med y-värden från skärmens nederkant (0.0f) till dess över
 
 i uniform buffern. Det är learnopengls `glm::ortho(0, 800, 0, 600)` med bottom och top ombytta – eftersom Vulkans clip
 space har y *nedåt*: y = 0 avbildas nu på clip-y = +1, fönstrets nederkant, och y = 600 på -1, överkanten.
-Koordinaterna är learnopengls: y-värdena går från skärmens nederkant (0.0) till dess överkant (600.0), och punkten
+Koordinaterna är learnopengls: y-värdena går från skärmens nederkant (0,0) till dess överkant (600,0), och punkten
 (0.0, 0.0) är det nedre vänstra hörnet. (Det är också därför det inte finns något `proj[1][1] *= -1` här: att byta plats
 på bottom och top är samma vändning.)
 :::
@@ -704,8 +704,8 @@ på bottom och top är samma vändning.)
 ```
 
 skriven till constant buffern (`SceneConstantBuffer`, root-parameter 1) i `OnUpdate`. Direct3D:s clip space har y uppåt
-som OpenGL:s, så det här är learnopengls `glm::ortho(0, 800, 0, 600)`: y-värdena går från skärmens nederkant (0.0) till
-dess överkant (600.0), och punkten (0.0, 0.0) är det nedre vänstra hörnet.
+som OpenGL:s, så det här är learnopengls `glm::ortho(0, 800, 0, 600)`: y-värdena går från skärmens nederkant (0,0) till
+dess överkant (600,0), och punkten (0.0, 0.0) är det nedre vänstra hörnet.
 :::
 
 Sist skapar vi vertex buffern för att rendera rektanglarna. Varje rektangel behöver 6 vertex med 4 floats; vertexen
@@ -964,11 +964,11 @@ Till sist flyttar vi x-koordinaten framåt med tecknets advance. Observera att a
 pixlar innan vi skalar den.
 
 ```quiz
-En glyfs `advance.x` är 1856. Hur långt flyttar `RenderText` pennan med skalan 0.5?
+En glyfs `advance.x` är 1856. Hur långt flyttar `RenderText` pennan med skalan 0,5?
 - [ ] 928 pixlar
-- [ ] 1856 / 0.5 = 3712 pixlar
+- [ ] 1856 / 0,5 = 3712 pixlar
 - [ ] 58 pixlar
-- [x] 14.5 pixlar: 1856 >> 6 = 29 pixlar i den laddade storleken, gånger 0.5
+- [x] 14,5 pixlar: 1856 >> 6 = 29 pixlar i den laddade storleken, gånger 0,5
 ---
 Advance är i 1/64 pixlar (fixpunkt 26.6): att skifta 6 steg delar med 64. Skalan tillämpas efteråt, som på varje annat mått.
 ```
@@ -1065,7 +1065,7 @@ uppe till höger**.
 
 :::vulkan
 Dess rektanglar hamnar i buffern efter den första radens: 35 ritanrop totalt, 210 vertex. Jämförd pixel för pixel med
-OpenGL-versionen ligger den här raden **en pixel högre** (y 11..32 i stället för 12..33): med skalan 0.5 hamnar dess
+OpenGL-versionen ligger den här raden **en pixel högre** (y 11..32 i stället för 12..33): med skalan 0,5 hamnar dess
 rektanglars kanter precis på pixelcentrum, och Vulkans top-left-rasteriseringsregel, tillämpad i dess framebuffer med
 y nedåt, avgör de lägena åt andra hållet än OpenGL:s i dess med y uppåt.
 :::
@@ -1075,7 +1075,7 @@ Dess rektanglar hamnar i buffern efter den första radens, och dess ritanrop bö
 :::
 
 Den andra raden använder samma glyfer på 48 pixlar i halv storlek: `scale` krymper rektanglarna, och det linjära
-filtret krymper bitmapparna. Det är learnopengls sätt och fungerar bra för faktorn 0.5, men skalade bitmappar blir
+filtret krymper bitmapparna. Det är learnopengls sätt och fungerar bra för faktorn 0,5, men skalade bitmappar blir
 suddiga (eller, uppskalade, blockiga). För en annan storlek laddar ett riktigt program glyferna i den storleken –
 spelets text senare i den här delen använder 24 pixlar.
 

@@ -292,10 +292,10 @@ samma vyrum som GLM och OpenGL: med dem är varje tal i det här kapitlet detsam
 
 :::opengl
 ```quiz
-Efter perspektivdivisionen har en vertex i scenen z = 0.5. Ligger den inom OpenGL:s synvolym, och hur är det med z = -0.5?
-- [ ] z = 0.5 syns, z = -0.5 klipps eftersom den ligger framför det nära planet
+Efter perspektivdivisionen har en vertex i scenen z = 0,5. Ligger den inom OpenGL:s synvolym, och hur är det med z = -0,5?
+- [ ] z = 0,5 syns, z = -0,5 klipps eftersom den ligger framför det nära planet
 - [ ] Båda klipps: z måste vara exakt 0 i NDC
-- [ ] Bara z = -0.5 syns, eftersom +z pekar bort från kameran
+- [ ] Bara z = -0,5 syns, eftersom +z pekar bort från kameran
 - [x] Båda syns: OpenGL behåller z mellan -1 (nära) och 1 (bortre)
 ---
 OpenGL:s NDC-kub går från -1 till 1 längs alla tre axlarna. Vulkan och Direct3D använder 0..1 för z, och därför byggs deras projektionsmatriser annorlunda.
@@ -303,7 +303,7 @@ OpenGL:s NDC-kub går från -1 till 1 längs alla tre axlarna. Vulkan och Direct
 :::
 :::vulkan
 ```quiz
-Efter perspektivdivisionen har en vertex i scenen z = -0.5. Vad händer med den i Vulkan?
+Efter perspektivdivisionen har en vertex i scenen z = -0,5. Vad händer med den i Vulkan?
 - [x] Den klipps: Vulkan behåller z mellan 0 (nära) och 1 (bortre)
 - [ ] Den ritas överst i fönstret, eftersom Vulkans y pekar nedåt
 - [ ] Den ritas: Vulkan behåller z mellan -1 och 1 som OpenGL
@@ -314,7 +314,7 @@ Vulkans djupintervall i NDC är 0..1. Därför behövs `GLM_FORCE_DEPTH_ZERO_TO_
 :::
 :::d3d12
 ```quiz
-Efter perspektivdivisionen har en vertex i scenen z = -0.5. Vad händer med den i Direct3D?
+Efter perspektivdivisionen har en vertex i scenen z = -0,5. Vad händer med den i Direct3D?
 - [ ] Den ritas överst i fönstret, eftersom Direct3D:s y pekar nedåt
 - [ ] Den ritas: Direct3D behåller z mellan -1 och 1 som OpenGL
 - [ ] Den ritas, men bakom alla andra vertexar
@@ -1233,7 +1233,7 @@ resultat, jämför din kod med kodutdragen ovan.
 Du vill ha kameran 3 enheter längre bak, på z = +3, tittande längs -z. Vad lägger du i view-matrisen?
 - [ ] En rotation med 180° runt y-axeln
 - [ ] En förflyttning med (0, 0, 3): kameran rör sig i +z
-- [ ] Ingenting – projektionens nära plan på 0.1 flyttar kameran bakåt automatiskt
+- [ ] Ingenting – projektionens nära plan på 0,1 flyttar kameran bakåt automatiskt
 - [x] En förflyttning med (0, 0, -3): att flytta kameran bakåt är detsamma som att flytta hela scenen framåt
 ---
 View-matrisen flyttar världen, inte kameran, så den använder det omvända av kamerans rörelse. Lägg scenen på z = -3 så ligger den 3 enheter framför en kamera i origo som tittar längs -z.
@@ -1844,13 +1844,13 @@ Gör nu uppgiften **depth-test**. Varsågod! En fullt texturerad kub med korrekt
 :::
 
 ```quiz
-Depth buffern rensas till 1.0 varje bildruta, och djuptestet är "mindre än". Vad uppnår det?
+Depth buffern rensas till 1,0 varje bildruta, och djuptestet är "mindre än". Vad uppnår det?
 - [ ] Ingenting ändras så länge du inte också rensar färgbuffern
 - [ ] Bara fragment som ligger exakt på det bortre planet ritas
 - [x] Det första fragmentet på en pixel klarar alltid testet, och därefter ersätter bara fragment som är närmare än det lagrade djupet det
 - [ ] Fragment ritas bakifrån och fram, så bortre sidor täcker närmare
 ---
-1.0 är det bortre planet, så varje synligt fragment ligger närmare än det rensade värdet. Varje fragment som klarar testet skriver sitt djup, och senare fragment måste slå det. Utan rensning skulle förra bildrutans djup blockera den här bildrutans fragment.
+1,0 är det bortre planet, så varje synligt fragment ligger närmare än det rensade värdet. Varje fragment som klarar testet skriver sitt djup, och senare fragment måste slå det. Utan rensning skulle förra bildrutans djup blockera den här bildrutans fragment.
 ```
 
 ### Fler kuber!

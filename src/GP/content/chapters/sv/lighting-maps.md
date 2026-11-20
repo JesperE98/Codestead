@@ -105,7 +105,7 @@ Varför har materialet ingen egen ambient färg längre när diffuse mapen komme
 - [ ] Ambient belysning stängs av när en textur används
 - [x] En ytas ambienta färg är i praktiken alltid dess diffusa färg, och ljusets `ambient`-intensitet styr redan hur stark den är – så den ambienta termen läser också diffuse mapen
 ---
-Båda termerna beskriver ytans egen färg; bara ljuset avgör hur mycket av den som syns (0.2 för ambient, 0.5 för diffust i det här projektet). Alltså `ambient = light.ambient * diffus färg` och `diffuse = light.diffuse * diff * diffus färg`, båda från samma texel.
+Båda termerna beskriver ytans egen färg; bara ljuset avgör hur mycket av den som syns (0,2 för ambient, 0,5 för diffust i det här projektet). Alltså `ambient = light.ambient * diffus färg` och `diffuse = light.diffuse * diff * diffus färg`, båda från samma texel.
 ```
 
 Observera att vi återigen behöver texturkoordinater i fragment shadern, så den får en extra indatavariabel. Sedan
@@ -151,8 +151,8 @@ vertexattribut vidare till fragment shadern, ladda texturen och binda den till r
 
 :::opengl
 Du fortsätter i ditt program från *Material*. Förbered det först: döp om den belysta kubens shadrar till
-`lighting_maps.vs` och `lighting_maps.fs`, och ge ljuset learnopengls fasta intensiteter igen (ambient 0.2, diffust
-0.5, spekulärt 1.0 – ingen föränderlig färg); materialet förblir korallfärgat. Ta sedan tillbaka det som texturer
+`lighting_maps.vs` och `lighting_maps.fs`, och ge ljuset learnopengls fasta intensiteter igen (ambient 0,2, diffust
+0,5, spekulärt 1,0 – ingen föränderlig färg); materialet förblir korallfärgat. Ta sedan tillbaka det som texturer
 behöver: `stb_image.h` (med `STB_IMAGE_IMPLEMENTATION`, som i *Texturer*), de tre bilderna `container2.png`,
 `container2_specular.png` och `matrix.png` – **Spara resursfilerna…** i panelen kopierar dem till din mapp – och
 vertexdata med texturkoordinater. Varje vertex har nu en position, en normal och texturkoordinater, 8 floats;
@@ -172,8 +172,8 @@ lägger till texturkoordinatattributet, laddar texturerna och binder dem i rende
 :::
 :::vulkan
 Du fortsätter i ditt program från *Material*. Förbered det först: döp om kubens shadrar till
-`shaders/lighting_maps.vert` och `.frag`, och ge ljuset learnopengls fasta intensiteter igen (ambient 0.2, diffust
-0.5, spekulärt 1.0 – ingen föränderlig färg); materialet förblir korallfärgat. Ta sedan tillbaka det som texturer
+`shaders/lighting_maps.vert` och `.frag`, och ge ljuset learnopengls fasta intensiteter igen (ambient 0,2, diffust
+0,5, spekulärt 1,0 – ingen föränderlig färg); materialet förblir korallfärgat. Ta sedan tillbaka det som texturer
 behöver, från ditt program i kapitlet *Texturer*: `stb_image.h`, vulkan-tutorials hjälpfunktioner `createBuffer()`,
 `createImage()`, `beginSingleTimeCommands()`, `endSingleTimeCommands()`, `transitionImageLayout()` och
 `copyBufferToImage()`, och samplern `textureSampler` (linjär filtrering, repeat, anisotropi), som skapas i
@@ -196,7 +196,7 @@ dess layout till `TRANSFER_DST_OPTIMAL`, kopierar buffern till den och byter lay
 :::
 :::d3d12
 Du fortsätter i ditt program från *Material*. Förbered det först: döp om den belysta kubens shadrar till
-`lighting_maps.hlsl`, och ge ljuset learnopengls fasta intensiteter igen (ambient 0.2, diffust 0.5, spekulärt 1.0 –
+`lighting_maps.hlsl`, och ge ljuset learnopengls fasta intensiteter igen (ambient 0,2, diffust 0,5, spekulärt 1,0 –
 ingen föränderlig färg); materialet förblir korallfärgat. Ta sedan tillbaka det som texturer behöver: `stb_image.h`
 (med `STB_IMAGE_IMPLEMENTATION`, som i *Texturer*), de tre bilderna `container2.png`, `container2_specular.png` och
 `matrix.png` – **Spara resursfilerna…** i panelen kopierar dem till din mapp – och en `Vertex`-struct med en tredje
@@ -367,7 +367,7 @@ renderloopen binder vi texturen till enhet 0 innan kuben ritas:
 ```
 
 De två `setVec3`-anropen för `material.ambient` och `material.diffuse` försvinner – de uniform-variablerna finns inte
-längre. Vi behåller den spekulära färgen på 0.5 och använder, som learnopengl, shininess 64:
+längre. Vi behåller den spekulära färgen på 0,5 och använder, som learnopengl, shininess 64:
 
 ```cpp
         // material properties
@@ -464,7 +464,7 @@ Och `createDescriptorSets()` skriver image view och sampler till binding 0:
 
 Eftersom descriptor setet binds en gång i `recordCommandBuffer()`, som förut, ändras ingenting där: kartan binds
 tillsammans med uniform buffern. C++-structen `Material` förlorar `ambient` och `diffuse` precis som shaderns – den är
-nu `glm::vec3 specular; float shininess;`, 16 byte – och `updateUniformBuffer()` behåller den spekulära färgen på 0.5
+nu `glm::vec3 specular; float shininess;`, 16 byte – och `updateUniformBuffer()` behåller den spekulära färgen på 0,5
 och använder, som learnopengl, shininess 64:
 
 ```cpp
@@ -545,7 +545,7 @@ heap-plats där SRV:n ligger, i `PopulateCommandList`, efter root parameter 1:
 ```
 
 C++-structen `Material` förlorar `ambient` och `diffuse` precis som shaderns – den är nu `XMFLOAT3 specular; float
-shininess;`, en rad på 16 byte – och `OnUpdate` behåller den spekulära färgen på 0.5 och använder, som learnopengl,
+shininess;`, en rad på 16 byte – och `OnUpdate` behåller den spekulära färgen på 0,5 och använder, som learnopengl,
 shininess 64:
 
 ```cpp
