@@ -62,6 +62,8 @@ die die Summe aus r = 4, w = 2 und x = 1 ist:
 | `644` | `rw-r--r--` | Gewöhnliche Dateien |
 | `600` | `rw-------` | Geheime Dateien |
 
+![Rechte als Ziffern](images/perm-octal.webp "Jede Dreiergruppe wird zu einer Ziffer: r zählt 4, w 2, x 1 und ein Strich 0. So wird rwxr-xr-x zu 755 und rw-r--r-- zu 644.")
+
 ```sh
 chmod 644 {{notes}}
 ```
@@ -170,3 +172,5 @@ sudo gilt nur für den Befehl (`echo`). Die Umleitung erledigt deine Shell, und
 die läuft als du. `tee` ist das Programm, das die Datei schreibt, also braucht
 `tee` das sudo.
 ```
+
+![Wer die Datei öffnet](images/sudo-tee.webp "In der ersten Zeile öffnet deine eigene Shell, die als du läuft, /etc/file für > und wird abgewiesen, also läuft echo gar nicht erst. In der zweiten läuft tee als root und öffnet /etc/hosts selbst.")

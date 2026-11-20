@@ -24,6 +24,8 @@ Process एक चलता हुआ program है, उन सब चीज़
 प्रोसेस नंबर 1 पर पहुँचते हैं।
 ```
 
+![Process tree](images/process-tree.webp "हर process का एक PID होता है, और उसका PPID उसके parent का PID होता है, जो parent के रंग में दिखाया गया है। ps -ef से parents का पीछा करें तो आप अपने shell से होते हुए process 1, init तक पहुँचते हैं।")
+
 ## मेरे processes – `ps`
 
 बिना options के `ps` (*process status*) आपके अपने terminal के processes दिखाता है:
@@ -163,6 +165,8 @@ Variable `$!` में सबसे हाल के background job का PID 
 `Ctrl+Z` प्रोग्राम को रोक (pause कर) देता है। `bg` रुके हुए job को background में
 आगे चलने देता है, जबकि `fg` उसे वापस foreground में ले आता।
 ```
+
+![Foreground, background और रुका हुआ job](images/job-states.webp "Command foreground में चलता है, या आख़िर में & लगाने पर background में। Ctrl+Z foreground वाले job को रोकता है, bg रुके हुए job को background में चलने देता है, fg job को foreground में लाता है, और Ctrl+C या kill उसे ख़त्म करते हैं।")
 
 ### Logout के बाद भी चलते रहना – `nohup`
 

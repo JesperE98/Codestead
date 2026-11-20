@@ -58,6 +58,8 @@ Det fungerar, eftersom länken ligger i hemkatalogen och
 `{{documents}}/{{fruits}}` finns där. En länk `/tmp/f` med samma innehåll
 skulle leta efter `/tmp/{{documents}}/{{fruits}}` – och vara trasig.
 
+![En relativ länk räknas från där den ligger](images/symlink-relative.webp "Båda länkarna innehåller samma relativa sökväg, och den följs från katalogen där länken ligger. Från din hemkatalog leder den till filen; från /tmp leder den ingenstans, så den länken är trasig.")
+
 `readlink` visar vad som står i en länk, och `realpath` visar hela sökvägen
 med alla länkar följda:
 
@@ -142,6 +144,8 @@ efter att `b.txt` togs bort.
 | Om originalet tas bort | Länken går sönder | Filen lever kvar |
 | I `ls -l` | `l` och `->` | Antalet länkar ökar |
 
+![Namn, inoder och innehåll](images/link-kinds.webp "En hård länk är ett namn till för samma inod, så antalet länkar blir 2. En symbolisk länk har en egen inod som innehåller ett namn. Efter rm lever filen kvar genom sitt andra namn, men den symboliska länken är trasig.")
+
 ```quiz
 Vilken sorts länk kan peka på en katalog?
 - [x] Bara en symbolisk länk
@@ -210,6 +214,8 @@ umask
 
 Den vanliga umasken `0022` tar bort skrivrätten för gruppen och övriga, och
 därför får dina filer `644` och dina kataloger `755`.
+
+![Vad umask 022 tar bort](images/umask.webp "Nya filer utgår från 666 och nya kataloger från 777. Umask 022 tar bort w för gruppen och för övriga, och kvar blir 644 och 755.")
 
 | umask | Nya filer | Nya kataloger | Betyder |
 |---|---|---|---|

@@ -55,6 +55,8 @@ type  owner   group   others
 | `644` | `rw-r--r--` | 普通文件 |
 | `600` | `rw-------` | 机密文件 |
 
+![用数字表示权限](images/perm-octal.webp "每组三个字符变成一个数字：r 算 4，w 算 2，x 算 1，短横线算 0。所以 rwxr-xr-x 就是 755，rw-r--r-- 就是 644。")
+
 ```sh
 chmod 644 {{notes}}
 ```
@@ -145,3 +147,5 @@ echo "127.0.0.1 test.local" | sudo tee -a /etc/hosts
 ---
 sudo 只作用于命令本身（`echo`）。重定向由你的 shell 处理，而 shell 是以你的身份运行的。`tee` 是负责写文件的程序，所以需要 sudo 的是 `tee`。
 ```
+
+![是谁打开了文件](images/sudo-tee.webp "第一行中，为 > 打开 /etc/file 的是以你的身份运行的 shell，它被拒绝了，所以 echo 根本没有运行。第二行中，tee 以 root 身份运行，自己打开 /etc/hosts。")

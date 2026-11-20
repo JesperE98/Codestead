@@ -57,6 +57,8 @@ cat {{fruits}}
 `{{documents}}/{{fruits}}` वहीं है। उसी content वाला link `/tmp/f`
 `/tmp/{{documents}}/{{fruits}}` ढूँढेगा – और टूटा हुआ होगा।
 
+![Relative link अपनी जगह से गिना जाता है](images/symlink-relative.webp "दोनों links में एक ही relative path है, और वह उस directory से follow होता है जहाँ link है। आपकी home directory से वह file तक पहुँचता है; /tmp से वह कहीं नहीं पहुँचता, इसलिए वह link टूटा हुआ है।")
+
 `readlink` दिखाता है कि link में क्या लिखा है, और `realpath` हर link के पीछे जाकर
 पूरा path दिखाता है:
 
@@ -142,6 +144,8 @@ again
 | अगर original हटा दिया जाए | Link टूट जाता है | File बनी रहती है |
 | `ls -l` में | `l` और `->` | Link count बढ़ जाता है |
 
+![नाम, inodes और content](images/link-kinds.webp "Hard link उसी inode का एक और नाम है, इसलिए link count 2 हो जाता है। Symbolic link का अपना inode होता है, जिसमें एक नाम रखा होता है। rm के बाद file अपने दूसरे नाम से बनी रहती है, लेकिन symbolic link टूट जाता है।")
+
 ```quiz
 किस तरह का लिंक किसी डायरेक्टरी की ओर इशारा कर सकता है?
 - [x] सिर्फ़ सिम्बॉलिक लिंक
@@ -210,6 +214,8 @@ umask
 
 आम umask `0022` group और others से write permission हटा देता है, इसीलिए आपकी
 files को `644` और directories को `755` मिलता है।
+
+![umask 022 क्या हटाता है](images/umask.webp "नई files 666 से और नई directories 777 से शुरू होती हैं। umask 022 group और others से w हटा देता है, जिससे 644 और 755 बचते हैं।")
 
 | umask | नई files | नई directories | मतलब |
 |---|---|---|---|

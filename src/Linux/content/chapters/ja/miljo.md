@@ -27,6 +27,8 @@ env
 export EDITOR=nano
 ```
 
+![export の働き](images/env-export.webp "作成した変数はあなたのシェルの中にしかありません。export すると環境変数になり、シェルが起動するすべてのプログラムがそのコピーを受け取ります。")
+
 ```quiz
 値 `blue` を持つ変数 `COLOR` を作るのはどの行ですか？
 - [ ] `COLOR = blue`
@@ -72,6 +74,8 @@ echo $PATH
 ```sh
 echo $PATH | tr ':' '\n'
 ```
+
+![シェルが ls を見つけるしくみ](images/path-lookup.webp "PATH はコロンで区切られたディレクトリの一覧です。シェルはそれを順番に調べ、最初に見つけた ls（/usr/bin/ls）を実行するので、/bin までは探しません。")
 
 `which` は、プログラムがどこで見つかったかを表示します。`cd` のように、
 ファイルではなくシェルに *組み込まれている* コマンドもあります。`type` を使うと、

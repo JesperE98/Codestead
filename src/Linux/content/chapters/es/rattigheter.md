@@ -63,6 +63,8 @@ que es la suma de r = 4, w = 2 y x = 1:
 | `644` | `rw-r--r--` | Archivos normales |
 | `600` | `rw-------` | Archivos secretos |
 
+![Los permisos como cifras](images/perm-octal.webp "Cada grupo de tres se convierte en una cifra: r vale 4, w 2, x 1 y un guion 0. Así, rwxr-xr-x es 755 y rw-r--r-- es 644.")
+
 ```sh
 chmod 644 {{notes}}
 ```
@@ -171,3 +173,5 @@ sudo solo se aplica al comando (`echo`). La redirección la gestiona tu
 shell, que se ejecuta como tú. `tee` es el programa que escribe el archivo, así que es
 `tee` el que necesita sudo.
 ```
+
+![Quién abre el archivo](images/sudo-tee.webp "En la primera línea es tu propia shell, que se ejecuta como tú, la que abre /etc/file para > y recibe un rechazo, así que echo ni siquiera se ejecuta. En la segunda, tee se ejecuta como root y abre /etc/hosts él mismo.")

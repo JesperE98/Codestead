@@ -27,6 +27,8 @@ You create a variable with `NAME=value` (no spaces around the `=`!). With
 export EDITOR=nano
 ```
 
+![What export does](images/env-export.webp "A variable you create lives only in your shell. With export it becomes an environment variable, and every program the shell starts gets a copy of it.")
+
 ```quiz
 Which line creates the variable `COLOR` with the value `blue`?
 - [ ] `COLOR = blue`
@@ -72,6 +74,8 @@ directory in `PATH` ends up on a line of its own:
 ```sh
 echo $PATH | tr ':' '\n'
 ```
+
+![How the shell finds ls](images/path-lookup.webp "PATH is a list of directories separated by colons. The shell looks in them in order and runs the first ls it finds, /usr/bin/ls, so it never looks in /bin.")
 
 `which` shows where a program was found. Some commands, like `cd`, aren't
 files at all but are *built into* the shell – `type` tells you what a name is:

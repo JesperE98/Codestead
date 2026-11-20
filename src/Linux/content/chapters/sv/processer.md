@@ -23,6 +23,8 @@ Varje process har en förälder. Följer du föräldrarna tillräckligt långt
 hamnar du hos process nummer 1.
 ```
 
+![Processträdet](images/process-tree.webp "Varje process har ett PID, och dess PPID är förälderns PID, i förälderns färg. Följer du föräldrarna från ps -ef kommer du via ditt skal till process nummer 1, init.")
+
 ## Mina processer – `ps`
 
 `ps` (*process status*) utan flaggor visar processerna i din egen terminal:
@@ -159,6 +161,8 @@ köras medan du behåller prompten?
 `Ctrl+Z` pausar programmet. `bg` låter ett stoppat jobb fortsätta i
 bakgrunden, medan `fg` skulle ta tillbaka det till förgrunden.
 ```
+
+![Förgrund, bakgrund och stoppad](images/job-states.webp "Ett kommando körs i förgrunden, eller med & sist i bakgrunden. Ctrl+Z stoppar ett jobb i förgrunden, bg låter ett stoppat jobb fortsätta i bakgrunden, fg flyttar ett jobb till förgrunden och Ctrl+C eller kill avslutar det.")
 
 ### Fortsätt efter utloggning – `nohup`
 

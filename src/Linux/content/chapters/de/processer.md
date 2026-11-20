@@ -25,6 +25,8 @@ Jeder Prozess hat einen Elternprozess. Folgst du den Eltern weit genug, landest
 du bei Prozess Nummer 1.
 ```
 
+![Der Prozessbaum](images/process-tree.webp "Jeder Prozess hat eine PID, und seine PPID ist die PID seines Elternprozesses, hier in dessen Farbe. Folgst du den Eltern von ps -ef aus, kommst du über deine Shell zu Prozess 1, init.")
+
 ## Meine Prozesse – `ps`
 
 `ps` (*process status*) ohne Optionen zeigt die Prozesse in deinem eigenen
@@ -170,6 +172,8 @@ weiterlaufen und behältst trotzdem deinen Prompt?
 `Ctrl+Z` hält das Programm an. `bg` lässt einen angehaltenen Job im Hintergrund
 weiterlaufen, während `fg` ihn wieder in den Vordergrund holen würde.
 ```
+
+![Vordergrund, Hintergrund und angehalten](images/job-states.webp "Ein Befehl läuft im Vordergrund oder, mit & am Ende, im Hintergrund. Ctrl+Z hält einen Job im Vordergrund an, bg lässt einen angehaltenen Job im Hintergrund weiterlaufen, fg holt einen Job in den Vordergrund, und Ctrl+C oder kill beendet ihn.")
 
 ### Weiterlaufen nach dem Abmelden – `nohup`
 

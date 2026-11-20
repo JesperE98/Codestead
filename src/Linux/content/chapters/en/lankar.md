@@ -58,6 +58,8 @@ That works, because the link is in your home directory and
 `{{documents}}/{{fruits}}` is there. A link `/tmp/f` with the same content would
 look for `/tmp/{{documents}}/{{fruits}}` – and be broken.
 
+![A relative link counts from where it is](images/symlink-relative.webp "Both links contain the same relative path, and it is followed from the directory each link is in. From your home directory it leads to the file; from /tmp it leads nowhere, so that link is broken.")
+
 `readlink` shows what is in a link, and `realpath` shows the full path with
 every link followed:
 
@@ -142,6 +144,8 @@ still there after `b.txt` was removed.
 | If the original is removed | The link breaks | The file lives on |
 | In `ls -l` | `l` and `->` | The link count goes up |
 
+![Names, inodes and contents](images/link-kinds.webp "A hard link is one more name for the same inode, so the link count becomes 2. A symbolic link has an inode of its own that holds a name. After rm the file lives on through its other name, but the symbolic link is broken.")
+
 ```quiz
 Which kind of link can point to a directory?
 - [x] Only a symbolic link
@@ -210,6 +214,8 @@ umask
 
 The usual umask `0022` removes write permission for the group and others,
 which is why your files get `644` and your directories `755`.
+
+![What umask 022 takes away](images/umask.webp "New files start from 666 and new directories from 777. The umask 022 takes away w for the group and for others, which leaves 644 and 755.")
 
 | umask | New files | New directories | Means |
 |---|---|---|---|

@@ -60,6 +60,8 @@ Funciona, porque el enlace está en tu directorio personal y
 `{{documents}}/{{fruits}}` está ahí. Un enlace `/tmp/f` con el mismo contenido
 buscaría `/tmp/{{documents}}/{{fruits}}`, y estaría roto.
 
+![Un enlace relativo cuenta desde donde está](images/symlink-relative.webp "Los dos enlaces contienen la misma ruta relativa, que se sigue desde el directorio donde está cada enlace. Desde tu directorio personal lleva al archivo; desde /tmp no lleva a ninguna parte, así que ese enlace está roto.")
+
 `readlink` muestra lo que hay en un enlace, y `realpath` muestra la ruta
 completa con todos los enlaces resueltos:
 
@@ -146,6 +148,8 @@ sigue ahí después de eliminar `b.txt`.
 | Si se elimina el original | El enlace se rompe | El archivo sigue vivo |
 | En `ls -l` | `l` y `->` | El contador de enlaces sube |
 
+![Nombres, inodos y contenido](images/link-kinds.webp "Un enlace duro es un nombre más para el mismo inodo, así que el contador de enlaces sube a 2. Un enlace simbólico tiene su propio inodo, que contiene un nombre. Después de rm el archivo sigue vivo con su otro nombre, pero el enlace simbólico está roto.")
+
 ```quiz
 ¿Qué tipo de enlace puede apuntar a un directorio?
 - [x] Solo un enlace simbólico
@@ -216,6 +220,8 @@ umask
 
 La umask habitual, `0022`, quita el permiso de escritura al grupo y a los
 demás; por eso tus archivos reciben `644` y tus directorios `755`.
+
+![Lo que quita la umask 022](images/umask.webp "Los archivos nuevos parten de 666 y los directorios nuevos de 777. La umask 022 quita la w al grupo y a los otros, y quedan 644 y 755.")
 
 | umask | Archivos nuevos | Directorios nuevos | Significa |
 |---|---|---|---|
