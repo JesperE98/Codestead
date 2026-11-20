@@ -596,8 +596,8 @@ export class LearningWindow extends Store {
   }
 
   /**
-   * Installed so that it can update itself, the app offers a newer version. Installed by the hub or as a native
-   * package, the hub or the package manager does it instead.
+   * Installed so that it can update itself (Velopack, or a native package and the system's package manager), the app
+   * offers a newer version. Installed by the hub, the hub does it instead.
    */
   private async offerUpdate(): Promise<void> {
     const updater = this.tool.selfUpdate;
@@ -609,12 +609,30 @@ export class LearningWindow extends Store {
       return; // Offline or the release server is unavailable – try again next start.
     }
     if (version === null) return;
+    const text = this.t("update.text", { version }) + (updater.asksForPassword === true ? " " + this.t("update.password") : "");
     this.overlay.showWhenFree(() =>
-      this.overlay.confirm(this.t("update.title"), this.t("update.text", { version }), this.t("update.button"), this.t("update.later"), false, () => {
+      this.overlay.confirm(this.t("update.title"), text, this.t("update.button"), this.t("update.later"), false, () => {
         this.overlay.toast(this.t("update.downloading"), 30);
         this.saveAll();
-        updater.downloadAndRestart(() => {}).catch((e: unknown) => this.overlay.toast(e instanceof Error ? e.message : String(e)));
+        let installing = false;
+        updater
+          .downloadAndRestart((percent) => {
+            if (percent >= 0 || installing) return;
+            installing = true;
+            this.overlay.toast(this.t("update.installing"), 120);
+          })
+          .catch((e: unknown) => this.updateFailed(e instanceof Error ? e.message : String(e)));
       }),
+    );
+  }
+
+  /** The update could not be installed (say, the password dialog was closed): its release page instead. */
+  private updateFailed(error: string): void {
+    const product = this.tool.product;
+    this.overlay.showWhenFree(() =>
+      this.overlay.confirm(this.t("update.failedTitle"), this.t("update.failed", { error }), this.t("update.download"), this.t("update.later"), false, () =>
+        this.openLink(`https://github.com/${product.releasesRepo}/releases/tag/${product.id}-latest`),
+      ),
     );
   }
 

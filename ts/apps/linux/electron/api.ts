@@ -38,8 +38,9 @@ export interface CodesteadApi {
   /** Lets the learner pick a folder; null when cancelled. */
   pickFolder(title: string): Promise<string | null>;
   /**
-   * The app's own updates (Velopack in the main process, see @codestead/ui/electron-main): installed with Setup.exe or
-   * as an AppImage it updates itself; otherwise canUpdateItself is false.
+   * The app's own updates (in the main process, see @codestead/ui/electron-main): installed with Setup.exe or as an
+   * AppImage it updates itself with Velopack, as a .deb/.rpm/Arch package with the system's package manager (pkexec
+   * asks for the password); otherwise (installed by the hub) canUpdateItself is false.
    */
   readonly selfUpdate: SelfUpdate;
   /** Ends the app with an exit code. */

@@ -6,6 +6,7 @@ import type { SelfUpdate } from "../SelfUpdate.js";
 /** The IPC channels of the self-update (main ⇄ preload). */
 export const SelfUpdateChannels = {
   canUpdateItself: "codestead:self-update-can",
+  asksForPassword: "codestead:self-update-password",
   check: "codestead:self-update-check",
   download: "codestead:self-update-download",
   progress: "codestead:self-update-progress",
@@ -26,6 +27,7 @@ export interface SelfUpdateIpcRenderer {
 export function selfUpdateBridge(ipc: SelfUpdateIpcRenderer): SelfUpdate {
   return {
     canUpdateItself: ipc.sendSync(SelfUpdateChannels.canUpdateItself) === true,
+    asksForPassword: ipc.sendSync(SelfUpdateChannels.asksForPassword) === true,
     check: () => ipc.invoke(SelfUpdateChannels.check) as Promise<string | null>,
     downloadAndRestart: async (progress: (percent: number) => void) => {
       const listener = (_e: unknown, percent: unknown) => {
@@ -34,9 +36,17 @@ export function selfUpdateBridge(ipc: SelfUpdateIpcRenderer): SelfUpdate {
       ipc.on(SelfUpdateChannels.progress, listener);
       try {
         await ipc.invoke(SelfUpdateChannels.download);
+      } catch (e) {
+        throw new Error(remoteMessage(e));
       } finally {
         ipc.removeListener(SelfUpdateChannels.progress, listener);
       }
     },
   };
+}
+
+/** The main process's error message without Electron's "Error invoking remote method '…': Error: " in front. */
+export function remoteMessage(e: unknown): string {
+  const text = e instanceof Error ? e.message : String(e);
+  return text.replace(/^Error invoking remote method '[^']*': (?:\w*Error: )?/, "");
 }

@@ -2,7 +2,9 @@
 
 Release-flödet testar automatiskt på Windows Server 2022/2025, Ubuntu 22.04/24.04, Fedora, Arch och
 CachyOS, och uppdaterar en installation av den sista C#-releasen och av den föregående releasen till den nya
-versionen (AppImage och Setup.exe). Det här görs för hand på riktiga datorer före en större release.
+versionen (AppImage och Setup.exe). Uppdateringen av ett native-paket med pkexec provas i docker
+(`packaging/native-update-test.sh`, med en låtsas-pkexec). Det här görs för hand på riktiga datorer före en större
+release.
 
 ## Windows 10 och Windows 11 (x64, ren användare)
 
@@ -22,6 +24,15 @@ versionen (AppImage och Setup.exe). Det här görs för hand på riktiga datorer
       användare (paketen gör `chrome-sandbox` setuid root; AppImagen startar utan sandlåda där den inte går).
 - [ ] Språk med andra skrivsystem (kinesiska, japanska) visas rätt.
 - [ ] AppImage: starta, kontrollera att den hittar uppdateringar.
+- [ ] **Uppdatering av ett native-paket** (Ubuntu med GNOME, vars polkit-agent visar lösenordsrutan; gärna även
+      Fedora/KDE): installera den *föregående* versionen av hubben (och Codestead Linux) som `.deb`/`.rpm` med
+      pakethanteraren och starta den som vanlig användare. Hubben visar **Uppdatera och starta om** med raden om
+      lösenordet (verktyget: erbjudandet med samma rad). Klicka: förloppet visas, sedan systemets lösenordsruta.
+      - Avbryt rutan: fönstret säger att uppdateringen inte installerades och visar **Ladda ner den nya versionen**
+        (releasesidan); `dpkg -l`/`rpm -q` visar fortfarande den gamla versionen.
+      - Försök igen och skriv lösenordet: appen stängs och startar om som den nya versionen ("Vad är nytt" visas),
+        `dpkg -l codestead-hub`/`rpm -q codestead-hub` visar den nya versionen, framstegen finns kvar och inget
+        `codestead-hub-update-*` ligger kvar i `/tmp`.
 - [ ] Avinstallera med pakethanteraren.
 
 ## Hubben Codestead (Windows 10/11 och ett Linux-skrivbord)

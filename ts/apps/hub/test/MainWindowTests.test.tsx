@@ -1,4 +1,4 @@
-import { MemoryStorage, type Storage } from "@codestead/ui";
+import { MemoryStorage, type SelfUpdate, type Storage } from "@codestead/ui";
 import { afterEach, describe, expect, it } from "vitest";
 import { Catalog } from "../src/core/Catalog.js";
 import { CatalogAsset } from "../src/core/CatalogAsset.js";
@@ -82,8 +82,8 @@ class FakeApi implements HubApi {
 
 const startInfo: HubStartInfo = { smokeTest: false, background: false, catalog: null, install: null, rid: "linux-x64", dataRoot: "/data/codestead", traySupported: true, autostartSupported: true };
 
-async function open(api = new FakeApi()) {
-  const w = new MainWindow(api, startInfo, noSelfUpdate);
+async function open(api = new FakeApi(), selfUpdate: SelfUpdate = noSelfUpdate) {
+  const w = new MainWindow(api, startInfo, selfUpdate);
   render(<MainWindowView w={w} />);
   await act(() => w.start());
   w.dispose();
@@ -100,6 +100,35 @@ describe("MainWindowTests", () => {
     expect(document.querySelector('[data-tool="codestead-hub"]')).toBeNull();
     expect(screen.getByText("A new version of Codestead is available: 9.9.9")).toBeTruthy();
     expect(screen.getByText("Download the new version")).toBeTruthy();
+  });
+
+  it("installed as a native package: the update button, the password note, and the download page when it fails", async () => {
+    const seen: number[] = [];
+    let fail = true;
+    const native: SelfUpdate = {
+      canUpdateItself: true,
+      asksForPassword: true,
+      check: () => Promise.resolve("9.9.9"),
+      downloadAndRestart: async (progress) => {
+        for (const p of [0, 100, -1]) progress(p), seen.push(p);
+        if (fail) throw new Error("The password dialog was closed, so the update was not installed.");
+      },
+    };
+    const { w } = await open(new FakeApi(), native);
+    expect(screen.getByText("A new version of Codestead is available: 9.9.9")).toBeTruthy();
+    expect(screen.getByText("Your system will ask for your password to install the update.")).toBeTruthy();
+    expect(screen.queryByText("Download the new version")).toBeNull();
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Update and restart" })));
+    expect(seen).toEqual([0, 100, -1]);
+    expect(screen.getByText(/^The update was not installed: The password dialog was closed/)).toBeTruthy();
+    expect(screen.getByText("Download the new version")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Update and restart" })).toBeNull();
+    // While the system installs it.
+    fail = false;
+    w.hubUpdateFailed = null;
+    w.hubUpdateProgress = -1;
+    act(() => w.render());
+    expect(screen.getByText("Installing the update – your system asks for your password …")).toBeTruthy();
   });
 
   it("installs, shows the news of an update and tells the tool they were seen", async () => {
