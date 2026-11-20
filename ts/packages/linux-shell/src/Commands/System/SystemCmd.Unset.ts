@@ -11,7 +11,7 @@ export const unset = simple(
       if (k === "-f") functions = true;
       else if (k === "-v") functions = false;
       else if (functions) ctx.sh.functions.delete(k);
-      else ctx.sh.env.delete(k);
+      else ctx.sh.unsetVar(k);
     }
     return 0;
   },

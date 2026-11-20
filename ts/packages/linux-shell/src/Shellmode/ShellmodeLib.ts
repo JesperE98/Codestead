@@ -213,7 +213,7 @@ export function shellStartup(sh: Shell, mode: ShellMode, io: Sink): void {
 const Uvars = ".config/fish/fish_variables";
 
 // [^\n\r\u2028\u2029] in C#: what "." matches in JavaScript without the s flag.
-const uvarLineRe = /^SETUVAR (?:--export )?([A-Za-z_][A-Za-z0-9_]*):(.*)$/;
+const uvarLineRe = /^SETUVAR (--export )?([A-Za-z_][A-Za-z0-9_]*):(.*)$/;
 const uvarHexRe = /\\x([0-9a-f]{2})/gi;
 const uvarEncRe = /[^A-Za-z0-9_/.~-]/g;
 
@@ -221,25 +221,38 @@ function uvarPath(sh: Shell): string {
   return `${sh.currentUser().home}/${Uvars}`;
 }
 
-function readUvars(sh: Shell): Map<string, string> {
+/** A universal variable: its value and whether it is exported (set -Ux, "SETUVAR --export" in the file). */
+interface Uvar {
+  value: string;
+  exported: boolean;
+}
+
+function readUvars(sh: Shell): Map<string, Uvar> {
   const content = sh.vfs.tryLookup(uvarPath(sh), sh.currentUser())?.content ?? "";
-  const vars = Js.obj<string>();
+  const vars = Js.obj<Uvar>();
   for (const line of content.split("\n")) {
     const m = uvarLineRe.exec(line);
-    if (m) vars.set(m[1]!, m[2]!.replaceAll("\\x1e", " ").replace(uvarHexRe, (_x, h: string) => String.fromCharCode(Number.parseInt(h, 16))));
+    if (m) {
+      const value = m[3]!.replaceAll("\\x1e", " ").replace(uvarHexRe, (_x, h: string) => String.fromCharCode(Number.parseInt(h, 16)));
+      vars.set(m[2]!, { value, exported: m[1] !== undefined });
+    }
   }
   return vars;
 }
 
 function loadUniversalVars(sh: Shell): void {
-  for (const [k, v] of readUvars(sh)) if (!sh.env.has(k)) sh.env.set(k, v);
+  for (const [k, v] of readUvars(sh)) {
+    if (sh.env.has(k)) continue;
+    sh.env.set(k, v.value);
+    if (v.exported) sh.exported.add(k);
+  }
 }
 
-/** Saves (or removes, with value null) a universal variable. */
-export function saveUniversalVar(sh: Shell, name: string, value: string | null): void {
+/** Saves (or removes, with value null) a universal variable; exported is set -Ux. */
+export function saveUniversalVar(sh: Shell, name: string, value: string | null, exported = false): void {
   const vars = readUvars(sh);
   if (value === null) vars.delete(name);
-  else vars.set(name, value);
+  else vars.set(name, { value, exported });
   const enc = (v: string): string =>
     v.replace(uvarEncRe, (m) => {
       const c = m.charCodeAt(0);
@@ -247,7 +260,7 @@ export function saveUniversalVar(sh: Shell, name: string, value: string | null):
     });
   // Object.entries(vars).sort() compares the entries as "key,value" strings.
   const lines = [...vars]
-    .sort((a, b) => Js.ordinal(a[0] + "," + a[1], b[0] + "," + b[1]))
-    .map(([k, v]) => `SETUVAR ${k}:${enc(v)}`);
+    .sort((a, b) => Js.ordinal(a[0] + "," + a[1].value, b[0] + "," + b[1].value))
+    .map(([k, v]) => `SETUVAR ${v.exported ? "--export " : ""}${k}:${enc(v.value)}`);
   writeHomeFile(sh, Uvars, `# This file contains fish universal variable definitions.\n# VERSION: 3.0\n${lines.join("\n")}${lines.length > 0 ? "\n" : ""}`);
 }

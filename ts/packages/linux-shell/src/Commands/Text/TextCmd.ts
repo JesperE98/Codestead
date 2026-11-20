@@ -101,12 +101,13 @@ export function breToJs(p: string): string {
 }
 
 /**
- * How sort orders text: by the terminal's $LANG, like GNU sort (sv_SE.UTF-8 puts å, ä, ö last,
+ * How sort orders text: by the environment's $LANG (or $LC_ALL), like GNU sort (sv_SE.UTF-8 puts å, ä, ö last,
  * en_US.UTF-8 sorts them with a and o). Unknown locales fall back to the root (invariant) collation.
  */
 export function collation(sh: Shell): Intl.Collator {
-  const all = sh.env.get("LC_ALL");
-  const lang = all !== undefined && all.length > 0 ? all : (sh.env.get("LANG") ?? "");
+  // A program sees only the environment variables: LC_ALL=C sort, or export LC_ALL=C – not a plain LC_ALL=C.
+  const all = sh.envVar("LC_ALL");
+  const lang = all !== null && all.length > 0 ? all : (sh.envVar("LANG") ?? "");
   const name = lang.split(".")[0]!.replaceAll("_", "-");
   if (name === "" || name === "C" || name === "POSIX") return new Intl.Collator("und");
   try {

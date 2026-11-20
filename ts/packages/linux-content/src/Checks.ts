@@ -129,9 +129,14 @@ export function installed(c: CheckContext, pkg: string): boolean {
   return c.sh.installed.has(pkg);
 }
 
-/** A shell variable; the name may be a {{placeholder}}. */
+/** A shell variable, exported or not; the name may be a {{placeholder}}. */
 export function env(c: CheckContext, name: string): string | null {
   return c.sh.env.get(x(c, name)) ?? null;
+}
+
+/** An environment variable (exported with export or fish's set -x); null when it is unset or only a shell variable. */
+export function exported(c: CheckContext, name: string): string | null {
+  return c.sh.envVar(x(c, name));
 }
 
 /** A path itself, also when it is a symbolic link (like lstat); "~" and {{placeholders}} are filled in. */

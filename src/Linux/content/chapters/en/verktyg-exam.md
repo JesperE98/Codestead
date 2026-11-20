@@ -129,12 +129,12 @@ always fails.
 
 ```quiz
 How do you make `EDITOR` an environment variable with the value `nano` in fish?
-- [ ] `export EDITOR=nano`
+- [ ] `set EDITOR nano`
 - [ ] `EDITOR=nano`
 - [x] `set -x EDITOR nano`
 - [ ] `set -e EDITOR nano`
 ---
-`-x` exports the variable; `-e` erases it.
+`-x` exports the variable. Without `-x` it is a plain variable that only exists in fish, and `-e` erases it.
 ```
 
 ```quiz

@@ -23,6 +23,8 @@ export interface ShellSnapshot {
   fs: FsNode;
   cwd: string;
   env: Obj<string>;
+  /** The names of the exported variables (null in terminals saved before they were kept apart: all of env). */
+  exported?: string[] | null;
   aliases: Obj<string>;
   history: string[];
   installed: Obj<string>;
@@ -62,6 +64,7 @@ function reviveFrame(v: unknown): ShellFrame {
     saved: {
       cwd: (saved["cwd"] as string | undefined) ?? "",
       env: toMap<string>(saved["env"]),
+      exported: (saved["exported"] as string[] | null | undefined) ?? null,
       aliases: toMap<string>(saved["aliases"]),
       functions: toMap<Node>(saved["functions"]),
     },
@@ -106,6 +109,7 @@ export function snapshotFromJson(json: string): ShellSnapshot | null {
     fs: (opt("fs", reviveFsNode) ?? null) as FsNode,
     cwd: (s["cwd"] as string | undefined) ?? "",
     env: toMap<string>(s["env"]),
+    exported: (s["exported"] as string[] | null | undefined) ?? null,
     aliases: toMap<string>(s["aliases"]),
     history: (s["history"] as string[] | undefined) ?? [],
     installed: toMap<string>(s["installed"]),

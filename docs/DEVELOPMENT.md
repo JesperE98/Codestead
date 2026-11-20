@@ -676,11 +676,18 @@ språken. `ShellI18nTests` kontrollerar nycklar, platshållare och att inget har
   länkantal och ett gemensamt inodnummer; när en sparad terminal läses in fogas de ihop
   igen. `VfsLib.cloneNode` (cp) ger alltid nya filer utan inodnummer.
 - **umask** finns på filsystemet och sparas med terminalen. Att skriva filer och skapa mappar använder den.
+- **Variabler** (`Shell.ts`): alla skalets variabler ligger i `sh.env` och namnen på de exporterade
+  (miljövariablerna) i `sh.exported`, som sparas med terminalen. Det skalet startar som ett nytt program – `bash -c`,
+  `bash`/`sh`/`./skript.sh` (med eller utan `#!`), zsh och fish, `env KOMMANDO`, `xargs`, cron-jobb – får bara
+  miljövariablerna och inga funktioner (`sh.environment()`, `sh.asChild`), som i bash; `source`/`.`, `( … )` och
+  `$( … )` ser allt. `NAMN=värde kommando` exporterar bara till det kommandot, och program som läser miljön (`env`,
+  `printenv`, `sort` med `LANG`) använder `sh.envVar`. fish:s `set -x` exporterar och `set -u` tar bort exporten.
 - **cron** (`Commands/Cron/`): användarnas crontab ligger i `/var/spool/cron/crontabs`
   (Debian/Ubuntu) eller `/var/spool/cron`. Cron-kommandots tick körs före varje kommandorad och kör de
   jobb vars minut har passerat sedan förra gången (högst en timme bakåt), men bara medan tjänsten
   cron/crond/cronie är igång. Tiden räknas inte medan appen är stängd, precis som en avstängd dator.
-  Systemets egna jobb (`run-parts`) loggas men körs inte.
+  Jobben får cron:s egen korta miljö (`HOME`, `LOGNAME`, `USER`, `SHELL=/bin/sh`, `PATH=/usr/bin:/bin`, `LANG`), inte
+  elevens variabler. Systemets egna jobb (`run-parts`) loggas men körs inte.
 - **Servern** `192.168.1.10` (`serverFor` i `Commands/Ssh/`) är en egen Debian-terminal i minnet. ssh, scp och
   rsync kör mot den, och `~/.ssh/config` (`Host`, `HostName`, `User`, `Port`) läses på samma sätt
   som av OpenSSH. Serverns filer sparas inte när appen stängs.
