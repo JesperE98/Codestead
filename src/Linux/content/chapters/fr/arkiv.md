@@ -34,6 +34,8 @@ gzip ne traite qu'un fichier à la fois et ne connaît rien aux répertoires, et
 une archive tar seule n'est pas plus petite que les fichiers qu'elle contient.
 ```
 
+![tar rassemble, gzip compresse](images/tar-gzip.webp "tar fait un seul fichier du répertoire, plus gros que les fichiers eux-mêmes, car chaque fichier reçoit un en-tête de 512 octets et l'archive est complétée jusqu'à des blocs entiers. gzip la rend ensuite petite ; tar -czf fait les deux. Les barres sont à l'échelle.")
+
 | Extension | Qu'est-ce que c'est ? | Décompresser avec |
 |---|---|---|
 | `.tar` | Archive, non compressée | `tar -xf` |
@@ -94,6 +96,8 @@ Mettez toujours `f` en **dernier** quand vous collez les options ensemble,
 puisque le nom du fichier doit venir juste après. Pour des raisons
 historiques, vous pouvez aussi omettre le tiret : `tar czvf` équivaut à
 `tar -czvf`.
+
+![Les parties de tar -czvf](images/tar-options.webp "c, z, v et f sont des options écrites ensemble, f en dernier, car le nom de l'archive vient juste après. Tout ce qui suit le nom est empaqueté.")
 
 ```quiz
 Que fait `tar -xzvf backup.tar.gz` ?
@@ -207,6 +211,8 @@ Vous lancez `tar -czf backup.tar.gz -C ~ {{documents}}`. Que contient l'archive 
 `-C ~` demande à tar de passer d'abord dans votre répertoire personnel, donc
 les noms dans l'archive commencent à `{{documents}}/`.
 ```
+
+![Où commencent les noms dans l'archive](images/tar-paths.webp "Si vous empaquetez un chemin de votre répertoire personnel, les noms commencent par home et votre nom d'utilisateur, car tar retire la barre oblique initiale. Avec -C ~, tar se place d'abord dans votre répertoire personnel, et les noms commencent au répertoire empaqueté.")
 
 ## Compresser un seul fichier avec `gzip`
 

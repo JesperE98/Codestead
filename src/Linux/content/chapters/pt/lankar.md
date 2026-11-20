@@ -60,6 +60,8 @@ Isso funciona, porque o link está no seu diretório pessoal e
 `{{documents}}/{{fruits}}` fica ali. Um link `/tmp/f` com o mesmo conteúdo
 procuraria `/tmp/{{documents}}/{{fruits}}` – e estaria quebrado.
 
+![Um link relativo conta a partir de onde está](images/symlink-relative.webp "Os dois links contêm o mesmo caminho relativo, que é seguido a partir do diretório onde cada link está. A partir do seu diretório pessoal ele leva ao arquivo; a partir de /tmp não leva a lugar nenhum, então esse link está quebrado.")
+
 O `readlink` mostra o que está dentro de um link, e o `realpath` mostra o
 caminho completo, com todos os links seguidos:
 
@@ -145,6 +147,8 @@ continua lá depois que `b.txt` foi removido.
 | Se o original for removido | O link quebra | O arquivo continua existindo |
 | No `ls -l` | `l` e `->` | O contador de links aumenta |
 
+![Nomes, inodes e conteúdo](images/link-kinds.webp "Um link físico é mais um nome para o mesmo inode, então o contador de links vai para 2. Um link simbólico tem um inode próprio, que contém um nome. Depois do rm o arquivo continua existindo pelo outro nome, mas o link simbólico está quebrado.")
+
 ```quiz
 Que tipo de link pode apontar para um diretório?
 - [x] Só um link simbólico
@@ -213,6 +217,8 @@ umask
 
 A umask habitual `0022` tira a permissão de escrita do grupo e dos outros, e é
 por isso que os seus arquivos recebem `644` e os seus diretórios `755`.
+
+![O que a umask 022 tira](images/umask.webp "Arquivos novos partem de 666 e diretórios novos de 777. A umask 022 tira o w do grupo e dos outros, o que deixa 644 e 755.")
 
 | umask | Arquivos novos | Diretórios novos | Significa |
 |---|---|---|---|

@@ -26,6 +26,8 @@ Du skapar en variabel med `NAMN=värde` (inga mellanslag runt `=`!). Med
 export EDITOR=nano
 ```
 
+![Vad export gör](images/env-export.webp "En variabel du skapar finns bara i ditt skal. Med export blir den en miljövariabel, och varje program som skalet startar får en kopia av den.")
+
 ```quiz
 Vilken rad skapar variabeln `FARG` med värdet `blue`?
 - [ ] `FARG = blue`
@@ -71,6 +73,8 @@ katalog i `PATH` hamnar på en egen rad:
 ```sh
 echo $PATH | tr ':' '\n'
 ```
+
+![Hur skalet hittar ls](images/path-lookup.webp "PATH är en lista med kataloger åtskilda av kolon. Skalet letar i dem i tur och ordning och kör det första ls det hittar, /usr/bin/ls, så det letar aldrig i /bin.")
 
 `which` visar var ett program hittades. Vissa kommandon, som `cd`, är inga
 filer utan *inbyggda* i skalet – `type` berättar vad ett namn är:

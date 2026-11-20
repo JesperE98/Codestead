@@ -60,6 +60,8 @@ Das funktioniert, weil der Link in deinem Home-Verzeichnis liegt und
 `{{documents}}/{{fruits}}` dort zu finden ist. Ein Link `/tmp/f` mit demselben
 Inhalt würde nach `/tmp/{{documents}}/{{fruits}}` suchen – und wäre kaputt.
 
+![Ein relativer Link zählt von seinem Ort aus](images/symlink-relative.webp "Beide Links enthalten denselben relativen Pfad, und er wird von dem Verzeichnis aus verfolgt, in dem der Link liegt. Von deinem Home-Verzeichnis aus führt er zur Datei; von /tmp aus führt er ins Leere, dieser Link ist kaputt.")
+
 `readlink` zeigt, was in einem Link steht, und `realpath` zeigt den
 vollständigen Pfad, bei dem jeder Link aufgelöst ist:
 
@@ -147,6 +149,8 @@ geschrieben wurde, ist noch da, nachdem `b.txt` entfernt wurde.
 | Wenn das Original entfernt wird | Der Link ist kaputt | Die Datei lebt weiter |
 | In `ls -l` | `l` und `->` | Der Linkzähler steigt |
 
+![Namen, Inodes und Inhalt](images/link-kinds.webp "Ein harter Link ist ein weiterer Name für denselben Inode, deshalb steigt der Linkzähler auf 2. Ein symbolischer Link hat einen eigenen Inode, der einen Namen enthält. Nach rm lebt die Datei unter ihrem anderen Namen weiter, aber der symbolische Link ist kaputt.")
+
 ```quiz
 Welche Art von Link kann auf ein Verzeichnis zeigen?
 - [x] Nur ein symbolischer Link
@@ -218,6 +222,8 @@ umask
 
 Die übliche umask `0022` nimmt der Gruppe und allen anderen das Schreibrecht
 weg. Deshalb bekommen deine Dateien `644` und deine Verzeichnisse `755`.
+
+![Was die umask 022 wegnimmt](images/umask.webp "Neue Dateien beginnen bei 666, neue Verzeichnisse bei 777. Die umask 022 nimmt der Gruppe und den anderen das w weg, übrig bleiben 644 und 755.")
 
 | umask | Neue Dateien | Neue Verzeichnisse | Bedeutet |
 |---|---|---|---|

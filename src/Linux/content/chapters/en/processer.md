@@ -23,6 +23,8 @@ Every process has a parent. Follow the parents far enough and you end up at
 process number 1.
 ```
 
+![The process tree](images/process-tree.webp "Every process has a PID, and its PPID is the PID of its parent, shown in the parent's colour. Following the parents from ps -ef leads through your shell to process 1, init.")
+
 ## My processes – `ps`
 
 `ps` (*process status*) without options shows the processes in your own
@@ -164,6 +166,8 @@ carry on running while you keep your prompt?
 `Ctrl+Z` pauses the program. `bg` lets a stopped job continue in the
 background, while `fg` would bring it back to the foreground.
 ```
+
+![Foreground, background and stopped](images/job-states.webp "A command runs in the foreground, or with & at the end in the background. Ctrl+Z stops a foreground job, bg lets a stopped job go on in the background, fg brings a job to the foreground, and Ctrl+C or kill ends it.")
 
 ### Keep running after you log out – `nohup`
 

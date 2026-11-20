@@ -61,6 +61,8 @@ av r = 4, w = 2 och x = 1:
 | `644` | `rw-r--r--` | Vanliga filer |
 | `600` | `rw-------` | Hemliga filer |
 
+![Rättigheter som siffror](images/perm-octal.webp "Varje grupp om tre tecken blir en siffra: r räknas som 4, w som 2, x som 1 och ett streck som 0. Så blir rwxr-xr-x 755 och rw-r--r-- 644.")
+
 ```sh
 chmod 644 {{notes}}
 ```
@@ -165,3 +167,5 @@ sudo gäller bara kommandot (`echo`). Omdirigeringen sköts av ditt skal, som
 körs som du. `tee` är programmet som skriver filen, så det är `tee` som
 behöver sudo.
 ```
+
+![Vem som öppnar filen](images/sudo-tee.webp "På första raden är det ditt eget skal, som körs som du, som öppnar /etc/file för > och nekas, så echo körs aldrig. På andra raden körs tee som root och öppnar /etc/hosts själv.")

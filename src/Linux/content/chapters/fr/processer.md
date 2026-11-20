@@ -25,6 +25,8 @@ Chaque processus a un parent. Remontez les parents assez loin et vous arrivez
 au processus numéro 1.
 ```
 
+![L'arbre des processus](images/process-tree.webp "Chaque processus a un PID, et son PPID est le PID de son parent, dans la couleur du parent. En remontant les parents depuis ps -ef, on passe par votre shell jusqu'au processus 1, init.")
+
 ## Mes processus – `ps`
 
 `ps` (*process status*) sans option affiche les processus de votre propre
@@ -173,6 +175,8 @@ laisser continuer à tourner tout en gardant votre invite ?
 `Ctrl+Z` met le programme en pause. `bg` laisse un job stoppé continuer en
 arrière-plan, alors que `fg` le ramènerait au premier plan.
 ```
+
+![Premier plan, arrière-plan et stoppé](images/job-states.webp "Une commande tourne au premier plan, ou en arrière-plan avec & à la fin. Ctrl+Z stoppe un job au premier plan, bg laisse un job stoppé continuer en arrière-plan, fg ramène un job au premier plan, et Ctrl+C ou kill le termine.")
 
 ### Continuer après la déconnexion – `nohup`
 

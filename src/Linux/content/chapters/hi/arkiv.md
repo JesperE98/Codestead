@@ -30,6 +30,8 @@ gzip एक बार में सिर्फ़ एक फ़ाइल सं
 जानता, और अकेला tar आर्काइव अपनी फ़ाइलों से छोटा नहीं होता।
 ```
 
+![tar इकट्ठा करता है, gzip छोटा करता है](images/tar-gzip.webp "tar directory से एक file बनाता है, जो असली files से भी बड़ी होती है, क्योंकि हर file से पहले 512 bytes का header लगता है और archive को पूरे blocks तक भरा जाता है। फिर gzip उसे छोटा करता है; tar -czf दोनों काम करता है। Bars scale के हिसाब से बनी हैं।")
+
 | File extension | यह क्या है? | किससे unpack करें |
 |---|---|---|
 | `.tar` | Archive, बिना compression | `tar -xf` |
@@ -85,6 +87,8 @@ tar -cvf {{documents}}.tar {{documents}}
 Options को साथ में लिखते समय `f` को हमेशा **आख़िर** में रखिए, क्योंकि file का नाम ठीक
 उसके बाद आना चाहिए। ऐतिहासिक कारणों से आप dash छोड़ भी सकते हैं: `tar czvf` का मतलब
 वही है जो `tar -czvf` का।
+
+![tar -czvf के हिस्से](images/tar-options.webp "c, z, v और f एक साथ लिखे गए options हैं, और f आख़िर में आता है, क्योंकि उसके ठीक बाद archive का नाम आता है। नाम के बाद जो कुछ भी है, वह pack हो जाता है।")
 
 ```quiz
 `tar -xzvf backup.tar.gz` क्या करता है?
@@ -195,6 +199,8 @@ tar -tzf backup.tar.gz
 `-C ~` से tar पहले आपकी होम डायरेक्टरी में जाता है, इसलिए आर्काइव में नाम
 `{{documents}}/` से शुरू होते हैं।
 ```
+
+![Archive में नाम कहाँ से शुरू होते हैं](images/tar-paths.webp "Home directory का कोई path pack करने पर नाम home और आपके user name से शुरू होते हैं, क्योंकि tar शुरुआत का slash हटा देता है। -C ~ के साथ tar पहले आपकी home directory में जाता है, और नाम उसी directory से शुरू होते हैं जिसे आप pack करते हैं।")
 
 ## `gzip` से अकेली files compress करना
 

@@ -30,6 +30,8 @@ gzip hanterar bara en fil i taget och vet ingenting om kataloger, och ett
 tar-arkiv är i sig inte mindre än filerna i det.
 ```
 
+![tar samlar ihop, gzip komprimerar](images/tar-gzip.webp "tar gör en enda fil av katalogen, större än filerna själva eftersom varje fil får ett huvud på 512 byte och arkivet fylls ut till jämna block. Sedan gör gzip den liten; tar -czf gör båda. Staplarna är ritade i skala.")
+
 | Filändelse | Vad är det? | Packa upp med |
 |---|---|---|
 | `.tar` | Arkiv, okomprimerat | `tar -xf` |
@@ -85,6 +87,8 @@ Resten är tillägg. En vanlig minnesregel:
 Lägg alltid `f` **sist** när du skriver ihop flaggorna, eftersom filnamnet ska
 stå direkt efter den. Av historiska skäl går det också att skippa
 bindestrecket: `tar czvf` betyder samma sak som `tar -czvf`.
+
+![Delarna i tar -czvf](images/tar-options.webp "c, z, v och f är flaggor som skrivs ihop, med f sist, eftersom arkivets namn kommer direkt efter den. Allt efter namnet packas ihop.")
 
 ```quiz
 Vad gör `tar -xzvf backup.tar.gz`?
@@ -193,6 +197,8 @@ Du kör `tar -czf backup.tar.gz -C ~ {{documents}}`. Vad innehåller arkivet?
 `-C ~` gör att tar först byter till din hemkatalog, så namnen i arkivet börjar
 med `{{documents}}/`.
 ```
+
+![Var namnen i arkivet börjar](images/tar-paths.webp "Packar du en sökväg i din hemkatalog börjar namnen i arkivet med home och ditt användarnamn, eftersom tar tar bort det inledande snedstrecket. Med -C ~ byter tar först till din hemkatalog, och namnen börjar vid katalogen du packar.")
 
 ## Komprimera enskilda filer med `gzip`
 
