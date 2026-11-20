@@ -196,9 +196,10 @@ TypeScript-version kan släppas som nästa version av samma produkt (fas 6).
   `UpdateNix` och `AppRun` är byte för byte desamma, så en C#-installation uppdateras till en TypeScript-version från
   samma källa.
 - **glibc:** Velopacks Linux-modul är byggd mot glibc 2.39 men använder 2.39-funktionerna (`pidfd_spawnp`,
-  `pidfd_getpid`) bara som svaga symboler; `package-app.mjs` märker den versionen som valfri i modulen, så den laddas
-  även med glibc 2.34–2.38 (Ubuntu 22.04, Debian 12). Modulen laddas först när den behövs; går den inte att ladda
-  startar appen ändå, utan självuppdatering.
+  `pidfd_getpid`) bara som svaga symboler; `package-app.mjs` märker den versionen som valfri i modulen
+  (`packaging/ts/velopack-glibc.mjs`, som stoppar bygget om en ny Velopack ser annorlunda ut), så den laddas även med
+  glibc 2.34–2.38 (Ubuntu 22.04, Debian 12). Modulen laddas först när den behövs; går den inte att ladda startar appen
+  ändå, utan självuppdatering – därför kontrollerar installationstestet att den laddas (`packaging/ts/velopack-check.cjs`).
 - **Testa:** `packaging/install-test.sh <id> <exe> <deb|rpm|arch|appimage> electron` (AppImagens bibliotek, och att
   `chrome-sandbox` är setuid root i paketen), `packaging/hub-e2e.sh` och `install-test-windows.ps1` som för C#.
   `.github/workflows/ts-packaging.yml` (vid `workflow_dispatch` och push till `ts-migration`) bygger de tre apparnas

@@ -105,6 +105,26 @@ export CODESTEAD_DATA_DIR=/tmp/codestead-smoke
 out=$(timeout 180 xvfb-run -a "${run[@]}" --smoke-test 2>&1) || { echo "$out"; echo "Smoke test failed" >&2; exit 1; }
 echo "$out"
 grep -q "SMOKE OK" <<<"$out" || { echo "Smoke test did not print SMOKE OK" >&2; exit 1; }
+! grep -q "Velopack is not available" <<<"$out" || { echo "The app started without Velopack (no self-update)" >&2; exit 1; }
+
+# Velopack (the apps' self-update) must load, not only the app: without it the app starts all the same, so the smoke test
+# would not notice. On Ubuntu 22.04 its native module loads only because packaging/ts/velopack-glibc.mjs made its glibc
+# 2.39 need optional. In the AppImage, Velopack must also find its installation (the update button is offered).
+echo "--- Velopack"
+if [[ "$kind" == appimage ]]; then
+  version=${app#./"$pkg"-}
+  version=${version%-linux-x86_64.AppImage}
+  x=$(mktemp -d)
+  (cd "$x" && "/artifacts/${app#./}" --appimage-extract >/dev/null)
+  check=(env APPIMAGE="/artifacts/${app#./}" ELECTRON_RUN_AS_NODE=1 "$x/squashfs-root/usr/bin/$exe.bin" /packaging/ts/velopack-check.cjs
+    --installed "$pkg" "$version")
+else
+  check=(env ELECTRON_RUN_AS_NODE=1 "/opt/$pkg/$exe.bin" /packaging/ts/velopack-check.cjs)
+fi
+vp=$("${check[@]}" 2>&1) || { echo "$vp"; echo "Velopack does not load" >&2; exit 1; }
+echo "$vp"
+grep -q "^VELOPACK OK" <<<"$vp" || { echo "No VELOPACK OK" >&2; exit 1; }
+[[ "$kind" != appimage ]] || rm -rf "$x"
 
 # Uninstall again – a clean removal is part of the test.
 case "$kind" in

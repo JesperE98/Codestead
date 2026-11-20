@@ -305,6 +305,13 @@ describe("Codestead GP (Electron)", () => {
         await first.scrollIntoViewIfNeeded();
         await sceneIs(page, scenes[0]!, "state", "fallback");
         expect(await first.locator("img").getAttribute("src")).toContain(`viz-${scenes[0]}`);
+        // The picture is the course's own file in src/GP/content (the build copies none into dist/assets: vite.config.ts),
+        // and the page may load it from there.
+        expect(await first.locator("img").getAttribute("src")).toMatch(/\/src\/GP\/content\/images\//);
+        await page.waitForFunction((scene) => {
+          const img = document.querySelector<HTMLImageElement>(`.cs-viz[data-scene="${scene}"] img`);
+          return img !== null && img.complete && img.naturalWidth > 0;
+        }, scenes[0]!);
         expect(await contexts(page)).toBe(0);
         await shot(page, "11-scene-fallback");
       } finally {

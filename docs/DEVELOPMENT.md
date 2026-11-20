@@ -761,6 +761,23 @@ egenskaper de inte känner till (som C#-hubbens System.Text.Json gjorde), så ny
 befintliga får inte byta namn, typ eller betydelse (`ts/apps/hub/test/CatalogCompatibilityTests.test.ts` läser den
 publicerade katalogen och det nya formatet med hubbens parser).
 
+**Paketens storlek och Velopacks glibc.** Det mesta av varje paket är Electron självt (≈ 265 MB okomprimerat: den
+redan strippade körfilen, `libffmpeg.so`, SwiftShader – Chromiums WebGL utan GPU, som GP:s visualiserare behöver i
+virtuella maskiner – och licenserna). `package-app.mjs` tar bara med Chromiums språkfiler för språken apparna erbjuder
+(`offered` i `build/languages.json`) och bara Velopacks modul för plattformen; GP:s sida laddar kursens bilder och
+filer från `src/GP/content` – där kurs-workern läser dem – i stället för kopior i `dist/assets`
+(`ts/apps/gp/vite.config.ts`, båda byggena listar dem i `repo-files.json`). Komprimeringen: `.deb` med xz
+(`packaging/ts/deb-xz.mjs`, nfpm:s egen xz är sämre), `.rpm` med zstd -19 (rpm 4.14 och senare), Arch-paketet med
+zstd -19 och AppImagen (och därmed Velopacks uppdateringspaket, som bär den) med zstd -19 i block på 1 MiB
+(`packaging/ts/squashfs/mksquashfs`, som `vpk` kör i stället för den riktiga; AppImagens runtime läser zstd, och
+bygget kontrollerar det). `.tar.gz` (hubben) och `.zip`/`Setup.exe` (Windows) behåller sina format.
+Velopacks Linux-modul är byggd mot glibc 2.39 men tar bara de svaga `pidfd_spawnp`/`pidfd_getpid` därifrån;
+`packaging/ts/velopack-glibc.mjs` gör det behovet valfritt (en byte) så att modulen laddas med glibc 2.34–2.38, och
+stoppar bygget om en ny Velopack ser annorlunda ut (testat i `ts/packages/ui/test/VelopackGlibcTests.test.ts`).
+Installationstestet kontrollerar att Velopack verkligen laddas (`packaging/ts/velopack-check.cjs`) – på Ubuntu 22.04
+(glibc 2.35) både `.deb` och AppImage, där Velopack också måste hitta installationen – eftersom appen annars startar
+utan självuppdatering och röktestet inte märker något.
+
 Release-titlarna kommer från `title` i `packaging/products.json` ("Codestead Linux 0.5.1",
 "Codestead hub 0.1.1"), eftersom alla produkter delar repot. Efter varje publicering skriver flödet om
 README:n i `codestead-releases` med `packaging/releases_readme.py` (på engelska: innehållsförteckning,
@@ -991,8 +1008,8 @@ Release-flödet kontrollerar att nyckeln och den publika nyckeln hör ihop innan
 
 #### Lokalt
 
-Linux (kräver Node 22 och `npm ci` i `ts/`, [nfpm](https://nfpm.goreleaser.com), `mksquashfs` och
-`dotnet tool install -g vpk --version 1.2.161`, som behöver .NET):
+Linux (kräver Node 22 och `npm ci` i `ts/`, [nfpm](https://nfpm.goreleaser.com), `mksquashfs` 4.4 eller senare,
+`xz`, `zstd` och `dotnet tool install -g vpk --version 1.2.161`, som behöver .NET):
 
 ```bash
 packaging/build-linux.sh ts/apps/linux codestead-linux "Codestead Linux" Codestead.Linux 0.6.0

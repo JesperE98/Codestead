@@ -5,31 +5,38 @@
     "changes": {
       "en": [
         "**Chromium's sandbox on Ubuntu**: Ubuntu 23.10 and later restrict the user namespaces Chromium's sandbox needs, so Codestead Linux ran without it there. Installed as a .deb, .rpm or Arch package, it now brings an AppArmor profile that turns the sandbox back on; installed by the hub, it uses the sandbox when the hub runs as a package or you have turned it on in the hub.",
-        "**Signed updates for the Linux packages**: installed as a .deb, .rpm or Arch package, Codestead Linux now checks its updates against Codestead's signed catalog – the new version and the package's checksum come from a list that is signed when the version is published, so only exactly the package that was published is installed."
+        "**Signed updates for the Linux packages**: installed as a .deb, .rpm or Arch package, Codestead Linux now checks its updates against Codestead's signed catalog – the new version and the package's checksum come from a list that is signed when the version is published, so only exactly the package that was published is installed.",
+        "**Smaller downloads**: the .deb, .rpm and Arch packages and the AppImage of Codestead Linux are 14–24 % smaller, and so are the AppImage's updates."
       ],
       "sv": [
         "**Chromiums sandlåda i Ubuntu**: Ubuntu 23.10 och senare begränsar de användarnamnrymder som Chromiums sandlåda behöver, så Codestead Linux kördes utan den där. Installerad som .deb-, .rpm- eller Arch-paket har den nu med sig en AppArmor-profil som slår på sandlådan igen; installerad av hubben använder den sandlådan när hubben är installerad som paket eller när du har slagit på den i hubben.",
-        "**Signerade uppdateringar för Linuxpaketen**: installerad som .deb-, .rpm- eller Arch-paket kontrollerar Codestead Linux nu sina uppdateringar mot Codesteads signerade katalog – den nya versionen och paketets kontrollsumma kommer från en lista som signeras när versionen publiceras, så bara exakt det paket som publicerades installeras."
+        "**Signerade uppdateringar för Linuxpaketen**: installerad som .deb-, .rpm- eller Arch-paket kontrollerar Codestead Linux nu sina uppdateringar mot Codesteads signerade katalog – den nya versionen och paketets kontrollsumma kommer från en lista som signeras när versionen publiceras, så bara exakt det paket som publicerades installeras.",
+        "**Mindre nedladdningar**: Codestead Linux .deb-, .rpm- och Arch-paket och AppImage är 14–24 % mindre, och detsamma gäller AppImagens uppdateringar."
       ],
       "de": [
         "**Chromiums Sandbox unter Ubuntu**: Ubuntu 23.10 und neuer schränken die User-Namespaces ein, die Chromiums Sandbox braucht, deshalb lief Codestead Linux dort ohne sie. Als .deb-, .rpm- oder Arch-Paket installiert, bringt es jetzt ein AppArmor-Profil mit, das die Sandbox wieder einschaltet; vom Hub installiert, nutzt es die Sandbox, wenn der Hub als Paket installiert ist oder du sie im Hub eingeschaltet hast.",
-        "**Signierte Updates für die Linux-Pakete**: Als .deb-, .rpm- oder Arch-Paket installiert, prüft Codestead Linux seine Updates jetzt anhand des signierten Katalogs von Codestead – die neue Version und die Prüfsumme des Pakets stammen aus einer Liste, die beim Veröffentlichen der Version signiert wird, sodass nur genau das veröffentlichte Paket installiert wird."
+        "**Signierte Updates für die Linux-Pakete**: Als .deb-, .rpm- oder Arch-Paket installiert, prüft Codestead Linux seine Updates jetzt anhand des signierten Katalogs von Codestead – die neue Version und die Prüfsumme des Pakets stammen aus einer Liste, die beim Veröffentlichen der Version signiert wird, sodass nur genau das veröffentlichte Paket installiert wird.",
+        "**Kleinere Downloads**: Die .deb-, .rpm- und Arch-Pakete und das AppImage von Codestead Linux sind 14–24 % kleiner, ebenso die Updates des AppImage."
       ],
       "fr": [
         "**Le bac à sable de Chromium sous Ubuntu** : Ubuntu 23.10 et les versions suivantes restreignent les espaces de noms utilisateur dont le bac à sable de Chromium a besoin ; Codestead Linux y fonctionnait donc sans lui. Installé en paquet .deb, .rpm ou Arch, il apporte désormais un profil AppArmor qui réactive le bac à sable ; installé par le hub, il utilise le bac à sable quand le hub est installé en paquet ou que vous l'avez activé dans le hub.",
-        "**Mises à jour signées pour les paquets Linux** : installé en paquet .deb, .rpm ou Arch, Codestead Linux vérifie désormais ses mises à jour avec le catalogue signé de Codestead – la nouvelle version et la somme de contrôle du paquet proviennent d'une liste signée lors de la publication de la version, si bien que seul le paquet publié, à l'identique, est installé."
+        "**Mises à jour signées pour les paquets Linux** : installé en paquet .deb, .rpm ou Arch, Codestead Linux vérifie désormais ses mises à jour avec le catalogue signé de Codestead – la nouvelle version et la somme de contrôle du paquet proviennent d'une liste signée lors de la publication de la version, si bien que seul le paquet publié, à l'identique, est installé.",
+        "**Téléchargements plus légers** : les paquets .deb, .rpm et Arch et l'AppImage de Codestead Linux sont 14 à 24 % plus petits, tout comme les mises à jour de l'AppImage."
       ],
       "es": [
         "**El sandbox de Chromium en Ubuntu**: Ubuntu 23.10 y posteriores limitan los espacios de nombres de usuario que necesita el sandbox de Chromium, así que Codestead Linux funcionaba allí sin él. Instalado como paquete .deb, .rpm o de Arch, ahora trae un perfil de AppArmor que vuelve a activar el sandbox; instalado por el hub, usa el sandbox cuando el hub está instalado como paquete o lo has activado en el hub.",
-        "**Actualizaciones firmadas para los paquetes de Linux**: instalado como paquete .deb, .rpm o de Arch, Codestead Linux ahora comprueba sus actualizaciones con el catálogo firmado de Codestead: la nueva versión y la suma de comprobación del paquete vienen de una lista que se firma al publicar la versión, así que solo se instala exactamente el paquete publicado."
+        "**Actualizaciones firmadas para los paquetes de Linux**: instalado como paquete .deb, .rpm o de Arch, Codestead Linux ahora comprueba sus actualizaciones con el catálogo firmado de Codestead: la nueva versión y la suma de comprobación del paquete vienen de una lista que se firma al publicar la versión, así que solo se instala exactamente el paquete publicado.",
+        "**Descargas más pequeñas**: los paquetes .deb, .rpm y de Arch y la AppImage de Codestead Linux son entre un 14 y un 24 % más pequeños, igual que las actualizaciones de la AppImage."
       ],
       "zh": [
         "**Ubuntu 上的 Chromium 沙箱**：Ubuntu 23.10 及更高版本限制了 Chromium 沙箱所需的用户命名空间，因此 Codestead Linux 在那里一直没有沙箱。以 .deb、.rpm 或 Arch 软件包安装时，它现在自带一个 AppArmor 配置文件，重新开启沙箱；由 Hub 安装时，只要 Hub 以软件包安装，或你在 Hub 中开启了沙箱，它就会使用沙箱。",
-        "**Linux 软件包的签名更新**：以 .deb、.rpm 或 Arch 软件包安装时， Codestead Linux 现在会根据 Codestead 的签名目录核对更新——新版本和软件包的校验和来自发布该版本时签名的列表，因此只会安装与发布时完全相同的软件包。"
+        "**Linux 软件包的签名更新**：以 .deb、.rpm 或 Arch 软件包安装时， Codestead Linux 现在会根据 Codestead 的签名目录核对更新——新版本和软件包的校验和来自发布该版本时签名的列表，因此只会安装与发布时完全相同的软件包。",
+        "**更小的下载**：Codestead Linux 的 .deb、.rpm、Arch 软件包和 AppImage 缩小了 14–24%，AppImage 的更新也同样变小。"
       ],
       "ja": [
         "**Ubuntu での Chromium のサンドボックス**：Ubuntu 23.10 以降は Chromium のサンドボックスに必要なユーザー名前空間を制限しているため、Codestead Linux はサンドボックスなしで動いていました。.deb、.rpm、Arch のパッケージとしてインストールした場合は、サンドボックスを再び有効にする AppArmor プロファイルを備えるようになりました。ハブからインストールした場合は、ハブがパッケージとしてインストールされているか、ハブでサンドボックスを有効にしたときに使用します。",
-        "**Linux パッケージの署名付き更新**：.deb、.rpm、Arch のパッケージとしてインストールした Codestead Linux は、Codestead の署名付きカタログで更新を検証するようになりました。新しいバージョンとパッケージのチェックサムはバージョンの公開時に署名される一覧から取得するため、公開されたものとまったく同じパッケージだけがインストールされます。"
+        "**Linux パッケージの署名付き更新**：.deb、.rpm、Arch のパッケージとしてインストールした Codestead Linux は、Codestead の署名付きカタログで更新を検証するようになりました。新しいバージョンとパッケージのチェックサムはバージョンの公開時に署名される一覧から取得するため、公開されたものとまったく同じパッケージだけがインストールされます。",
+        "**ダウンロードが小さく**：Codestead Linux の .deb、.rpm、Arch パッケージと AppImage が 14～24% 小さくなり、AppImage の更新も同様に小さくなりました。"
       ]
     }
   },

@@ -165,10 +165,10 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
-      - name: Install packaging tools (nfpm, vpk)
+      - name: Install packaging tools (nfpm, vpk, mksquashfs, xz, zstd)
         run: |
           curl -sSfL -o /tmp/nfpm.deb "https://github.com/goreleaser/nfpm/releases/download/v${NFPM_VERSION}/nfpm_${NFPM_VERSION}_amd64.deb"
-          sudo apt-get install -y /tmp/nfpm.deb squashfs-tools
+          sudo apt-get install -y /tmp/nfpm.deb squashfs-tools xz-utils zstd
           dotnet tool install -g vpk --version "$VPK_VERSION"
       - name: Build Linux artifacts
         env:
@@ -222,7 +222,8 @@ jobs:
           retention-days: 1
 
   # Installation tests on clean systems: a fresh container per distribution, installing the package
-  # exactly like a user would, starting the app (--smoke-test) on a virtual display and removing it again.
+  # exactly like a user would, starting the app (--smoke-test) on a virtual display, checking that its Velopack loads
+  # (the self-update) and removing it again.
   test-linux:
     needs: [plan, build-linux]
     # The install tests need the uploaded builds (only runs by hand, see above).
@@ -239,6 +240,9 @@ jobs:
           - { name: Arch Linux (.pkg.tar.zst), image: 'archlinux:latest', kind: arch }
           - { name: CachyOS (.pkg.tar.zst), image: 'cachyos/cachyos:latest', kind: arch }
           - { name: Ubuntu 24.04 LTS (AppImage), image: 'ubuntu:24.04', kind: appimage }
+          # glibc 2.35: Velopack's native module (the AppImage's self-update) loads only with its glibc 2.39 need made
+          # optional (packaging/ts/velopack-glibc.mjs); install-test.sh checks that it loads and finds the installation.
+          - { name: Ubuntu 22.04 LTS (AppImage), image: 'ubuntu:22.04', kind: appimage }
           - { name: Fedora (AppImage), image: 'fedora:latest', kind: appimage }
           - { name: Arch Linux (AppImage), image: 'archlinux:latest', kind: appimage }
     name: Install test – ${{ matrix.product.name }} – ${{ matrix.target.name }}

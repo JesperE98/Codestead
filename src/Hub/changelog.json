@@ -5,31 +5,38 @@
     "changes": {
       "en": [
         "**Chromium's sandbox on Ubuntu**: Ubuntu 23.10 and later restrict the user namespaces Chromium's sandbox needs, so the hub and your tools ran without it there. Installed as a .deb, .rpm or Arch package, the hub now brings an AppArmor profile that turns the sandbox back on – also for the tools it opens. Installed as an AppImage, the hub offers to add such a profile for your tools (your system asks for your password).",
-        "**Signed updates for the Linux packages**: installed as a .deb, .rpm or Arch package, the hub now checks its updates against Codestead's signed catalog – the new version and the package's checksum come from a list that is signed when the version is published, so only exactly the package that was published is installed."
+        "**Signed updates for the Linux packages**: installed as a .deb, .rpm or Arch package, the hub now checks its updates against Codestead's signed catalog – the new version and the package's checksum come from a list that is signed when the version is published, so only exactly the package that was published is installed.",
+        "**Smaller downloads**: the hub's .deb, .rpm and Arch packages and its AppImage are 15–26 % smaller, and so are the AppImage's updates."
       ],
       "sv": [
         "**Chromiums sandlåda i Ubuntu**: Ubuntu 23.10 och senare begränsar de användarnamnrymder som Chromiums sandlåda behöver, så hubben och dina verktyg kördes utan den där. Installerad som .deb-, .rpm- eller Arch-paket har hubben nu med sig en AppArmor-profil som slår på sandlådan igen – även för verktygen den öppnar. Installerad som AppImage erbjuder hubben att lägga till en sådan profil för dina verktyg (systemet frågar efter ditt lösenord).",
-        "**Signerade uppdateringar för Linuxpaketen**: installerad som .deb-, .rpm- eller Arch-paket kontrollerar hubben nu sina uppdateringar mot Codesteads signerade katalog – den nya versionen och paketets kontrollsumma kommer från en lista som signeras när versionen publiceras, så bara exakt det paket som publicerades installeras."
+        "**Signerade uppdateringar för Linuxpaketen**: installerad som .deb-, .rpm- eller Arch-paket kontrollerar hubben nu sina uppdateringar mot Codesteads signerade katalog – den nya versionen och paketets kontrollsumma kommer från en lista som signeras när versionen publiceras, så bara exakt det paket som publicerades installeras.",
+        "**Mindre nedladdningar**: hubbens .deb-, .rpm- och Arch-paket och AppImage är 15–26 % mindre, och detsamma gäller AppImagens uppdateringar."
       ],
       "de": [
         "**Chromiums Sandbox unter Ubuntu**: Ubuntu 23.10 und neuer schränken die User-Namespaces ein, die Chromiums Sandbox braucht, deshalb liefen der Hub und deine Werkzeuge dort ohne sie. Als .deb-, .rpm- oder Arch-Paket installiert, bringt der Hub jetzt ein AppArmor-Profil mit, das die Sandbox wieder einschaltet – auch für die Werkzeuge, die er öffnet. Als AppImage installiert, bietet der Hub an, ein solches Profil für deine Werkzeuge hinzuzufügen (dein System fragt nach deinem Passwort).",
-        "**Signierte Updates für die Linux-Pakete**: Als .deb-, .rpm- oder Arch-Paket installiert, prüft der Hub seine Updates jetzt anhand des signierten Katalogs von Codestead – die neue Version und die Prüfsumme des Pakets stammen aus einer Liste, die beim Veröffentlichen der Version signiert wird, sodass nur genau das veröffentlichte Paket installiert wird."
+        "**Signierte Updates für die Linux-Pakete**: Als .deb-, .rpm- oder Arch-Paket installiert, prüft der Hub seine Updates jetzt anhand des signierten Katalogs von Codestead – die neue Version und die Prüfsumme des Pakets stammen aus einer Liste, die beim Veröffentlichen der Version signiert wird, sodass nur genau das veröffentlichte Paket installiert wird.",
+        "**Kleinere Downloads**: Die .deb-, .rpm- und Arch-Pakete und das AppImage des Hubs sind 15–26 % kleiner, ebenso die Updates des AppImage."
       ],
       "fr": [
         "**Le bac à sable de Chromium sous Ubuntu** : Ubuntu 23.10 et les versions suivantes restreignent les espaces de noms utilisateur dont le bac à sable de Chromium a besoin ; le hub et vos outils y fonctionnaient donc sans lui. Installé en paquet .deb, .rpm ou Arch, le hub apporte désormais un profil AppArmor qui réactive le bac à sable – aussi pour les outils qu'il ouvre. Installé en AppImage, le hub propose d'ajouter un tel profil pour vos outils (votre système vous demande votre mot de passe).",
-        "**Mises à jour signées pour les paquets Linux** : installé en paquet .deb, .rpm ou Arch, le hub vérifie désormais ses mises à jour avec le catalogue signé de Codestead – la nouvelle version et la somme de contrôle du paquet proviennent d'une liste signée lors de la publication de la version, si bien que seul le paquet publié, à l'identique, est installé."
+        "**Mises à jour signées pour les paquets Linux** : installé en paquet .deb, .rpm ou Arch, le hub vérifie désormais ses mises à jour avec le catalogue signé de Codestead – la nouvelle version et la somme de contrôle du paquet proviennent d'une liste signée lors de la publication de la version, si bien que seul le paquet publié, à l'identique, est installé.",
+        "**Téléchargements plus légers** : les paquets .deb, .rpm et Arch et l'AppImage du hub sont 15 à 26 % plus petits, tout comme les mises à jour de l'AppImage."
       ],
       "es": [
         "**El sandbox de Chromium en Ubuntu**: Ubuntu 23.10 y posteriores limitan los espacios de nombres de usuario que necesita el sandbox de Chromium, así que el hub y tus herramientas funcionaban allí sin él. Instalado como paquete .deb, .rpm o de Arch, el hub trae ahora un perfil de AppArmor que vuelve a activar el sandbox, también para las herramientas que abre. Instalado como AppImage, el hub ofrece añadir un perfil así para tus herramientas (tu sistema te pide la contraseña).",
-        "**Actualizaciones firmadas para los paquetes de Linux**: instalado como paquete .deb, .rpm o de Arch, el hub ahora comprueba sus actualizaciones con el catálogo firmado de Codestead: la nueva versión y la suma de comprobación del paquete vienen de una lista que se firma al publicar la versión, así que solo se instala exactamente el paquete publicado."
+        "**Actualizaciones firmadas para los paquetes de Linux**: instalado como paquete .deb, .rpm o de Arch, el hub ahora comprueba sus actualizaciones con el catálogo firmado de Codestead: la nueva versión y la suma de comprobación del paquete vienen de una lista que se firma al publicar la versión, así que solo se instala exactamente el paquete publicado.",
+        "**Descargas más pequeñas**: los paquetes .deb, .rpm y de Arch y la AppImage del hub son entre un 15 y un 26 % más pequeños, igual que las actualizaciones de la AppImage."
       ],
       "zh": [
         "**Ubuntu 上的 Chromium 沙箱**：Ubuntu 23.10 及更高版本限制了 Chromium 沙箱所需的用户命名空间，因此 Hub 和你的工具在那里一直没有沙箱。以 .deb、.rpm 或 Arch 软件包安装时，Hub 现在自带一个 AppArmor 配置文件，重新开启沙箱——它打开的工具也同样受益。以 AppImage 安装时，Hub 会提出为你的工具添加这样的配置文件（系统会要求输入你的密码）。",
-        "**Linux 软件包的签名更新**：以 .deb、.rpm 或 Arch 软件包安装时，中心现在会根据 Codestead 的签名目录核对更新——新版本和软件包的校验和来自发布该版本时签名的列表，因此只会安装与发布时完全相同的软件包。"
+        "**Linux 软件包的签名更新**：以 .deb、.rpm 或 Arch 软件包安装时，中心现在会根据 Codestead 的签名目录核对更新——新版本和软件包的校验和来自发布该版本时签名的列表，因此只会安装与发布时完全相同的软件包。",
+        "**更小的下载**：中心的 .deb、.rpm、Arch 软件包和 AppImage 缩小了 15–26%，AppImage 的更新也同样变小。"
       ],
       "ja": [
         "**Ubuntu での Chromium のサンドボックス**：Ubuntu 23.10 以降は Chromium のサンドボックスに必要なユーザー名前空間を制限しているため、ハブとツールはサンドボックスなしで動いていました。.deb、.rpm、Arch のパッケージとしてインストールしたハブは、サンドボックスを再び有効にする AppArmor プロファイルを備えるようになりました（ハブが開くツールにも有効です）。AppImage としてインストールしたハブは、ツール用にこのプロファイルを追加することを提案します（システムがパスワードを求めます）。",
-        "**Linux パッケージの署名付き更新**：.deb、.rpm、Arch のパッケージとしてインストールしたハブは、Codestead の署名付きカタログで更新を検証するようになりました。新しいバージョンとパッケージのチェックサムはバージョンの公開時に署名される一覧から取得するため、公開されたものとまったく同じパッケージだけがインストールされます。"
+        "**Linux パッケージの署名付き更新**：.deb、.rpm、Arch のパッケージとしてインストールしたハブは、Codestead の署名付きカタログで更新を検証するようになりました。新しいバージョンとパッケージのチェックサムはバージョンの公開時に署名される一覧から取得するため、公開されたものとまったく同じパッケージだけがインストールされます。",
+        "**ダウンロードが小さく**：ハブの .deb、.rpm、Arch パッケージと AppImage が 15～26% 小さくなり、AppImage の更新も同様に小さくなりました。"
       ]
     }
   },
