@@ -22,6 +22,25 @@ release.
 - [ ] Wayland-session: appen startar (via XWayland).
 - [ ] Ubuntu 24.04 och senare (AppArmor begränsar användarnamnrymderna): `.deb` och AppImage startar som vanlig
       användare (paketen gör `chrome-sandbox` setuid root; AppImagen startar utan sandlåda där den inte går).
+- [ ] **Chromiums sandlåda med AppArmor** (ett riktigt Ubuntu 24.04-skrivbord: containrar har ingen egen AppArmor;
+      [DEVELOPMENT.md](DEVELOPMENT.md#chromiums-sandlåda-på-linux)). `sysctl kernel.apparmor_restrict_unprivileged_userns`
+      ska vara 1.
+      - Installera hubbens `.deb`: `sudo aa-status | grep codestead-hub` visar profilen. Gör hjälpen icke-setuid för att
+        prova bara profilen: `sudo chmod 0755 /opt/codestead-hub/chrome-sandbox`. Starta hubben från menyn:
+        `cat /proc/$(pgrep -f -o Codestead.Hub.bin)/attr/current` visar `codestead-hub (unconfined)`, och
+        `ps -o args= -p $(pgrep -f -o Codestead.Hub.bin)` har **inte** `--no-sandbox`, och renderaren har en egen
+        användarnamnrymd (`readlink /proc/$(pgrep -f -n 'Codestead.Hub.bin --type=renderer')/ns/user` skiljer sig från
+        `readlink /proc/self/ns/user`). Hubben startar och fungerar. `sudo chmod 4755 …/chrome-sandbox` igen efteråt.
+      - Med hubben som paket: installera Codestead Linux i hubben och öppna den. Dess process har etiketten
+        `codestead-hub (unconfined)` (ärvd) och startas utan `--no-sandbox`.
+      - Hubben som AppImage (avinstallera paketet först), med Codestead Linux installerat i hubben: erbjudandet
+        **Slå på Chromiums sandlåda för dina verktyg?** visas. **Slå på** → systemets lösenordsruta → aviseringen;
+        `/etc/apparmor.d/codestead-user-$(id -u)` finns och `sudo aa-status` visar `codestead-user-<uid>`. Öppna Codestead
+        Linux: etiketten är `codestead-user-<uid> (unconfined)`, ingen `--no-sandbox`. Inställningarna säger "På".
+        Avbryt lösenordsrutan en gång först: felet visas, inget installeras. **Inte nu** döljer erbjudandet även efter
+        omstart. Hubben själv (AppImage) kör med `--no-sandbox`.
+      - `sudo apt remove codestead-hub`: `/etc/apparmor.d/codestead-hub` är borta och profilen urladdad
+        (`sudo aa-status`). Uppgradera paketet en gång (äldre → ny `.deb`): profilen finns kvar efteråt.
 - [ ] Språk med andra skrivsystem (kinesiska, japanska) visas rätt.
 - [ ] AppImage: starta, kontrollera att den hittar uppdateringar.
 - [ ] **Uppdatering av ett native-paket** (Ubuntu med GNOME, vars polkit-agent visar lösenordsrutan; gärna även

@@ -3,11 +3,11 @@
 ![Det här har du byggt i slutet av kapitlet](images/results/physically-based-bloom.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
 
 Kapitlet *Bloom* i delen *Avancerad belysning* fick starkt ljus att glöda: ett ljuspass skrev varje fragment som var
-ljusare än 1.0 i en andra färgbuffer, tio pass av en gaussisk blur smetade ut den, och det sista passet adderade bluren
+ljusare än 1,0 i en andra färgbuffer, tio pass av en gaussisk blur smetade ut den, och det sista passet adderade bluren
 till scenen före tone mappingen. Det fungerar, och så gjorde många spel bloom i åratal. Men det har svagheter som syns så
 fort man tittar noga:
 
-- **Den hårda tröskeln.** En färg strax under 1.0 glöder inte alls, en strax över glöder fullt ut. En yta vars
+- **Den hårda tröskeln.** En färg strax under 1,0 glöder inte alls, en strax över glöder fullt ut. En yta vars
   ljusstyrka passerar tröskeln – ett ljus som dämpas, en högdager som flyttar sig – slår sin glöd av och på.
 - **En liten, blockig glöd.** learnopengls kärna med 9 sampel, upprepad fem gånger i varje riktning, når några tiotal
   pixlar. En bredare glöd kräver fler pass – vart och ett ett pass över hela skärmen i full upplösning – och blurens form
@@ -21,7 +21,7 @@ Duty: Advanced Warfare* på SIGGRAPH 2014, i kursen *Advances in Real-Time Rende
 HDR-bilden steg för steg till allt mindre texturer, och sedan **uppsampla** den tillbaka och addera nivåerna. De små
 texturerna gör en bred blur billig – några texlars blur i en textur på 12 × 9 täcker en stor del av skärmen – och
 filtren är valda så att resultatet blir mjukt och stabilt. Dessutom försvinner tröskeln: i stället för att bara addera
-det som är ljusare än 1.0 blandar den in en liten andel av *hela* den blurrade bilden i scenen. Det är vad "fysikaliskt
+det som är ljusare än 1,0 blandar den in en liten andel av *hela* den blurrade bilden i scenen. Det är vad "fysikaliskt
 baserad" syftar på här: en riktig lins sprider lite av *allt* ljus som passerar genom den, inte bara ljuset över en viss
 ljusstyrka, och ljusa saker glöder mer helt enkelt för att det finns mer av deras ljus att sprida.
 
@@ -256,9 +256,9 @@ g - h - i
 ```
 
 `e` är mitten; `a`…`i` ligger två källtexlar isär, `j`…`m` en texel diagonalt från mitten. Vikterna kommer från fem
-överlappande rutor på 2 × 2 – de fyra hörnrutorna (`a b d e`, `b c e f`, `d e g h`, `e f h i`) väger 0.125 var, den inre
-rutan (`j k l m`) 0.5 – och summerar till 1, så nedsamplingen behåller bildens energi: summerat får `e` 0.125, hörnen
-`a c g i` 0.03125 var, kanterna `b d f h` 0.0625 var, och `j k l m` 0.125 var.
+överlappande rutor på 2 × 2 – de fyra hörnrutorna (`a b d e`, `b c e f`, `d e g h`, `e f h i`) väger 0,125 var, den inre
+rutan (`j k l m`) 0,5 – och summerar till 1, så nedsamplingen behåller bildens energi: summerat får `e` 0,125, hörnen
+`a c g i` 0,03125 var, kanterna `b d f h` 0,0625 var, och `j k l m` 0,125 var.
 
 ![Nedsamplingsfiltret med 13 sampel](images/bloom-taps.webp "De 13 samplen i ett område om 6 × 6 texlar i källan och de fem rutorna de bildar, med sina vikter.")
 
@@ -388,7 +388,7 @@ snäva glöden runt ljusa detaljer, och summan har en mjuk avtoning med lång sv
 ljus.
 
 Uppsamplingsfiltret är ett **tältfilter** på 3 × 3: nio bilinjära sampel viktade 1 2 1 / 2 4 2 / 1 2 1, delat med 16.
-Dess radie anges i **texturkoordinater**, inte texlar – learnopengls `filterRadius` på 0.005 – så på en liten nivå
+Dess radie anges i **texturkoordinater**, inte texlar – learnopengls `filterRadius` på 0,005 – så på en liten nivå
 spänner det över mindre än en texel och på en stor över flera: bluren växer med nivån den används på, som den ska.
 
 :::opengl vulkan
@@ -539,7 +539,7 @@ I C++: `float bloomStrength = 0.04f;`, `shaderBloomFinal.setInt("bloomBlur", 1);
 `bloom_final.frag` läser bloom-texturen på bindning 2 – ett `bloomDescriptorSet` gjort av `createBloomDescriptorSet`, som i
 kapitlet *Bloom*, med scenen på bindning 1 och nivå 0:s vy på bindning 2 – och `bloomStrength` ur uniform buffern, där
 den följer efter `exposure` (std140-offset 272). Före tone mappingen: `hdrColor = mix(hdrColor, bloomColor,
-ubo.bloomStrength);` med `bloomStrength` = 0.04.
+ubo.bloomStrength);` med `bloomStrength` = 0,04.
 :::
 :::d3d12
 `bloom_final.hlsl` läser bloom-texturen (nivå 0) på t1 via en fjärde root-parameter – en descriptor table med en SRV – och
@@ -549,7 +549,7 @@ får `bloomStrength` bredvid `exposure` i sina root constants (`HdrConstants`). 
     hdrColor = lerp(hdrColor, bloomColor, bloomStrength); // linear interpolation (GLSL's mix)
 ```
 
-med `bloomStrength` = 0.04 – HLSL:s `lerp` är GLSL:s `mix`.
+med `bloomStrength` = 0,04 – HLSL:s `lerp` är GLSL:s `mix`.
 :::
 
 Gör nu den fjärde uppgiften, **combine**. Bygg och kör: scenen är tillbaka, och allt ljust glöder mjukt – ljuskuberna mest,
@@ -562,7 +562,7 @@ ljusar upp den svarta bakgrunden nära dem. Jämför med bilden i kapitlet *Bloo
 ```quiz
 Med `mix(hdrColor, bloomColor, 0.04)` och ingen tröskel – varför glöder en ljuskub synligt men en svagt belyst vägg knappt alls?
 - [x] För att glöden är proportionell mot ljusstyrkan: 4 % av det blurrade ljuset från en kub med värden på 5–15 är fortfarande ljust, 4 % av en väggs blurrade färg under 1 är för svagt för att märkas
-- [ ] För att nedsamplingsfiltret tar bort färger under 1.0
+- [ ] För att nedsamplingsfiltret tar bort färger under 1,0
 - [ ] För att tone mappingen tar bort mörka ytors glöd
 - [ ] För att bara ljuskuberna renderas i mip-kedjan
 ---
@@ -582,7 +582,7 @@ weight = 1 / (1 + luma(box) / 4)
 ```
 
 så att mycket ljusa rutor väger mindre och en enda extrem pixel inte kan ta över medelvärdet. learnopengl mäter lumat för
-rutans färg omräknad till sRGB (`pow(c, 1/2.2)`, vikterna 0.299, 0.587, 0.114). Det behövs bara i den första
+rutans färg omräknad till sRGB (`pow(c, 1/2.2)`, vikterna 0,299; 0,587; 0,114). Det behövs bara i den första
 nedsamplingen, där enskilda pixlar fortfarande är enskilda pixlar; efter den är bilden mjuk nog. Shadern får en uniform
 `mipLevel` – 0 för det första passet, 1 därefter – och använder de fem rutorna som grupper i stället för de
 sammanslagna vikterna:

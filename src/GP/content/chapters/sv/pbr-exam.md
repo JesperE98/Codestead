@@ -17,7 +17,7 @@ Texturer är ett bekvämt sätt att ange parametrarna, men de 7 × 7 sfärerna m
 
 ```quiz
 Cook-Torrance-BRDF:en är `kd · c / π + ks · D · F · G / (4 (ωo · n)(ωi · n))`. Varför lyder shaderns sista rad `Lo += (kD * albedo / PI + specular) * radiance * NdotL` – utan `kS` framför `specular`?
-- [ ] Eftersom ks alltid är 1.0 för punktljus
+- [ ] Eftersom ks alltid är 1,0 för punktljus
 - [x] Eftersom Fresnelfaktorn F är andelen reflekterat ljus – den är ks – och redan finns i `specular`; att multiplicera med kS igen skulle räkna den två gånger
 - [ ] Eftersom metaller saknar spekulär reflektion
 - [ ] Eftersom geometrifunktionen redan innehåller ks
@@ -59,7 +59,7 @@ NDF:en är en täthet av mikrofasettnormaler, ännu ingen BRDF som bevarar energ
 Uppgiften textured läser albedot med `pow(…, 2.2)` och metallic, roughness och ao som de är. Vad skulle hända om även strävhetsmappen omvandlades med `pow(…, 2.2)`?
 - [ ] Inget synligt: omvandlingen spelar bara roll för färger
 - [ ] Rosten skulle bli metallisk
-- [x] Materialet skulle ändras: strävheten 0.5 skulle bli ungefär 0.22, så hela ytan skulle se mycket slätare och blankare ut än avsett
+- [x] Materialet skulle ändras: strävheten 0,5 skulle bli ungefär 0,22, så hela ytan skulle se mycket slätare och blankare ut än avsett
 - [ ] Normal mappen skulle inverteras
 ---
 Datamappar skapas som linjära värden; bara färgbilder bär skärmens kurva och behöver omvandlingen (eller ett sRGB-format).
@@ -69,10 +69,10 @@ Datamappar skapas som linjära värden; bara färgbilder bär skärmens kurva oc
 I slutet av PBR-shadern tonmappas färgen med `color / (color + 1.0)` och gammakorrigeras sedan med `pow(color, 1.0 / 2.2)`. Varför räknas belysningen ut utan någondera fram till dess?
 - [ ] Eftersom tonmappning bara behövs för bakgrunden
 - [ ] Eftersom GPU:n inte kan räkna ut `pow` före belysningen
-- [x] Eftersom PBR behöver linjära värden för sin matematik (att lägga ihop ljus, multiplicera med BRDF:en) och fysikaliska intensiteter som överstiger 1.0; Reinhard avbildar HDR-resultatet på 0..1 utan att klippa, och gammakodningen kommer sist, en gång
+- [x] Eftersom PBR behöver linjära värden för sin matematik (att lägga ihop ljus, multiplicera med BRDF:en) och fysikaliska intensiteter som överstiger 1,0; Reinhard avbildar HDR-resultatet på 0..1 utan att klippa, och gammakodningen kommer sist, en gång
 - [ ] Eftersom båda funktionerna är linjära, så ordningen spelar ingen roll
 ---
-Före uppgiften tone-map var bilden mörk och hård: linjära värden skrivna direkt i fönstret och klippta vid 1.0.
+Före uppgiften tone-map var bilden mörk och hård: linjära värden skrivna direkt i fönstret och klippta vid 1,0.
 ```
 
 ```quiz
@@ -98,9 +98,9 @@ I irradianskonvolutionen multipliceras varje sample med `cos(theta) * sin(theta)
 ```quiz
 Bakgrundskuben ritas sist, med `clipPos.xyww` och djuptestet mindre än eller lika med. Vad skulle hända med standardtestet mindre än?
 - [ ] Bakgrunden skulle täcka sfärerna
-- [ ] Ingenting: djupet 1.0 är mindre än alla värden i djupbuffern
+- [ ] Ingenting: djupet 1,0 är mindre än alla värden i djupbuffern
 - [ ] Bakgrunden skulle bara synas bakom metallsfärerna
-- [x] Den skulle försvinna: dess djup är exakt 1.0, värdet djupbuffern rensas till, och 1.0 < 1.0 underkänns överallt
+- [x] Den skulle försvinna: dess djup är exakt 1,0, värdet djupbuffern rensas till, och 1,0 < 1,0 underkänns överallt
 ---
 Med mindre än eller lika med klarar den testet precis där ingen sfär har skrivit ett närmare djup. Att rita den sist låter sfärernas pixlar underkänna den innan dess fragment shader körs.
 ```
@@ -127,7 +127,7 @@ Hela den spekulära integralen beror på ljusriktningen, vyriktningen och sträv
 
 ```quiz
 Kursens omgivning har en liten sol som är ungefär 60 gånger ljusare än vitt. Vad gör förfiltershadern för att de sträva mipnivåerna inte ska visa ljusa prickar?
-- [ ] Den klämmer varje sample till 1.0 innan det läggs till
+- [ ] Den klämmer varje sample till 1,0 innan det läggs till
 - [x] Den samplar omgivningen på en mipnivå som väljs utifrån varje samples sannolikhet: `0.5 * log2(saSample / saTexel)` – ett sällsynt sample, som står för en stor rymdvinkel, läser en suddigare nivå, där solen redan är utspridd över den yta samplet står för
 - [ ] Den använder 1024 samples i stället för 128
 - [ ] Den hoppar över de samples som träffar solen
@@ -146,13 +146,13 @@ I strykande vinkel på släta ytor (nere till vänster) dominerar förskjutninge
 ```
 
 ```quiz
-Förfiltermappen renderades med `roughness = mip / 4` för sina nivåer 0 till 4. En sfär har strävheten 0.5. Vilken nivå läser `textureLod(prefilterMap, R, roughness * MAX_REFLECTION_LOD)`?
-- [ ] Nivå 0.5, mellan nivå 0 och 1
+Förfiltermappen renderades med `roughness = mip / 4` för sina nivåer 0 till 4. En sfär har strävheten 0,5. Vilken nivå läser `textureLod(prefilterMap, R, roughness * MAX_REFLECTION_LOD)`?
+- [ ] Nivå 0,5, mellan nivå 0 och 1
 - [ ] Nivå 4, eftersom MAX_REFLECTION_LOD är 4
-- [x] Nivå 2.0 – exakt den nivå som filtrerades för strävheten 0.5
+- [x] Nivå 2,0 – exakt den nivå som filtrerades för strävheten 0,5
 - [ ] Nivå 1, eftersom strävheten kvadreras först
 ---
-Att multiplicera med 4 inverterar `mip / 4`. Strävheten 0.3 skulle läsa nivå 1.2, som det trilinjära filtret blandar av nivå 1 och 2.
+Att multiplicera med 4 inverterar `mip / 4`. Strävheten 0,3 skulle läsa nivå 1,2, som det trilinjära filtret blandar av nivå 1 och 2.
 ```
 
 :::opengl

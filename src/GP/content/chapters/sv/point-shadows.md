@@ -25,7 +25,7 @@ på 2 × 2 × 2 från `renderCube()`, skalad med 5 så att väggarna ligger på 
 hack"). De fem kuberna ritas med culling på. Ljuset står på `lightPos` (0, 0, 0), mitt i rummet. learnopengl flyttar
 det fram och tillbaka med `lightPos.z = static_cast<float>(sin(glfwGetTime() * 0.5) * 3.0);` – den raden finns i
 renderloopen som kommentar, så bilden ändras inte med tiden; ta bort kommentaren om du vill, så sveper skuggorna över
-väggarna. `point_shadows.vs/.fs` belyser scenen som i förra kapitlet: ljusfärgen 0.3, ambient, diffust och
+väggarna. `point_shadows.vs/.fs` belyser scenen som i förra kapitlet: ljusfärgen 0,3, ambient, diffust och
 Blinn-Phong-spekulärt, kombinerat som `(ambient + (1.0 - shadow) * (diffuse + specular)) * color` – med
 `float shadow = 0.0;` tills vidare. `shader_m.h` är Shader-klassen med den valfria geometry shader-filen från kapitlet
 *Geometry shader*, och de tre djupshadrarna `point_shadows_depth.vs/.gs/.fs` finns med sina deklarationer; deras
@@ -40,7 +40,7 @@ enda kub (learnopengls kub på 2 × 2 × 2 från `renderCube()`, 36 vertex, v v�
 gånger. Rummet får `reverse_normals = VK_TRUE`: dess normaler pekar utåt, och vertex shadern vänder dem så att insidan
 blir belyst (learnopengls "small little hack"). Ljuset är den globala `lightPos` (0, 0, 0), mitt i rummet. learnopengl
 flyttar det med `lightPos.z = sin(glfwGetTime() * 0.5) * 3.0`; här står det still, så bilden ändras inte med tiden.
-`shaders/point_shadows.vert/.frag` belyser scenen som i förra kapitlet: ljusfärgen 0.3, ambient, diffust och
+`shaders/point_shadows.vert/.frag` belyser scenen som i förra kapitlet: ljusfärgen 0,3, ambient, diffust och
 Blinn-Phong-spekulärt, kombinerat som `(ambient + (1.0 - shadow) * (diffuse + specular)) * color` – med
 `float shadow = 0.0;` tills vidare. Djupshadrarna `point_shadows_depth.vert/.geom/.frag` börjar som tomma shaders –
 uppgifterna fyller i dem. `createPipeline` tar en valfri geometry shader (`""` = ingen), som i kapitlet *Geometry
@@ -55,7 +55,7 @@ sätter varje draws `ModelConstants` (`model`, `normalMatrix` och `BOOL reverseN
 anropar den en gång per pass. Rummet får `reverseNormals = TRUE`: dess normaler pekar utåt, och vertex shadern vänder
 dem så att insidan blir belyst (learnopengls "small little hack"). Ljuset är den globala `lightPos` (0, 0, 0), mitt i
 rummet; learnopengl flyttar det med `lightPos.z = sin(glfwGetTime() * 0.5) * 3.0`, här står det still, så bilden
-ändras inte med tiden. `point_shadows.hlsl` belyser scenen som i förra kapitlet: ljusfärgen 0.3, ambient, diffust och
+ändras inte med tiden. `point_shadows.hlsl` belyser scenen som i förra kapitlet: ljusfärgen 0,3, ambient, diffust och
 Blinn-Phong-spekulärt, kombinerat som `(ambient + (1.0f - shadow) * (diffuse + specular)) * color` – med
 `float shadow = 0.0f;` tills vidare. `point_shadows_depth.hlsl` har sina constant buffers och structar; dess tre
 ingångspunkter är ditt jobb (filen kompileras inte förrän dess).
@@ -208,7 +208,7 @@ stencil view och en shader resource view:
 ```
 
 `SHADOW_WIDTH` och `SHADOW_HEIGHT` är 1024, storleken på varje sida. Den skapas i tillståndet `DEPTH_WRITE` med
-rensningsvärdet 1.0 (`D32_FLOAT`), som shadow mapen. Dess depth stencil view täcker alla sex skivorna – en
+rensningsvärdet 1,0 (`D32_FLOAT`), som shadow mapen. Dess depth stencil view täcker alla sex skivorna – en
 `Texture2DArray`-vy. Det är learnopengls `glFramebufferTexture` med hela cube mapen, ett *lager*-attachment:
 
 ```cpp
@@ -296,7 +296,7 @@ Varje sådan matris innehåller både en projektionsmatris och en vymatris. Som 
 perspektivprojektion: ljuskällan är en punkt i rummet, så perspektivprojektion är det rimligaste. Alla sex matriserna
 använder samma projektionsmatris. Viktigt här är projektionens synfält (field of view), som vi sätter till 90 grader.
 Med 90 grader blir synfältet precis stort nog att fylla en sida av cube mapen, så att alla sidor passar ihop i kanterna.
-Bildförhållandet är 1 (sidorna är kvadratiska), det främre planet 1.0 och det bakre planet 25.0.
+Bildförhållandet är 1 (sidorna är kvadratiska), det främre planet 1,0 och det bakre planet 25,0.
 
 ```quiz
 Varför använder ljusets projektion ett synfält på exakt 90° och bildförhållandet 1?
@@ -868,7 +868,7 @@ djupshadrarna och den här felsökningsutdatan.
 :::
 
 Bygg och kör: fönstret visar **djup-cube mapen sedd från kameran** – grått överallt, och ganska mörkt. Den bakre väggen
-ligger 5 till 8.7 enheter från ljuset, 0.2 till 0.35 av `far_plane`: dess mitt är 51 av 255, och den blir ljusare mot
+ligger 5 till 8,7 enheter från ljuset, 0,2 till 0,35 av `far_plane`: dess mitt är 51 av 255, och den blir ljusare mot
 kanterna och hörnen, som ligger längre från ljuset. Kuben i övre vänstra hörnet är mörkare – närmare ljuset. Och skuggan
 syns redan: där kuben skymmer väggen från ljuset innehåller cube mapen kubens avstånd, inte väggens – ett mörkt band
 runt kubens övre vänstra kant, lika mörkt som kuben själv. Inget trä, ingen belysning: det här är djup-cube mapen och
@@ -896,7 +896,7 @@ Sedan hämtar vi djupvärdet mellan det aktuella fragmentet och ljuskällan, vil
 `fragToLight`, tack vare hur vi beräknade djupvärdena i cube mapen. Nu kan vi jämföra de två djupvärdena för att se
 vilket som ligger närmast och avgöra om det aktuella fragmentet ligger i skugga. Vi tar också med en skuggbias så att vi
 inte får shadow acne. Observera att biasen nu är i världsenheter – djupen är avstånd från `near_plane` till
-`far_plane` – så vi använder en mycket större bias på 0.05.
+`far_plane` – så vi använder en mycket större bias på 0,05.
 
 ```quiz
 Varför lagrar djuppasset `avstånd / far_plane` i stället för det djup som ljusets projektion skulle ge?
@@ -1002,7 +1002,7 @@ upplösningsberoende artefakter – de hackiga kanterna. Percentage-closer filte
 filtrera flera samplingar runt fragmentets position och ta medelvärdet av resultaten.
 
 Tar vi förra kapitlets enkla PCF-filter och lägger till en tredje dimension får vi learnopengls första försök: tre
-nästlade loopar som samplar 4 × 4 × 4 förskjutningar runt `fragToLight`, var och en mellan -0.1 och 0.1, och tar
+nästlade loopar som samplar 4 × 4 × 4 förskjutningar runt `fragToLight`, var och en mellan -0,1 och 0,1, och tar
 medelvärdet av de 64 jämförelserna. Det fungerar, men 64 samplingar per fragment är mycket. Och många av dem är
 överflödiga: de samplar nära den ursprungliga riktningsvektorn, eller längs den, vilket inte ändrar riktningen alls.
 
@@ -1012,7 +1012,7 @@ liten radie sprider de samplingarna över omgivningen kring samplingsriktningen.
 
 Ett annat intressant trick vi kan använda här är att ändra `diskRadius` utifrån betraktarens avstånd till fragmentet,
 vilket gör skuggorna mjukare på avstånd och skarpare på nära håll:
-`diskRadius = (1.0 + (viewDistance / far_plane)) / 25.0`. Biasen växer till 0.15, som i learnopengl: förskjutningarna
+`diskRadius = (1.0 + (viewDistance / far_plane)) / 25.0`. Biasen växer till 0,15, som i learnopengl: förskjutningarna
 läser djupet i lite andra riktningar, där en lutande yta ligger något närmare ljuset.
 
 ```quiz

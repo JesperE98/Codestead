@@ -235,7 +235,7 @@ resursfilerna…** i panelen kopierar båda till din mapp. Golvets texturkoordin
 upprepas. Kuberna står i (-1, 0, -1) och (2, 0, 0), så den vänstra kuben syns helt och av den högra syns bara
 vänstersidan vid fönstrets högra kant. Ritordningen är learnopengls: kub 0, kub 1 och golvet sist. Kuben är de 36
 vertexarna (position + texturkoordinater) från *Koordinatsystem*; golvet är learnopengls `planeVertices`, två
-trianglar på y = -0.5:
+trianglar på y = -0,5:
 
 ```cpp
     float planeVertices[] = {
@@ -481,9 +481,9 @@ mycket mindre precision när z är långt bort.
 Tänk efter en sekund: vill vi verkligen att djupvärden 1000 enheter bort ska ha samma precision som detaljrika föremål
 på avståndet 1? Den linjära ekvationen tar inte hänsyn till det.
 
-Eftersom den icke-linjära funktionen är proportionell mot `1/z` ger z-värden mellan 1.0 och 2.0 djupvärden mellan 1.0
-och 0.5, vilket är halva flyttalets intervall `[0,1]` – enorm precision vid små z-värden. Z-värden mellan 50.0 och
-100.0 skulle bara stå för 2 % av flyttalets intervall – precis vad vi vill. En sådan ekvation, som också tar hänsyn
+Eftersom den icke-linjära funktionen är proportionell mot `1/z` ger z-värden mellan 1,0 och 2,0 djupvärden mellan 1,0
+och 0,5, vilket är halva flyttalets intervall `[0,1]` – enorm precision vid små z-värden. Z-värden mellan 50,0 och
+100,0 skulle bara stå för 2 % av flyttalets intervall – precis vad vi vill. En sådan ekvation, som också tar hänsyn
 till near- och far-avstånden, ser ut så här:
 
 ```text
@@ -521,16 +521,16 @@ NDC-z från `-1` till `1`, som dess viewport-transform sedan avbildar på `0..1`
 Effekten av den här icke-linjära ekvationen blir snabbt tydlig när vi försöker visualisera djupbuffern.
 
 ```quiz
-Med near = 0.1 och far = 100, hur långt från kameran ligger ett fragment vars värde i djupbuffern är 0.5?
+Med near = 0,1 och far = 100, hur långt från kameran ligger ett fragment vars värde i djupbuffern är 0,5?
 - [ ] Ungefär 50 enheter – halvvägs mellan near- och far-planet
 - [ ] Ungefär 10 enheter
-- [x] Ungefär 0.2 enheter – strax framför near-planet
+- [x] Ungefär 0,2 enheter – strax framför near-planet
 - [ ] Det beror på fönstrets storlek
 ---
-Djupet är proportionellt mot 1/z, inte mot z. Löser man `0.5 = (1/z - 10) / (0.01 - 10)` får man z ≈ 0.2: hälften av djupbufferns värden används mellan 0.1 och 0.2 enheter.
+Djupet är proportionellt mot 1/z, inte mot z. Löser man `0.5 = (1/z - 10) / (0.01 - 10)` får man z ≈ 0,2: hälften av djupbufferns värden används mellan 0,1 och 0,2 enheter.
 ```
 
-![Djupvärde mot avstånd](images/depth-curve.webp "Värdet i djupbufferten för ett avstånd framför kameran, med near = 0.1 och far = 100: det icke-linjära djupet är 0.5 vid 0.2 enheter och redan 0.97 vid vänstra kubens framsida, 3.5 enheter bort, medan den linjära ekvationen knappt har börjat.")
+![Djupvärde mot avstånd](images/depth-curve.webp "Värdet i djupbufferten för ett avstånd framför kameran, med near = 0,1 och far = 100: det icke-linjära djupet är 0,5 vid 0,2 enheter och redan 0,97 vid vänstra kubens framsida, 3,5 enheter bort, medan den linjära ekvationen knappt har börjat.")
 
 ## Visualisera djupbuffern
 
@@ -742,9 +742,9 @@ OpenGL:s projektion ger NDC-z i -1..1 och dess viewport avbildar det på 0..1; l
 :::
 
 Gör nu uppgiften **linear-depth** och bygg och kör sedan. Bilden är nu nästan svart: värdet är avståndet delat med 100,
-och föremålen ligger bara några enheter bort – framsidan på den vänstra kuben, 3.5 enheter från kameran, får 0.035.
-Golvet blir ljusare bakåt, och bakgrunden (clear-färgen, 0.1) är nu ljusare än allt som ritats. Färgerna är mest svarta
-eftersom djupvärdena går linjärt från near-planet, 0.1, till far-planet, 100 – som fortfarande ligger ganska långt bort.
+och föremålen ligger bara några enheter bort – framsidan på den vänstra kuben, 3,5 enheter från kameran, får 0,035.
+Golvet blir ljusare bakåt, och bakgrunden (clear-färgen, 0,1) är nu ljusare än allt som ritats. Färgerna är mest svarta
+eftersom djupvärdena går linjärt från near-planet, 0,1, till far-planet, 100 – som fortfarande ligger ganska långt bort.
 Resultatet är att vi befinner oss relativt nära near-planet och därför får låga (mörka) djupvärden.
 
 ![Djupbufferten och det linjära djupet som grått](images/depth-visualized.webp "Djupbufferns värden som grått (uppgiften visualize-depth) och det linjära djupet delat med far (uppgiften linear-depth), ritade av kursens simulator.")
@@ -757,7 +757,7 @@ formerna hela tiden verkar byta ordning, vilket ger konstiga, flimrande mönster
 ser ut som om formerna slåss om vem som hamnar överst.
 
 I scenen vi har använt finns några ställen där z-fighting kan märkas. Lådorna står på exakt samma höjd som golvet,
-vilket betyder att lådans bottenplan ligger i samma plan som golvet: båda ligger på y = -0.5. Då har de två planen
+vilket betyder att lådans bottenplan ligger i samma plan som golvet: båda ligger på y = -0,5. Då har de två planen
 samma djupvärden, så djuptestet har inget sätt att avgöra vilket som är det rätta. Om du flyttar kameran in i en av
 lådorna syns effekten tydligt: lådans nedre del växlar hela tiden mellan lådans bottensida och golvet i ett
 sicksackmönster.

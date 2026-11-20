@@ -23,12 +23,12 @@ lägger dem.
 ## Modellen
 
 learnopengl animerar en dansande figur från en sajt för 3D-tillgångar. Kursen använder en egen modell: en **tentakel** –
-ett avsmalnande, randigt rör med rundad spets och en rad bleka sugkoppar – 2.2 enheter hög, med foten i origo. Den är en
+ett avsmalnande, randigt rör med rundad spets och en rad bleka sugkoppar – 2,2 enheter hög, med foten i origo. Den är en
 glTF 2.0-fil, `models/tentacle.gltf` (med `tentacle.bin` och texturen `tentacle.png`), skriven av kursens skript
-`models/make_tentacle.py`. Skelettet är en kedja av **fyra ben**: `Base` vid foten, `Lower` vid y = 0.55, `Upper` vid 1.1
-och `Tip` vid 1.65; varje vertex är fäst vid högst två av dem, med vikter som summerar till 1. Den enda animationen,
+`models/make_tentacle.py`. Skelettet är en kedja av **fyra ben**: `Base` vid foten, `Lower` vid y = 0,55, `Upper` vid 1,1
+och `Tip` vid 1,65; varje vertex är fäst vid högst två av dem, med vikter som summerar till 1. Den enda animationen,
 `Sway`, varar 2 sekunder och upprepas: en våg av rotationer löper uppför tentakeln, basen vrider sig och guppar, och
-spetsen sväller – fem nycklar per ben, vid 0, 0.5, 1, 1.5 och 2 sekunder.
+spetsen sväller – fem nycklar per ben, vid 0; 0,5; 1; 1,5 och 2 sekunder.
 
 Kameran är learnopengls, i (0, 0, 3) med blicken längs -z, och modellmatrisen `translate(0, -1, 0) · scale(0.9)` ställer
 tentakeln mitt i fönstret (learnopengl använder `translate(0, -0.4, 0) · scale(0.5)` för sin figur). Fragment shadern
@@ -162,7 +162,7 @@ Meshet modellerades i **bindposen** (viloposen): vertexarnas positioner ligger i
 För att flytta en vertex med ett ben måste vi först uttrycka vertexen *i förhållande till benet* – ta bort benets
 transform i bindposen – och sedan tillämpa benets nuvarande, animerade globala transform. Den första delen är
 **offsetmatrisen** (*den inversa bindmatrisen*): inversen av benets globala transform i bindposen. För tentakelns ben
-`Lower`, som sitter vid y = 0.55 i bindposen, är den helt enkelt `translate(0, -0.55, 0)`. Varje bens slutliga matris är
+`Lower`, som sitter vid y = 0,55 i bindposen, är den helt enkelt `translate(0, -0.55, 0)`. Varje bens slutliga matris är
 alltså
 
 ```text
@@ -184,9 +184,9 @@ isär mellan de platser vart och ett av benen skulle ta den till, och meshet bö
 ![Linear blend skinning](images/skinning.webp "En vertex med vikterna 0,5 för Lower och 0,5 för Upper: varje bens slutliga matris flyttar den för sig, och den viktade summan är dit den hamnar.")
 
 ```quiz
-En vertex ligger i (0, 0.55, 0) i bindposen, och dess enda ben `Lower` (vid y = 0.55 i bindposen) har inte rört sig. Vad gör benets slutliga matris med vertexen?
-- [ ] Den flyttar vertexen till origo, eftersom offsetmatrisen förskjuter med −0.55
-- [ ] Den flyttar den uppåt 0.55 en gång till
+En vertex ligger i (0, 0.55, 0) i bindposen, och dess enda ben `Lower` (vid y = 0,55 i bindposen) har inte rört sig. Vad gör benets slutliga matris med vertexen?
+- [ ] Den flyttar vertexen till origo, eftersom offsetmatrisen förskjuter med −0,55
+- [ ] Den flyttar den uppåt 0,55 en gång till
 - [x] Ingenting: global transform · offset = translate(0, 0.55, 0) · translate(0, −0.55, 0) = enhetsmatrisen i bindposen
 - [ ] Den roterar den kring origo
 ---
@@ -719,16 +719,16 @@ efter indata och före ritningen, och ta bort engångsuppdateringen vid tiden 0.
 
 Gör nu den sista uppgiften, **play**. Bygg och kör: tentakeln svajar – en våg löper uppåt från basen, basen vrider sig
 och guppar, spetsen sväller och krymper – ett varv varannan sekund, och den upprepas utan hopp eftersom den sista
-nyckeln är lika med den första. Det förväntade resultatet visar den vid 1.25 s, 1250 ticks, mellan nycklarna vid 1000
-och 1500: tentakeln lutar åt höger, med spetsen uppe till höger. Vid 0.25 s lutar den åt vänster i spegelposen.
+nyckeln är lika med den första. Det förväntade resultatet visar den vid 1,25 s, 1250 ticks, mellan nycklarna vid 1000
+och 1500: tentakeln lutar åt höger, med spetsen uppe till höger. Vid 0,25 s lutar den åt vänster i spegelposen.
 
 ![Svajet vid fyra ögonblick](images/tentacle-sway.webp "Tentakeln vid animationens nycklar vid 0, 500, 1000 och 1500 ticks. Ritad av kursens simulator.")
 
 ```quiz
 Animationen är 2000 ticks lång med 1000 ticks per sekund. Animatorns tid står på 1990 ticks och nästa bildruta tar 1/60 s. Var är animationen efter uppdateringen?
-- [ ] Vid 2006.7 ticks: tiden fortsätter, och nycklarna efter 2000 upprepar den sista
+- [ ] Vid 2006,7 ticks: tiden fortsätter, och nycklarna efter 2000 upprepar den sista
 - [ ] Vid 0: animationen börjar om exakt från början
-- [x] Vid ungefär 6.7 ticks: 1990 + 1000 · (1/60) = 2006.7, och `fmod` med 2000 slår runt den till början av nästa varv
+- [x] Vid ungefär 6,7 ticks: 1990 + 1000 · (1/60) = 2006,7, och `fmod` med 2000 slår runt den till början av nästa varv
 - [ ] Vid 1990: animatorn stannar i slutet
 ---
 `fmod` håller tiden inom animationen. Eftersom tentakelns nyckel vid 2000 är lika med nyckeln vid 0 blir övergången sömlös.

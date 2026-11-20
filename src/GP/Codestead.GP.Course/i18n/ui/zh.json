@@ -382,6 +382,7 @@
   "viz.step": "第 {n} 步，共 {total} 步",
   "viz.loading": "正在加载场景…",
   "viz.start": "启动场景",
+  "viz.goTo": "转到“{chapter}”中的场景",
   "viz.model": "模型",
   "viz.modeData": "真实数据",
   "viz.modeConcept": "概念",

@@ -279,7 +279,7 @@ platt **vit** kub mot den mörkgrå bakgrunden – kubens fragment shader skrive
 
 Det finns en ändring till av kameran: var den börjar. learnopengl:s belysningskapitel placerar ljuskällan i
 (1.2, 1.0, 2.0) – framför kuben, till höger om och ovanför den. En kamera i (0, 0, 3) som tittar längs -z kan inte se
-den punkten: lampan är bara en enhet framför kameran men 1.2 enheter åt sidan, ungefär 50° från siktlinjen, medan
+den punkten: lampan är bara en enhet framför kameran men 1,2 enheter åt sidan, ungefär 50° från siktlinjen, medan
 synfältet på 45° i ett fönster på 800×600 bara når ungefär 29° åt varje sida. (I learnopengl:s skärmbilder har
 författaren helt enkelt flugit kameran någon annanstans först.)
 
@@ -320,8 +320,8 @@ dess **vänstersida** (vänd mot -x), och lampan uppe till höger. Det är preci
 framsidan är vänd mot ljuset och vänstersidan bort från det, så att du kan jämföra en belyst och en obelyst sida, och i
 nästa kapitel hamnar den blanka högdagern på framsidan, där den här kameran kan se den.
 
-`yaw` och `pitch` är vinklarna för den här `cameraFront` (yaw för (3.5, 0.4, -2.2) är atan2(-2.2, 3.5) ≈ -32.2°,
-pitch är asin(0.4 / 4.15) ≈ 5.5°). De måste stämma: den första musrörelsen räknar ut `cameraFront` från yaw och pitch,
+`yaw` och `pitch` är vinklarna för den här `cameraFront` (yaw för (3.5, 0.4, -2.2) är atan2(-2.2, 3.5) ≈ -32,2°,
+pitch är asin(0,4 / 4,15) ≈ 5,5°). De måste stämma: den första musrörelsen räknar ut `cameraFront` från yaw och pitch,
 och med de gamla värdena (-90°, 0°) skulle kameran hoppa tillbaka till att titta längs -z. *Colors*, *Basic Lighting*,
 *Materials* och *Lighting Maps* behåller den här kameran; *Light Casters* och *Multiple Lights* går tillbaka till
 (0, 0, 3).
@@ -335,7 +335,7 @@ Varför låter kursen kameran börja i (-3, 0, 3) i stället för learnopengl:s 
 - [ ] För att lampan skulle vara dold bakom kuben från (0, 0, 3)
 - [x] För att lampan i (1.2, 1.0, 2.0) ligger för långt åt sidan för en kamera i (0, 0, 3) – utanför synfältet – och snett framifrån från vänster syns både en sida vänd mot ljuset och en vänd bort från det
 ---
-Sett från (0, 0, 3) ligger lampan 1 enhet framför men 1.2 enheter till höger: ungefär 50° från siktlinjen, långt utanför ett synfält på 45°. Inget i själva belysningen beror på var kameran står – det handlar bara om vad du får se.
+Sett från (0, 0, 3) ligger lampan 1 enhet framför men 1,2 enheter till höger: ungefär 50° från siktlinjen, långt utanför ett synfält på 45°. Inget i själva belysningen beror på var kameran står – det handlar bara om vad du får se.
 ```
 
 ![Lampan i och utanför bild](images/lamp-in-view.webp "Scenen uppifrån: med ett synfält på 45° ser kameran ungefär 29° åt varje håll. Från (0, 0, 3) hamnar lampan utanför bilden; från (−3, 0, 3) syns både kuben och lampan.")
@@ -538,7 +538,7 @@ Varför har `SceneConstantBuffer` i C++ en `float padding0;` mellan `objectColor
 
 Gör nu den första uppgiften, **object-color**: ge kubens fragment shader de två färgerna och skriv ut deras produkt,
 och sätt dem från programmet. När du bygger och kör blir den vita kuben **korallfärgad** – (255, 128, 79) på skärmen,
-eftersom 0.5 · 255 = 127.5 avrundas till 128 och 0.31 · 255 ≈ 79.
+eftersom 0,5 · 255 = 127,5 avrundas till 128 och 0,31 · 255 ≈ 79.
 
 Titta noga, dock: framsidan och vänstersidan har exakt samma färg, och kuben ser platt ut, som en pappersfigur. Inget i
 shadern beror på var ljuset är eller åt vilket håll en sida är vänd, så varje fragment får samma färg. Det är vad

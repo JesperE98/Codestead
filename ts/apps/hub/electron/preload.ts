@@ -55,6 +55,8 @@ const api: HubApi = {
   setTrayToolTip: (text) => ipcRenderer.send(Ipc.setTrayToolTip, text),
   startsWithComputer: () => ipcRenderer.invoke(Ipc.startsWithComputer),
   setStartsWithComputer: (value) => ipcRenderer.invoke(Ipc.setStartsWithComputer, value),
+  sandboxStatus: () => ipcRenderer.invoke(Ipc.sandboxStatus),
+  enableSandbox: () => ipcRenderer.invoke(Ipc.enableSandbox),
   selfUpdate: selfUpdateBridge(ipcRenderer),
   openExternal: (url) => ipcRenderer.invoke(Ipc.openExternal, url),
   pickFile: () => ipcRenderer.invoke(Ipc.pickFile),

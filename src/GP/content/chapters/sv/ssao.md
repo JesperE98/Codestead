@@ -40,13 +40,13 @@ resurs – en liten textur fylld med slumpdata från CPU:n.
 
 learnopengl belyser sin ryggsäcksmodell i ett stort rum; kursen ställer en **planet** där – modellen från delen
 Modelladdning, en sfär med radien 1 med en platt ring runt, stående på golvet (förflyttad till (0, 0.5, 0); learnopengl
-roterar sin ryggsäck -90° kring x, planeten står upprätt). Rummet är kuben på 2 × 2 × 2 skalad med 7.5 och flyttad upp
-7, med inverterade normaler eftersom vi ser dess insida: golvet ligger på y = -0.5, bakväggen på z = -7.5. Allt har samma
-ljusgrå albedo, 0.95 – learnopengls: modellens texturer laddas men används inte, så ocklusionen syns tydligt. Kameran är
+roterar sin ryggsäck -90° kring x, planeten står upprätt). Rummet är kuben på 2 × 2 × 2 skalad med 7,5 och flyttad upp
+7, med inverterade normaler eftersom vi ser dess insida: golvet ligger på y = -0,5, bakväggen på z = -7,5. Allt har samma
+ljusgrå albedo, 0,95 – learnopengls: modellens texturer laddas men används inte, så ocklusionen syns tydligt. Kameran är
 learnopengls, på (0, 0, 5) och tittar längs -z, med ett bortre klipplan på 50.
 
 Ett punktljus, learnopengls: på (2, 4, -2) – ovanför och bakom planeten, till höger – med blå färg (0.2, 0.2, 0.7), linjär
-dämpning 0.09 och kvadratisk 0.032. Belysningspasset är learnopengls Blinn-Phong: en omgivningsterm `0.3 * Diffuse`,
+dämpning 0,09 och kvadratisk 0,032. Belysningspasset är learnopengls Blinn-Phong: en omgivningsterm `0.3 * Diffuse`,
 diffust och spekulärt ljus (exponent 8), dämpat. Det arbetar i **vyrymden**: ljusets position transformeras med
 vymatrisen innan den skickas, och betraktaren sitter i origo, så `viewDir = normalize(-FragPos)`.
 
@@ -57,7 +57,7 @@ resultat på CPU:n, och SSAO-passet är ett av de dyraste passen i kursen:
   och i praktiken detsamma efter.
 - **`rand()` i stället för `std::uniform_real_distribution`.** learnopengl drar sina slumptal med
   `std::uniform_real_distribution<GLfloat>` och `std::default_random_engine`, och talen den motorn ger skiljer sig
-  mellan standardbibliotek. Kursen använder `srand(42)` och `rand() / (float)RAND_MAX` – ett flyttal mellan 0.0 och 1.0
+  mellan standardbibliotek. Kursen använder `srand(42)` och `rand() / (float)RAND_MAX` – ett flyttal mellan 0,0 och 1,0
   – vars talföljd kursens bilder återskapar (glibc:s), så **Förväntat resultat** visar samma kärna och brus som ditt
   program på Linux, vid varje körning. På Windows ger Microsofts `rand()` (med ett `RAND_MAX` på 32767) andra tal:
   bilden ser likadan ut, bruset skiljer sig i detaljerna.
@@ -204,8 +204,8 @@ Djupet vi behöver är gPositions z. learnopengl påpekar att det går att rekon
 djupvärden med några fiffiga knep – det sparar positionsmålets minne och bandbredd, och är vad större renderare gör. Här
 behålls positionsbuffern för tydlighetens skull.
 
-Utöver G-buffern behöver SSAO-passet ett eget mål. Dess resultat är ett enda tal per pixel, ocklusionsfaktorn mellan 0.0
-och 1.0 – så målet har **en enda kanal**:
+Utöver G-buffern behöver SSAO-passet ett eget mål. Dess resultat är ett enda tal per pixel, ocklusionsfaktorn mellan 0,0
+och 1,0 – så målet har **en enda kanal**:
 
 :::opengl
 ```cpp
@@ -329,7 +329,7 @@ Cryteks ursprungliga SSAO använde en sfär, vilket gav dess karaktäristiska gr
 ![Sfär- och halvsfärkärna](images/ssao-hemisphere.webp "Ett fragment på golvet framför en vägg, sett från sidan. Ett sampel inne i geometrin räknas som skymt: med en sfär är halvan under golvet också skymd; med en halvsfär längs normalen skymmer bara väggen.")
 
 Med en enhetshalvsfär kan vi få en samplingskärna med högst 32 samplingar så här: vi varierar x- och y-riktningen i
-tangentrymden mellan -1.0 och 1.0, och z-riktningen mellan 0.0 och 1.0 (om vi varierade även z mellan -1.0 och 1.0 skulle
+tangentrymden mellan -1,0 och 1,0, och z-riktningen mellan 0,0 och 1,0 (om vi varierade även z mellan -1,0 och 1,0 skulle
 vi få en sfärisk kärna). Eftersom samplingskärnan orienteras längs ytnormalen hamnar alla de resulterande vektorerna i
 halvsfären. Sedan normaliseras varje sampling och skalas med en slumpmässig längd, så att samplingarna ligger inuti
 halvsfären, inte bara på dess yta.
@@ -458,7 +458,7 @@ skulle kunna skapa en slumpmässig rotationsvektor för varje fragment i scenen,
 rimligare att skapa en liten textur med slumpmässiga rotationsvektorer som vi lägger ut över skärmen.
 
 Vi skapar en array på 4 × 4 med slumpmässiga rotationsvektorer orienterade kring ytnormalen i tangentrymden. Eftersom
-samplingskärnan är orienterad längs positiv z i tangentrymden lämnar vi z-komponenten på 0.0, så att vi roterar kring
+samplingskärnan är orienterad längs positiv z i tangentrymden lämnar vi z-komponenten på 0,0, så att vi roterar kring
 z-axeln. De 16 vektorerna hamnar i en textur på 4 × 4 med **upprepad** adressering och **nearest**-filtrering:
 SSAO-shadern läser den på `TexCoords * noiseScale`, med `noiseScale = (800 / 4, 600 / 4)` – fönstrets storlek delad med
 brusets storlek – så texturkoordinaterna går från 0 till 200 över fönstret, texturen upprepas 200 × 150 gånger, och varje
@@ -580,7 +580,7 @@ gNormal, gAlbedo (t2) och SSAO-texturen (t3).
 - [ ] 800 × 600 slumpvektorer, en per pixel
 - [ ] 16 texlar, men bara fönstrets översta vänstra 4 × 4 pixlar läser dem; de andra får (0, 0, 0)
 ---
-Med `GL_CLAMP_TO_EDGE` skulle varje koordinat över 1.0 läsa den sista texeln: nästan hela fönstret skulle få en och samma rotation.
+Med `GL_CLAMP_TO_EDGE` skulle varje koordinat över 1,0 läsa den sista texeln: nästan hela fönstret skulle få en och samma rotation.
 ```
 :::
 :::vulkan
@@ -609,7 +609,7 @@ Båda samplerna filtrerar med punkter; de skiljer sig bara i adresseringen. Shad
 ## SSAO-shadern
 
 SSAO-shadern körs på skärmfyrhörningen och beräknar ocklusionsvärdet för vart och ett av dess fragment. Dess parametrar
-är learnopengls: kärnans storlek (32 här), en radie på 0.5 – halvsfärens storlek i vyrymdsenheter – och en bias på 0.025.
+är learnopengls: kärnans storlek (32 här), en radie på 0,5 – halvsfärens storlek i vyrymdsenheter – och en bias på 0,025.
 
 Vi börjar med att bygga en TBN-matris som transformerar vilken vektor som helst från tangentrymden till vyrymden. Med en
 metod som kallas *Gram-Schmidt-processen* skapar vi en ortogonal bas, varje gång lite lutad utifrån värdet på
@@ -630,9 +630,9 @@ det aktuella fragmentets position, och jämför fragmentpositionens djup med sam
 
 Det finns ett problem till: när ett fragment nära kanten av en yta testas för ambient occlusion tar det också hänsyn
 till djupvärden från ytor långt bakom den testade ytan; de värdena bidrar (felaktigt) till ocklusionsfaktorn. Det kan vi
-lösa med en **avståndskontroll**: `smoothstep(0.0, 1.0, radius / abs(fragPos.z - sampleDepth))` är 1.0 när
+lösa med en **avståndskontroll**: `smoothstep(0.0, 1.0, radius / abs(fragPos.z - sampleDepth))` är 1,0 när
 djupskillnaden ligger inom radien, och avtar mjukt för ytor längre bort, så en avlägsen yta knappt bidrar. Till sist
-normaliseras ocklusionsbidraget med kärnans storlek och dras från 1.0, så att resultatet är andelen samplingar som *inte*
+normaliseras ocklusionsbidraget med kärnans storlek och dras från 1,0, så att resultatet är andelen samplingar som *inte*
 är skymda – faktorn som omgivningsljuset multipliceras med senare.
 
 :::opengl
@@ -924,7 +924,7 @@ Vad är avståndskontrollen `smoothstep(0.0, 1.0, radius / abs(fragPos.z - sampl
 - [ ] Den gör resultatet till en mjuk gradient i stället för en hård 0 eller 1 per sampling
 - [x] Vid ett fragment nära ett objekts kant hamnar samplingar på en yta långt bakom det; utan kontrollen skulle den avlägsna ytan räknas som skymmande – med den bidrar en djupskillnad mycket större än radien knappt
 ---
-Inom radien är kontrollen 1.0 och samplingen räknas fullt ut; vid två gånger radien är den nere i ungefär 0.5 och fortsätter falla. Utan den skulle du se mörka halor runt planeten på bakväggen.
+Inom radien är kontrollen 1,0 och samplingen räknas fullt ut; vid två gånger radien är den nere i ungefär 0,5 och fortsätter falla. Utan den skulle du se mörka halor runt planeten på bakväggen.
 ```
 
 Bygg och kör: fönstret visar **den råa SSAO-texturen i grått**. Vitt där inget skymmer: det mesta av planeten, golvet,
@@ -949,7 +949,7 @@ inte pixel för pixel.
 
 Mellan SSAO-passet och belysningspasset vill vi först blurra SSAO-texturen. Slumprotationernas upprepade brusmönster syns
 tydligt i det råa resultatet, och vi vill ha en mjuk ocklusion. En enkel blurshader räcker: vi går igenom de omgivande
-SSAO-texlarna mellan -2.0 och 2.0 (exklusive), samplar SSAO-texturen lika många gånger som brustexturens mått – 4 × 4 –
+SSAO-texlarna mellan -2,0 och 2,0 (exklusive), samplar SSAO-texturen lika många gånger som brustexturens mått – 4 × 4 –
 och tar medelvärdet.
 
 Varför precis 4 × 4? Bruset upprepas var fjärde pixel i båda riktningarna, så varje block på 4 × 4 pixlar innehåller var

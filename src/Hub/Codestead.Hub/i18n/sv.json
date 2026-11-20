@@ -70,5 +70,16 @@
   "tray.show": "Visa Codestead",
   "tray.open": "Öppna {name}",
   "tray.quit": "Avsluta",
-  "tool.autoUpdated": "{name} uppdaterades till {version}"
+  "tool.autoUpdated": "{name} uppdaterades till {version}",
+  "sandbox.title": "Slå på Chromiums sandlåda för dina verktyg?",
+  "sandbox.text": "Ubuntu låter bara program med en AppArmor-profil använda de användarnamnrymder som Chromiums sandlåda behöver, så dina Codestead-verktyg körs utan sandlådan. Hubben kan lägga till en profil för verktygen i sin mapp – systemet frågar efter ditt lösenord. (Installerad som .deb-paket behöver hubben ingen sådan profil.)",
+  "sandbox.enable": "Slå på",
+  "sandbox.later": "Inte nu",
+  "sandbox.working": "Slår på sandlådan – systemet frågar efter ditt lösenord …",
+  "sandbox.done": "Chromiums sandlåda är på: verktygen använder den från nästa start.",
+  "sandbox.failed": "Chromiums sandlåda slogs inte på: {error}",
+  "settings.sandbox": "Chromiums sandlåda",
+  "settings.sandboxOff": "Dina verktyg körs utan Chromiums sandlåda, eftersom Ubuntu begränsar de användarnamnrymder den behöver. En AppArmor-profil för verktygen i hubbens mapp slår på den.",
+  "settings.sandboxOn": "På: en AppArmor-profil låter dina verktyg använda Chromiums sandlåda.",
+  "settings.sandboxEnable": "Slå på (frågar efter ditt lösenord)"
 }

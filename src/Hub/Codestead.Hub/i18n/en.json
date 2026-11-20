@@ -70,5 +70,16 @@
   "tray.show": "Show Codestead",
   "tray.open": "Open {name}",
   "tray.quit": "Quit",
-  "tool.autoUpdated": "{name} was updated to {version}"
+  "tool.autoUpdated": "{name} was updated to {version}",
+  "sandbox.title": "Turn on Chromium's sandbox for your tools?",
+  "sandbox.text": "Ubuntu lets only programs with an AppArmor profile use the user namespaces that Chromium's sandbox needs, so your Codestead tools run without the sandbox. The hub can add a profile for the tools in its folder – your system asks for your password. (Installed as a .deb package, the hub needs no such profile.)",
+  "sandbox.enable": "Turn on",
+  "sandbox.later": "Not now",
+  "sandbox.working": "Turning on the sandbox – your system asks for your password …",
+  "sandbox.done": "Chromium's sandbox is on: your tools use it from their next start.",
+  "sandbox.failed": "Chromium's sandbox was not turned on: {error}",
+  "settings.sandbox": "Chromium's sandbox",
+  "settings.sandboxOff": "Your tools run without Chromium's sandbox, because Ubuntu restricts the user namespaces it needs. An AppArmor profile for the tools in the hub's folder turns it on.",
+  "settings.sandboxOn": "On: an AppArmor profile lets your tools use Chromium's sandbox.",
+  "settings.sandboxEnable": "Turn on (asks for your password)"
 }

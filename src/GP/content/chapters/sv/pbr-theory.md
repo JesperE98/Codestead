@@ -114,7 +114,7 @@ Skillnaden mellan reflekterat och brutet ljus leder till en annan iakttagelse om
 varandra*. Den ljusenergi som reflekteras absorberas inte längre av själva materialet. Den energi som är kvar att tränga
 in i ytan som brutet ljus är alltså precis det som återstår när reflektionen är avräknad.
 
-![Reflektion och brytning](images/reflect-refract.webp "Ljuset delas i en reflekterad del, kS, och en bruten del, kD = 1.0 - kS. I ett dielektrikum sprids det brutna ljuset och lämnar delvis ytan igen som diffust ljus; i en metall absorberas det.")
+![Reflektion och brytning](images/reflect-refract.webp "Ljuset delas i en reflekterad del, kS, och en bruten del, kD = 1,0 - kS. I ett dielektrikum sprids det brutna ljuset och lämnar delvis ytan igen som diffust ljus; i en metall absorberas det.")
 
 Vi bevarar det här energisambandet genom att först räkna ut den spekulära andelen, alltså hur stor del av det inkommande
 ljusets energi som reflekteras. Andelen brutet ljus räknas sedan direkt ut ur den spekulära andelen:
@@ -126,7 +126,7 @@ float kD = 1.0 - kS;                        // refraction/diffuse  fraction
 
 På så sätt vet vi både hur mycket av det inkommande ljuset som reflekteras och hur mycket som bryts, och vi följer
 energiprincipen. Med det här angreppssättet kan det brutna/diffusa och det reflekterade/spekulära bidraget aldrig
-tillsammans överstiga 1.0, så deras sammanlagda energi blir aldrig större än den inkommande ljusenergin. Det tog vi inte
+tillsammans överstiga 1,0, så deras sammanlagda energi blir aldrig större än den inkommande ljusenergin. Det tog vi inte
 hänsyn till i de tidigare belysningskapitlen: där var ambient, diffus och spekulär styrka oberoende tal, och inget
 hindrade deras summa från att bli större än det ljus som kom in.
 
@@ -256,10 +256,10 @@ skalar eller viktar den inkommande radiansen utifrån ytans materialegenskaper.
 
 ```quiz
 Radiansen från ett punktljus når en yta i 60° vinkel mot ytans normal. Med vilken faktor skalar reflektansekvationen den innan BRDF:en tillämpas?
-- [x] cos 60° = 0.5, termen `n · ωi`: ljus som kommer in snett sprids över en större yta
-- [ ] 1.0: radiansen är densamma från alla håll
-- [ ] sin 60° ≈ 0.87, eftersom vinkeln mäts från ytan
-- [ ] 60 / 90 ≈ 0.67, ett linjärt avtagande mellan rakt infallande och strykande ljus
+- [x] cos 60° = 0,5, termen `n · ωi`: ljus som kommer in snett sprids över en större yta
+- [ ] 1,0: radiansen är densamma från alla håll
+- [ ] sin 60° ≈ 0,87, eftersom vinkeln mäts från ytan
+- [ ] 60 / 90 ≈ 0,67, ett linjärt avtagande mellan rakt infallande och strykande ljus
 ---
 Skalärprodukten av normalen och (enhets)riktningen mot ljuset är cosinus för vinkeln mellan dem – samma faktor som den diffusa termen i kapitlet Grundläggande ljussättning. Vid 90° är den 0: strykande ljus bidrar inte alls.
 ```
@@ -269,9 +269,9 @@ Skalärprodukten av normalen och (enhets)riktningen mot ljuset är cosinus för 
 BRDF:en, *bidirectional reflective distribution function*, är en funktion som tar in den inkommande (ljus-)riktningen
 ωi, den utgående (vy-)riktningen ωo, ytans normal n och en ytparameter a som står för mikroytans strävhet. BRDF:en
 approximerar hur mycket varje enskild ljusstråle ωi bidrar till det slutliga reflekterade ljuset från en ogenomskinlig
-yta med givna materialegenskaper. Om ytan till exempel är helt slät (som en spegel) ger BRDF-funktionen 0.0 för alla
+yta med givna materialegenskaper. Om ytan till exempel är helt slät (som en spegel) ger BRDF-funktionen 0,0 för alla
 inkommande ljusstrålar ωi utom den enda stråle som har samma (reflekterade) vinkel som den utgående strålen ωo, för
-vilken funktionen ger 1.0.
+vilken funktionen ger 1,0.
 
 En BRDF approximerar materialets reflekterande och brytande egenskaper utifrån mikrofasetteorin ovan. För att en BRDF ska
 vara fysikaliskt rimlig måste den följa lagen om energibevarande, alltså får summan av reflekterat ljus aldrig överstiga
@@ -416,7 +416,7 @@ ljusriktningen (geometriskuggning). Båda kan vi ta med med *Smiths metod*:
 ```
 
 Smiths metod med Schlick-GGX som G_sub ger följande utseende för olika strävhet R: geometrifunktionen är en
-multiplikator mellan 0.0 och 1.0, där 1.0 (vitt) betyder att mikrofasetterna inte skuggas alls och 0.0 (svart) att de
+multiplikator mellan 0,0 och 1,0, där 1,0 (vitt) betyder att mikrofasetterna inte skuggas alls och 0,0 (svart) att de
 skuggas helt. Den gör ytan mörkast där ljuset eller ögat ser den i strykande vinkel, och desto mer ju strävare den är.
 
 I GLSL blir geometrifunktionen följande kod:
@@ -486,8 +486,8 @@ Ytans svar vid vinkelrätt infall, grundreflektiviteten, finns i stora databaser
 | Aluminium | (0.91, 0.92, 0.92) | (0.96, 0.96, 0.97) |
 | Silver | (0.95, 0.93, 0.88) | (0.98, 0.97, 0.95) |
 
-Det intressanta här är att grundreflektiviteten för alla dielektriska ytor aldrig går över 0.17, och det är undantaget
-snarare än regeln, medan den för ledare börjar mycket högre och (mestadels) ligger mellan 0.5 och 1.0. Dessutom är
+Det intressanta här är att grundreflektiviteten för alla dielektriska ytor aldrig går över 0,17, och det är undantaget
+snarare än regeln, medan den för ledare börjar mycket högre och (mestadels) ligger mellan 0,5 och 1,0. Dessutom är
 grundreflektiviteten för ledare (metalliska ytor) färgad. Därför anges F0 som en RGB-trippel (reflektiviteten vid
 vinkelrätt infall kan variera med våglängden). Det ser vi bara hos metalliska ytor.
 
@@ -496,7 +496,7 @@ arbetsflödet*. I det metalliska arbetsflödet skapar vi ytmaterial med en extra
 en yta är metallisk eller icke-metallisk.
 
 Teoretiskt är ett materials metalness binär: det är en metall eller inte; det kan inte vara båda. De flesta
-renderingspipelines låter ändå ytans metalness variera linjärt mellan 0.0 och 1.0. Det beror mest på att
+renderingspipelines låter ändå ytans metalness variera linjärt mellan 0,0 och 1,0. Det beror mest på att
 materialtexturerna saknar precision. En metallyta med små (icke-metalliska) damm- eller sandliknande partiklar eller
 repor är till exempel svår att rendera med binära metalness-värden.
 
@@ -509,7 +509,7 @@ F0      = mix(F0, surfaceColor.rgb, metalness);
 ```
 
 Vi definierar en grundreflektivitet som approximerar de flesta dielektriska ytor. Det är ännu en approximation, eftersom
-F0 är ett medelvärde för de vanligaste dielektrika. En grundreflektivitet på 0.04 gäller för de flesta dielektrika och
+F0 är ett medelvärde för de vanligaste dielektrika. En grundreflektivitet på 0,04 gäller för de flesta dielektrika och
 ger fysikaliskt rimliga resultat utan att vi behöver ytterligare en ytparameter. Sedan tar vi, beroende på hur metallisk
 ytan är, antingen den dielektriska grundreflektiviteten eller F0 angiven som ytans färg. Eftersom metalliska ytor
 absorberar allt brutet ljus har de inga diffusa reflektioner, och vi kan använda ytans färgtextur direkt som deras
@@ -597,7 +597,7 @@ Kursens material, som de sista uppgifterna i kapitlen *PBR-belysning* och *Speku
 - **Roughness** (`roughness.png`): strävhetsmappen anger hur sträv ytan är per texel. Det samplade strävhetsvärdet
   påverkar den statistiska riktningen hos ytans mikrofasetter. En strävare yta får bredare och suddigare reflektioner,
   en slät yta fokuserade och klara reflektioner. Vissa PBR-motorer vill ha en *smoothness*-map (släthet) i stället för
-  en strävhetsmap, vilket en del grafiker tycker är mer intuitivt. De värdena räknas om (1.0 − smoothness) till strävhet
+  en strävhetsmap, vilket en del grafiker tycker är mer intuitivt. De värdena räknas om (1,0 − smoothness) till strävhet
   när de samplas.
 - **AO** (`ao.png`): *ambient occlusion*- eller AO-mappen anger en extra skuggningsfaktor för ytan och eventuellt
   omgivande geometri. Har vi till exempel en tegelyta ska albedotexturen inte innehålla någon skuggning i tegelstenarnas
@@ -617,9 +617,9 @@ olika PBR-motorer, ser rätt ut oavsett omgivning och ser därför mycket mer na
 
 Det här kapitlet har inga uppgifter; i slutet förbereder du programmet som nästa kapitel arbetar i. Utgå från ditt
 program från *Kamera* i en ny mapp och gör om det till learnopengls scen för PBR-belysning: ett rutnät med 7 × 7
-sfärer, var och en en UV-sfär med radien 1, med 2.5 enheters mellanrum. Raderna går från icke-metall (nederst,
-`metallic = 0`) till metall (överst, `metallic = 6/7`), kolumnerna från slät (vänster, strävhet 0.05) till sträv
-(höger, strävhet 6/7); varje sfär har albedot (0.5, 0.0, 0.0) och ao 1.0. Fyra punktljus med färgen (300, 300, 300)
+sfärer, var och en en UV-sfär med radien 1, med 2,5 enheters mellanrum. Raderna går från icke-metall (nederst,
+`metallic = 0`) till metall (överst, `metallic = 6/7`), kolumnerna från slät (vänster, strävhet 0,05) till sträv
+(höger, strävhet 6/7); varje sfär har albedot (0.5, 0.0, 0.0) och ao 1,0. Fyra punktljus med färgen (300, 300, 300)
 hänger på (±10, ±10, 10), framför rutnätet. Kameran står på **(0, 0, 22)** och tittar längs -z, så att hela rutnätet
 syns (learnopengls kamera börjar på (0, 0, 3), mitt i rutnätet, och du skulle behöva flyga bakåt med tangenterna för
 att se det).

@@ -1,7 +1,8 @@
 # nfpm config for the native Linux packages of one Codestead tool (.deb, .rpm, Arch .pkg.tar.zst): the app in
 # /opt/<id>/, /usr/bin/<id>, the desktop entry and the icon (the same package, files and paths as the C# apps' before
-# them), with Electron's libraries as dependencies and its sandbox helper made setuid root. Values come from
-# environment variables set by packaging/build-linux.sh.
+# them), with Electron's libraries as dependencies, its sandbox helper made setuid root and an AppArmor profile that
+# allows it user namespaces (postinstall.sh, postremove.sh). Values come from environment variables set by
+# packaging/build-linux.sh.
 name: ${PKG_NAME}
 arch: amd64
 platform: linux
@@ -125,10 +126,26 @@ contents:
     dst: /usr/share/applications/${PKG_NAME}.desktop
   - src: build/icons/${PKG_NAME}.png
     dst: /usr/share/icons/hicolor/1024x1024/apps/${PKG_NAME}.png
+  # Copied to /etc/apparmor.d by postinstall.sh where the system's AppArmor accepts it (not a package file there: older
+  # AppArmor would refuse it at every boot).
+  - src: ${GEN_DIR}/apparmor-profile
+    dst: /opt/${PKG_NAME}/apparmor-profile
+    file_info:
+      mode: 0644
 
 scripts:
   postinstall: ${GEN_DIR}/postinstall.sh
+  postremove: ${GEN_DIR}/postremove.sh
 # pacman runs post_upgrade (not post_install) on an upgrade.
 archlinux:
   scripts:
     postupgrade: ${GEN_DIR}/postinstall.sh
+
+# Compression (≈ 20 % smaller than nfpm's gzip): the .deb is written uncompressed and its data.tar then compressed with
+# xz itself (packaging/ts/deb-xz.mjs in packaging/build-linux.sh: nfpm's own xz compresses Electron worse; every dpkg
+# reads xz), the .rpm with zstd at nfpm's highest level (rpm 4.14 and later: Fedora, RHEL 8 and later, openSUSE). nfpm has
+# no setting for the Arch package's zstd level: build-linux.sh compresses it again with zstd -19.
+deb:
+  compression: none
+rpm:
+  compression: zstd:19

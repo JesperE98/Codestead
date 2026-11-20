@@ -50,10 +50,19 @@
   border-radius: 0;
 }
 
-/* Links between slides (the overview's stages) lead nowhere inside a chapter. */
-.rpv .mm-chip,
-.rpv [data-slide] {
+/* Links between slides (the overview's stages): to the scene in the course that shows the slide (engine/mount.ts), or
+   no link at all where the course has none. */
+.rpv .ov-chip {
+  cursor: pointer;
+}
+
+.rpv .ov-chip:disabled {
   cursor: default;
+}
+
+.rpv .ov-chip:disabled:hover {
+  background: color-mix(in srgb, currentColor 8%, rgba(5, 6, 13, 0.6));
+  box-shadow: none;
 }
 
 /* The code under the scene: the slide's API panel. */

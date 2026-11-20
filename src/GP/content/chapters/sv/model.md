@@ -858,9 +858,9 @@ I Direct3D är texturkoordinaten v = 0 bildens översta rad, och `TextureFromFil
 är, översta raden först. Alltså måste v vändas exakt **en** gång, och det är vad `aiProcess_FlipUVs` gör: v blir
 1 − v. learnopengls OpenGL-program vänder två gånger – `aiProcess_FlipUVs` *och*
 `stbi_set_flip_vertically_on_load(true)` – vilket bara passar dess ryggsäcksmodell, vars koordinater är lagrade åt
-andra hållet. För vår planet gör en vändning den upprätt, med den vita polen högst upp. (`aiProcess_ConvertToLeftHanded`
-används inte heller: programmet behåller learnopengls högerhänta matematik, `XMMatrixLookAtRH` och
-`XMMatrixPerspectiveFovRH`.)
+andra hållet. För vår planet gör en vändning den upprätt: precis under den vita iskalotten högst upp ligger ett hav,
+med ett litet runt hav till höger om det. (`aiProcess_ConvertToLeftHanded` används inte heller: programmet behåller
+learnopengls högerhänta matematik, `XMMatrixLookAtRH` och `XMMatrixPerspectiveFovRH`.)
 :::
 
 ```quiz
@@ -1320,9 +1320,11 @@ vilket GPU:n mäter genom att köra fragment i grupper om 2×2. Inuti en `if` va
 på gränsen mellan ringen och planeten – kör några av dem inte anropet till `texture()`, och resultatet är odefinierat.
 Att sampla båda utanför villkoret är alltid rätt; för två texturer är det extra samplet billigt.
 
-Gör nu uppgiften **material-textures** och bygg och kör sedan. Planeten syns med textur: blå hav, grönt land och den
-vita nordpolen högst upp – texturen är upprätt – med ringens beige band runt sig, sedd lite ovanifrån. Det här är bilden
-från learnopengls `model_loading.cpp`: bara diffuse-texturen, ingen ljussättning.
+Gör nu uppgiften **material-textures** och bygg och kör sedan. Planeten syns med textur: blå hav, grönt land och en vit
+iskalott högst upp, med ringens beige band runt sig, sedd lite ovanifrån. Texturen är upprätt när ett hav ligger precis
+under iskalotten, med ett litet runt hav till höger om det; upp och ner ligger det land under iskalotten och ett långt,
+smalt sund slingrar sig nedåt på högra sidan (båda polerna är vita, så iskalotten ensam avslöjar det inte). Det här är
+bilden från learnopengls `model_loading.cpp`: bara diffuse-texturen, ingen ljussättning.
 
 ```quiz
 Planeten och ringen har olika diffuse maps, men hela modellen är ett enda `vkCmdDrawIndexed`. Hur får ett fragment på ringen färgen från `rings.png`?
@@ -1401,8 +1403,11 @@ void main()
 ```
 
 Gör nu uppgiften **draw-model**: `Model::Draw` och de två raderna i `main.cpp`. Bygg och kör: planeten syns, med textur
-och utan ljussättning – blå hav, grönt land, den vita nordpolen högst upp – med den beige ringen runt sig, sedd lite
-ovanifrån. Ringens närmaste del går framför planeten; bakom planeten döljer djuptestet den.
+och utan ljussättning – blå hav, grönt land, en vit iskalott högst upp – med den beige ringen runt sig, sedd lite
+ovanifrån. Ringens närmaste del går framför planeten; bakom planeten döljer djuptestet den. Texturen är upprätt när ett
+hav ligger precis under iskalotten, med ett litet runt hav till höger om det; upp och ner ligger det land under
+iskalotten och ett långt, smalt sund slingrar sig nedåt på högra sidan (båda polerna är vita, så iskalotten ensam
+avslöjar det inte).
 
 ```quiz
 Fragment shadern samplar bara `texture_diffuse1`, men ändå visar planeten `planet_diffuse.png` och ringen `rings.png`. Varför?
@@ -1469,8 +1474,10 @@ float4 PSMain(PSInput input) : SV_TARGET
 ```
 
 Gör nu uppgiften **draw-model** och bygg och kör sedan: planeten syns, med textur och utan ljussättning – blå hav, grönt
-land, den vita nordpolen högst upp – med den beige ringen runt sig, sedd lite ovanifrån. Ringens närmaste del går
-framför planeten; bakom planeten döljer djuptestet den.
+land, en vit iskalott högst upp – med den beige ringen runt sig, sedd lite ovanifrån. Ringens närmaste del går framför
+planeten; bakom planeten döljer djuptestet den. Texturen är upprätt när ett hav ligger precis under iskalotten, med ett
+litet runt hav till höger om det; upp och ner ligger det land under iskalotten och ett långt, smalt sund slingrar sig
+nedåt på högra sidan (båda polerna är vita, så iskalotten ensam avslöjar det inte).
 
 ```quiz
 När får `LoadAssets` släppa texturernas upload-buffrar (`m_model.uploadHeaps.clear()`)?
@@ -1538,7 +1545,7 @@ ringens specular. Gör nu uppgiften **specular-maps**. Bilden ändras inte: shad
 learnopengl avslutar kapitlet med en försmak: vi kan också vara lite mer kreativa och föra in ljusen från
 ljuskapitlen i renderingsekvationen, och tillsammans med specular maps få fantastiska resultat. Det är det här
 kapitlets sista uppgift: ljussätt modellen som i kapitlet *Lighting maps* – ett vitt punktljus vid `lightPos` (1.2,
-1.0, 2.0) med ambient 0.2, diffuse 0.5 och specular 1.0 (ingen dämpning), Phong-skuggning med diffuse mapen som ytans
+1.0, 2.0) med ambient 0,2, diffuse 0,5 och specular 1,0 (ingen dämpning), Phong-skuggning med diffuse mapen som ytans
 färg och specular mapen för högdagern, shininess 32, och kamerans position som `viewPos`. Vertex shadern måste skicka
 vidare fragmentets världsposition och dess normal, transformerad med normalmatrisen. Försök själv först; koden kommer
 här.
@@ -1915,7 +1922,7 @@ täcker redan två SRV:er: bara shadern behövde börja läsa `t1`.
 
 Gör nu uppgiften **lighting** och bygg och kör sedan. Planeten lyses upp snett uppifrån höger framifrån, där ljuset är:
 sidan som vetter mot det är ljusast, nedre vänstra delen får bara det ambienta ljuset, och hela bilden är mörkare än
-förut (högst 0.2 + 0.5 av texturens färg, plus högdagern). Ringen, en platt skiva, lyses upp jämnt.
+förut (högst 0,2 + 0,5 av texturens färg, plus högdagern). Ringen, en platt skiva, lyses upp jämnt.
 
 Och högdagern? Med den här kameran hamnar ljusets reflex lite till höger om och ovanför planetens mitt – på land.
 Planetens specular map är mörk på land och ljus på haven (vattnet glänser, marken knappt), så högdagern är bara en

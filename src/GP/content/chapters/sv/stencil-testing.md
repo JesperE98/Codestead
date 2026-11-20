@@ -625,7 +625,7 @@ Nu när stencilbuffern är uppdaterad med ettor där lådorna ritades ska vi rit
 med rätt testfunktion och med skrivningar till stencilbuffern avslagna: steg 4 till 8. Vi sätter testfunktionen till
 NOT_EQUAL med referensvärdet 1, vilket ser till att vi bara ritar de delar av lådorna där värdet inte är 1. På så sätt
 ritar vi bara den del av lådorna som ligger utanför de tidigare ritade lådorna. Vi slår också av djuptestningen, så att
-de skalade lådorna (kanterna) inte skrivs över av – eller döljs bakom – golvet. Skalfaktorn är 1.1, en kub som är 10 %
+de skalade lådorna (kanterna) inte skrivs över av – eller döljs bakom – golvet. Skalfaktorn är 1,1, en kub som är 10 %
 större.
 
 :::opengl
@@ -806,7 +806,7 @@ De skalade kuberna ritas i sin helhet, men bara en ring runt varje kub syns. Var
 Stencilbuffern minns originalkubernas siluett. Den 10 % större kuben täcker siluetten plus en marginal runt den; marginalen är allt som klarar testet. Djuptestet spelar ingen roll – det är avslaget för konturerna.
 ```
 
-![Konturen i tre steg](images/stencil-outline.webp "Konturen i tre steg runt den vänstra kuben, ritad av kursens simulator: 1 stencilbufferten efter kuberna (vitt är 1), 2 kuberna skalade med 1.1 i konturfärgen utan stenciltestet, 3 samma ritning med NOT_EQUAL 1 – bara ringen blir kvar.")
+![Konturen i tre steg](images/stencil-outline.webp "Konturen i tre steg runt den vänstra kuben, ritad av kursens simulator: 1 stencilbufferten efter kuberna (vitt är 1), 2 kuberna skalade med 1,1 i konturfärgen utan stenciltestet, 3 samma ritning med NOT_EQUAL 1 – bara ringen blir kvar.")
 
 Du ser att kanterna överlappar mellan de två lådorna, vilket oftast är den effekt vi vill ha (tänk på strategispel där
 vi vill välja 10 enheter; sammanflytande kanter är i allmänhet att föredra). Om du vill ha en hel kant per föremål

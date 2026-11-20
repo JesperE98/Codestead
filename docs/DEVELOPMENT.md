@@ -322,10 +322,13 @@ src/GP/
   **inte** redan är löst före.
 - Lägg till kapitlet i `lessonList` i `ts/packages/gp-course/src/GpCourse.ts` (ordningen där är kursens ordning) och
   dess kontroller i `Checks/`.
-- `TaskTests` tar ungefär en timme på en kärna, så `npm test` hoppar över dem; CI kör dem i parallella jobb per
-  kursdel (`gp-tasks` i `.github/workflows/ci.yml` och `release.yml`, med `CODESTEAD_GP_PARTS`). **En ny kursdel ska
-  in i matrisen i båda arbetsflödena** (`CiTests` kontrollerar det). Lokalt, i `ts/`:
-  `CODESTEAD_GP_PARTS=pbr npx vitest run packages/gp-course/test/TaskTests.test.ts`.
+- `TaskTests` tar ungefär en timme på en kärna, så `npm test` hoppar över dem; CI kör dem i åtta parallella jobb på
+  ungefär sju minuter var (`gp-tasks` i `.github/workflows/ci.yml` och `release.yml`): varje jobb väljer kursdelar
+  (`CODESTEAD_GP_PARTS`) och några kapitel ur dem eller alla utom några (`CODESTEAD_GP_CHAPTERS=bloom,ssao` respektive
+  `!bloom,!ssao`, se `test/TaskSelection.ts`); de tunga kapitlen (bloom, ssao, specular-ibl, area-lights …) är
+  utspridda efter CI:s tider. **Ett nytt kapitel eller en ny kursdel ska finnas i exakt ett jobb i båda
+  arbetsflödena** (`CiTests` kontrollerar det; ett nytt kapitel i en del hamnar oftast själv i dess "!"-jobb). Lokalt,
+  i `ts/`: `CODESTEAD_GP_PARTS=pbr npx vitest run packages/gp-course/test/TaskTests.test.ts`.
 
 **Koden ska vara korrekt.** `src/GP/verify/verify.sh <mappar>` kompilerar projekten med de riktiga verktygen:
 OpenGL och Vulkan med g++ (GLAD genereras med `pip install glad`), DirectX 12 med MinGW-w64 mot Microsofts
@@ -363,7 +366,7 @@ kapitlets färdiga program (`GpCourse.SolutionProject`), inte av en annan övnin
 `i18n/<språk>/<kapitel>.json`, kontrollerna i `Checks/TaskChecks.Exercises*.ts` (en övning utan kontroll bockar eleven
 i själv). Panelen visar stegen under "Follow along" och övningarna under "Exercises" (`TaskInfo.Section`).
 `TaskTests` kräver att varje övning byggs rent och att en övning med kontroll inte
-godkänns av kapitlets program men av sin lösning; `CODESTEAD_GP_CHAPTERS=a,b` kör testerna för några kapitel.
+godkänns av kapitlets program men av sin lösning; `CODESTEAD_GP_CHAPTERS=a,b` kör testerna för några kapitel (`!a` hoppar över ett).
 
 **Bilder i kapitlen.** Ett stycke som bara är en bild, `![alt](images/namn.webp "bildtext")`, visas av textvyn
 (`AnimatedImage` i `ts/packages/ui`: PNG, JPEG, WebP och animerad GIF/WebP; bildrutor på en sekund eller mer är ett bildspel som tonar
@@ -378,6 +381,18 @@ slides visas levande i kapitlen: eleven stegar fram och tillbaka genom en slides
 scenen har fokus), spelar ett steg igen, byter modell (triangel, kub, tekanna …) och läge (verklig data/koncept) och kan
 visa API:ts kod för steget – i det API eleven valt, på svenska eller engelska (andra språk får engelska; knapparnas texter
 är `viz.*` i UI-texterna) och i fönstrets ljusa eller mörka tema, och de följer med när något av dem ändras.
+
+- **Ljust tema**: stilarna och 3D-materialen vänds till ljusa (`engine/css.ts`, `engine/light.ts`). Två saker förblir
+  mörka med flit (`engine/light-only.css`): 2D-närbilderna (`PixelCanvas`: rasterisering, fragment, djup, blending) är
+  bilder av ett render target – pixlarnas riktiga färger på svart, med siffrorna bredvid – och visas som en mörk skärm
+  med tydlig kant; och ett steg vars poäng är ljus som läggs till (blending-slidens additiva steg: på vitt syns
+  ingenting) ritas på en mörk scen med slidens egna färger och ljusa paneler ovanpå (`DarkSteps` i
+  `engine/mount.ts`).
+- **Översiktens steg** (`viz:pipeline`, slide `overview`) är länkar till den scen i kursen som visar steget: den första
+  `viz:`-scenen med den sliden i kursens ordning (eller i kapitlet som visas, om det har en), `slidePlaces` i
+  `VizSource.ts`. Ett klick visar kapitlet, scrollar till scenen och ger den fokus (`revealScene` i
+  `ts/apps/gp/src/VizScene.tsx`); verktygstipset är `viz.goTo`. Steg som ingen scen visar (Vertex layout, Pipeline
+  state) är inga länkar. Motorn tar reda på vart varje steg leder genom att låta sliden själv svara (`rpv:go`).
 
 - **I texten** är en scen en bild vars källa är `viz:<scen>`, ensam i sitt stycke, med alt-text och bildtext som en bild:
   `![Vertexattribut](viz:input-layout "Vertexattribut: en stride stegar …")`. Scenens namn finns i
@@ -402,10 +417,11 @@ visa API:ts kod för steget – i det API eleven valt, på svenska eller engelsk
   kopierar koden på nytt (och ändrar bara importerna av GSAP och stilarna samt testernas sökvägar); skriv in commiten i
   paketets README, kör `npm run typecheck` och testerna och titta på scenerna i appen. Visualiserarens egna tester av den
   kopierade koden (`visualizer/tests/`) körs med `npm test`.
-- **Testerna**: `ts/packages/pipeline-viz/test/` (stegen, `viz:`-källorna, budgeten, stilarnas ljusa version,
-  tween-motorn, komponenten med en låtsasmotor i jsdom), `GpToolTests` (scenerna står där bilderna stod, stillbilderna
+- **Testerna**: `ts/packages/pipeline-viz/test/` (stegen, `viz:`-källorna och var varje slide visas, budgeten,
+  stilarnas och 3D-materialens ljusa version, tween-motorn, komponenten med en låtsasmotor i jsdom), `GpToolTests` (scenerna står där bilderna stod, stillbilderna
   utan WebGL) och e2e-testet (`ts/apps/gp/e2e`): med SwiftShader (`--use-angle=swiftshader --enable-unsafe-swiftshader`)
-  körs Hello Triangles scener, stegas och är aldrig fler än två; med `--disable-gpu --disable-software-rasterizer` visas
+  körs Hello Triangles scener, stegas och är aldrig fler än två, och översiktens "Depth test" leder till Depth testings
+  scen; med `--disable-gpu --disable-software-rasterizer` visas
   stillbilderna.
 
 **Diagram och simulatorbilder** (`src/GP/content/images/diagrams/`). Bilderna som förklarar kapitlen (inte
@@ -720,6 +736,13 @@ hämtad från release-repot; C#-appens egen Velopack tillämpar uppdateringen, s
 till, TS → TS) och, när det finns en, av dess föregående release – AppImage på Ubuntu och Fedora, Setup.exe på
 Windows Server, med kontroll av att användarens data och framsteg finns kvar (`packaging/upgrade-test.sh`,
 `upgrade-test-windows.ps1`; C#-appens uppdateringsknapp är `packaging/upgrade-driver`, det enda .NET-projektet).
+Får hubben en ny version uppdaterar dessutom dess föregående release, installerad som `.deb` (Ubuntu 24.04), `.rpm`
+(Fedora) och Arch-paket, sig själv till bygget med sin native-uppdatering, som root och som vanlig användare genom
+pkexec (`upgrade-native`, `packaging/native-update-test.sh`; se "Hur apparna uppdateras"). Det gamla paketet hämtas
+från release-repot, inget byggs två gånger; hubben räcker eftersom koden är delad. Har releasen inget sådant paket,
+eller kan dess hubb inte köras så (`--self-update-test` kom i 0.2.7), hoppas fallet över med en notis; får hubben
+ingen ny version från en TypeScript-release listar `plan.py` ett enda `{"skip": …}`-fall, så att jobbet alltid körs
+(publiceringen väntar på det, och ett överhoppat jobb skulle hoppa över publiceringen).
 Därefter publiceras de ändrade produkterna i det offentliga repot
 `JesperE98/codestead-releases` – men bara när båda secrets nedan finns (annars en varning, inget fel):
 
@@ -727,7 +750,33 @@ Därefter publiceras de ändrade produkterna i det offentliga repot
 |---|---|
 | `<id>-v<version>` (t.ex. `codestead-linux-v0.5.0`) | Alla filer för versionen och `SHA256SUMS.txt` |
 | `<id>-latest` | Samma filer utan version i namnet (länkarna i README) och Velopacks uppdateringsflöde |
-| `catalog` | `catalog.json` och `catalog.json.sig`: listan som hubben läser |
+| `catalog` | `catalog.json` och `catalog.json.sig`: listan som hubben läser, och som native-paketen uppdaterar sig efter |
+
+**Katalogen** (`packaging/catalog.py`, en produkt i taget i publiceringsjobbet, efter att produktens release har
+skapats) har för varje verktyg version, beskrivning, ändringslogg, de portabla arkiven (`assets`, som hubben
+installerar) och `nativePackages`: versionens `.deb`, `.rpm` och Arch-paket per processor (`linux-x64`) med filnamn,
+SHA-256 och storlek, räknade på samma filer som releasen får. Flödet signerar filen (ECDSA P-256, `CATALOG_SIGNING_KEY`)
+och kontrollerar signaturen som apparna gör innan den laddas upp. Formatet får bara växa: släppta hubbar hoppar över
+egenskaper de inte känner till (som C#-hubbens System.Text.Json gjorde), så nya egenskaper går att lägga till, men
+befintliga får inte byta namn, typ eller betydelse (`ts/apps/hub/test/CatalogCompatibilityTests.test.ts` läser den
+publicerade katalogen och det nya formatet med hubbens parser).
+
+**Paketens storlek och Velopacks glibc.** Det mesta av varje paket är Electron självt (≈ 265 MB okomprimerat: den
+redan strippade körfilen, `libffmpeg.so`, SwiftShader – Chromiums WebGL utan GPU, som GP:s visualiserare behöver i
+virtuella maskiner – och licenserna). `package-app.mjs` tar bara med Chromiums språkfiler för språken apparna erbjuder
+(`offered` i `build/languages.json`) och bara Velopacks modul för plattformen; GP:s sida laddar kursens bilder och
+filer från `src/GP/content` – där kurs-workern läser dem – i stället för kopior i `dist/assets`
+(`ts/apps/gp/vite.config.ts`, båda byggena listar dem i `repo-files.json`). Komprimeringen: `.deb` med xz
+(`packaging/ts/deb-xz.mjs`, nfpm:s egen xz är sämre), `.rpm` med zstd -19 (rpm 4.14 och senare), Arch-paketet med
+zstd -19 och AppImagen (och därmed Velopacks uppdateringspaket, som bär den) med zstd -19 i block på 1 MiB
+(`packaging/ts/squashfs/mksquashfs`, som `vpk` kör i stället för den riktiga; AppImagens runtime läser zstd, och
+bygget kontrollerar det). `.tar.gz` (hubben) och `.zip`/`Setup.exe` (Windows) behåller sina format.
+Velopacks Linux-modul är byggd mot glibc 2.39 men tar bara de svaga `pidfd_spawnp`/`pidfd_getpid` därifrån;
+`packaging/ts/velopack-glibc.mjs` gör det behovet valfritt (en byte) så att modulen laddas med glibc 2.34–2.38, och
+stoppar bygget om en ny Velopack ser annorlunda ut (testat i `ts/packages/ui/test/VelopackGlibcTests.test.ts`).
+Installationstestet kontrollerar att Velopack verkligen laddas (`packaging/ts/velopack-check.cjs`) – på Ubuntu 22.04
+(glibc 2.35) både `.deb` och AppImage, där Velopack också måste hitta installationen – eftersom appen annars startar
+utan självuppdatering och röktestet inte märker något.
 
 Release-titlarna kommer från `title` i `packaging/products.json` ("Codestead Linux 0.5.1",
 "Codestead hub 0.1.1"), eftersom alla produkter delar repot. Efter varje publicering skriver flödet om
@@ -759,16 +808,24 @@ Var appen kommer ifrån avgör vem som uppdaterar den (huvudprocessen väljer: `
 **Native-paket.** Appen räknas som installerad av pakethanteraren när den körs från `/opt/<id>/` *och*
 `dpkg-query -W`, `rpm -q` eller `pacman -Q` säger att paketet `<id>` är installerat (sökvägen räcker inte). Då:
 
-1. **Den senaste versionen**: hubben läser den ur sin signerade katalog (samma källa som när den inte kan uppdatera
-   sig själv); Codestead Linux och GP ur Velopacks flöde `releases.linux.json` i `<id>-latest` (det AppImagen
-   uppdaterar från).
-2. **Nedladdningen**: paketet för systemet och processorn (bara x64 byggs) och `SHA256SUMS.txt` ur releasen
-   `<id>-v<version>` – bara över HTTPS från `github.com` och GitHubs nedladdningsvärdar (`objects.githubusercontent.com`,
-   `release-assets.githubusercontent.com`). Omdirigeringarna följs en i taget och bara dit (Electrons `net.fetch` kan
-   inte stanna vid dem, så nedladdningen görs med `net.request` och `redirect: "manual"`). Filen hamnar i en ny
-   privat temporär mapp (`mkdtemp`) som tas bort efteråt.
-3. **Kontrollsumman**: paketets SHA-256 måste stå i releasens `SHA256SUMS.txt` och stämma. Saknas den eller
-   stämmer den inte installeras ingenting.
+1. **Den senaste versionen och paketets SHA-256**: ur den signerade katalogen (`catalog.json` och `catalog.json.sig`
+   i releasen `catalog`; `ts/packages/ui/src/electron/SignedCatalog.ts`). Alla tre apparna – hubben, Codestead Linux
+   och GP – hämtar den själva och kontrollerar signaturen mot den publika nyckeln som är inbyggd i appen
+   (`build/catalog-signing.pub.pem`, som i hubben; därför hör filen till Linux och GP:s `paths` också). Hubben använder
+   aldrig katalogen eller nyckeln från `--catalog`/`--public-key` till sin uppdatering (de gäller röktestets
+   verktygslista). En katalog med fel signatur används inte (ingen uppdatering erbjuds); en äldre, återspelad katalog
+   kan bara nämna äldre versioner, och bara en nyare version än appens erbjuds.
+2. **Nedladdningen**: paketet för systemet och processorn (bara x64 byggs) ur releasen `<id>-v<version>` – bara över
+   HTTPS från `github.com` och GitHubs nedladdningsvärdar (`objects.githubusercontent.com`,
+   `release-assets.githubusercontent.com`), katalogen likaså. Omdirigeringarna följs en i taget och bara dit (Electrons
+   `net.fetch` kan inte stanna vid dem, så nedladdningen görs med `net.request` och `redirect: "manual"`). Filen hamnar
+   i en ny privat temporär mapp (`mkdtemp`) som tas bort efteråt.
+3. **Kontrollsumman**: katalogens `nativePackages` måste ha just den filen (`linux-x64`, paketets sort, filnamnet i
+   releasen) för versionen, och den nedladdade filen måste ha dess SHA-256 (och inte vara större). Saknas posten
+   laddas ingenting ner; stämmer summan inte installeras ingenting. Releasens `SHA256SUMS.txt` används inte längre:
+   den är inte signerad, så den skyddar bara mot trasiga nedladdningar, inte mot någon som kan ändra releasens filer –
+   och som reserv skulle den vara precis den väg en angripare valde. En post som saknar `nativePackages` (skriven
+   före 0.2.8/0.6.9/0.2.9) gäller bara versioner som redan är äldre än apparna med den här koden.
 4. **Installationen**, med programmen ur `/usr/bin`, `/usr/sbin`, `/bin` eller `/sbin` (inte ur `PATH`) och filen
    som argument (inget skal): `pkexec apt-get install -y <fil>` (.deb), `pkexec dnf install -y <fil>` – annars
    `zypper --non-interactive install --allow-unsigned-rpm <fil>` eller `rpm -U <fil>` – (.rpm),
@@ -784,13 +841,17 @@ agent found") eller misslyckas pakethanteraren, visar fönstret varför (paketha
 releasesidan i stället. Det finns ingen inställning eller miljövariabel som pekar uppdateringarna någon annanstans.
 
 **Test i docker** (bara hubben har en testkrok: `--smoke-test --self-update-test` kör uppdateringsknappen utan
-fönster, med katalogen från `--catalog`/`--public-key` som i röktestet). `packaging/native-update-test.sh`
-installerar en äldre hubb som paket i en ren container, låter `/etc/hosts` skicka `github.com` och
+fönster). `packaging/native-update-test.sh` installerar en äldre hubb som paket i en ren container och ändrar
+systemet som en angripare i mitten skulle behöva: `/etc/hosts` skickar `github.com` och
 `objects.githubusercontent.com` till en lokal HTTPS-server (`packaging/native-update-server.cjs`, med ett
-engångs-CA som bara containern litar på) och kontrollerar: som root, fel kontrollsumma, en omdirigering bort från
-GitHub, och som vanlig användare med en låtsas-pkexec som skriver upp sina argument (och en gång låtsas att
-lösenordsrutan stängdes). Efter varje fall: paketets installerade version och att hubben startade om som den nya
-versionen. Två byggen med olika version behövs (testet ingår inte i CI: det kräver två byggen av hubben):
+engångs-CA som bara containern litar på), och den inbyggda katalognyckeln i den installerade hubbens `main.cjs` byts
+(som root) mot en engångsnyckel som serverns katalog är signerad med. Appen har ingen växel för någon annan adress
+eller nyckel. Testet kontrollerar: som root, fel SHA-256 i katalogen, en katalog signerad med en annan nyckel, en
+katalog utan paketet, en omdirigering av paketet bort från GitHub, och som vanlig användare med en låtsas-pkexec som
+skriver upp sina argument (och en gång låtsas att lösenordsrutan stängdes). Efter varje fall: paketets installerade
+version och att hubben startade om som den nya versionen. En gammal hubb före 0.2.8 (kontrollsumman ur
+`SHA256SUMS.txt`, katalogen från `--catalog`/`--public-key`) testas med de kontroller den har – så kör CI:s
+`upgrade-native` testet från föregående release. Lokalt med två byggen:
 
 ```bash
 packaging/build-linux.sh ts/apps/hub codestead-hub Codestead Codestead.Hub 0.2.90 /tmp/hub-old
@@ -799,7 +860,125 @@ packaging/native-update-test.sh /tmp/hub-old /tmp/hub-new deb ubuntu:24.04   # e
 ```
 
 (`NATIVE_UPDATE_DOCKER_ARGS="--tmpfs /opt:exec,size=2g --tmpfs /tmp:exec,size=2g"` lägger containerns stora filer i
-minnet där diskutrymmet är knappt.)
+minnet där diskutrymmet är knappt. Som gammal hubb går också föregående releases paket: lägg det ensamt i en mapp.)
+
+### Chromiums sandlåda på Linux
+
+Chromium sandlådar sina processer med användarnamnrymder (user namespaces), eller med den setuid-märkta hjälpen
+`chrome-sandbox`. Ubuntu 23.10 och senare begränsar namnrymderna med AppArmor
+(`kernel.apparmor_restrict_unprivileged_userns=1`): bara program vars AppArmor-profil har regeln `userns` får använda
+dem. Där varken det eller hjälpen fungerar vägrar Chromium starta, så startskriptet `packaging/ts/launcher.sh` (appens
+`<exe>` bredvid Electrons `<exe>.bin`) startar då med `--no-sandbox`. Fönstret behåller Electrons egen isolering
+(`contextIsolation`, ingen `nodeIntegration`), men renderarens och GPU-processens sandlåda saknas.
+
+| Installation | Sandlådan där AppArmor begränsar namnrymderna |
+|---|---|
+| `.deb`, `.rpm`, Arch-paket (`/opt/<id>/`) | Ja: `chrome-sandbox` är setuid root, och paketet installerar AppArmor-profilen `/etc/apparmor.d/<id>`. |
+| Verktyg som hubben installerat (`<datamapp>/tools/<id>/<version>/`), startade av hubben som paket | Ja: verktyget ärver hubbens profil (se nedan). |
+| Samma verktyg, startade av hubben som AppImage eller portabelt arkiv | Bara om användaren slår på det i hubben (profilen `codestead-user-<uid>`), annars `--no-sandbox`. |
+| AppImage (hubben eller ett verktyg) | Nej, `--no-sandbox` (se nedan). |
+
+**Paketen.** `packaging/ts/apparmor-profile` (ifylld av `build-linux.sh`) följer med paketet som
+`/opt/<id>/apparmor-profile`; `packaging/ts/postinstall.sh` kopierar den till `/etc/apparmor.d/<id>` om systemets
+`apparmor_parser` godtar den (en torrkörning med `--skip-kernel-load`) och laddar den med
+`apparmor_parser --replace --write-cache --skip-read-cache` när AppArmor körs (`aa-enabled`), inte i en chroot och
+inte om en administratör har stängt av den med `/etc/apparmor.d/disable/<id>`. Profilen är samma sorts profil som
+Ubuntus egna för Electron-appar (Discord, Obsidian, Slack, VS Code …) och som electron-builders .deb-paket installerar:
+
+```
+abi <abi/4.0>,
+include <tunables/global>
+profile codestead-hub /opt/codestead-hub/Codestead.Hub.bin flags=(unconfined) {
+  userns,
+  include if exists <local/codestead-hub>
+}
+```
+
+Den är inte en paketfil i `/etc/apparmor.d`: AppArmor 3 (Ubuntu 22.04, Debian 12) känner inte till `abi/4.0` och
+`userns` och skulle vägra den vid varje start; där kopieras den inte. `packaging/ts/postremove.sh` laddar ur och tar
+bort den när paketet tas bort, men inte vid en uppgradering (dpkg: `upgrade`, rpm: `%postun 1` – som körs *efter* den
+nya versionens `%post` –, pacman: `post_upgrade`). `chrome-sandbox` görs fortfarande setuid root: den fungerar även där
+namnrymderna är avstängda helt.
+
+**Startskriptet** startar med sandlådan när hjälpen är setuid root, när namnrymderna inte är begränsade (och
+`unshare --user` fungerar), eller när en Codestead-profil gäller för `<exe>.bin`. Det sista avgörs så här:
+
+1. Skriptet kör redan under en `codestead-*`-profil (`/proc/self/attr/current`): det har startats av en Codestead-app
+   med profil. En `exec` av ett program utan egen profil stannar i en `flags=(unconfined)`-profil (kärnans
+   `profile_transition`: "unconfined exec no attachment"), så även Electron gör det.
+2. Annars, bara om `/etc/apparmor.d/<id>` eller `/etc/apparmor.d/codestead-user-<uid>` finns: Electron startas som
+   Node (`ELECTRON_RUN_AS_NODE=1 <exe>.bin -e …`, några hundradelar) och skriver ut sin egen etikett. Profiler knyts till
+   programmets sökväg när det startar, och listan över laddade profiler kan bara root läsa – en profilfil kan dessutom
+   gälla en annan sökväg (paketets profil gäller `/opt/<id>/`, inte en kopia av appen någon annanstans). Därför frågar
+   skriptet den riktiga filen. (Electrons säkring *RunAsNode* måste därför vara på, som den är.)
+
+`ts/packages/ui/test/LauncherTests.test.ts` kör skriptet med `sh` mot ett låtsat system: `/proc` och
+`/etc/apparmor.d` är testets mappar (skriptets två inställningar `proc=` och `apparmor_d=`), `id` och `unshare` är
+låtsasprogram, och Electron ett skript som skriver ut sina argument eller etiketten.
+
+**Hubbens verktyg.** Hubben installerar verktygen per användare, så deras `chrome-sandbox` kan inte vara setuid root.
+Installerad som paket kör hubben under sin profil, och verktygen den startar ärver den: inget mer behövs. Annars
+(AppImage, portabelt arkiv) visar hubben, när namnrymderna är begränsade och minst ett verktyg är installerat, en gång
+**Slå på Chromiums sandlåda för dina verktyg?** (**Inte nu** döljer den för gott; inställningarna har den kvar under
+**Chromiums sandlåda**). **Slå på** kör med pkexec (lösenordsrutan) ett fast skript som root
+(`ts/apps/hub/src/core/SandboxProfile.ts`): `pkexec /bin/sh -c <skript> codestead-sandbox <datamapp> codestead-linux
+Codestead.Linux codestead-gp Codestead.GP`. Ingen skalkod byggs av användarens data; mappen och verktygen är argument
+som skriptet själv kontrollerar:
+
+- användaren tas ur `PKEXEC_UID` (sätts av pkexec, inte av den som anropar);
+- mappen måste vara en absolut, verklig sökväg (inga länkar, `.`, `..`, `//`) med bara `A–Z a–z 0–9 . _ - /` (inget som
+  AppArmor läser som mönster, variabel eller citat), ligga i användarens hemmapp (`getent passwd`), och varje mapp från
+  hemmappen till den måste ägas av användaren och inte vara skrivbar för andra;
+- verktygen måste heta `codestead-…` och `Codestead.…`.
+
+Skriptet skriver själv profilen `/etc/apparmor.d/codestead-user-<uid>`, provar den med `apparmor_parser
+--skip-kernel-load` och installerar och laddar den först sedan:
+
+```
+profile codestead-user-1000 /home/anna/.local/share/codestead/tools/{codestead-linux/[0-9]*/Codestead.Linux.bin,codestead-gp/[0-9]*/Codestead.GP.bin} flags=(unconfined) {
+  userns,
+  include if exists <local/codestead-user-1000>
+}
+```
+
+Hubben räknar ut samma text (`userProfileText`) och visar sandlådan som på när filen är just den; ändras datamappen
+eller verktygslistan erbjuds den igen. Verktygens nya startskript (Codestead Linux 0.6.9, GP 0.2.9) behövs för att de
+ska använda den; äldre startar med `--no-sandbox` som förut. Ta bort profilen för hand:
+`sudo apparmor_parser -R /etc/apparmor.d/codestead-user-<uid> && sudo rm /etc/apparmor.d/codestead-user-<uid>`.
+
+**Säkerhet.** Begränsningen är en härdning: den minskar hur mycket av kärnan (namnrymdernas kod, som många
+kärnexploits går genom) som oprivilegierad kod kommer åt. Varje `userns`-profil öppnar den igen för det programmet:
+
+- Användarens profil gäller en mapp som användaren själv kan skriva i. Vilket program som helst som kör som den
+  användaren kan lägga ett annat program där och få namnrymder, så **för den användaren är begränsningen i praktiken
+  avstängd** (för andra användare inte: skriptet vägrar mappar som andra kan skriva i, utanför hemmappen eller via
+  länkar).
+- Men det gäller i stort sett redan varje `userns`-profil för ett dynamiskt länkat program, också paketets
+  `/opt/<id>/<exe>.bin`, som root äger: `LD_PRELOAD=egen.so /opt/codestead-hub/Codestead.Hub.bin` (eller
+  `ELECTRON_RUN_AS_NODE=1 … -e "require('child_process')…"`, eftersom program som startas ärver profilen) ger vem som
+  helst som kan starta programmet namnrymder. Det är samma sak som Qualys visade med Ubuntus egna profiler 2025, och
+  Ubuntu behandlar begränsningen som härdning och profilerna som sättet att låta appar som behöver namnrymder få dem.
+- Därför: paketets profil är det Ubuntu själv gör för Electron-appar. Användarens profil ger samma sak för en
+  användare, i utbyte mot Chromiums sandlåda (som skyddar mot det mer sannolika: en sårbarhet i renderaren eller
+  GPU-processen, t.ex. via shaders eller innehåll som verktygen visar). Den kräver en administratörs lösenord och ett
+  aktivt val, och den säkrare vägen – hubben som paket, som inte behöver någon profil för användarens mapp – står i
+  erbjudandet. En profil som bara gäller filer med ett visst xattr (`security.*`, som bara root kan sätta) vore inte säkrare, eftersom
+  `LD_PRELOAD` fungerar likadant mot den riktiga filen, och skulle kräva att root ändrar filer i användarens mappar.
+- Kod som redan kör som användaren kan ändå visa en falsk lösenordsruta eller ändra hubben (AppImagen är användarens
+  fil), så pkexec-steget skyddar mot felaktig indata och mot andra användare, inte mot skadlig kod som redan kör som
+  användaren.
+
+**AppImagen** monteras på en slumpmässig `/tmp/.mount_*`-sökväg (eller packas upp i `/tmp`), som alla användare kan
+skapa: en profil för den skulle stänga av begränsningen för alla. Den startar därför utan sandlåda där namnrymderna
+är begränsade; installera paketet för att få sandlådan.
+
+**Prova.** `npx vitest run apps/hub/test/SandboxProfileTests.test.ts packages/ui/test/LauncherTests.test.ts` (i `ts/`)
+provar texten, sökvägarna, när hubben erbjuder sandlådan och rootskriptet självt (med `sh`, en låtsas-`apparmor_parser`
+och en temporär mapp för `/etc/apparmor.d`); där AppArmor 4:s `apparmor_parser` finns (Ubuntu 24.04, CI) granskar den
+även båda profilerna. `packaging/install-test.sh` kontrollerar att paketen lägger profilen i `/etc/apparmor.d` på Ubuntu
+24.04 men inte på 22.04 och tar bort den igen. Att kärnan laddar profilen och att appen då verkligen kör med sandlådan
+går inte att prova i docker (containrar har ingen egen AppArmor): det görs för hand på ett riktigt Ubuntu 24.04
+([RELEASE-CHECKLIST.md](RELEASE-CHECKLIST.md)).
 
 ### Secrets i det här repot
 
@@ -808,7 +987,8 @@ minnet där diskutrymmet är knappt.)
 
 ### Signeringsnyckel för katalogen
 
-Hubben litar bara på en katalog som är signerad med rätt nyckel (ECDSA P-256). Skapa nyckelparet en
+Hubben litar bara på en katalog som är signerad med rätt nyckel (ECDSA P-256), och apparna (hubben, Codestead Linux och
+GP) installerade som native-paket uppdaterar sig bara efter en sådan katalog. Skapa nyckelparet en
 gång, på din egen dator (Git Bash på Windows har `openssl`):
 
 ```bash
@@ -819,7 +999,7 @@ openssl ecparam -name prime256v1 -genkey -noout -out catalog-signing.pem
 openssl ec -in catalog-signing.pem -pubout -out build/catalog-signing.pub.pem
 ```
 
-1. Committa `build/catalog-signing.pub.pem` (den publika nyckeln byggs in i hubben).
+1. Committa `build/catalog-signing.pub.pem` (den publika nyckeln byggs in i alla tre apparna).
 2. Lägg hela innehållet i `catalog-signing.pem` som secret `CATALOG_SIGNING_KEY`
    (Settings → Secrets and variables → Actions).
 3. Spara `catalog-signing.pem` säkert utanför repot, t.ex. i en lösenordshanterare. Committa den aldrig.
@@ -828,8 +1008,8 @@ Release-flödet kontrollerar att nyckeln och den publika nyckeln hör ihop innan
 
 #### Lokalt
 
-Linux (kräver Node 22 och `npm ci` i `ts/`, [nfpm](https://nfpm.goreleaser.com), `mksquashfs` och
-`dotnet tool install -g vpk --version 1.2.161`, som behöver .NET):
+Linux (kräver Node 22 och `npm ci` i `ts/`, [nfpm](https://nfpm.goreleaser.com), `mksquashfs` 4.4 eller senare,
+`xz`, `zstd` och `dotnet tool install -g vpk --version 1.2.161`, som behöver .NET):
 
 ```bash
 packaging/build-linux.sh ts/apps/linux codestead-linux "Codestead Linux" Codestead.Linux 0.6.0

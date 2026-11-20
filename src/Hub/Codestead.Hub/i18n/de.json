@@ -70,5 +70,16 @@
   "tray.show": "Codestead anzeigen",
   "tray.open": "{name} öffnen",
   "tray.quit": "Beenden",
-  "tool.autoUpdated": "{name} wurde auf {version} aktualisiert"
+  "tool.autoUpdated": "{name} wurde auf {version} aktualisiert",
+  "sandbox.title": "Chromiums Sandbox für deine Werkzeuge einschalten?",
+  "sandbox.text": "Ubuntu lässt nur Programme mit einem AppArmor-Profil die User-Namespaces nutzen, die Chromiums Sandbox braucht – deshalb laufen deine Codestead-Werkzeuge ohne Sandbox. Der Hub kann ein Profil für die Werkzeuge in seinem Ordner hinzufügen; dein System fragt dabei nach deinem Passwort. (Als .deb-Paket installiert braucht der Hub kein solches Profil.)",
+  "sandbox.enable": "Einschalten",
+  "sandbox.later": "Nicht jetzt",
+  "sandbox.working": "Sandbox wird eingeschaltet – dein System fragt nach deinem Passwort …",
+  "sandbox.done": "Chromiums Sandbox ist eingeschaltet: Deine Werkzeuge nutzen sie ab ihrem nächsten Start.",
+  "sandbox.failed": "Chromiums Sandbox wurde nicht eingeschaltet: {error}",
+  "settings.sandbox": "Chromiums Sandbox",
+  "settings.sandboxOff": "Deine Werkzeuge laufen ohne Chromiums Sandbox, weil Ubuntu die User-Namespaces einschränkt, die sie braucht. Ein AppArmor-Profil für die Werkzeuge im Ordner des Hubs schaltet sie ein.",
+  "settings.sandboxOn": "Eingeschaltet: Ein AppArmor-Profil lässt deine Werkzeuge Chromiums Sandbox nutzen.",
+  "settings.sandboxEnable": "Einschalten (fragt nach deinem Passwort)"
 }

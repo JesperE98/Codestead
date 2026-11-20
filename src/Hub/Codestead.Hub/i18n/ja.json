@@ -70,5 +70,16 @@
   "tray.show": "Codestead を表示",
   "tray.open": "{name} を開く",
   "tray.quit": "終了",
-  "tool.autoUpdated": "{name} を {version} に更新しました"
+  "tool.autoUpdated": "{name} を {version} に更新しました",
+  "sandbox.title": "ツールで Chromium のサンドボックスを有効にしますか？",
+  "sandbox.text": "Ubuntu では、Chromium のサンドボックスに必要なユーザー名前空間を使えるのは AppArmor プロファイルを持つプログラムだけです。そのため、Codestead のツールはサンドボックスなしで動いています。ハブは自分のフォルダー内のツール用にプロファイルを追加できます（システムがパスワードを求めます）。（.deb パッケージとしてインストールしたハブには、このプロファイルは不要です。）",
+  "sandbox.enable": "有効にする",
+  "sandbox.later": "後で",
+  "sandbox.working": "サンドボックスを有効にしています。システムがパスワードを求めます…",
+  "sandbox.done": "Chromium のサンドボックスを有効にしました。ツールは次回の起動から使用します。",
+  "sandbox.failed": "Chromium のサンドボックスを有効にできませんでした：{error}",
+  "settings.sandbox": "Chromium のサンドボックス",
+  "settings.sandboxOff": "Ubuntu が必要なユーザー名前空間を制限しているため、ツールは Chromium のサンドボックスなしで動いています。ハブのフォルダー内のツール用の AppArmor プロファイルで有効になります。",
+  "settings.sandboxOn": "有効：AppArmor プロファイルにより、ツールが Chromium のサンドボックスを使用できます。",
+  "settings.sandboxEnable": "有効にする（パスワードが必要です）"
 }

@@ -83,9 +83,9 @@ En back buffer som lämnats till swap chainen är i tillståndet `PRESENT`; för
 :::
 
 ```quiz
-Efter perspektivdivisionen har ett av en triangels hörn x = 1.5; de två andra ligger en bra bit inne i fönstret. Vad ser du?
+Efter perspektivdivisionen har ett av en triangels hörn x = 1,5; de två andra ligger en bra bit inne i fönstret. Vad ser du?
 - [x] Den del av triangeln som ligger inuti vyvolymen; resten klipps vid fönstrets högra kant
-- [ ] Hela triangeln, ihoptryckt så att x = 1.5 hamnar vid fönstrets högra kant
+- [ ] Hela triangeln, ihoptryckt så att x = 1,5 hamnar vid fönstrets högra kant
 - [ ] Hela triangeln; hörnet utanför fönstret ritas bortom dess kant
 - [ ] Ingenting: en triangel med en vertex utanför vyvolymen kastas
 ---
@@ -240,7 +240,7 @@ Om programmet inte anropade `stbi_set_flip_vertically_on_load(true)` skulle låd
 - [ ] stb_image läser in bilder spegelvända, i alla API:er
 - [ ] Vertex shadern vänder y eftersom OpenGL:s NDC har y nedåt
 - [ ] Texturens wrapping-läge `GL_REPEAT` vänder på bilden
-- [x] OpenGL lägger texturkoordinat 0.0 på y-axeln vid datans första rad, som den behandlar som bildens nederkant, medan bildfiler lagrar den översta raden först
+- [x] OpenGL lägger texturkoordinat 0,0 på y-axeln vid datans första rad, som den behandlar som bildens nederkant, medan bildfiler lagrar den översta raden först
 ---
 `glTexImage2D` tar datans första rad som texturens nederkant (t = 0). Bildfiler börjar med den översta raden, så utan vändningen kommer bilden upp och ned.
 ```
@@ -319,7 +319,7 @@ Djuptestningen är på, men programmet glömmer att rensa djupbufferten i börja
 - [ ] Scenen ritas utan djuptestning
 - [ ] Ingenting ändras: varje fragment skriver ändå över djupbufferten
 ---
-Rensningen sätter varje djup till 1.0, fjärrplanet, så att det första fragmentet på en pixel alltid klarar testet. Utan den döljer de gamla värdena den här bildrutans fragment överallt där de inte ligger närmare än förut.
+Rensningen sätter varje djup till 1,0, fjärrplanet, så att det första fragmentet på en pixel alltid klarar testet. Utan den döljer de gamla värdena den här bildrutans fragment överallt där de inte ligger närmare än förut.
 ```
 
 ```quiz

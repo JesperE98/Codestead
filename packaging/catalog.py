@@ -5,16 +5,27 @@ Usage:
   packaging/catalog.py --catalog catalog.json --id codestead-linux --name "Codestead Linux" \
       --version 0.4.0 --notes-url URL --description-file src/Linux/description.json \
       --changelog-file src/Linux/changelog.json \
-      --asset linux-x64=FILE=URL=EXECUTABLE [--asset win-x64=FILE=URL=EXECUTABLE ...]
+      --asset linux-x64=FILE=URL=EXECUTABLE [--asset win-x64=FILE=URL=EXECUTABLE ...] \
+      --native-package linux-x64=deb=FILE [--native-package linux-x64=rpm=FILE ...]
 
 The catalog file is created if it does not exist. Sizes and SHA-256 sums are computed from the files.
+
+"nativePackages" (the .deb, .rpm and Arch packages of the version, by runtime id and kind: file name, SHA-256, size) is
+what an app installed as such a package checks its update against (ts/packages/ui/src/electron/SignedCatalog.ts): the
+catalog is signed, the release's SHA256SUMS.txt is not. The file names are the ones in the release <id>-v<version>.
+The catalog only grows: released hubs ignore properties they do not know (as the C# hub's System.Text.Json did), so
+new properties may be added to a tool, but the existing ones must keep their names, types and meaning.
 """
 import argparse
 import datetime
 import hashlib
 import json
 import os
+import re
 import sys
+
+# The kinds of native package the apps can update themselves from (NativePackageKind in NativePackageUpdate.ts).
+NATIVE_KINDS = ("deb", "rpm", "arch")
 
 
 def sha256(path):
@@ -35,6 +46,8 @@ def main():
     p.add_argument("--description-file", required=True)
     p.add_argument("--changelog-file", help="src/<App>/changelog.json: the latest versions' changes are shown by the hub")
     p.add_argument("--asset", action="append", default=[], help="RID=FILE=URL=EXECUTABLE")
+    p.add_argument("--native-package", action="append", default=[],
+                   help="RID=KIND=FILE: a native package of the version (KIND: deb, rpm or arch), named as in its release")
     a = p.parse_args()
 
     catalog = {"schema": 1, "generated": "", "tools": []}
@@ -51,7 +64,21 @@ def main():
         rid, path, url, exe = spec.split("=", 3)
         assets[rid] = {"url": url, "sha256": sha256(path), "size": os.path.getsize(path), "executable": exe}
 
+    native = {}
+    for spec in a.native_package:
+        rid, kind, path = spec.split("=", 2)
+        if kind not in NATIVE_KINDS:
+            sys.exit(f"--native-package {spec}: the kind must be one of {', '.join(NATIVE_KINDS)}")
+        name = os.path.basename(path)
+        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._+-]*", name) or ".." in name:
+            sys.exit(f"--native-package {spec}: not a plain file name")
+        if os.path.getsize(path) <= 0:
+            sys.exit(f"--native-package {spec}: the file is empty")
+        native.setdefault(rid, {})[kind] = {"file": name, "sha256": sha256(path), "size": os.path.getsize(path)}
+
     tool = {"id": a.id, "name": a.name, "description": description, "version": a.version, "assets": assets}
+    if native:
+        tool["nativePackages"] = native
     if a.notes_url:
         tool["releaseNotesUrl"] = a.notes_url
     if a.changelog_file:
@@ -69,7 +96,8 @@ def main():
     with open(a.catalog, "w", encoding="utf-8") as f:
         json.dump(catalog, f, ensure_ascii=False, indent=2)
         f.write("\n")
-    print(f"{a.catalog}: {a.id} {a.version} ({', '.join(assets) or 'no assets'})")
+    packages = [f"{rid} {kind}" for rid, kinds in native.items() for kind in kinds]
+    print(f"{a.catalog}: {a.id} {a.version} ({', '.join(assets) or 'no assets'}; native packages: {', '.join(packages) or 'none'})")
 
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 // The tables of CORE-MATH's sin, cos, tan, asin, acos, atan and atan2 (src/binary64/<function>/<function>.c and
 // atan2/tint.h of https://gitlab.inria.fr/core-math/core-math, taken from its GitHub mirror
-// https://github.com/nak5124/core-math, commit 018fa97cbdacf59924b899a9dfa422d532cb2bb7), extracted from the C sources
+// https://github.com/nak5124/core-math, commit 018fa97cbdacf59924b899a9dfa422d532cb2bb7;
+// the same commit is in the official repository, checked 2026-11-20, so the files are the official ones), extracted from the C sources
 // by a script: doubles parsed exactly from their hexadecimal form and printed in the shortest decimal form that reads
 // back as the same double, 64- and 128-bit integers as bigints, dint64_t/tint_t structures split into arrays.
 // Used by libm-coremath.ts.

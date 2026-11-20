@@ -4,7 +4,8 @@
 // solution written into the folder and Check my code again (the steps ticked), the solution window opened and closed
 // with ✕ and with Escape, the expected-result picture drawn; everything saved in the C# app's files; the Render
 // Pipeline Visualizer's scenes in Hello Triangle (live with WebGL – SwiftShader –, stepped, at most two WebGL contexts
-// while scrolling; the still pictures without WebGL); --smoke-test and --version.
+// while scrolling; the overview's stages lead to the scene of another chapter; the still pictures without WebGL);
+// --smoke-test and --version.
 //
 //   npm run test:e2e            (in ts/apps/gp; set E2E_SKIP_BUILD=1 to use the last build)
 //
@@ -274,6 +275,19 @@ describe("Codestead GP (Electron)", () => {
         }
         expect(most).toBeGreaterThan(0);
         expect(most).toBeLessThanOrEqual(2);
+        // The overview's stages lead to the scene of the course that shows them (Depth test: in Depth testing); a stage no
+        // scene shows is no link.
+        const overview = page.locator(`.cs-viz[data-scene="pipeline"]`);
+        await overview.scrollIntoViewIfNeeded();
+        await sceneIs(page, "pipeline", "state", "live");
+        expect(await overview.locator(".cs-viz-host button.ov-chip:disabled").count()).toBeGreaterThan(0);
+        await overview.getByRole("button", { name: t("viz.step", { n: 4, total: 4 }) }).click();
+        await sceneIs(page, "pipeline", "step", "4");
+        await overview.getByRole("button", { name: /^Depth test/ }).click();
+        await page.getByRole("heading", { name: "Depth testing" }).first().waitFor();
+        await page.waitForFunction(() => (document.activeElement as HTMLElement | null)?.dataset["scene"] === "depth", null);
+        await sceneIs(page, "depth", "state", "live");
+        await shot(page, "10-scene-link");
         // Leaving the chapter frees them all.
         await page.locator(".cs-sidebar button.nav-item").getByText("Textures", { exact: true }).click();
         await page.getByRole("heading", { name: "Textures" }).first().waitFor();
@@ -291,8 +305,15 @@ describe("Codestead GP (Electron)", () => {
         await first.scrollIntoViewIfNeeded();
         await sceneIs(page, scenes[0]!, "state", "fallback");
         expect(await first.locator("img").getAttribute("src")).toContain(`viz-${scenes[0]}`);
+        // The picture is the course's own file in src/GP/content (the build copies none into dist/assets: vite.config.ts),
+        // and the page may load it from there.
+        expect(await first.locator("img").getAttribute("src")).toMatch(/\/src\/GP\/content\/images\//);
+        await page.waitForFunction((scene) => {
+          const img = document.querySelector<HTMLImageElement>(`.cs-viz[data-scene="${scene}"] img`);
+          return img !== null && img.complete && img.naturalWidth > 0;
+        }, scenes[0]!);
         expect(await contexts(page)).toBe(0);
-        await shot(page, "10-scene-fallback");
+        await shot(page, "11-scene-fallback");
       } finally {
         await app.close();
       }

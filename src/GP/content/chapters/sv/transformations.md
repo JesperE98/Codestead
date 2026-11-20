@@ -172,7 +172,7 @@ här ser det ut med två enhetsvektorer (du kan kontrollera att båda har längd
 |  0   |   | 0 |
 ```
 
-För att få vinkeln mellan de två enhetsvektorerna använder vi inversen till cosinus, cos⁻¹ (acos), vilket ger 143.1
+För att få vinkeln mellan de två enhetsvektorerna använder vi inversen till cosinus, cos⁻¹ (acos), vilket ger 143,1
 grader. Vi har nu räknat ut vinkeln mellan de två vektorerna. Skalärprodukter visar sig vara mycket användbara i
 ljusberäkningar längre fram.
 
@@ -355,7 +355,7 @@ När vi skalar en vektor ökar vi pilens längd med den faktor vi vill skala med
 Eftersom vi arbetar i 2 eller 3 dimensioner kan vi definiera skalning med en vektor av 2 eller 3 skalningsvariabler,
 som var och en skalar en axel (x, y eller z).
 
-Låt oss skala vektorn v = (3, 2). Vi skalar vektorn längs x-axeln med 0.5, vilket gör den hälften så bred, och längs
+Låt oss skala vektorn v = (3, 2). Vi skalar vektorn längs x-axeln med 0,5, vilket gör den hälften så bred, och längs
 y-axeln med 2, vilket gör den dubbelt så hög: resultatet är (1.5, 4).
 
 Kom ihåg att grafik-API:er oftast arbetar i 3D, så i 2D-fall kan vi sätta z-axelns skalning till 1 och lämna den
@@ -401,7 +401,7 @@ ursprungliga värden (kom ihåg reglerna för matrismultiplikation). Det hade in
 ### Homogena koordinater
 
 En vektors w-komponent kallas också en *homogen koordinat*. För att få 3D-vektorn ur en homogen vektor dividerar vi
-x-, y- och z-koordinaten med w-koordinaten. Det märker vi oftast inte, eftersom w-komponenten för det mesta är 1.0.
+x-, y- och z-koordinaten med w-koordinaten. Det märker vi oftast inte, eftersom w-komponenten för det mesta är 1,0.
 Homogena koordinater har flera fördelar: de låter oss göra translationer med matriser på 3D-vektorer (utan
 w-komponent kan vi inte translatera vektorer), och i nästa kapitel använder vi w-värdet för att skapa perspektiv i
 3D.
@@ -412,16 +412,16 @@ pil någon annanstans ändrar inte vart den pekar.
 
 Du har redan stött på den homogena koordinaten i dina vertex shaders.
 :::opengl
-`gl_Position = vec4(aPos, 1.0);` gör om positionen med 3 komponenter till en med 4 komponenter och w = 1.0: en punkt,
+`gl_Position = vec4(aPos, 1.0);` gör om positionen med 3 komponenter till en med 4 komponenter och w = 1,0: en punkt,
 som en translation kommer att flytta.
 :::
 :::vulkan
-`gl_Position = vec4(inPosition, 1.0);` gör om positionen med 3 komponenter till en med 4 komponenter och w = 1.0: en
+`gl_Position = vec4(inPosition, 1.0);` gör om positionen med 3 komponenter till en med 4 komponenter och w = 1,0: en
 punkt, som en translation kommer att flytta.
 :::
 :::d3d12
 `VSMain` tar en `float4 position : POSITION` fast vertexbufferten bara innehåller tre floats per position; input
-assemblern fyller i det saknade w med 1.0. Varje vertex kommer alltså fram som en punkt, som en translation kommer
+assemblern fyller i det saknade w med 1,0. Varje vertex kommer alltså fram som en punkt, som en translation kommer
 att flytta.
 :::
 
@@ -450,8 +450,8 @@ vinkel i grader   = vinkel i radianer · (180 / π)
 vinkel i radianer = vinkel i grader · (π / 180)
 ```
 
-där π är (avrundat) 3.14159265359. Att rotera ett halvt varv är att rotera 360/2 = 180 grader, och att rotera en
-femtedel åt höger betyder att vi roterar 360/5 = 72 grader åt höger. Ett kvarts varv, 90 grader, är π/2 ≈ 1.5708
+där π är (avrundat) 3,14159265359. Att rotera ett halvt varv är att rotera 360/2 = 180 grader, och att rotera en
+femtedel åt höger betyder att vi roterar 360/5 = 72 grader åt höger. Ett kvarts varv, 90 grader, är π/2 ≈ 1,5708
 radianer.
 
 Rotationer i 3D anges med en vinkel **och** en *rotationsaxel*. Objektet roteras med den angivna vinkeln kring den
@@ -555,7 +555,7 @@ Om vi tillämpar den slutliga transformationsmatrisen på vår vektor får vi f�
 Utmärkt! Vektorn skalas först med två och translateras sedan med (1, 2, 3). I allmänhet sätts en modells matris
 samman som M = T · R · S: vertices skalas, roteras och translateras sedan.
 
-![M = T · R · S, steg för steg](images/transform-steps.webp "M = T · R · S tillämpad på lådan: matrisen närmast vertexen verkar först – skala med 0.5, rotera ett kvarts varv, flytta sedan med (0.5, −0.5).")
+![M = T · R · S, steg för steg](images/transform-steps.webp "M = T · R · S tillämpad på lådan: matrisen närmast vertexen verkar först – skala med 0,5, rotera ett kvarts varv, flytta sedan med (0.5, −0.5).")
 
 ```quiz
 M = Trans · Scale, där Scale skalar med 2 och Trans translaterar med (1, 2, 3). Vad är M · (1, 1, 1, 1)?
@@ -608,7 +608,7 @@ transformationsmatriser, och `type_ptr.hpp` har `glm::value_ptr`, som vi behöve
 OpenGL.
 
 Låt oss se om vi kan använda våra kunskaper om transformationer genom att translatera vektorn (1, 0, 0) med (1, 1, 0)
-(observera att vi definierar den som en `glm::vec4` med den homogena koordinaten satt till 1.0). Det här är bara ett
+(observera att vi definierar den som en `glm::vec4` med den homogena koordinaten satt till 1,0). Det här är bara ett
 exempel, inte en del av projektet:
 
 ```cpp
@@ -620,7 +620,7 @@ std::cout << vec.x << vec.y << vec.z << std::endl;
 ```
 
 Först definierar vi en vektor `vec` med GLM:s inbyggda vektorklass. Sedan definierar vi en `mat4` och initierar den
-uttryckligen till identitetsmatrisen genom att sätta diagonalen till 1.0; om vi inte initierar den till
+uttryckligen till identitetsmatrisen genom att sätta diagonalen till 1,0; om vi inte initierar den till
 identitetsmatrisen blir den en nollmatris (alla element 0), och alla efterföljande matrisoperationer blir också en
 nollmatris (sedan GLM 0.9.9 är matriser inte längre identitetsmatrisen som standard).
 
@@ -655,7 +655,7 @@ bygger transformationsmatriser:
 matris. Vi kopierar i stället matrisen till en struct, så vi behöver den inte.)
 
 Låt oss se om vi kan använda våra kunskaper om transformationer genom att translatera vektorn (1, 0, 0) med (1, 1, 0)
-(observera att vi definierar den som en `glm::vec4` med den homogena koordinaten satt till 1.0). Det här är bara ett
+(observera att vi definierar den som en `glm::vec4` med den homogena koordinaten satt till 1,0). Det här är bara ett
 exempel, inte en del av projektet:
 
 ```cpp
@@ -667,7 +667,7 @@ std::cout << vec.x << vec.y << vec.z << std::endl;
 ```
 
 Först definierar vi en vektor `vec` med GLM:s inbyggda vektorklass. Sedan definierar vi en `mat4` och initierar den
-uttryckligen till identitetsmatrisen genom att sätta diagonalen till 1.0; om vi inte initierar den till
+uttryckligen till identitetsmatrisen genom att sätta diagonalen till 1,0; om vi inte initierar den till
 identitetsmatrisen blir den en nollmatris (alla element 0), och alla efterföljande matrisoperationer blir också en
 nollmatris (sedan GLM 0.9.9 är matriser inte längre identitetsmatrisen som standard).
 
@@ -722,7 +722,7 @@ translatera", läst från höger till vänster) blir alltså `XMMatrixScaling(�
 DirectXMath – och det läses från **vänster till höger**: v · S · T skalar först v och translaterar den sedan. Den
 ordning du skriver en DirectXMath-produkt i är den ordning stegen sker i.
 
-Låt oss prova genom att translatera vektorn (1, 0, 0) med (1, 1, 0) (observera att den homogena koordinaten är 1.0).
+Låt oss prova genom att translatera vektorn (1, 0, 0) med (1, 1, 0) (observera att den homogena koordinaten är 1,0).
 Det här är bara ett exempel, inte en del av projektet:
 
 ```cpp
@@ -859,7 +859,7 @@ Först skapar vi transformationsmatrisen i renderingsloopen, efter `ourShader.us
         transform = glm::scale(transform, glm::vec3(0.5f, 0.5f, 0.5f));
 ```
 
-Först skalar vi lådan med 0.5 längs varje axel och sedan roterar vi den 90 grader kring z-axeln. GLM vill ha vinklar
+Först skalar vi lådan med 0,5 längs varje axel och sedan roterar vi den 90 grader kring z-axeln. GLM vill ha vinklar
 i radianer, så vi räknar om graderna till radianer med `glm::radians`. Observera att den texturerade rektangeln ligger
 i XY-planet, så vi vill rotera kring z-axeln. Tänk på att axeln vi roterar kring ska vara en enhetsvektor, så
 normalisera vektorn först om du inte roterar kring X-, Y- eller Z-axeln. Eftersom varje GLM-anrop multiplicerar från
@@ -990,7 +990,7 @@ ritningen:
         vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
 ```
 
-Först skalar vi lådan med 0.5 längs varje axel och sedan roterar vi den 90 grader kring z-axeln. GLM vill ha vinklar
+Först skalar vi lådan med 0,5 längs varje axel och sedan roterar vi den 90 grader kring z-axeln. GLM vill ha vinklar
 i radianer, så vi räknar om graderna till radianer med `glm::radians`. Rektangeln ligger i XY-planet, så vi roterar
 kring z-axeln; tänk på att axeln ska vara en enhetsvektor. Eftersom varje GLM-anrop multiplicerar från höger är
 `transform` R · S, som skalar först och roterar sedan – läs anropen nerifrån och upp.
@@ -1146,7 +1146,7 @@ För att rotera lådan över tid måste vi uppdatera transformationsmatrisen i r
 ```
 
 `glfwGetTime()` returnerar antalet sekunder sedan GLFW initierades, och vi använder det direkt som vinkel i
-radianer: ett helt varv var 2π ≈ 6.3 sekund.
+radianer: ett helt varv var 2π ≈ 6,3 sekund.
 
 Tänk på att vi i förra fallet kunde deklarera transformationsmatrisen var som helst, men nu måste vi skapa den i
 varje iteration för att hela tiden uppdatera rotationen. Det betyder att vi måste skapa transformationsmatrisen på
@@ -1168,7 +1168,7 @@ Gör nu uppgiften **translate-rotate**: ersätt rotations- och skalningsraderna 
 ```
 
 `glfwGetTime()` returnerar antalet sekunder sedan GLFW initierades (learnopengl använder den också), och vi använder
-det direkt som vinkel i radianer: ett helt varv var 2π ≈ 6.3 sekund. `recordCommandBuffer()` körs varje bildruta, så
+det direkt som vinkel i radianer: ett helt varv var 2π ≈ 6,3 sekund. `recordCommandBuffer()` körs varje bildruta, så
 tiden läses på nytt varje bildruta och matrisen som pushas ändras med den.
 
 Här roterar vi först lådan kring origo (0, 0, 0), och när den har roterats translaterar vi den roterade versionen
@@ -1196,7 +1196,7 @@ Vårt D3D12-program har ingen GLFW, så det mäter tiden själv med `std::chrono
 ```
 
 `startTime` är `static`, så den sätts en gång, i den första bildrutan; `time` är antalet sekunder sedan dess, och vi
-använder det direkt som vinkel i radianer: ett helt varv var 2π ≈ 6.3 sekund. `PopulateCommandList()` körs varje
+använder det direkt som vinkel i radianer: ett helt varv var 2π ≈ 6,3 sekund. `PopulateCommandList()` körs varje
 bildruta, så matrisen byggs om varje bildruta.
 
 Här roterar vi först lådan kring origo (0, 0, 0), och när den har roterats translaterar vi den roterade versionen

@@ -245,7 +245,7 @@ På en bildruta flyttas bollen några pixlar på en gång, så den hamnar oftast
 ## I spelet
 
 Bollens tal är learnopengls: en starthastighet på (100, −350) – uppåt (y pekar nedåt i spelets koordinater) och lite
-åt höger – och en radie på 12.5 pixlar:
+åt höger – och en radie på 12,5 pixlar:
 
 :::opengl vulkan
 ```cpp
@@ -408,19 +408,19 @@ Om användaren trycker på mellanslag sätts bollens `Stuck` till false. Observe
 tillsammans med racketens så länge bollen sitter fast.
 
 Gör nu uppgiften **launch**. Kom ihåg kursens fasta indata (Förberedelser): ingen trycker på A eller D, och mellanslag
-trycks ned en gång, vid 0.5 s – bildruta 30 – och släpps vid 0.55 s. Under en halv sekund ligger bollen alltså på
+trycks ned en gång, vid 0,5 s – bildruta 30 – och släpps vid 0,55 s. Under en halv sekund ligger bollen alltså på
 racketen; i bildruta 30 sätter `ProcessInput` `Stuck = false`, och samma bildrutas `Update` flyttar den för första
-gången, med (100, −350) × 1/60. Bygg och kör: bilden visar **1.0 s** – bildruta 60 –, och **bollen flyger uppåt åt
+gången, med (100, −350) × 1/60. Bygg och kör: bilden visar **1,0 s** – bildruta 60 –, och **bollen flyger uppåt åt
 höger**, på (439.17, 374.17), med den tomma racketen under sig.
 
 ```quiz
-Bollen släpps i bildruta 30 och flyttas med `INITIAL_BALL_VELOCITY / 60` i varje bildruta från och med då, bildruta 30 inräknad. Var ligger dess övre vänstra hörn i bildruta 60 (bilden vid 1.0 s)?
+Bollen släpps i bildruta 30 och flyttas med `INITIAL_BALL_VELOCITY / 60` i varje bildruta från och med då, bildruta 30 inräknad. Var ligger dess övre vänstra hörn i bildruta 60 (bilden vid 1,0 s)?
 - [ ] På (387.5, 555): bollen sitter fortfarande fast
 - [ ] På (437.5, 380): 30 bildrutors rörelse
 - [x] På ungefär (439.17, 374.17): 31 bildrutors rörelse (bildrutorna 30 till 60), 31 × (100, −350) / 60 från (387.5, 555)
 - [ ] På (487.5, 205): en sekunds rörelse
 ---
-31 × 100 / 60 ≈ 51.67 och 31 × 350 / 60 ≈ 180.83. Eftersom kursens tid är fast, 1/60 per bildruta, är positionen densamma i alla API:er och med alla drivrutiner – och i learnopengls program med en riktig klocka skulle den bli ungefär densamma.
+31 × 100 / 60 ≈ 51,67 och 31 × 350 / 60 ≈ 180,83. Eftersom kursens tid är fast, 1/60 per bildruta, är positionen densamma i alla API:er och med alla drivrutiner – och i learnopengls program med en riktig klocka skulle den bli ungefär densamma.
 ```
 
 Bollen flyger rakt igenom blocken: ingenting kontrollerar kollisioner ännu. Kör projektet lite längre i huvudet, så når

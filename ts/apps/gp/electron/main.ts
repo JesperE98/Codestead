@@ -12,12 +12,10 @@ import {
   appSelfUpdate,
   detectNativeInstall,
   electronGet,
-  latestFromVelopackFeed,
   launcherOf,
   type NativeInstall,
   runVelopackHooks,
   serveSelfUpdate,
-  updateFeedUrl,
 } from "@codestead/ui/electron-main";
 import iconDataUrl from "../../../../src/GP/Codestead.GP/Assets/icon.png";
 import { ProductInfo } from "../src/ProductInfo.js";
@@ -29,6 +27,11 @@ import { FileStorage } from "./FileStorage.js";
 // Velopack's install/update hooks first (C#: VelopackApp.Build().Run() first in Program.Main); it ends the process
 // when Setup.exe or an update started the app for one of them.
 runVelopackHooks();
+
+// The public key of the signed catalog (build/catalog-signing.pub.pem), built in as in the hub: the native update takes
+// its version and the package's SHA-256 only from a catalog signed with it. Nothing can give the app another key.
+const catalogKeys = import.meta.glob<string>("../../../../build/catalog-signing.pub.pem", { query: "?raw", import: "default", eager: true });
+const catalogPublicKey: string | null = Object.values(catalogKeys)[0] ?? null;
 
 const args = process.argv.slice(1);
 
@@ -151,17 +154,17 @@ function start(): void {
     return r.canceled ? null : (r.filePaths[0] ?? null);
   });
   // The app's own updates (C#: the learning window's SelfUpdate): installed with Setup.exe or as an AppImage (Velopack),
-  // or as a .deb/.rpm/Arch package (the package manager, with the version of the AppImage's update feed).
-  const get = electronGet(net);
+  // or as a .deb/.rpm/Arch package (the package manager, with the version and the package's SHA-256 from the signed
+  // catalog, checked with the built-in key).
   serveSelfUpdate(ipcMain, () =>
     appSelfUpdate({
       releasesRepo: ProductInfo.releasesRepo,
       packageId: ProductInfo.toolId,
       currentVersion: ProductInfo.version,
       nativeInstall,
+      catalogPublicKey,
       exit: () => app.exit(0),
-      get,
-      latestVersion: () => latestFromVelopackFeed(get, updateFeedUrl(ProductInfo.releasesRepo, ProductInfo.toolId), ProductInfo.toolId),
+      get: electronGet(net),
       relaunch: { executable: launcherOf(process.execPath) },
     }),
   );

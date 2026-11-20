@@ -180,8 +180,10 @@ TypeScript-version kan släppas som nästa version av samma produkt (fas 6).
   Electron (`<exe>.bin`): Chromium sandlådar med användarnamnrymder eller med den setuid-märkta hjälpen
   `chrome-sandbox`, och startar inte alls där ingen av dem fungerar. Skriptet startar då med `--no-sandbox`: som root
   (containrar, installationstesterna), när namnrymderna är avstängda eller begränsade (Ubuntu 23.10 och senare,
-  AppArmor) och `chrome-sandbox` inte är setuid root (hubbens installation per användare, AppImage). .deb/.rpm/Arch
-  gör `chrome-sandbox` setuid root (`packaging/ts/postinstall.sh`), så där fungerar sandlådan alltid.
+  AppArmor) och `chrome-sandbox` inte är setuid root (hubbens installation per användare, AppImage) – utom där en
+  Codestead-profil för AppArmor tillåter dem. .deb/.rpm/Arch gör `chrome-sandbox` setuid root och installerar en sådan
+  profil (`packaging/ts/postinstall.sh`), så där fungerar sandlådan alltid; för hubbens verktyg, se "Chromiums
+  sandlåda på Linux" i [DEVELOPMENT.md](DEVELOPMENT.md).
   Beroendena (`packaging/ts/nfpm.yaml`) är Electrons bibliotek (GTK, NSS, ALSA, CUPS …; på Ubuntu t64-paketen först).
 - **Uppdateringar:** Velopacks Node-SDK (npm-paketet `velopack` 1.2.161 – samma version som C#-apparnas Velopack och
   `vpk`) i main-processen, `@codestead/ui/electron-main` (`runVelopackHooks` först i main, som
@@ -194,9 +196,10 @@ TypeScript-version kan släppas som nästa version av samma produkt (fas 6).
   `UpdateNix` och `AppRun` är byte för byte desamma, så en C#-installation uppdateras till en TypeScript-version från
   samma källa.
 - **glibc:** Velopacks Linux-modul är byggd mot glibc 2.39 men använder 2.39-funktionerna (`pidfd_spawnp`,
-  `pidfd_getpid`) bara som svaga symboler; `package-app.mjs` märker den versionen som valfri i modulen, så den laddas
-  även med glibc 2.34–2.38 (Ubuntu 22.04, Debian 12). Modulen laddas först när den behövs; går den inte att ladda
-  startar appen ändå, utan självuppdatering.
+  `pidfd_getpid`) bara som svaga symboler; `package-app.mjs` märker den versionen som valfri i modulen
+  (`packaging/ts/velopack-glibc.mjs`, som stoppar bygget om en ny Velopack ser annorlunda ut), så den laddas även med
+  glibc 2.34–2.38 (Ubuntu 22.04, Debian 12). Modulen laddas först när den behövs; går den inte att ladda startar appen
+  ändå, utan självuppdatering – därför kontrollerar installationstestet att den laddas (`packaging/ts/velopack-check.cjs`).
 - **Testa:** `packaging/install-test.sh <id> <exe> <deb|rpm|arch|appimage> electron` (AppImagens bibliotek, och att
   `chrome-sandbox` är setuid root i paketen), `packaging/hub-e2e.sh` och `install-test-windows.ps1` som för C#.
   `.github/workflows/ts-packaging.yml` (vid `workflow_dispatch` och push till `ts-migration`) bygger de tre apparnas

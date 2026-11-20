@@ -13,11 +13,13 @@ name: Release
 #   => Windows and Linux artifacts are built for every product, installed and smoke-tested on clean
 #      systems (Windows Server 2022/2025, Ubuntu 22.04/24.04, Fedora, Arch Linux, CachyOS), the hub
 #      installs and starts the tool end to end, every product that gets a new version is updated to it
-#      from a user's installation of its last C# release and of its previous release (the upgrade gate),
+#      from a user's installation of its last C# release and of its previous release, and the hub's previous
+#      release installed as a .deb/.rpm/Arch package updates itself to it (the upgrade gate),
 #      and only then the changed products are published in the public repository JesperE98/codestead-releases:
 #        <id>-v<version>   the release with all files (e.g. codestead-linux-v0.5.0)
 #        <id>-latest       the same files without version in the name + the Velopack update feed
-#        catalog           catalog.json + catalog.json.sig, read by the hub
+#        catalog           catalog.json + catalog.json.sig, read by the hub; the native packages' updates check
+#                          the version and the package's SHA-256 against it
 #   Each release records the source commit it was built from (a hidden comment in its notes); that is
 #   how the next run knows what changed. Nothing is published until both secrets below exist.
 #
@@ -72,6 +74,7 @@ jobs:
       publish: ${{ steps.plan.outputs.publish }}
       upgrade_linux: ${{ steps.plan.outputs.upgrade_linux }}
       upgrade_windows: ${{ steps.plan.outputs.upgrade_windows }}
+      upgrade_native: ${{ steps.plan.outputs.upgrade_native }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -91,7 +94,8 @@ jobs:
           python3 packaging/releases_readme.py --repo "$RELEASES_REPO" --tags "$RUNNER_TEMP/tags.txt" --out "$RUNNER_TEMP/README.md"
 
   # The tests run once; the packaging jobs below only build. Codestead GP's TaskTests run in parallel jobs by course
-  # part (gp-tasks, as in ci.yml; ts/packages/gp-course/test/CiTests.test.ts checks that the lists cover every part).
+  # parts and chapters (gp-tasks, as in ci.yml; ts/packages/gp-course/test/CiTests.test.ts checks that every lesson is in
+  # exactly one job).
   test:
     runs-on: ubuntu-latest
     defaults:
@@ -109,19 +113,26 @@ jobs:
       - run: npm test
 
   gp-tasks:
-    name: GP tasks (${{ matrix.parts }})
+    name: GP tasks (${{ matrix.shard.name }})
     strategy:
       fail-fast: false
       matrix:
-        parts:
-          - 'start,getting-started,lighting,model-loading,advanced-opengl'
-          - 'advanced-lighting'
-          - 'pbr'
-          - 'in-practice'
-          - 'guest-articles'
+        # About 7 minutes of tests each (measured on CI, November 2026): the heavy chapters (bloom, ssao, specular-ibl,
+        # area-lights, render-text, powerups, deferred-shading …) are spread over the jobs. `chapters` narrows the parts
+        # to some chapters, or leaves some out with "!"; CiTests.test.ts checks that every lesson is in exactly one job.
+        shard:
+          - { name: 'getting started … advanced OpenGL, PBR', parts: 'start,getting-started,lighting,model-loading,advanced-opengl,pbr', chapters: '!specular-ibl' }
+          - { name: 'specular-ibl, deferred-shading', parts: 'pbr,advanced-lighting', chapters: 'specular-ibl,deferred-shading' }
+          - { name: 'advanced lighting, bloom', parts: 'advanced-lighting', chapters: '!ssao,!point-shadows,!deferred-shading' }
+          - { name: 'ssao, point-shadows', parts: 'advanced-lighting', chapters: 'ssao,point-shadows' }
+          - { name: 'render-text, powerups', parts: 'in-practice', chapters: 'render-text,powerups' }
+          - { name: 'in practice', parts: 'in-practice', chapters: '!render-text,!powerups' }
+          - { name: 'area-lights, tessellation', parts: 'guest-articles', chapters: 'area-lights,tessellation,tessellation-height-map' }
+          - { name: 'guest articles', parts: 'guest-articles', chapters: '!area-lights,!tessellation,!tessellation-height-map' }
     runs-on: ubuntu-latest
     env:
-      CODESTEAD_GP_PARTS: ${{ matrix.parts }}
+      CODESTEAD_GP_PARTS: ${{ matrix.shard.parts }}
+      CODESTEAD_GP_CHAPTERS: ${{ matrix.shard.chapters }}
     defaults:
       run:
         working-directory: ts
@@ -154,10 +165,10 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
-      - name: Install packaging tools (nfpm, vpk)
+      - name: Install packaging tools (nfpm, vpk, mksquashfs, xz, zstd)
         run: |
           curl -sSfL -o /tmp/nfpm.deb "https://github.com/goreleaser/nfpm/releases/download/v${NFPM_VERSION}/nfpm_${NFPM_VERSION}_amd64.deb"
-          sudo apt-get install -y /tmp/nfpm.deb squashfs-tools
+          sudo apt-get install -y /tmp/nfpm.deb squashfs-tools xz-utils zstd
           dotnet tool install -g vpk --version "$VPK_VERSION"
       - name: Build Linux artifacts
         env:
@@ -211,7 +222,8 @@ jobs:
           retention-days: 1
 
   # Installation tests on clean systems: a fresh container per distribution, installing the package
-  # exactly like a user would, starting the app (--smoke-test) on a virtual display and removing it again.
+  # exactly like a user would, starting the app (--smoke-test) on a virtual display, checking that its Velopack loads
+  # (the self-update) and removing it again.
   test-linux:
     needs: [plan, build-linux]
     # The install tests need the uploaded builds (only runs by hand, see above).
@@ -228,6 +240,9 @@ jobs:
           - { name: Arch Linux (.pkg.tar.zst), image: 'archlinux:latest', kind: arch }
           - { name: CachyOS (.pkg.tar.zst), image: 'cachyos/cachyos:latest', kind: arch }
           - { name: Ubuntu 24.04 LTS (AppImage), image: 'ubuntu:24.04', kind: appimage }
+          # glibc 2.35: Velopack's native module (the AppImage's self-update) loads only with its glibc 2.39 need made
+          # optional (packaging/ts/velopack-glibc.mjs); install-test.sh checks that it loads and finds the installation.
+          - { name: Ubuntu 22.04 LTS (AppImage), image: 'ubuntu:22.04', kind: appimage }
           - { name: Fedora (AppImage), image: 'fedora:latest', kind: appimage }
           - { name: Arch Linux (AppImage), image: 'archlinux:latest', kind: appimage }
     name: Install test – ${{ matrix.product.name }} – ${{ matrix.target.name }}
@@ -369,8 +384,62 @@ jobs:
             -DisplayName "${{ matrix.case.name }}" -ProductDir "${{ matrix.case.dir }}" -Artifacts artifacts `
             -From "${{ matrix.case.upgradeFrom }}" @chain
 
+  # The one-click update of a native package (.deb, .rpm, Arch), part of the gate: the hub's previous release, installed
+  # with the system's package manager in a clean container, updates itself to this build – the version and the
+  # package's SHA-256 from a signed catalog (a throw-away key the test writes over the installed hub's built-in one),
+  # as root and as a user through pkexec, plus the refusals (packaging/native-update-test.sh). The old package is
+  # downloaded from the previous release, not rebuilt; the hub is enough (Codestead Linux and GP share the code).
+  # packaging/plan.py lists the cases; with none (the hub gets no new version, or has no TypeScript release yet) it
+  # lists one {"skip": …}, so the job always runs and publish never waits on a skipped job.
+  upgrade-native:
+    needs: [plan, build-linux]
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        case: ${{ fromJSON(needs.plan.outputs.upgrade_native) }}
+    name: ${{ matrix.case.skip && format('Native update test – none ({0})', matrix.case.skip) || format('Native update test – {0} {1} to {2} – {3}', matrix.case.name, matrix.case.upgradeFrom, matrix.case.version, matrix.case.targetName) }}
+    steps:
+      - if: matrix.case.skip
+        env:
+          WHY: ${{ matrix.case.skip }}
+        run: echo "::notice::No native update test in this run ($WHY)."
+      - uses: actions/checkout@v4
+        if: ${{ !matrix.case.skip }}
+      - uses: actions/download-artifact@v4
+        if: ${{ !matrix.case.skip }}
+        with:
+          name: linux-${{ matrix.case.id }}
+          path: artifacts
+      - name: Download the released ${{ matrix.case.upgradeFrom }} package (${{ matrix.case.kind }})
+        id: old
+        if: ${{ !matrix.case.skip }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ID: ${{ matrix.case.id }}
+          FROM: ${{ matrix.case.upgradeFrom }}
+          KIND: ${{ matrix.case.kind }}
+        run: |
+          case "$KIND" in
+            deb) file="${ID}_${FROM}_amd64.deb" ;;
+            rpm) file="$ID-$FROM-1.x86_64.rpm" ;;
+            arch) file="$ID-$FROM-1-x86_64.pkg.tar.zst" ;;
+          esac
+          if ! gh release view "$ID-v$FROM" --repo "$RELEASES_REPO" --json assets --jq '.assets[].name' | grep -qxF "$file"; then
+            echo "::notice::$ID-v$FROM has no $file: nothing to update from."
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          mkdir old
+          gh release download "$ID-v$FROM" --repo "$RELEASES_REPO" --pattern "$file" --dir old
+          echo "found=true" >> "$GITHUB_OUTPUT"
+      - name: Update the released ${{ matrix.case.upgradeFrom }} package to this build in a clean ${{ matrix.case.image }} container
+        if: ${{ !matrix.case.skip && steps.old.outputs.found == 'true' }}
+        run: packaging/native-update-test.sh old artifacts "${{ matrix.case.kind }}" "${{ matrix.case.image }}"
+
   publish:
-    needs: [plan, test, gp-tasks, test-linux, test-windows, test-hub, upgrade-linux, upgrade-windows]
+    needs: [plan, test, gp-tasks, test-linux, test-windows, test-hub, upgrade-linux, upgrade-windows, upgrade-native]
     if: needs.plan.outputs.publish != '[]'
     runs-on: ubuntu-latest
     strategy:
@@ -449,6 +518,9 @@ jobs:
           for asset in $(gh release view "$tag" --repo "$RELEASES_REPO" --json assets --jq '.assets[].name'); do
             [[ -e "latest/$asset" ]] || gh release delete-asset "$tag" "$asset" --repo "$RELEASES_REPO" --yes
           done
+      # After the release: the catalog names a version only once its files are there. It also lists the version's
+      # native packages with their SHA-256, computed from the same files the release got (release/): an app installed
+      # as a .deb/.rpm/Arch package checks its update against this signed list, not the release's SHA256SUMS.txt.
       - name: Update the signed catalog
         run: |
           base="https://github.com/$RELEASES_REPO/releases/download/$ID-v$VERSION"
@@ -463,7 +535,10 @@ jobs:
             --description-file "$DIR/description.json" \
             --changelog-file "$DIR/changelog.json" \
             --asset "linux-x64=release/$ID-$VERSION-linux-x64.tar.gz=$base/$ID-$VERSION-linux-x64.tar.gz=$EXE" \
-            --asset "win-x64=release/$ID-$VERSION-win-x64.zip=$base/$ID-$VERSION-win-x64.zip=$EXE.exe"
+            --asset "win-x64=release/$ID-$VERSION-win-x64.zip=$base/$ID-$VERSION-win-x64.zip=$EXE.exe" \
+            --native-package "linux-x64=deb=release/${ID}_${VERSION}_amd64.deb" \
+            --native-package "linux-x64=rpm=release/$ID-$VERSION-1.x86_64.rpm" \
+            --native-package "linux-x64=arch=release/$ID-$VERSION-1-x86_64.pkg.tar.zst"
           openssl dgst -sha256 -sign "$RUNNER_TEMP/key.pem" catalog.json | base64 -w0 > catalog.json.sig
           # Check the signature the same way the hub does before publishing it.
           openssl dgst -sha256 -verify build/catalog-signing.pub.pem -signature <(base64 -d catalog.json.sig) catalog.json

@@ -62,8 +62,10 @@ Start picture: centre = (128, 128, 0), the square as in the mesh chapter.
   one: `outColor = fragMaterialIndex == 0u ? planetColor : ringsColor;`.
 - **Hint:** Sample before choosing: texture() inside an if whose condition changes between neighbouring pixels gets a
   wrong level of detail.
-- **When done:** the textured planet (blue oceans, green land, the white north pole at the top – the texture is
-  upright) and the beige-banded ring around it, seen from slightly above, on (13, 13, 13): centre = (105, 140, 60),
+- **When done:** the textured planet (blue oceans, green land, the white polar cap at the top, an ocean right below
+  it with a small round sea to its right – the texture is upright; both poles are white, so the cap alone can't tell,
+  and the simulator always flips v here, see TaskChecks.ModelLoading.ts: textureUpright) and the beige-banded ring
+  around it, seen from slightly above, on (13, 13, 13): centre = (105, 140, 60),
   top = (28, 70, 150), pole = (235, 240, 245), left = (63, 121, 50), ocean-left = (28, 70, 150), highlight =
   (72, 125, 52), ring-front = (181, 155, 120), ring-right = (97, 83, 64), ring-left = (96, 83, 64). This is the
   picture of learnopengl's model_loading.cpp (diffuse texture only, no lighting).

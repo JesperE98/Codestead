@@ -94,7 +94,7 @@ Direct3D:s NDC-z är redan 0..1, som djupen i shadow mapen. Dess textur-v = 0 ä
 :::
 
 ```quiz
-Skugg-biasen ändras från `max(0.05 * (1.0 - dot(normal, lightDir)), 0.005)` till ett fast värde på 0.2. Vad väntar du dig?
+Skugg-biasen ändras från `max(0.05 * (1.0 - dot(normal, lightDir)), 0.005)` till ett fast värde på 0,2. Vad väntar du dig?
 - [ ] Mer shadow acne: ränderna kommer tillbaka på golvet
 - [ ] Mjuka skuggkanter, som med PCF
 - [ ] Allt utanför ljusets frustum blir mörkt
@@ -114,13 +114,13 @@ Att ta medelvärdet av djup skulle ge nonsens vid ett föremåls kant, där ett 
 ```
 
 ```quiz
-Biasen i shadow mapping ligger mellan 0.005 och 0.05; punktskuggorna använder 0.05, och 0.15 med PCF. Varför kan punktskuggornas bias vara så mycket större?
+Biasen i shadow mapping ligger mellan 0,005 och 0,05; punktskuggorna använder 0,05, och 0,15 med PCF. Varför kan punktskuggornas bias vara så mycket större?
 - [ ] Cube maps har mer shadow acne än 2D-djupkartor
 - [ ] Perspektivprojektionen gör det lagrade djupet icke-linjärt, så biasen måste vara stor nära det bortre planet
-- [x] Jämförelsen sker mellan avstånd i världsenheter – det lagrade värdet gånger `far_plane` (25) och `length(fragToLight)` – inte mellan djup på 0..1; 0.05 är en tjugondels enhet
+- [x] Jämförelsen sker mellan avstånd i världsenheter – det lagrade värdet gånger `far_plane` (25) och `length(fragToLight)` – inte mellan djup på 0..1; 0,05 är en tjugondels enhet
 - [ ] Punktskuggornas bias läggs på ljusets position, inte på djupet
 ---
-Det riktade ljusets djup går från 0 till 1 över 6.5 enheter, så 0.005 där är ungefär 0.03 enheter. I världsenheter är båda biasvärdena ungefär lika stora; PCF:s förskjutningar läser lite andra riktningar, vilket kräver lite mer.
+Det riktade ljusets djup går från 0 till 1 över 6,5 enheter, så 0,005 där är ungefär 0,03 enheter. I världsenheter är båda biasvärdena ungefär lika stora; PCF:s förskjutningar läser lite andra riktningar, vilket kräver lite mer.
 ```
 
 :::opengl
@@ -223,7 +223,7 @@ Förskjutningen måste ske längs texturens axlar, hur ytan än är orienterad i
 
 ```quiz
 I början av HDR-kapitlet är tunnelns bortre ände platt vit. Vilka ändringar ger tillsammans tillbaka dess brädor? (Flera svar är rätt.)
-- [x] En flyttalsfärgbuffert, som behåller värdena över 1.0 medan scenen ritas
+- [x] En flyttalsfärgbuffert, som behåller värdena över 1,0 medan scenen ritas
 - [ ] Att läsa träet som en sRGB-textur
 - [x] Tone mapping i skärmfyrhörningens shader, som avbildar värdena tillbaka till 0..1 innan de hamnar i fönstret
 - [ ] Att stänga av gammakorrigeringen
@@ -278,11 +278,11 @@ Belysning, blur, addition och tone mapping förväntar sig alla linjära värden
 ```quiz
 Varför fungerar bloom bäst tillsammans med HDR?
 - [ ] Bloom kan bara göra flyttalstexturer suddiga
-- [x] Med HDR har "ljust" en naturlig betydelse – en luminans över 1.0, mer än fönstret kan visa – så tröskeln väljer ut ljusen; med LDR skulle den behöva ligga under 1.0, och varje vit vägg skulle också glöda
+- [x] Med HDR har "ljust" en naturlig betydelse – en luminans över 1,0, mer än fönstret kan visa – så tröskeln väljer ut ljusen; med LDR skulle den behöva ligga under 1,0, och varje vit vägg skulle också glöda
 - [ ] HDR gör den gaussiska bluren separerbar
 - [ ] Utan HDR kan ljuskuberna inte ritas till en andra färgbuffert
 ---
-Det är olika tekniker, och bloom kan göras med buffertar på 8 bitar. Men HDR behåller den verkliga ljusstyrkan, så en tröskel på 1.0 och en addition före tone mappingen ger ett sken bara där ljuset verkligen är för starkt för att visas.
+Det är olika tekniker, och bloom kan göras med buffertar på 8 bitar. Men HDR behåller den verkliga ljusstyrkan, så en tröskel på 1,0 och en addition före tone mappingen ger ett sken bara där ljuset verkligen är för starkt för att visas.
 ```
 
 ```quiz

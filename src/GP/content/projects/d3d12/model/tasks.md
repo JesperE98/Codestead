@@ -24,7 +24,8 @@ Start = the Mesh chapter's solution plus, prepared:
   `PopulateCommandList`.
 
 Texture orientation: `aiProcess_FlipUVs` (learnopengl's flags) and stb_image **without** a flip: D3D12's v = 0 is the
-image's top row, so flipping v once (in Assimp) makes the planet upright – white pole at the top. (learnopengl's
+image's top row, so flipping v once (in Assimp) makes the planet upright – the ocean right below the white cap and the
+small round sea to its right; both poles are white, so the cap alone can't tell. (learnopengl's
 OpenGL flips twice: FlipUVs and stbi_set_flip_vertically_on_load.) `aiProcess_ConvertToLeftHanded` is not used: the RH
 maths matches learnopengl.
 

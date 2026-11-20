@@ -177,7 +177,7 @@ som learnopengl gör:
 ```
 
 `CheckCollision(Ball, box)` skickar bollen där en `GameObject&` förväntas – dess `GameObject`-del, med dess låda på
-25 × 25. Gör nu uppgiften **do-collisions**. Bygg och kör: det förväntade resultatet visar nu **3.0 s** (bildruta 180),
+25 × 25. Gör nu uppgiften **do-collisions**. Bygg och kör: det förväntade resultatet visar nu **3,0 s** (bildruta 180),
 och **bollen har huggit en kanal genom muren**: tio block är borta – de blå, gröna och gula i kolumnerna 9, 10 och 11
 och ett orange block högst upp –, och månen syns genom luckan. Bollen själv är tillbaka på den öppna himlen, på väg
 nedåt åt höger. Dess bana är fortfarande den från kapitlet Bollen: ingenting studsar ännu, så bollen flyger igenom
@@ -311,9 +311,9 @@ behöva omvandlingen till basklassen – så cirkelversionen vinner. Innan den f
 sak att tänka på: ett anrop ser bara de överlagringar som deklarerats *före* det, och därför ligger cirkelversionen
 mellan AABB-versionen och `DoCollisions`. (learnopengl har båda som överlagringar också.)
 
-Gör nu uppgiften **circle**. Bygg och kör: bilden vid 3.0 s är densamma, pixel för pixel. Den runda bollen möter samma
+Gör nu uppgiften **circle**. Bygg och kör: bilden vid 3,0 s är densamma, pixel för pixel. Den runda bollen möter samma
 tio block på sin väg – bara några av dem en bildruta senare, eftersom lådans hörn nådde dem innan cirkeln gjorde det.
-Vid 1.75 s hade till exempel lådversionen redan förstört fyra block, cirkelversionen tre; det fjärde följer en bildruta
+Vid 1,75 s hade till exempel lådversionen redan förstört fyra block, cirkelversionen tre; det fjärde följer en bildruta
 senare. Skillnaden är liten i den här hastigheten, men det är skillnaden mellan en boll som träffar ett block och en som
 missar det med ett hörn – den syns när bollen snuddar vid ett block.
 

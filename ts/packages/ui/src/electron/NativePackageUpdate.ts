@@ -1,23 +1,29 @@
 // The updates of an app installed as a native Linux package (.deb, .rpm, Arch .pkg.tar.zst: /opt/<id>/, owned by the
-// system's package manager), where Velopack cannot update it (VelopackUpdate.ts). The app downloads the package of the
-// new version for this system from the version's release in the releases repository, checks it against the release's
-// SHA256SUMS.txt and installs it with the system's package manager through pkexec (the system asks for the password
-// once; as root, without pkexec), then starts again as the new version. Node only, for the apps' main processes.
+// system's package manager), where Velopack cannot update it (VelopackUpdate.ts). The app reads its latest version and
+// the SHA-256 of that version's packages from the signed catalog (SignedCatalog.ts: catalog.json, whose signature is
+// checked with the public key built into the app), downloads the package for this system from the version's release in
+// the releases repository, checks it against the catalog's SHA-256 and installs it with the system's package manager
+// through pkexec (the system asks for the password once; as root, without pkexec), then starts again as the new
+// version. Node only, for the apps' main processes.
 //
 // Security: the files come only over HTTPS from GitHub (the fixed releases repository; the downloads' redirects may only
-// go to GitHub's download hosts), the package must have the SHA-256 the release's checksums file gives it (no sum, or
-// another one: nothing is installed), the package manager and pkexec are taken from the system's own folders (not the
-// PATH) and get the file as an argument (no shell), and the files are in a new private temporary folder that is removed
-// again. There is no way to give the app another address for its updates.
+// go to GitHub's download hosts); the catalog must carry the signature of the release workflow's key (a catalog that
+// does not: nothing is offered); the package must be the one the signed catalog lists for this version, kind and
+// processor and have its SHA-256 (not listed, or another sum: nothing is installed – the release's unsigned
+// SHA256SUMS.txt is not used, so whoever could change a release's files still cannot get a package installed); the
+// package manager and pkexec are taken from the system's own folders (not the PATH) and get the file as an argument (no
+// shell), and the files are in a new private temporary folder that is removed again. There is no way to give the app
+// another address or key for its updates.
 
 import { spawn } from "node:child_process";
-import { createHash } from "node:crypto";
+import { createHash, type KeyObject } from "node:crypto";
 import { accessSync, constants, existsSync } from "node:fs";
 import { mkdtemp, open, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Readable } from "node:stream";
 import type { SelfUpdate } from "../SelfUpdate.js";
+import { catalogUrl, readSignedRelease, SignedCatalogError, type NativePackageFile, type SignedRelease } from "./SignedCatalog.js";
 
 /** The kind of native package the app is installed as. */
 export type NativePackageKind = "deb" | "rpm" | "arch";
@@ -96,9 +102,6 @@ export const systemBinDirs: readonly string[] = ["/usr/bin", "/usr/sbin", "/bin"
 
 /** The hosts the downloads may come from: the releases on github.com and GitHub's download hosts it redirects to. */
 export const allowedDownloadHosts: readonly string[] = ["github.com", "objects.githubusercontent.com", "release-assets.githubusercontent.com"];
-
-/** The name of the checksums file of every release (`sha256sum` format; .github/workflows/release.yml). */
-export const checksumsFileName = "SHA256SUMS.txt";
 
 /** A package id that can be a package name and part of a path and a URL. */
 function isPackageId(id: string): boolean {
@@ -223,13 +226,9 @@ export function releaseAssetUrl(releasesRepo: string, tag: string, file: string)
   return `https://github.com/${releasesRepo}/releases/download/${encodeURIComponent(tag)}/${encodeURIComponent(file)}`;
 }
 
-/** The SHA-256 (lower case hex) a checksums file (`sha256sum` output) gives a file, or null if it gives none. */
-export function checksumFor(checksums: string, file: string): string | null {
-  for (const line of checksums.split(/\r?\n/)) {
-    const m = /^([0-9a-fA-F]{64}) [ *](.+?)\s*$/.exec(line);
-    if (m && m[2] === file) return m[1]!.toLowerCase();
-  }
-  return null;
+/** The runtime id of the catalog's entries for this processor ("linux-x64"). */
+export function linuxRid(arch: string): string {
+  return `linux-${arch}`;
 }
 
 /** May a download come from (or be redirected to) this address? HTTPS from GitHub only. */
@@ -243,7 +242,7 @@ export function isAllowedDownloadUrl(url: string): boolean {
 }
 
 /** Why a native update did not happen (the message says it to the user, in English). */
-export type NativeUpdateFailure = "download" | "checksum" | "cancelled" | "not-authorized" | "no-agent" | "install-failed";
+export type NativeUpdateFailure = "catalog" | "download" | "checksum" | "cancelled" | "not-authorized" | "no-agent" | "install-failed";
 
 export class NativeUpdateError extends Error {
   constructor(
@@ -291,12 +290,17 @@ async function get(httpGet: HttpGet, url: string): Promise<Response> {
   }
 }
 
-/** A small text file (at most `maxBytes`). */
-export async function downloadText(httpGet: HttpGet, url: string, maxBytes = 1 << 20): Promise<string> {
+/** A small file's exact bytes (at most `maxBytes`). */
+export async function downloadBytes(httpGet: HttpGet, url: string, maxBytes = 1 << 20): Promise<Uint8Array> {
   const response = await get(httpGet, url);
+  const length = Number(response.headers.get("content-length") ?? NaN);
+  if (length > maxBytes) {
+    await response.body?.cancel().catch(() => {});
+    throw new NativeUpdateError("download", `${url} is too large.`);
+  }
   const bytes = new Uint8Array(await response.arrayBuffer());
   if (bytes.length > maxBytes) throw new NativeUpdateError("download", `${url} is too large.`);
-  return new TextDecoder().decode(bytes);
+  return bytes;
 }
 
 /**
@@ -337,16 +341,21 @@ export async function downloadFile(httpGet: HttpGet, url: string, file: string, 
   return hash.digest("hex");
 }
 
-/** The latest version in a product's Velopack feed (releases.linux.json of <id>-latest, which the AppImage updates from). */
-export async function latestFromVelopackFeed(httpGet: HttpGet, feedUrl: string, packageId: string): Promise<string | null> {
-  const json = JSON.parse(await downloadText(httpGet, `${feedUrl}releases.linux.json`)) as { Assets?: unknown };
-  let best: string | null = null;
-  for (const a of Array.isArray(json.Assets) ? (json.Assets as Record<string, unknown>[]) : []) {
-    const v = a?.Version;
-    if (a?.PackageId !== packageId || a?.Type !== "Full" || typeof v !== "string" || parseVersion(v) === null) continue;
-    if (best === null || isNewerVersion(v, best)) best = v;
+/**
+ * What the signed catalog of the releases repository says about the product: its latest version and that version's
+ * native packages, or null when the catalog does not list the product. The catalog's signature is checked against
+ * `key` (the app's built-in key) before anything in it is read; a catalog that is not signed by it is an error.
+ */
+export async function latestFromSignedCatalog(httpGet: HttpGet, releasesRepo: string, key: KeyObject, packageId: string): Promise<SignedRelease | null> {
+  const url = catalogUrl(releasesRepo);
+  const data = await downloadBytes(httpGet, url, 8 << 20);
+  const signature = new TextDecoder().decode(await downloadBytes(httpGet, `${url}.sig`, 4096));
+  try {
+    return readSignedRelease(data, signature, key, packageId);
+  } catch (e) {
+    if (e instanceof SignedCatalogError) throw new NativeUpdateError("catalog", e.message);
+    throw e;
   }
-  return best;
 }
 
 /** A program with its arguments. */
@@ -421,8 +430,11 @@ export interface NativeUpdateOptions {
   /** The running app's version. */
   readonly currentVersion: string;
   readonly install: NativeInstall;
-  /** The latest released version (the hub: its signed catalog; the learning apps: the Velopack feed). */
-  readonly latestVersion: () => Promise<string | null>;
+  /**
+   * The product's latest release in the signed catalog, with its native packages' SHA-256 ({@link latestFromSignedCatalog}
+   * with the app's built-in key).
+   */
+  readonly latestRelease: () => Promise<SignedRelease | null>;
   /** One GET without redirects (Electron: {@link electronGet}). */
   readonly get: HttpGet;
   /** Starts the app again (the new version) once this process has ended, and ends it. */
@@ -440,12 +452,12 @@ export interface NativeUpdateOptions {
 }
 
 /**
- * The {@link SelfUpdate} of an app installed as a native package: the package of the new version, checked against its
- * release's checksums, installed by the system's package manager (pkexec asks for the password), then a restart.
- * Progress: 0-100 while downloading, then -1 while the package manager installs it.
+ * The {@link SelfUpdate} of an app installed as a native package: the package of the new version, checked against the
+ * SHA-256 the signed catalog gives it, installed by the system's package manager (pkexec asks for the password), then a
+ * restart. Progress: 0-100 while downloading, then -1 while the package manager installs it.
  */
 export class NativePackageSelfUpdate implements SelfUpdate {
-  private pending: string | null = null;
+  private pending: SignedRelease | null = null;
   private readonly arch: string;
   private readonly isRoot: boolean;
   private readonly run: RunCommand;
@@ -470,29 +482,38 @@ export class NativePackageSelfUpdate implements SelfUpdate {
 
   async check(): Promise<string | null> {
     if (!this.canUpdateItself) return null;
-    const latest = await this.o.latestVersion();
-    this.pending = latest !== null && isNewerVersion(latest, this.o.currentVersion) ? latest : null;
-    return this.pending;
+    const latest = await this.o.latestRelease();
+    this.pending = latest !== null && isNewerVersion(latest.version, this.o.currentVersion) ? latest : null;
+    return this.pending?.version ?? null;
+  }
+
+  /** The package of `release` for this system that the signed catalog lists, or null. */
+  private signedPackage(release: SignedRelease, asset: string): NativePackageFile | null {
+    const entry = release.nativePackages?.[linuxRid(this.arch)]?.[this.o.install.kind];
+    // The file must be the one this version's release has for this system (the catalog cannot name another file).
+    return entry !== undefined && entry.file === asset ? entry : null;
   }
 
   async downloadAndRestart(progress: (percent: number) => void): Promise<void> {
-    const version = this.pending;
-    if (version === null) return;
+    const release = this.pending;
+    if (release === null) return;
+    const { version } = release;
     const { kind } = this.o.install;
     const asset = nativePackageAsset(this.o.packageId, version, kind, this.arch);
     if (asset === null) throw new NativeUpdateError("download", `There is no ${kind} package for this computer (${this.arch}).`);
+    const expected = this.signedPackage(release, asset);
+    if (expected === null) {
+      throw new NativeUpdateError("catalog", `The signed catalog lists no ${asset} for ${this.o.packageId} ${version}, so it is not installed.`);
+    }
     const tag = `${this.o.packageId}-v${version}`;
     const log = this.o.log ?? (() => {});
     const dir = await mkdtemp(join(this.o.tempRoot ?? tmpdir(), `${this.o.packageId}-update-`));
     try {
-      const sums = await downloadText(this.o.get, releaseAssetUrl(this.o.releasesRepo, tag, checksumsFileName));
-      const expected = checksumFor(sums, asset);
-      if (expected === null) throw new NativeUpdateError("checksum", `${checksumsFileName} of ${tag} has no checksum for ${asset}, so it is not installed.`);
       const file = join(dir, asset);
       log(`Downloading ${releaseAssetUrl(this.o.releasesRepo, tag, asset)}`);
-      const actual = await downloadFile(this.o.get, releaseAssetUrl(this.o.releasesRepo, tag, asset), file, progress);
-      if (actual !== expected) throw new NativeUpdateError("checksum", `${asset} does not have the checksum its release gives (${checksumsFileName}), so it is not installed.`);
-      log(`SHA-256 ${actual} matches ${checksumsFileName}`);
+      const actual = await downloadFile(this.o.get, releaseAssetUrl(this.o.releasesRepo, tag, asset), file, progress, expected.size);
+      if (actual !== expected.sha256) throw new NativeUpdateError("checksum", `${asset} does not have the SHA-256 the signed catalog gives it, so it is not installed.`);
+      log(`SHA-256 ${actual} matches the signed catalog`);
 
       const command = installCommand(kind, file, this.isRoot, this.findTool);
       if (command === null) throw new NativeUpdateError("install-failed", "The system has no package manager or pkexec to install the update with.");

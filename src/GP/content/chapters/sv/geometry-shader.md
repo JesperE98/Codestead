@@ -667,7 +667,7 @@ layout(triangle_strip, max_vertices = 5) out;
 ```
 
 och `main` lämnar punktens position till en funktion som ger ut huset runt den. En sak skiljer sig från learnopengls
-shader: Vulkans y-axel pekar nedåt, så husets botten ligger på +0.2 och takets topp på -0.4 – y-förskjutningarna är
+shader: Vulkans y-axel pekar nedåt, så husets botten ligger på +0,2 och takets topp på -0,4 – y-förskjutningarna är
 negerade, precis som punkternas positioner, och bilden blir densamma:
 
 ```glsl
@@ -1074,7 +1074,7 @@ ger varje sådan subtraktion en vektor parallell med planet. Observera att om vi
 
 Nu när vi vet hur man räknar ut en normalvektor kan vi skriva en funktion `explode` som tar normalvektorn och en
 vertexposition. Funktionen returnerar en ny vektor som flyttar positionen i normalvektorns riktning. Funktionen `sin`
-får en variabel `time` som argument och ger, beroende på tiden, ett värde mellan -1.0 och 1.0. Eftersom vi inte vill
+får en variabel `time` som argument och ger, beroende på tiden, ett värde mellan -1,0 och 1,0. Eftersom vi inte vill
 att objektet ska *implodera* omvandlar vi sinusvärdet till intervallet [0,1]. Värdet skalar sedan normalvektorn, och
 den resulterande riktningsvektorn läggs till positionen.
 
@@ -1298,12 +1298,12 @@ indata och skapar 3 linjer i normalernas riktning – en normalvektor för varje
 Den här gången använder geometry shadern vertexnormalerna som modellen har i stället för att räkna ut dem själv. För
 att ta hänsyn till skalning och rotation (från view- och modellmatrisen) transformerar vi normalerna med en
 normalmatris. Geometry shadern får sina positioner i view space, så vi transformerar normalvektorerna till samma rum.
-Projektionen läggs på i geometry shadern, efter att normalen har lagts till: i view space betyder en längd på 0.2
+Projektionen läggs på i geometry shadern, efter att normalen har lagts till: i view space betyder en längd på 0,2
 samma sak i alla riktningar, medan den efter projektionen skulle förvrängas av perspektivet.
 
-En liten skillnad mot learnopengl: vår planet är skalad med 0.5. Normalmatrisen för en skalad modell gör normalerna
+En liten skillnad mot learnopengl: vår planet är skalad med 0,5. Normalmatrisen för en skalad modell gör normalerna
 längre (dubbelt så långa här), så vår vertex shader normaliserar den transformerade normalen – annars skulle linjerna
-bli 0.4 långa i stället för 0.2. learnopengls modell är inte skalad, så den behöver inte det.
+bli 0,4 långa i stället för 0,2. learnopengls modell är inte skalad, så den behöver inte det.
 
 :::opengl
 `normal_visualization.vs` är färdig:
@@ -1561,7 +1561,7 @@ Förutom att visualisera normaler används en sådan här geometry shader ofta f
 Varför låter normalvisualiseringens vertex shader bli att projicera och lämnar det till geometry shadern?
 - [ ] Vertex shadern kan inte läsa projektionsmatrisen
 - [ ] Positioner i clip space kan inte skickas mellan shadersteg
-- [x] Linjens ändpunkt räknas ut genom att lägga till normalen i view space, där en längd på 0.2 betyder samma sak i alla riktningar; projektionen kommer efteråt
+- [x] Linjens ändpunkt räknas ut genom att lägga till normalen i view space, där en längd på 0,2 betyder samma sak i alla riktningar; projektionen kommer efteråt
 - [ ] Projektionen behövs bara för trianglar, inte för linjer
 ---
 Att lägga en riktning till en position är bara meningsfullt i ett rum utan perspektivförvrängning. Därför stannar vertex shadern i view space, geometry shadern lägger till `normal * MAGNITUDE` där och projicerar först sedan linjens båda ändar.

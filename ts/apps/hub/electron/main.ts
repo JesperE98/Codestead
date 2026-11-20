@@ -1,5 +1,5 @@
 import { type ChildProcess } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { appSelfUpdate, detectNativeInstall, electronGet, launcherOf, type NativeInstall, runVelopackHooks, serveSelfUpdate } from "@codestead/ui/electron-main";
 import { app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, net, shell } from "electron";
@@ -12,6 +12,7 @@ import { messageOf } from "../src/core/Errors.js";
 import { fetchHttpClient } from "../src/core/Http.js";
 import { Platform } from "../src/core/Platform.js";
 import { isSafeId } from "../src/core/SafeId.js";
+import { enableSandbox, processSandboxEnvironment, sandboxStatus } from "../src/core/SandboxProfile.js";
 import { SingleInstance } from "../src/core/SingleInstance.js";
 import { ToolStore } from "../src/core/ToolStore.js";
 import { TraySupport } from "../src/core/TraySupport.js";
@@ -31,7 +32,8 @@ import { HubTray } from "./HubTray.js";
 runVelopackHooks();
 
 // The built-in public key for catalog.json (build/catalog-signing.pub.pem), when the repository has one (HubInfo.cs's
-// CatalogPublicKey; only the main process has it).
+// CatalogPublicKey; only the main process has it). The hub's own native update always uses this key, never
+// --public-key.
 const catalogKeys = import.meta.glob<string>("../../../../build/catalog-signing.pub.pem", { query: "?raw", import: "default", eager: true });
 const catalogPublicKey: string | null = Object.values(catalogKeys)[0] ?? null;
 
@@ -167,8 +169,9 @@ async function openExternal(url: string): Promise<void> {
 }
 
 /**
- * The hub's own updates. A native package learns of a new hub from the signed catalog (as the window does when the hub
- * cannot update itself) and starts again as `relaunchArgs`.
+ * The hub's own updates. A native package learns of a new hub, and the SHA-256 of its package, from the signed catalog
+ * of the releases repository, checked with the built-in key (not the catalog of --catalog/--public-key, which only the
+ * tool list of the smoke tests uses), and starts again as `relaunchArgs`.
  */
 function selfUpdate(relaunchArgs: readonly string[], inheritOutput: boolean) {
   return appSelfUpdate({
@@ -176,9 +179,9 @@ function selfUpdate(relaunchArgs: readonly string[], inheritOutput: boolean) {
     packageId: HubInfo.id,
     currentVersion: HubInfo.version,
     nativeInstall,
+    catalogPublicKey,
     exit: () => app.exit(0),
     get: electronGet(net),
-    latestVersion: async () => (catalog ?? (await catalogClient.load()).catalog).find(HubInfo.id)?.version ?? null,
     relaunch: { executable: launcherOf(process.execPath), args: relaunchArgs, inheritOutput },
     log: (line) => console.log(`SELF-UPDATE ${line}`),
   });
@@ -186,8 +189,9 @@ function selfUpdate(relaunchArgs: readonly string[], inheritOutput: boolean) {
 
 /**
  * --smoke-test --self-update-test (packaging/native-update-test.sh): the update button of a hub installed as a native
- * package, without the window – the catalog (--catalog, --public-key, as the smoke test's) names a newer hub, which is
- * downloaded from its release, checked, installed and started with the same smoke test (its output goes to this one's).
+ * package, without the window – the signed catalog of the releases repository names a newer hub, which is downloaded
+ * from its release, checked against the catalog, installed and started with the same smoke test (its output goes to
+ * this one's). The test cannot give it another catalog or key: it answers for github.com and changes the installed key.
  */
 async function selfUpdateTest(): Promise<void> {
   const updater = selfUpdate(
@@ -198,7 +202,6 @@ async function selfUpdateTest(): Promise<void> {
     `SELF-UPDATE ${HubInfo.version}: installed as ${nativeInstall?.kind ?? "no native package"}, ` +
       `canUpdateItself=${updater.canUpdateItself}, asksForPassword=${updater.asksForPassword === true}`,
   );
-  catalog = (await catalogClient.load()).catalog;
   const version = await updater.check();
   if (version === null) throw new Error("no newer hub in the catalog");
   console.log(`SELF-UPDATE available: ${version}`);
@@ -328,6 +331,12 @@ function registerIpc(): void {
       autostart.enable(HubInfo.name, executable, app.isPackaged || process.env.APPIMAGE ? "--background" : `"${app.getAppPath()}" --background`);
     } else autostart.disable();
   });
+
+  // Chromium's sandbox for the tools where AppArmor restricts user namespaces (core/SandboxProfile.ts).
+  ipcMain.handle(Ipc.sandboxStatus, () => sandboxStatus(processSandboxEnvironment(), store.root));
+  ipcMain.handle(Ipc.enableSandbox, () =>
+    outcome(() => enableSandbox(store.root, { makeFolder: (path) => mkdirSync(path, { recursive: true }) })),
+  );
 
   ipcMain.handle(Ipc.openExternal, (_e, url: string) => openExternal(url));
   ipcMain.handle(Ipc.pickFile, async () => {

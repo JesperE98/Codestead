@@ -1,5 +1,6 @@
 import type { SelfUpdate, Storage } from "@codestead/ui";
 import type { InstalledTool } from "./core/InstalledTool.js";
+import type { SandboxStatus } from "./core/SandboxProfile.js";
 
 // What the window gets from the main process (electron/preload.ts puts it on window.codestead). The hub's logic that
 // needs the file system, the network or processes (ToolStore, CatalogClient, launching, the tray, autostart) runs in
@@ -74,6 +75,12 @@ export interface HubApi {
   setTrayToolTip(text: string): void;
   startsWithComputer(): Promise<boolean>;
   setStartsWithComputer(value: boolean): Promise<void>;
+
+  // ---------- Chromium's sandbox for the tools (Linux, core/SandboxProfile.ts) ----------
+  /** Whether the tools the hub starts get Chromium's sandbox where AppArmor restricts user namespaces. */
+  sandboxStatus(): Promise<SandboxStatus>;
+  /** Installs the AppArmor profile for the user's tools (pkexec asks for the password); the new status. */
+  enableSandbox(): Promise<Outcome<SandboxStatus>>;
 
   // ---------- The app ----------
   /**

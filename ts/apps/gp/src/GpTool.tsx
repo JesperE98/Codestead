@@ -14,6 +14,7 @@ import type { ProductMeta } from "@codestead/common";
 import { Languages } from "@codestead/common";
 import { type CheckMessage, type CheckReport, CourseText, type FileSystem, GpCourse, GpGame, Ides, MainFiles, UiStrings } from "@codestead/gp-course";
 import { Apis } from "@codestead/gp-gpu";
+import { type ScenePlace, type SceneLinks, slidePlaces } from "@codestead/pipeline-viz";
 import type { CommandFacts, CourseChapter, GameRules, Reference } from "@codestead/learning";
 import {
   Changelog,
@@ -43,7 +44,7 @@ import { SolutionView } from "./GpTool.Solution.js";
 import { NoUpdates } from "./NoUpdates.js";
 import { ProductInfo } from "./ProductInfo.js";
 import { resources } from "./ProjectResources.js";
-import { vizScene } from "./VizScene.js";
+import { revealScene, vizScene } from "./VizScene.js";
 import { Large } from "./YourProject/ExpectedPicture.js";
 import type { PanelModel } from "./YourProject/PanelModel.js";
 import { ProjectPanel } from "./YourProject/ProjectPanel.js";
@@ -209,8 +210,41 @@ export class GpTool implements LearningTool {
 
   /** A scene of the Render Pipeline Visualizer (`![alt](viz:buffers "caption")`), live in the chosen API. */
   pictureView(picture: MarkdownPicture, lang: string): ReactNode | null {
-    return vizScene({ api: this.api, lang, t: (key, args) => this.w.t(key, args), picture: (path, l) => this.picture(path, l) }, picture);
+    return vizScene({ api: this.api, lang, t: (key, args) => this.w.t(key, args), picture: (path, l) => this.picture(path, l), links: this.sceneLinks }, picture);
   }
+
+  /** Where the visualizer's slides are shown in the course, per API (the chapters' scenes, see slidePlaces). */
+  private readonly slidePlacesByApi = new Map<string, ReadonlyMap<string, ScenePlace>>();
+
+  private slidePlaces(): ReadonlyMap<string, ScenePlace> {
+    const api = this.api;
+    let places = this.slidePlacesByApi.get(api);
+    if (places === undefined) {
+      places = slidePlaces(GpCourse.chapters.map((c) => ({ id: c.id, text: this.rawText(c.id, "en") })));
+      this.slidePlacesByApi.set(api, places);
+    }
+    return places;
+  }
+
+  /** Where a slide is shown: in the chapter on screen if it shows it, else the first chapter that does. */
+  private slidePlace(slide: string): ScenePlace | undefined {
+    const here = this.w.chapter.id;
+    return slidePlaces([{ id: here, text: this.rawText(here, "en") }]).get(slide) ?? this.slidePlaces().get(slide);
+  }
+
+  /** The overview's stages lead to the scene of the course that shows the stage. */
+  private readonly sceneLinks: SceneLinks = {
+    has: (slide) => this.slidePlaces().has(slide),
+    title: (slide) => {
+      const place = this.slidePlace(slide);
+      return place === undefined ? "" : this.w.t("viz.goTo", { chapter: this.chapterTitle(place.chapter, this.w.lang) });
+    },
+    go: (slide) => {
+      const place = this.slidePlace(slide);
+      if (place === undefined) return;
+      revealScene(place.scene, place.chapter === this.w.chapter.id ? null : () => this.w.navigate(place.chapter));
+    },
+  };
 
   references(chapterId: string): readonly Reference[] {
     return CourseText.references(chapterId, this.api);

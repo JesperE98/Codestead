@@ -330,7 +330,7 @@ Texturen är en committed resource som de `LoadTexture` skapar, med två skillna
 `CD3DX12_RESOURCE_DESC::Tex2D(format, width, height, arraySize, mipLevels, sampleCount, sampleQuality, flags)`
 beskriver en textur lika stor som fönstret, med en mipnivå och ett sample. Precis som learnopengls
 `glTexImage2D(..., NULL)` reserverar det här bara minne: inget laddas upp, det finns ingen upload heap och ingen
-kopiering. Clear-värdet talar om för drivrutinen vilken färg vi kommer att rensa texturen till (scenens grå 0.1); att
+kopiering. Clear-värdet talar om för drivrutinen vilken färg vi kommer att rensa texturen till (scenens grå 0,1); att
 rensa till exakt den färgen kan gå snabbare, och debuglagret varnar när en rensning använder en annan. Resursen börjar
 i tillståndet `D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE` – varför ser du när vi använder den.
 
@@ -1524,18 +1524,18 @@ Kerneln behöver grannar för varje pixel. Vid kanterna avgör adresseringsläge
 :::opengl
 Till spegeln kan du använda det här kapitlets framebuffer för den vridna vyn (en view-matris som tittar längs
 `-cameraFront`), rita den vanliga scenen direkt i default framebuffer, och sist rita en liten quad – med hörnen till
-exempel på x från -0.3 till 0.3 och y från 0.6 till 0.95 – med `textureColorbuffer`, med djuptestet avstängt.
+exempel på x från -0,3 till 0,3 och y från 0,6 till 0,95 – med `textureColorbuffer`, med djuptestet avstängt.
 :::
 :::vulkan
 Till spegeln kan du använda det här kapitlets offscreen-pass för den vridna vyn (en andra view-matris som tittar längs
 `-cameraFront`, i en andra uniform buffer eller en push constant), rita den vanliga scenen i fönstrets render pass –
 som då behöver scenens shadrar i en pipeline för `renderPass` – och sist rita en liten quad, med hörnen till exempel på
-x från -0.3 till 0.3 och y från -0.95 till -0.6 (fönstrets överkant i Vulkan), med offscreen-imagen.
+x från -0,3 till 0,3 och y från -0,95 till -0,6 (fönstrets överkant i Vulkan), med offscreen-imagen.
 :::
 :::d3d12
 Till spegeln kan du använda det här kapitlets off-screen-render target för den vridna vyn (en andra view-matris som
 tittar längs `-cameraFront`, i en andra constant buffer), rita den vanliga scenen i back buffern med djupbuffern, och
-sist rita en liten quad – med hörnen till exempel på x från -0.3 till 0.3 och y från 0.6 till 0.95 – med
+sist rita en liten quad – med hörnen till exempel på x från -0,3 till 0,3 och y från 0,6 till 0,95 – med
 off-screen-texturen. Scenens andra pass behöver att djupbuffern rensas igen innan den börjar.
 :::
 

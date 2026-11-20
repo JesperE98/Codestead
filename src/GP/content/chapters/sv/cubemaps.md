@@ -960,7 +960,7 @@ alla djupvärden, så vi behöver bara rendera skyboxens fragment där det tidig
 minskar antalet anrop av fragment shadern. Problemet är att skyboxen med största sannolikhet ritas ovanpå alla andra
 föremål, eftersom den bara är en liten kub runt kameran (från -1 till 1) och klarar de flesta djuptester. Att bara
 rendera den utan djuptest är ingen lösning, eftersom skyboxen då ändå skriver över alla andra föremål i scenen när den
-ritas sist. Vi behöver lura djupbuffern att tro att skyboxen har det största djupvärdet, 1.0, så att den misslyckas med
+ritas sist. Vi behöver lura djupbuffern att tro att skyboxen har det största djupvärdet, 1,0, så att den misslyckas med
 djuptestet överallt där ett annat föremål ligger framför den.
 
 I kapitlet om koordinatsystem sa vi att *perspektivdivisionen* utförs efter att vertex shadern har körts, och delar
@@ -990,7 +990,7 @@ void main() {
 ```
 
 I Vulkan är djupintervallet efter perspektivdivisionen 0..1 (OpenGL:s är -1..1, som sedan avbildas på 0..1), men den
-bortre änden är 1.0 i båda, så tricket fungerar oförändrat.
+bortre änden är 1,0 i båda, så tricket fungerar oförändrat.
 :::
 :::d3d12
 ```hlsl
@@ -1001,7 +1001,7 @@ bortre änden är 1.0 i båda, så tricket fungerar oförändrat.
 ```
 
 I Direct3D är djupintervallet efter perspektivdivisionen 0..1 (OpenGL:s är -1..1, som sedan avbildas på 0..1), men
-den bortre änden är 1.0 i båda, så tricket fungerar oförändrat.
+den bortre änden är 1,0 i båda, så tricket fungerar oförändrat.
 :::
 
 De resulterande normaliserade enhetskoordinaterna har då alltid ett z-värde lika med `1.0`: det största djupvärdet.
@@ -1027,7 +1027,7 @@ värden *mindre än eller lika med* djupbufferns i stället för *mindre än*:
 ```
 
 Det här blocket ersätter det gamla skyboxblocket och hamnar efter kuberna. Anropen till `glDepthMask` är borta:
-skyboxen får skriva sitt djup nu – den ritas sist, och 1.0 är vad djupbuffern ändå innehöll där.
+skyboxen får skriva sitt djup nu – den ritas sist, och 1,0 är vad djupbuffern ändå innehöll där.
 :::
 :::vulkan
 I Vulkan är compare op en del av pipelinen, så skyboxens pipeline skapas med `VK_COMPARE_OP_LESS_OR_EQUAL`:
@@ -1059,7 +1059,7 @@ I Direct3D 12 är djupfunktionen en del av PSO:t, så skyboxens PSO får `D3D12_
         psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 ```
 
-Skyboxen får skriva sitt djup nu – den ritas sist, och 1.0 är vad djupbuffern ändå innehöll där. Dess tre anrop
+Skyboxen får skriva sitt djup nu – den ritas sist, och 1,0 är vad djupbuffern ändå innehöll där. Dess tre anrop
 flyttar från före kuberna till efter dem, före barriären som avslutar bildrutan:
 
 ```cpp
@@ -1076,13 +1076,13 @@ OpenGL: den hör till skyboxens PSO.
 :::
 
 ```quiz
-Skyboxen ritas sist med sitt djup tvingat till 1.0. Varför behöver den djupfunktionen "mindre än eller lika med" i stället för "mindre än"?
+Skyboxen ritas sist med sitt djup tvingat till 1,0. Varför behöver den djupfunktionen "mindre än eller lika med" i stället för "mindre än"?
 - [ ] "Mindre än" skulle låta skyboxen skriva över kuberna
-- [x] Där inget ritades innehåller djupbuffern fortfarande sitt rensade värde 1.0, och 1.0 < 1.0 är falskt – med "mindre än" skulle himlen aldrig ritas
+- [x] Där inget ritades innehåller djupbuffern fortfarande sitt rensade värde 1,0, och 1,0 < 1,0 är falskt – med "mindre än" skulle himlen aldrig ritas
 - [ ] "Mindre än eller lika med" får GPU:n att hoppa över fragment shadern för skyboxen
 - [ ] Med "mindre än" skulle skyboxen ritas två gånger
 ---
-Djupbuffern rensas till 1.0 och skyboxens fragment har alla djupet 1.0. Bara "lika med" släpper igenom dem på de tomma pixlarna, medan allt som ligger närmare – kuberna – håller dem borta.
+Djupbuffern rensas till 1,0 och skyboxens fragment har alla djupet 1,0. Bara "lika med" släpper igenom dem på de tomma pixlarna, medan allt som ligger närmare – kuberna – håller dem borta.
 ```
 
 Gör nu uppgiften **skybox-last** och bygg och kör sedan. Ingenting syns ändras – och det är just poängen: bilden är
@@ -1406,17 +1406,17 @@ En lista över de vanligaste brytningsindexen finns i följande tabell:
 
 | Material | Brytningsindex |
 | --- | --- |
-| Luft | 1.00 |
-| Vatten | 1.33 |
-| Is | 1.309 |
-| Glas | 1.52 |
-| Diamant | 2.42 |
+| Luft | 1,00 |
+| Vatten | 1,33 |
+| Is | 1,309 |
+| Glas | 1,52 |
+| Diamant | 2,42 |
 
 Vi använder brytningsindexen för att räkna ut förhållandet mellan de båda material som ljuset passerar. I vårt fall går
 ljuset/blickstrålen från luft till glas (om vi antar att föremålet är av glas), så förhållandet blir
-1.00 / 1.52 = 0.658.
+1,00 / 1,52 = 0,658.
 
-![Refraktion](images/cubemap-refract.webp "Refraktion från luft (1.00) till glas (1.52): blickvektorn I böjs mot normalen, och R samplar cube mapen. Den streckade linjen är I utan brytning.")
+![Refraktion](images/cubemap-refract.webp "Refraktion från luft (1,00) till glas (1,52): blickvektorn I böjs mot normalen, och R samplar cube mapen. Den streckade linjen är I utan brytning.")
 
 Vi har redan bundit cube mapen, gett vertexdatan normaler och satt kamerans position som uniform. Det enda vi behöver
 ändra är fragment shadern:
@@ -1461,11 +1461,11 @@ Genom att ändra brytningsindexen kan du skapa helt andra visuella resultat.
 ```quiz
 Shadern använder `ratio = 1.00 / 1.52`. Vad beskriver det talet?
 - [ ] Hur mycket av himlen som speglas och hur mycket som bryts
-- [x] Förhållandet mellan de två materialens brytningsindex: blickstrålen går från luft (1.00) in i glas (1.52)
+- [x] Förhållandet mellan de två materialens brytningsindex: blickstrålen går från luft (1,00) in i glas (1,52)
 - [ ] Glaskubens tjocklek i världsenheter
 - [ ] Kubens storlek i förhållande till skyboxen
 ---
-`refract` böjer strålen enligt Snells lag, som beror på förhållandet mellan brytningsindexen på ytans båda sidor. För vatten i stället för glas skulle det vara 1.00 / 1.33.
+`refract` böjer strålen enligt Snells lag, som beror på förhållandet mellan brytningsindexen på ytans båda sidor. För vatten i stället för glas skulle det vara 1,00 / 1,33.
 ```
 
 Gör den sista uppgiften, **refraction**, och bygg och kör sedan. Kuberna ser nu ut som glasblock: du ser himlen bakom

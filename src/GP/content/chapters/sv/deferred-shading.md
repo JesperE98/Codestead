@@ -50,8 +50,8 @@ Djuptestet avgör vilket fragment som blir kvar först efter att fragment shader
 ## Scenen
 
 learnopengl ritar sin ryggsäcksmodell nio gånger i ett rutnät på 3 × 3; kursen ritar **nio containerlådor** på samma
-positioner (x -3, 0, 3; y -0.5; z -3, 0, 3), var och en de tidigare kapitlens kub på 2 × 2 × 2 skalad med 0.75 – lådor
-som är 1.5 enheter breda med 1.5 enheters mellanrum. Modellen spelar ingen roll för tekniken, och lådor behöver ingen
+positioner (x -3, 0, 3; y -0,5; z -3, 0, 3), var och en de tidigare kapitlens kub på 2 × 2 × 2 skalad med 0,75 – lådor
+som är 1,5 enheter breda med 1,5 enheters mellanrum. Modellen spelar ingen roll för tekniken, och lådor behöver ingen
 modelladdning. De använder `container2.png` som diffus karta och `container2_specular.png` som spekulär karta, lästa som
 vanliga (linjära) texturer: learnopengls deferred-demo gammakorrigerar inte, och det gör inte det här kapitlet heller
 (ingen tone mapping heller).
@@ -98,7 +98,7 @@ Ljusen är learnopengls: **32 punktljus** på "lite slumpmässiga" positioner me
 `srand(13)` sätter fröet för C-bibliotekets slumptalsgenerator: samma frö ger samma talföljd, så ljusen hamnar på samma
 ställen vid varje körning. Själva talföljden hör dock till C-biblioteket: bilderna som beskrivs här är glibc:s `rand()`
 (Linux, och kursens bilder **Förväntat resultat**); med Microsofts C-runtime på Windows hamnar de 32 ljusen på andra
-ställen – samma sorts scen, annorlunda i detaljerna. Ljusens dämpning är konstant 1, linjär 0.7 och kvadratisk 1.8, en
+ställen – samma sorts scen, annorlunda i detaljerna. Ljusens dämpning är konstant 1, linjär 0,7 och kvadratisk 1,8, en
 kort räckvidd, så varje ljus färgar bara lådorna nära det. Belysningen är learnopengls: en omgivningsterm
 `Diffuse * 0.1`, och för varje ljus en diffus term och en spekulär Blinn-Phong-term (exponent 16, gånger den spekulära
 kartans värde), båda dämpade – i världsrymden.
@@ -135,7 +135,7 @@ struct Light {
 std140 börjar en `vec3` på en multipel av 16 byte, som en `vec4`, så det blir en lucka på 4 byte efter varje `vec3`.
 learnopengls ordning är Position, Color, Linear, Quadratic; kursen flyttar varje float in i luckan efter en `vec3`, så
 att C++-structen får shaderns offsets utan utfyllnadsmedlemmar (32 byte per ljus). `updateUniformBuffer()` fyller
-`ubo.lights[i]` varje bildruta (`linear` 0.7, `quadratic` 1.8) och `ubo.viewPos = cameraPos`; `createLights()` kör
+`ubo.lights[i]` varje bildruta (`linear` 0,7, `quadratic` 1,8) och `ubo.viewPos = cameraPos`; `createLights()` kör
 learnopengls loop ovan en gång. Vertexbuffern innehåller kuben (vertex 0..35) och skärmfyrhörningen (36..41).
 Pipelinehjälparen är `createPipeline(vertFile, fragFile, pipelineRenderPass, colorAttachmentCount, pipeline)`, med ett
 blend state per färg-attachment, som i bloom-kapitlet. `createTextureSampler(filter, addressMode, sampler)` slår bara
@@ -161,7 +161,7 @@ och `deferred_light_box.hlsl` (klar, används i den tredje uppgiften).
 
 Bygg och kör programmet i din IDE: rutnätet på 3 × 3 trälådor med stålramar, sett ovanifrån och bakifrån, den främre
 raden stor längst ner, den bakre liten längst upp, svart runt omkring. Lådornas ovansidor och de sidor som vetter mot
-närliggande ljus är belysta i varma pastellfärger, resten är mörkt – bara omgivningstermen 0.1. Själva ljusen syns
+närliggande ljus är belysta i varma pastellfärger, resten är mörkt – bara omgivningstermen 0,1. Själva ljusen syns
 inte. Varje fragment av varje låda belystes med alla 32 ljus, även de fragment som en närmare låda sedan täckte.
 
 ## G-buffern
@@ -211,7 +211,7 @@ Varför är gPosition och gNormal 16-bitars flyttalsmål, medan albedo och speku
 - [ ] Albedot är gammakorrigerat, och det fungerar bara med 8-bitarsformat
 - [ ] Bara de två första render targets i ett pass kan vara flyttal
 ---
-En 8-bitars UNORM-kanal lagrar 256 värden mellan 0.0 och 1.0: den skulle klämma varje position och varje negativ normalkomponent. Priset för precisionen är minne: två mål på 8 byte och ett på 4 byte per pixel.
+En 8-bitars UNORM-kanal lagrar 256 värden mellan 0,0 och 1,0: den skulle klämma varje position och varje negativ normalkomponent. Priset för precisionen är minne: två mål på 8 byte och ett på 4 byte per pixel.
 ```
 
 :::opengl
@@ -909,7 +909,7 @@ hur många lådor som än överlappar.
 Säg att vi vill rendera varje ljuskälla som en 3D-kub på ljuskällans position, i ljusets färg. En första idé som dyker
 upp är att helt enkelt forward-rendera alla ljuskällor ovanpå den fördröjda belysningsfyrhörningen i slutet av
 deferred shading-kedjan. Alltså rendera kuberna som vi normalt skulle, men först när de fördröjda renderingsstegen är
-klara: en kub vid varje ljus, skala 0.125, i ljusets färg (`deferred_light_box`s fragment shader skriver inget annat än
+klara: en kub vid varje ljus, skala 0,125, i ljusets färg (`deferred_light_box`s fragment shader skriver inget annat än
 färgen).
 
 De renderade kuberna tar dock ingen hänsyn till det lagrade geometridjupet i deferred-renderaren och renderas därför
@@ -938,7 +938,7 @@ och fönstrets (0) som draw framebuffer, och kopierar bara djupet:
 
 learnopengls kommentar säger vad som kan gå fel: att blitta djup kräver samma djupformat på båda sidor, och fönstrets
 väljs av systemet. Här stämmer G-bufferns `GL_DEPTH_COMPONENT`-renderbuffer och GLFW:s förvalda djupbuffer på 24 bitar
-överens. Utan kopian håller fönstrets djupbuffer bara skärmfyrhörningens platta djup (0.5 överallt: NDC z = 0). Det
+överens. Utan kopian håller fönstrets djupbuffer bara skärmfyrhörningens platta djup (0,5 överallt: NDC z = 0). Det
 är närmare än alla kuber, så kuberna skulle klara djuptestet ingenstans och försvinna, i stället för att döljas bara där
 en låda står framför dem. Själva kuberna – learnopengls `// 3. render lights on top of scene` –
 använder `Shader shaderLightBox("deferred_light_box.vs", "deferred_light_box.fs");`:
@@ -1141,15 +1141,15 @@ flera av ljusvolymerna.
 
 ### Att beräkna en ljuskällas volym eller radie
 
-För att få fram en ljuskällas volymradie måste vi lösa dämpningsekvationen för när ljusets bidrag blir 0.0. Som
+För att få fram en ljuskällas volymradie måste vi lösa dämpningsekvationen för när ljusets bidrag blir 0,0. Som
 dämpningsfunktion använder vi funktionen från kapitlet Ljuskällor:
 
 ```text
 attenuation = 1.0 / (Kc + Kl * d + Kq * d²)
 ```
 
-Det vi vill är att lösa ekvationen för när dämpningen är 0.0. Tyvärr når ekvationen aldrig exakt 0.0, så det finns
-ingen lösning. Det vi kan göra är att i stället lösa den för ett ljusstyrkevärde som ligger nära 0.0 men ändå uppfattas
+Det vi vill är att lösa ekvationen för när dämpningen är 0,0. Tyvärr når ekvationen aldrig exakt 0,0, så det finns
+ingen lösning. Det vi kan göra är att i stället lösa den för ett ljusstyrkevärde som ligger nära 0,0 men ändå uppfattas
 som mörkt. learnopengl väljer 5/256: med 8 bitar per kanal syns ett bidrag under 5 av 256 nivåer knappt. Ljusets
 ljusaste färgkanal, *Imax*, gånger dämpningen ska nå 5/256:
 
@@ -1164,11 +1164,11 @@ En andragradsekvation i *d*, som vi löser med lösningsformeln (och tar den pos
 d = (-Kl + sqrt(Kl² - 4 * Kq * (Kc - Imax * 256/5))) / (2 * Kq)
 ```
 
-Med Kc = 1, Kl = 0.7 och Kq = 1.8 når ett ljus vars ljusaste kanal är 0.5 ungefär 3.5 enheter, ett ljus med en kanal på
-1.0 ungefär 5.1. Varje ljuskällas radie beräknas en gång per ljus på CPU:n och skickas med det; shadern hoppar över ljuset
+Med Kc = 1, Kl = 0,7 och Kq = 1,8 når ett ljus vars ljusaste kanal är 0,5 ungefär 3,5 enheter, ett ljus med en kanal på
+1,0 ungefär 5,1. Varje ljuskällas radie beräknas en gång per ljus på CPU:n och skickas med det; shadern hoppar över ljuset
 överallt där fragmentet ligger längre bort:
 
-![Ett ljus radie](images/light-radius.webp "Ett ljus starkaste kanal gånger dess dämpning över avståndet, för 1.0 och 0.5. Där en kurva faller under 5/256 ligger ljusets radie: ungefär 5.1 och 3.5 enheter.")
+![Ett ljus radie](images/light-radius.webp "Ett ljus starkaste kanal gånger dess dämpning över avståndet, för 1,0 och 0,5. Där en kurva faller under 5/256 ligger ljusets radie: ungefär 5,1 och 3,5 enheter.")
 
 ```text
 for(int i = 0; i < NR_LIGHTS; ++i)
@@ -1184,7 +1184,7 @@ for(int i = 0; i < NR_LIGHTS; ++i)
 ```
 
 :::opengl
-I `main.cpp`s ljusloop, learnopengls kod – den konstanta termen skickas inte, shadern antar 1.0:
+I `main.cpp`s ljusloop, learnopengls kod – den konstanta termen skickas inte, shadern antar 1,0:
 
 ```cpp
             // update attenuation parameters and calculate radius
@@ -1245,7 +1245,7 @@ struct Light {
 };
 ```
 
-I `updateUniformBuffer()`s ljusloop, learnopengls kod – den konstanta termen skickas inte, shadern antar 1.0:
+I `updateUniformBuffer()`s ljusloop, learnopengls kod – den konstanta termen skickas inte, shadern antar 1,0:
 
 ```cpp
             // update attenuation parameters and calculate radius
@@ -1303,7 +1303,7 @@ i den tredje raden om 16 byte – så ljuset förblir 48 byte, och C++-structen 
     };
 ```
 
-I `OnUpdate`s ljusloop, learnopengls kod – den konstanta termen skickas inte, shadern antar 1.0:
+I `OnUpdate`s ljusloop, learnopengls kod – den konstanta termen skickas inte, shadern antar 1,0:
 
 ```cpp
         // update attenuation parameters and calculate radius
