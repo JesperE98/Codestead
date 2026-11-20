@@ -195,8 +195,8 @@ ts/
 │   ├── learning/                Lärmotorn utan UI: kursens disposition, XP, nivåer, dagar i rad, utmärkelser,
 │   │                            LearningState (det som sparas i state.json)
 │   ├── ui/                      React: tema och färgsystem, markdown-vy, dialoger, kontrollfrågor (med en ISandbox
-│   │                            som verktyget ger), spelvyer, lagring, "Vad är nytt", självuppdatering (Velopack,
-│   │                            src/electron/) och lärfönstret alla verktyg delar (src/Learning/: LearningWindow,
+│   │                            som verktyget ger), spelvyer, lagring, "Vad är nytt", självuppdatering (Velopack och
+│   │                            native-paket, src/electron/) och lärfönstret alla verktyg delar (src/Learning/: LearningWindow,
 │   │                            LearningTool – det verktyget ger fönstret)
 │   ├── linux-shell/             Den simulerade terminalen (bash, zsh, fish, apt, pacman, dnf, git ...)
 │   │   └── src/                 Shell/ (kommandorader: pipes, omdirigering, sudo, skript, jobb), Parser/ (bash-parsern),
@@ -657,6 +657,63 @@ lagringsutrymme för artefakter.
 
 GitHub har inga rena Windows 10/11-skrivbordsmaskiner, bara Windows Server. Gå därför igenom
 [RELEASE-CHECKLIST.md](RELEASE-CHECKLIST.md) på en riktig Windows 10/11-dator före en större release.
+
+### Hur apparna uppdateras
+
+Var appen kommer ifrån avgör vem som uppdaterar den (huvudprocessen väljer: `appSelfUpdate` i
+`ts/packages/ui/src/electron/AppSelfUpdate.ts`, som hubben, Codestead Linux och GP använder):
+
+| Installation | Vem uppdaterar | Så går det till |
+|---|---|---|
+| Windows (`Setup.exe`), AppImage | Appen själv med Velopack (`VelopackUpdate.ts`) | Velopacks flöde i `<id>-latest`; Velopack byter version och startar om appen. |
+| `.deb`, `.rpm`, Arch-paket (`/opt/<id>/`) | Appen själv med systemets pakethanterare (`NativePackageUpdate.ts`) | Se nedan. |
+| Hubbens verktyg (tar.gz/zip under hubbens datamapp) | Hubben | Den signerade katalogen; hubben installerar den nya versionen bredvid den gamla (**Gå tillbaka** finns). |
+| Portabla arkivet uppackat för hand, utvecklingsbygge | Ingen | Hubben erbjuder en nyare hubb som nedladdning (releasesidan). |
+
+**Native-paket.** Appen räknas som installerad av pakethanteraren när den körs från `/opt/<id>/` *och*
+`dpkg-query -W`, `rpm -q` eller `pacman -Q` säger att paketet `<id>` är installerat (sökvägen räcker inte). Då:
+
+1. **Den senaste versionen**: hubben läser den ur sin signerade katalog (samma källa som när den inte kan uppdatera
+   sig själv); Codestead Linux och GP ur Velopacks flöde `releases.linux.json` i `<id>-latest` (det AppImagen
+   uppdaterar från).
+2. **Nedladdningen**: paketet för systemet och processorn (bara x64 byggs) och `SHA256SUMS.txt` ur releasen
+   `<id>-v<version>` – bara över HTTPS från `github.com` och GitHubs nedladdningsvärdar (`objects.githubusercontent.com`,
+   `release-assets.githubusercontent.com`). Omdirigeringarna följs en i taget och bara dit (Electrons `net.fetch` kan
+   inte stanna vid dem, så nedladdningen görs med `net.request` och `redirect: "manual"`). Filen hamnar i en ny
+   privat temporär mapp (`mkdtemp`) som tas bort efteråt.
+3. **Kontrollsumman**: paketets SHA-256 måste stå i releasens `SHA256SUMS.txt` och stämma. Saknas den eller
+   stämmer den inte installeras ingenting.
+4. **Installationen**, med programmen ur `/usr/bin`, `/usr/sbin`, `/bin` eller `/sbin` (inte ur `PATH`) och filen
+   som argument (inget skal): `pkexec apt-get install -y <fil>` (.deb), `pkexec dnf install -y <fil>` – annars
+   `zypper --non-interactive install --allow-unsigned-rpm <fil>` eller `rpm -U <fil>` – (.rpm),
+   `pkexec pacman -U --noconfirm <fil>` (Arch). pkexec visar systemets lösenordsruta (polkit); som root körs
+   pakethanteraren direkt. Pakethanterarens transaktion gör att en misslyckad installation lämnar den gamla
+   versionen orörd.
+5. **Omstarten**: ett litet skal väntar tills den gamla processen har slutat och startar sedan appens startskript
+   `/opt/<id>/<exe>` (den nya versionen).
+
+Utan pkexec (eller utan pakethanterare) visar hubben knappen **Ladda ner den nya versionen** som förut, och verktygen erbjuder ingen
+uppdatering. Stängs lösenordsrutan (pkexec 126), finns ingen polkit-agent som kan fråga (127, "No authentication
+agent found") eller misslyckas pakethanteraren, visar fönstret varför (pakethanterarens egen text) och erbjuder
+releasesidan i stället. Det finns ingen inställning eller miljövariabel som pekar uppdateringarna någon annanstans.
+
+**Test i docker** (bara hubben har en testkrok: `--smoke-test --self-update-test` kör uppdateringsknappen utan
+fönster, med katalogen från `--catalog`/`--public-key` som i röktestet). `packaging/native-update-test.sh`
+installerar en äldre hubb som paket i en ren container, låter `/etc/hosts` skicka `github.com` och
+`objects.githubusercontent.com` till en lokal HTTPS-server (`packaging/native-update-server.cjs`, med ett
+engångs-CA som bara containern litar på) och kontrollerar: som root, fel kontrollsumma, en omdirigering bort från
+GitHub, och som vanlig användare med en låtsas-pkexec som skriver upp sina argument (och en gång låtsas att
+lösenordsrutan stängdes). Efter varje fall: paketets installerade version och att hubben startade om som den nya
+versionen. Två byggen med olika version behövs (testet ingår inte i CI: det kräver två byggen av hubben):
+
+```bash
+packaging/build-linux.sh ts/apps/hub codestead-hub Codestead Codestead.Hub 0.2.90 /tmp/hub-old
+packaging/build-linux.sh ts/apps/hub codestead-hub Codestead Codestead.Hub 0.2.91 /tmp/hub-new
+packaging/native-update-test.sh /tmp/hub-old /tmp/hub-new deb ubuntu:24.04   # eller: rpm fedora:latest, arch archlinux:latest
+```
+
+(`NATIVE_UPDATE_DOCKER_ARGS="--tmpfs /opt:exec,size=2g --tmpfs /tmp:exec,size=2g"` lägger containerns stora filer i
+minnet där diskutrymmet är knappt.)
 
 ### Secrets i det här repot
 

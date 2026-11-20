@@ -1,5 +1,32 @@
 [
   {
+    "version": "0.2.7",
+    "date": "2026-11-20",
+    "changes": {
+      "en": [
+        "**One-click updates for the Linux packages**: installed as a .deb, .rpm or Arch package, the hub now updates itself with one click – it downloads the new version, checks it and installs it with your system's package manager, which asks for your password."
+      ],
+      "sv": [
+        "**Uppdatering med ett klick för Linuxpaketen**: installerad som .deb-, .rpm- eller Arch-paket uppdaterar hubben nu sig själv med ett klick – den laddar ner den nya versionen, kontrollerar den och installerar den med systemets pakethanterare, som frågar efter ditt lösenord."
+      ],
+      "de": [
+        "**Updates mit einem Klick für die Linux-Pakete**: Als .deb-, .rpm- oder Arch-Paket installiert, aktualisiert sich der Hub jetzt mit einem Klick selbst – die neue Version wird heruntergeladen, geprüft und mit der Paketverwaltung deines Systems installiert, die nach deinem Passwort fragt."
+      ],
+      "fr": [
+        "**Mises à jour en un clic pour les paquets Linux** : installé en paquet .deb, .rpm ou Arch, le hub se met désormais à jour en un clic – la nouvelle version est téléchargée, vérifiée puis installée avec le gestionnaire de paquets de votre système, qui vous demande votre mot de passe."
+      ],
+      "es": [
+        "**Actualizaciones con un clic para los paquetes de Linux**: instalado como paquete .deb, .rpm o de Arch, el hub ahora se actualiza con un clic: descarga la nueva versión, la comprueba y la instala con el gestor de paquetes de tu sistema, que te pide la contraseña."
+      ],
+      "zh": [
+        "**Linux 软件包一键更新**：以 .deb、.rpm 或 Arch 软件包安装时，中心现在只需点击一次即可自行更新——下载新版本、校验后用系统的软件包管理器安装，系统会要求输入你的密码。"
+      ],
+      "ja": [
+        "**Linux パッケージをワンクリックで更新**：.deb、.rpm、Arch のパッケージとしてインストールしたハブが、ワンクリックで自分自身を更新するようになりました。新しいバージョンをダウンロードして検証し、システムのパッケージマネージャーでインストールします（パスワードを求められます）。"
+      ]
+    }
+  },
+  {
     "version": "0.2.6",
     "date": "2026-11-19",
     "changes": {
