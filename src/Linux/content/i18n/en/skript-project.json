@@ -1,0 +1,33 @@
+{
+  "title": "Project: The report robot",
+  "tasks": {
+    "robot-born": {
+      "text": "Create the script `~/{{robotScript}}` with a shebang line and a line that prints a heading. Make it executable and run it.",
+      "hint": "Write the script with `cat > ~/{{robotScript}} << '{{heredocEnd}}'`, start with `#!/bin/bash` and finish with `{{heredocEnd}}`. Then `chmod +x` and `./{{robotScript}}` in your home directory."
+    },
+    "usage": {
+      "text": "The robot gets the log file as its first argument. Run **without** an argument, it should print how it is used and stop with an exit code other than 0. Try it!",
+      "hint": "`$#` is the number of arguments – compare it with `-eq 0` in an `if`. `exit 1` ends the script with exit code 1."
+    },
+    "missing-file": {
+      "text": "If the file in the argument doesn't exist, the robot should say so and stop with an exit code other than 0. Try it with a file name that doesn't exist.",
+      "hint": "`[ -f \"$1\" ]` is true if the file exists, and `!` turns the condition around. Error messages are best sent to stderr with `>&2`."
+    },
+    "levels": {
+      "text": "Now the important part: run on `~/{{documents}}/server.log`, the robot should print how many lines the log has of each level, counted with `awk`. `WARN` and `warn` are the same level!",
+      "hint": "The level is field 3: `awk '{print $3}' \"$1\"`. Turn it into capitals with `toupper($3)`, then count with `sort | uniq -c`."
+    },
+    "error-list": {
+      "text": "Below the numbers, the report should list every error – with time and message but **without** the date, which is the same on every line anyway. Remove the date with `sed`.",
+      "hint": "`grep ERROR \"$1\"` picks out the errors, and `sed 's/^[0-9-]* //'` removes everything up to the first space."
+    },
+    "schedule": {
+      "text": "Schedule the robot: it should run on `~/{{documents}}/server.log` at 06:30 Monday to Friday, and its output should be added to `~/{{robotLog}}`. Keep your old jobs.",
+      "hint": "Minute 30, hour 6, day of the week 1-5. Add the job without removing the old ones with `(crontab -l; echo '…') | crontab -`, and end the job's line with `>> ~/{{robotLog}} 2>&1`."
+    },
+    "rehearsal": {
+      "text": "Dress rehearsal: run the job's command by hand once, so that today's report ends up in `~/{{robotLog}}`.",
+      "hint": "Copy the command after the five time fields in `crontab -l` and run it. Then look in the file with `cat`."
+    }
+  }
+}

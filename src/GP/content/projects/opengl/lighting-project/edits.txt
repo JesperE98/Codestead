@@ -1,0 +1,131 @@
+=== task: house-lights
+--- file: main.cpp
+--- find:
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+--- replace:
+        glClearColor(0.01f, 0.01f, 0.01f, 1.0f); // the theatre is dark
+--- file: main.cpp
+--- find:
+        // directional light
+        lightingShader.setVec3("dirLight.direction", -0.2f, -1.0f, -0.3f);
+        lightingShader.setVec3("dirLight.ambient", 0.05f, 0.05f, 0.05f);
+        lightingShader.setVec3("dirLight.diffuse", 0.4f, 0.4f, 0.4f);
+        lightingShader.setVec3("dirLight.specular", 0.5f, 0.5f, 0.5f);
+--- replace:
+        // directional light: the hall's work light, switched off for the show
+        lightingShader.setVec3("dirLight.direction", -0.2f, -1.0f, -0.3f);
+        lightingShader.setVec3("dirLight.ambient", 0.0f, 0.0f, 0.0f);
+        lightingShader.setVec3("dirLight.diffuse", 0.0f, 0.0f, 0.0f);
+        lightingShader.setVec3("dirLight.specular", 0.0f, 0.0f, 0.0f);
+
+=== task: gels
+--- file: main.cpp
+--- find:
+        glm::vec3( 0.0f,  0.0f, -3.0f)
+    };
+--- replace:
+        glm::vec3( 0.0f,  0.0f, -3.0f)
+    };
+    // the colours of the point lights' gels: blue from the front, green, pink and red from behind the cast
+    glm::vec3 pointLightColors[] = {
+        glm::vec3(0.2f, 0.3f, 1.0f),
+        glm::vec3(0.2f, 1.0f, 0.3f),
+        glm::vec3(1.0f, 0.3f, 0.8f),
+        glm::vec3(1.0f, 0.2f, 0.2f)
+    };
+--- file: main.cpp
+--- find:
+        lightingShader.setVec3("pointLights[0].ambient", 0.05f, 0.05f, 0.05f);
+        lightingShader.setVec3("pointLights[0].diffuse", 0.8f, 0.8f, 0.8f);
+        lightingShader.setVec3("pointLights[0].specular", 1.0f, 1.0f, 1.0f);
+--- replace:
+        lightingShader.setVec3("pointLights[0].ambient", pointLightColors[0] * 0.1f);
+        lightingShader.setVec3("pointLights[0].diffuse", pointLightColors[0]);
+        lightingShader.setVec3("pointLights[0].specular", pointLightColors[0]);
+--- file: main.cpp
+--- find:
+        lightingShader.setVec3("pointLights[1].ambient", 0.05f, 0.05f, 0.05f);
+        lightingShader.setVec3("pointLights[1].diffuse", 0.8f, 0.8f, 0.8f);
+        lightingShader.setVec3("pointLights[1].specular", 1.0f, 1.0f, 1.0f);
+--- replace:
+        lightingShader.setVec3("pointLights[1].ambient", pointLightColors[1] * 0.1f);
+        lightingShader.setVec3("pointLights[1].diffuse", pointLightColors[1]);
+        lightingShader.setVec3("pointLights[1].specular", pointLightColors[1]);
+--- file: main.cpp
+--- find:
+        lightingShader.setVec3("pointLights[2].ambient", 0.05f, 0.05f, 0.05f);
+        lightingShader.setVec3("pointLights[2].diffuse", 0.8f, 0.8f, 0.8f);
+        lightingShader.setVec3("pointLights[2].specular", 1.0f, 1.0f, 1.0f);
+--- replace:
+        lightingShader.setVec3("pointLights[2].ambient", pointLightColors[2] * 0.1f);
+        lightingShader.setVec3("pointLights[2].diffuse", pointLightColors[2]);
+        lightingShader.setVec3("pointLights[2].specular", pointLightColors[2]);
+--- file: main.cpp
+--- find:
+        lightingShader.setVec3("pointLights[3].ambient", 0.05f, 0.05f, 0.05f);
+        lightingShader.setVec3("pointLights[3].diffuse", 0.8f, 0.8f, 0.8f);
+        lightingShader.setVec3("pointLights[3].specular", 1.0f, 1.0f, 1.0f);
+--- replace:
+        lightingShader.setVec3("pointLights[3].ambient", pointLightColors[3] * 0.1f);
+        lightingShader.setVec3("pointLights[3].diffuse", pointLightColors[3]);
+        lightingShader.setVec3("pointLights[3].specular", pointLightColors[3]);
+
+=== task: lamp-colours
+--- file: light_cube.fs
+--- find:
+out vec4 FragColor;
+
+void main()
+{
+    FragColor = vec4(1.0); // set all 4 vector values to 1.0
+}
+--- replace:
+out vec4 FragColor;
+
+// the colour of the light this lamp stands for
+uniform vec3 lightColor;
+
+void main()
+{
+    FragColor = vec4(lightColor, 1.0);
+}
+--- file: main.cpp
+--- find:
+            lightCubeShader.setMat4("model", model);
+--- replace:
+            lightCubeShader.setMat4("model", model);
+            lightCubeShader.setVec3("lightColor", pointLightColors[i]); // each lamp shows its gel's colour
+
+=== task: follow-spot
+--- file: main.cpp
+--- find:
+        // spotLight
+        lightingShader.setVec3("spotLight.position", cameraPos);
+        lightingShader.setVec3("spotLight.direction", cameraFront);
+        lightingShader.setVec3("spotLight.ambient", 0.0f, 0.0f, 0.0f);
+        lightingShader.setVec3("spotLight.diffuse", 1.0f, 1.0f, 1.0f);
+        lightingShader.setVec3("spotLight.specular", 1.0f, 1.0f, 1.0f);
+--- replace:
+        // spotLight: the follow spot, hanging 2 units above the audience's heads (the camera), aimed at a point on the stage
+        glm::vec3 spotPos    = glm::vec3(0.0f, 2.0f, 3.0f);
+        glm::vec3 spotTarget = glm::vec3(0.0f, 0.0f, 0.0f); // the star: container 0
+        lightingShader.setVec3("spotLight.position", spotPos);
+        lightingShader.setVec3("spotLight.direction", glm::normalize(spotTarget - spotPos));
+        lightingShader.setVec3("spotLight.ambient", 0.0f, 0.0f, 0.0f);
+        lightingShader.setVec3("spotLight.diffuse", 1.0f, 0.9f, 0.7f); // a warm white
+        lightingShader.setVec3("spotLight.specular", 1.0f, 0.9f, 0.7f);
+
+=== task: sweep
+--- file: main.cpp
+--- find:
+        glm::vec3 spotTarget = glm::vec3(0.0f, 0.0f, 0.0f); // the star: container 0
+--- replace:
+        // the spot sweeps over the star: its target swings from x = -1 to x = 1 and back, once every π seconds
+        glm::vec3 spotTarget = glm::vec3(sin(2.0f * currentFrame), 0.0f, 0.0f);
+
+=== task: polish
+--- file: main.cpp
+--- find:
+        lightingShader.setFloat("material.shininess", 32.0f);
+--- replace:
+        lightingShader.setFloat("material.shininess", 128.0f); // polished for opening night: small, sharp highlights

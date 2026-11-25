@@ -1,0 +1,33 @@
+{
+  "title": "Proyecto: ¡La web se ha caído!",
+  "tasks": {
+    "facts": {
+      "text": "Empieza un registro de incidencias, `~/{{incidentDir}}/{{incidentLog}}`, con la dirección IP del ordenador y la dirección de la puerta de enlace.",
+      "hint": "`ip a` muestra la dirección e `ip route` la puerta de enlace (la línea `default via`). Manda la salida al registro con `>` y `>>`."
+    },
+    "ping-out": {
+      "text": "Demuestra que la red funciona hasta llegar a internet, resolución de nombres incluida. Añade al registro un ping de tres paquetes a un nombre de internet.",
+      "hint": "Haz ping a un **nombre**, no a una dirección, y así pruebas también el DNS: `ping -c 3 example.com`, y termina con `>>`."
+    },
+    "listening": {
+      "text": "La web es myserver en el puerto 8080. Averigua si hay algo escuchando en ese puerto y, si no lo hay, arranca el servidor web y vuelve a comprobarlo.",
+      "hint": "`ss -tulpn` muestra los puertos que escuchan. Si falta el 8080, arranca el servidor con `myserver` (o con `systemctl`)."
+    },
+    "headers": {
+      "text": "¿Responde la web como debe? Añade al registro las cabeceras de respuesta de la página de inicio, `http://localhost:8080`. El código de estado debe ser 200.",
+      "hint": "`curl -I` descarga solo las cabeceras. En Ubuntu hay que instalar curl primero: `sudo apt install curl`."
+    },
+    "key": {
+      "text": "La próxima vez quieres entrar en el servidor `server.lan` sin contraseña. Crea un par de claves y pon la clave pública en el servidor.",
+      "hint": "`ssh-keygen` crea el par de claves: pulsa Intro en las preguntas. Después, `ssh-copy-id` pone la clave pública en el servidor, por ejemplo `ssh-copy-id srv`."
+    },
+    "backup": {
+      "text": "Haz una copia de seguridad de toda la carpeta `~/{{incidentDir}}` en tu directorio personal del servidor, para que el registro siga ahí aunque tu ordenador se rinda.",
+      "hint": "`rsync -av` con una barra después del origen copia el contenido: `rsync -av ~/{{incidentDir}}/ srv:{{incidentDir}}/`. `scp -r` también sirve."
+    },
+    "remote-read": {
+      "text": "Muestra con `ssh` el registro que está en el servidor, sin que nadie te pida una contraseña.",
+      "hint": "Escribe el comando después del host: `ssh srv cat {{incidentDir}}/{{incidentLog}}`. Si ssh pide una contraseña, la clave no está en su sitio."
+    }
+  }
+}

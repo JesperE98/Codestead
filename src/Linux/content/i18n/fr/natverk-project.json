@@ -1,0 +1,33 @@
+{
+  "title": "Projet : Le site web est en panne !",
+  "tasks": {
+    "facts": {
+      "text": "Commencez un journal d'incident, `~/{{incidentDir}}/{{incidentLog}}`, avec l'adresse IP de l'ordinateur et l'adresse de la passerelle.",
+      "hint": "`ip a` montre l'adresse et `ip route` la passerelle (la ligne `default via`). Envoyez la sortie dans le journal avec `>` et `>>`."
+    },
+    "ping-out": {
+      "text": "Montrez que le réseau fonctionne jusqu'à Internet – résolution de noms comprise. Ajoutez au journal un ping de trois paquets vers un nom sur Internet.",
+      "hint": "Pinguez un **nom**, pas une adresse, et vous testez aussi le DNS : `ping -c 3 example.com`, en terminant par `>>`."
+    },
+    "listening": {
+      "text": "Le site web, c'est myserver sur le port 8080. Découvrez si quelque chose écoute sur ce port – et si rien n'écoute, démarrez le serveur web et vérifiez à nouveau.",
+      "hint": "`ss -tulpn` montre les ports en écoute. S'il manque 8080, démarrez le serveur avec `myserver` (ou avec `systemctl`)."
+    },
+    "headers": {
+      "text": "Le site répond-il comme il faut ? Ajoutez au journal les en-têtes de réponse de la page d'accueil, `http://localhost:8080`. Le code d'état doit être 200.",
+      "hint": "`curl -I` ne récupère que les en-têtes. Sur Ubuntu, il faut d'abord installer curl : `sudo apt install curl`."
+    },
+    "key": {
+      "text": "La prochaine fois, vous voulez entrer sur le serveur `server.lan` sans mot de passe. Créez une paire de clés et mettez la clé publique sur le serveur.",
+      "hint": "`ssh-keygen` crée la paire de clés – appuyez sur Entrée aux questions. `ssh-copy-id` met ensuite la clé publique sur le serveur, par exemple `ssh-copy-id srv`."
+    },
+    "backup": {
+      "text": "Sauvegardez tout le dossier `~/{{incidentDir}}` dans votre répertoire personnel sur le serveur, pour que le journal survive même si votre ordinateur rend l'âme.",
+      "hint": "`rsync -av` avec une barre oblique après la source copie le contenu : `rsync -av ~/{{incidentDir}}/ srv:{{incidentDir}}/`. `scp -r` marche aussi."
+    },
+    "remote-read": {
+      "text": "Affichez avec `ssh` le journal qui se trouve sur le serveur – sans que personne ne demande de mot de passe.",
+      "hint": "Écrivez la commande après l'hôte : `ssh srv cat {{incidentDir}}/{{incidentLog}}`. Si ssh demande un mot de passe, la clé n'est pas en place."
+    }
+  }
+}

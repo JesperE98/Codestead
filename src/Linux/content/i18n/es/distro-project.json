@@ -1,0 +1,57 @@
+{
+  "title": "Proyecto: El portátil de segunda mano",
+  "tasks": {
+    "upgrade": {
+      "text": "Primero lo aburrido: descarga las listas de paquetes más recientes y actualiza todos los paquetes instalados.",
+      "hint": {
+        "debian": "Dos pasos con apt: `sudo apt update` y después `sudo apt upgrade`.",
+        "arch": "En pacman un solo comando hace las dos cosas: `-Syu`, con sudo.",
+        "redhat": "dnf descarga la información de los paquetes por sí mismo, así que basta con `sudo dnf upgrade`."
+      }
+    },
+    "search": {
+      "text": "Alex va a hacer un curso del lenguaje de programación Go. Busca en las listas de paquetes cómo se llama en tu distribución el paquete de Go.",
+      "hint": {
+        "debian": "`apt search` busca en los nombres y en las descripciones: prueba `golang` o `\"Go programming\"`.",
+        "arch": "`pacman -Ss` busca en los nombres y en las descripciones: prueba `\"Go programming\"`.",
+        "redhat": "`dnf search` busca en los nombres y en las descripciones: prueba `golang`."
+      }
+    },
+    "install": {
+      "text": "Instala todo lo de la lista de deseos de Alex: el visor de procesos `htop`, el lenguaje de programación Go y el editor de texto Vim.",
+      "hint": {
+        "debian": "Puedes darle a `sudo apt install` varios paquetes a la vez. Go se llama `golang-go` y Vim `vim`.",
+        "arch": "Puedes darle a `sudo pacman -S` varios paquetes a la vez. Go se llama `go` y Vim `vim`.",
+        "redhat": "Puedes darle a `sudo dnf install` varios paquetes a la vez. Go se llama `golang`, y Vim se llama `vim-enhanced` en la familia Red Hat."
+      }
+    },
+    "list-installed": {
+      "text": "Compruébalo: busca Go en la lista de paquetes **instalados**.",
+      "hint": {
+        "debian": "`apt list --installed` lista todos los paquetes instalados. Pásale la lista a `grep` para no tener que buscar.",
+        "arch": "`pacman -Q` lista todos los paquetes instalados, o solo los que escribas detrás.",
+        "redhat": "`dnf list --installed` lista todos los paquetes instalados. Pásale la lista a `grep` para no tener que buscar."
+      }
+    },
+    "remove": {
+      "text": "Alex probó Vim y no encontró la salida. «¡Quítamelo!» Desinstala Vim.",
+      "hint": {
+        "debian": "`sudo apt remove` y el nombre del paquete.",
+        "arch": "`sudo pacman -R` y el nombre del paquete.",
+        "redhat": "`sudo dnf remove` y el nombre del paquete: el mismo nombre que al instalarlo."
+      }
+    },
+    "vlc": {
+      "text": "Alex quiere ver películas. Instala el reproductor multimedia VLC (`org.videolan.VLC`) como Flatpak desde Flathub.",
+      "hint": {
+        "debian": "`flatpak install flathub org.videolan.VLC`. ¿Falta Flatpak o Flathub? Instala el paquete `flatpak` y añade Flathub con `flatpak remote-add`.",
+        "arch": "`flatpak install flathub org.videolan.VLC`. ¿Falta Flatpak o Flathub? Instala el paquete `flatpak` y añade Flathub con `flatpak remote-add`.",
+        "redhat": "`flatpak install flathub org.videolan.VLC`. ¿Falta Flathub? Añádelo con `flatpak remote-add`."
+      }
+    },
+    "go-version": {
+      "text": "Una prueba antes de devolver el portátil: haz que Go muestre su versión, para que Alex vea que el curso puede empezar.",
+      "hint": "El programa se llama `go`, y el subcomando `version` muestra la versión."
+    }
+  }
+}

@@ -1,0 +1,677 @@
+=== task: vignette
+--- file: shaders/framebuffers_screen.frag
+--- find:
+const float offset = 1.0 / 300.0; // the distance to the neighbouring samples
+
+void main() {
+    // in Vulkan v points down in an image: -offset is the row above
+    vec2 offsets[9] = vec2[](
+        vec2(-offset, -offset), // top-left
+        vec2( 0.0,    -offset), // top-center
+        vec2( offset, -offset), // top-right
+        vec2(-offset,  0.0),    // center-left
+        vec2( 0.0,     0.0),    // center-center
+        vec2( offset,  0.0),    // center-right
+        vec2(-offset,  offset), // bottom-left
+        vec2( 0.0,     offset), // bottom-center
+        vec2( offset,  offset)  // bottom-right
+    );
+
+    float kernel[9] = float[](
+        1.0,  1.0, 1.0,
+        1.0, -8.0, 1.0,
+        1.0,  1.0, 1.0
+    );
+
+    vec3 sampleTex[9];
+    for (int i = 0; i < 9; i++) {
+        sampleTex[i] = vec3(texture(screenTexture, fragTexCoord.st + offsets[i]));
+    }
+    vec3 col = vec3(0.0);
+    for (int i = 0; i < 9; i++) {
+        col += sampleTex[i] * kernel[i];
+    }
+
+    outColor = vec4(col, 1.0);
+}
+--- replace:
+void main() {
+    vec3 col = texture(screenTexture, fragTexCoord).rgb;
+    // a vignette: full brightness in the middle, fading to black towards the corners
+    float distanceFromCentre = length(fragTexCoord - vec2(0.5));
+    col *= 1.0 - smoothstep(0.4, 0.7, distanceFromCentre);
+    outColor = vec4(col, 1.0);
+}
+
+=== task: sky
+--- file: shaders/skybox.vert
+--- find:
+    // TODO: the sky's vertex shader (Cubemaps): the direction to the vertex, and the position at the largest depth
+--- replace:
+    fragTexCoord = inPosition; // the direction from the centre of the cube to the vertex
+    mat4 view = mat4(mat3(ubo.view)); // remove translation from the view matrix: the sky never comes nearer
+    vec4 pos = ubo.proj * view * vec4(inPosition, 1.0);
+    gl_Position = pos.xyww; // z = w: after the perspective divide the depth is 1.0, the largest depth value
+--- file: shaders/skybox.frag
+--- find:
+    // TODO: the sky's colour in the direction fragTexCoord
+--- replace:
+    outColor = texture(skybox, fragTexCoord);
+--- file: main.cpp
+--- find:
+#include <vector>
+--- replace:
+#include <vector>
+#include <string>
+--- file: main.cpp
+--- find:
+    {{ 1.0f,  1.0f,  0.0f}, {1.0f, 1.0f}}
+};
+--- replace:
+    {{ 1.0f,  1.0f,  0.0f}, {1.0f, 1.0f}},
+
+    // skybox: vertices 48..83, learnopengl's skyboxVertices - a cube from -1 to 1 around the origin, positions only
+    // (the texture coordinates stay 0: the skybox's shader does not read them)
+    {{-1.0f,  1.0f, -1.0f}},
+    {{-1.0f, -1.0f, -1.0f}},
+    {{ 1.0f, -1.0f, -1.0f}},
+    {{ 1.0f, -1.0f, -1.0f}},
+    {{ 1.0f,  1.0f, -1.0f}},
+    {{-1.0f,  1.0f, -1.0f}},
+
+    {{-1.0f, -1.0f,  1.0f}},
+    {{-1.0f, -1.0f, -1.0f}},
+    {{-1.0f,  1.0f, -1.0f}},
+    {{-1.0f,  1.0f, -1.0f}},
+    {{-1.0f,  1.0f,  1.0f}},
+    {{-1.0f, -1.0f,  1.0f}},
+
+    {{ 1.0f, -1.0f, -1.0f}},
+    {{ 1.0f, -1.0f,  1.0f}},
+    {{ 1.0f,  1.0f,  1.0f}},
+    {{ 1.0f,  1.0f,  1.0f}},
+    {{ 1.0f,  1.0f, -1.0f}},
+    {{ 1.0f, -1.0f, -1.0f}},
+
+    {{-1.0f, -1.0f,  1.0f}},
+    {{-1.0f,  1.0f,  1.0f}},
+    {{ 1.0f,  1.0f,  1.0f}},
+    {{ 1.0f,  1.0f,  1.0f}},
+    {{ 1.0f, -1.0f,  1.0f}},
+    {{-1.0f, -1.0f,  1.0f}},
+
+    {{-1.0f,  1.0f, -1.0f}},
+    {{ 1.0f,  1.0f, -1.0f}},
+    {{ 1.0f,  1.0f,  1.0f}},
+    {{ 1.0f,  1.0f,  1.0f}},
+    {{-1.0f,  1.0f,  1.0f}},
+    {{-1.0f,  1.0f, -1.0f}},
+
+    {{-1.0f, -1.0f, -1.0f}},
+    {{-1.0f, -1.0f,  1.0f}},
+    {{ 1.0f, -1.0f, -1.0f}},
+    {{ 1.0f, -1.0f, -1.0f}},
+    {{-1.0f, -1.0f,  1.0f}},
+    {{ 1.0f, -1.0f,  1.0f}}
+};
+--- file: main.cpp
+--- find:
+    VkPipeline screenPipeline; // the screen quad
+--- replace:
+    VkPipeline screenPipeline; // the screen quad
+    VkPipeline skyboxPipeline;
+--- file: main.cpp
+--- find:
+    VkSampler textureSampler;
+
+--- replace:
+    VkSampler textureSampler;
+
+    // the sky: one cube map image (6 array layers), its cube view and its sampler
+    VkImage cubemapImage;
+    VkDeviceMemory cubemapImageMemory;
+    VkImageView cubemapImageView;
+    VkSampler cubemapSampler;
+
+--- file: main.cpp
+--- find:
+    VkDescriptorSet screenDescriptorSet; // the uniform buffer (not used) and the offscreen colour image
+--- replace:
+    VkDescriptorSet screenDescriptorSet; // the uniform buffer (not used) and the offscreen colour image
+    VkDescriptorSet skyboxDescriptorSet; // the uniform buffer and the cube map
+--- file: main.cpp
+--- find:
+        createPipeline("shaders/framebuffers.vert.spv", "shaders/framebuffers.frag.spv", offscreenRenderPass, VK_TRUE, graphicsPipeline);
+        // the screen quad: for the window's render pass, without the depth test (it must never be hidden)
+        createPipeline("shaders/framebuffers_screen.vert.spv", "shaders/framebuffers_screen.frag.spv", renderPass, VK_FALSE, screenPipeline);
+--- replace:
+        createPipeline("shaders/framebuffers.vert.spv", "shaders/framebuffers.frag.spv", offscreenRenderPass, 2, VK_TRUE, VK_COMPARE_OP_LESS, graphicsPipeline);
+        // the screen quad: for the window's render pass, without the depth test (it must never be hidden)
+        createPipeline("shaders/framebuffers_screen.vert.spv", "shaders/framebuffers_screen.frag.spv", renderPass, 2, VK_FALSE, VK_COMPARE_OP_LESS, screenPipeline);
+        // the sky, drawn last at depth 1.0: it passes where the depth buffer still holds the 1.0 it was cleared to.
+        // It only needs the position: the first of the two vertex attributes
+        createPipeline("shaders/skybox.vert.spv", "shaders/skybox.frag.spv", offscreenRenderPass, 1, VK_TRUE, VK_COMPARE_OP_LESS_OR_EQUAL, skyboxPipeline);
+--- file: main.cpp
+--- find:
+        createTextureSampler(VK_SAMPLER_ADDRESS_MODE_REPEAT, textureSampler);
+--- replace:
+        createTextureSampler(VK_SAMPLER_ADDRESS_MODE_REPEAT, textureSampler);
+        std::vector<std::string> faces = {
+            "textures/skybox/right.png",
+            "textures/skybox/left.png",
+            "textures/skybox/top.png",
+            "textures/skybox/bottom.png",
+            "textures/skybox/front.png",
+            "textures/skybox/back.png"
+        };
+        loadCubemap(faces, cubemapImage, cubemapImageMemory, cubemapImageView);
+        createTextureSampler(VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, cubemapSampler); // no seams where two faces meet
+--- file: main.cpp
+--- find:
+        createDescriptorSet(offscreenImageView, textureSampler, screenDescriptorSet);
+--- replace:
+        createDescriptorSet(offscreenImageView, textureSampler, screenDescriptorSet);
+        createDescriptorSet(cubemapImageView, cubemapSampler, skyboxDescriptorSet);
+--- file: main.cpp
+--- find:
+        vkDestroySampler(device, textureSampler, nullptr);
+--- replace:
+        vkDestroySampler(device, textureSampler, nullptr);
+        vkDestroySampler(device, cubemapSampler, nullptr);
+
+        vkDestroyImageView(device, cubemapImageView, nullptr);
+        vkDestroyImage(device, cubemapImage, nullptr);
+        vkFreeMemory(device, cubemapImageMemory, nullptr);
+--- file: main.cpp
+--- find:
+        vkDestroyPipeline(device, screenPipeline, nullptr);
+--- replace:
+        vkDestroyPipeline(device, screenPipeline, nullptr);
+        vkDestroyPipeline(device, skyboxPipeline, nullptr);
+--- file: main.cpp
+--- find:
+    void createPipeline(const std::string& vertShaderFile, const std::string& fragShaderFile, VkRenderPass pipelineRenderPass, VkBool32 depthTestEnable, VkPipeline& pipeline) {
+--- replace:
+    void createPipeline(const std::string& vertShaderFile, const std::string& fragShaderFile, VkRenderPass pipelineRenderPass, uint32_t attributeCount, VkBool32 depthTestEnable, VkCompareOp depthCompareOp, VkPipeline& pipeline) {
+--- file: main.cpp
+--- find:
+        vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+--- replace:
+        vertexInputInfo.vertexAttributeDescriptionCount = attributeCount; // the first attributeCount attributes of a Vertex
+--- file: main.cpp
+--- find:
+        depthStencil.depthCompareOp = VK_COMPARE_OP_LESS; // keep the fragment if it is nearer than the stored depth
+--- replace:
+        depthStencil.depthCompareOp = depthCompareOp; // LESS: keep the fragment if it is nearer than the stored depth
+--- file: main.cpp
+--- find:
+    // A texture image (device local, ready for sampling)
+--- replace:
+    // learnopengl's loadCubemap: six images -> one cube map. A cube map is an image with 6 array layers, one per face,
+    // in the order +X (right), -X (left), +Y (top), -Y (bottom), +Z (front), -Z (back), read through a cube view.
+    // The images are not flipped: the cube map rules put each image's first row (its top) at the top of the face.
+    void loadCubemap(const std::vector<std::string>& faces, VkImage& image, VkDeviceMemory& imageMemory, VkImageView& imageView) {
+        // the six images, all of the same size, as RGBA
+        std::array<stbi_uc*, 6> pixels{};
+        int texWidth = 0, texHeight = 0, texChannels = 0;
+        for (size_t i = 0; i < faces.size(); i++) {
+            pixels[i] = stbi_load(faces[i].c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+            if (!pixels[i]) {
+                throw std::runtime_error("failed to load cubemap texture " + faces[i] + "!");
+            }
+        }
+        VkDeviceSize faceSize = texWidth * texHeight * 4;
+
+        // one staging buffer with the six faces one after the other
+        VkBuffer stagingBuffer;
+        VkDeviceMemory stagingBufferMemory;
+        createBuffer(faceSize * 6, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+
+        void* data;
+        vkMapMemory(device, stagingBufferMemory, 0, faceSize * 6, 0, &data);
+        for (size_t i = 0; i < 6; i++) {
+            memcpy(static_cast<stbi_uc*>(data) + faceSize * i, pixels[i], static_cast<size_t>(faceSize));
+            stbi_image_free(pixels[i]);
+        }
+        vkUnmapMemory(device, stagingBufferMemory);
+
+        // the image: 6 array layers, and the flag that allows a cube view of them
+        VkImageCreateInfo imageInfo{};
+        imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        imageInfo.flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
+        imageInfo.imageType = VK_IMAGE_TYPE_2D;
+        imageInfo.extent.width = static_cast<uint32_t>(texWidth);
+        imageInfo.extent.height = static_cast<uint32_t>(texHeight);
+        imageInfo.extent.depth = 1;
+        imageInfo.mipLevels = 1;
+        imageInfo.arrayLayers = 6;
+        imageInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
+        imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+        imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+        imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+        if (vkCreateImage(device, &imageInfo, nullptr, &image) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create cubemap image!");
+        }
+
+        VkMemoryRequirements memRequirements;
+        vkGetImageMemoryRequirements(device, image, &memRequirements);
+
+        VkMemoryAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        allocInfo.allocationSize = memRequirements.size;
+        allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+        if (vkAllocateMemory(device, &allocInfo, nullptr, &imageMemory) != VK_SUCCESS) {
+            throw std::runtime_error("failed to allocate cubemap image memory!");
+        }
+
+        vkBindImageMemory(device, image, imageMemory, 0);
+
+        VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+
+        // all six layers: UNDEFINED -> TRANSFER_DST_OPTIMAL
+        VkImageMemoryBarrier barrier{};
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.image = image;
+        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        barrier.subresourceRange.baseMipLevel = 0;
+        barrier.subresourceRange.levelCount = 1;
+        barrier.subresourceRange.baseArrayLayer = 0;
+        barrier.subresourceRange.layerCount = 6;
+        barrier.srcAccessMask = 0;
+        barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+        // face i of the staging buffer -> array layer i (learnopengl: GL_TEXTURE_CUBE_MAP_POSITIVE_X + i)
+        std::array<VkBufferImageCopy, 6> regions{};
+        for (uint32_t i = 0; i < 6; i++) {
+            regions[i].bufferOffset = faceSize * i;
+            regions[i].bufferRowLength = 0;
+            regions[i].bufferImageHeight = 0;
+            regions[i].imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            regions[i].imageSubresource.mipLevel = 0;
+            regions[i].imageSubresource.baseArrayLayer = i;
+            regions[i].imageSubresource.layerCount = 1;
+            regions[i].imageOffset = {0, 0, 0};
+            regions[i].imageExtent = {static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight), 1};
+        }
+        vkCmdCopyBufferToImage(commandBuffer, stagingBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, static_cast<uint32_t>(regions.size()), regions.data());
+
+        // all six layers: TRANSFER_DST_OPTIMAL -> SHADER_READ_ONLY_OPTIMAL
+        barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+        endSingleTimeCommands(commandBuffer);
+
+        vkDestroyBuffer(device, stagingBuffer, nullptr);
+        vkFreeMemory(device, stagingBufferMemory, nullptr);
+
+        // a cube view of the six layers: a shader samples it with a direction (samplerCube)
+        VkImageViewCreateInfo viewInfo{};
+        viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        viewInfo.image = image;
+        viewInfo.viewType = VK_IMAGE_VIEW_TYPE_CUBE;
+        viewInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
+        viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        viewInfo.subresourceRange.baseMipLevel = 0;
+        viewInfo.subresourceRange.levelCount = 1;
+        viewInfo.subresourceRange.baseArrayLayer = 0;
+        viewInfo.subresourceRange.layerCount = 6;
+
+        if (vkCreateImageView(device, &viewInfo, nullptr, &imageView) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create cubemap image view!");
+        }
+    }
+
+    // A texture image (device local, ready for sampling)
+--- file: main.cpp
+--- find:
+        poolSizes[0].descriptorCount = 3;
+--- replace:
+        poolSizes[0].descriptorCount = 4;
+--- file: main.cpp
+--- find:
+        poolSizes[1].descriptorCount = 3;
+--- replace:
+        poolSizes[1].descriptorCount = 4;
+--- file: main.cpp
+--- find:
+        poolInfo.maxSets = 3;
+--- replace:
+        poolInfo.maxSets = 4;
+--- file: main.cpp
+--- find:
+        vkCmdDraw(commandBuffer, 6, 1, 36, 0); // the floor's 6 vertices start at vertex 36
+--- replace:
+        vkCmdDraw(commandBuffer, 6, 1, 36, 0); // the floor's 6 vertices start at vertex 36
+
+        // the sky last: at depth 1.0 it only fills the pixels nothing else has covered (its vertex shader keeps only
+        // the camera's rotation of the view matrix)
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, skyboxPipeline);
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &skyboxDescriptorSet, 0, nullptr);
+        vkCmdDraw(commandBuffer, 36, 1, 48, 0); // the skybox's 36 vertices start at vertex 48
+
+=== task: columns
+--- file: shaders/columns.vert
+--- find:
+    // TODO: turn the cube into a column and give every instance (gl_InstanceIndex) a place of its own
+    vec3 position = inPosition;
+--- replace:
+    // the cube stretched into a column 0.5 x 3 x 0.5 standing on the floor (y from -0.5 to 2.5); instance i stands at
+    // x = -4 + 2i, 4 units behind the sculptures
+    vec3 position = inPosition * vec3(0.5, 3.0, 0.5) + vec3(-4.0 + 2.0 * gl_InstanceIndex, 1.0, -4.0);
+--- file: main.cpp
+--- find:
+    VkPipeline skyboxPipeline;
+--- replace:
+    VkPipeline skyboxPipeline;
+    VkPipeline columnPipeline; // the colonnade: one instanced draw
+--- file: main.cpp
+--- find:
+        // the sky, drawn last at depth 1.0: it passes where the depth buffer still holds the 1.0 it was cleared to.
+        // It only needs the position: the first of the two vertex attributes
+--- replace:
+        createPipeline("shaders/columns.vert.spv", "shaders/framebuffers.frag.spv", offscreenRenderPass, 2, VK_TRUE, VK_COMPARE_OP_LESS, columnPipeline);
+        // the sky, drawn last at depth 1.0: it passes where the depth buffer still holds the 1.0 it was cleared to.
+        // It only needs the position: the first of the two vertex attributes
+--- file: main.cpp
+--- find:
+        vkDestroyPipeline(device, skyboxPipeline, nullptr);
+--- replace:
+        vkDestroyPipeline(device, skyboxPipeline, nullptr);
+        vkDestroyPipeline(device, columnPipeline, nullptr);
+--- file: main.cpp
+--- find:
+        // the sky last: at depth 1.0 it only fills the pixels nothing else has covered (its vertex shader keeps only
+--- replace:
+        // the colonnade at the back: five marble columns in one instanced draw call (the cube's 36 vertices, 5 instances)
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, columnPipeline);
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &cubeDescriptorSet, 0, nullptr);
+        vkCmdDraw(commandBuffer, 36, 5, 0, 0);
+
+        // the sky last: at depth 1.0 it only fills the pixels nothing else has covered (its vertex shader keeps only
+
+=== task: outline
+--- file: shaders/outline.frag
+--- find:
+    // TODO: every fragment of the outline gets the same colour
+--- replace:
+    outColor = vec4(1.0, 0.8, 0.2, 1.0); // gold
+--- file: main.cpp
+--- find:
+            {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT},
+--- replace:
+            {VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT}, // depth with an 8-bit stencil buffer
+--- file: main.cpp
+--- find:
+        offscreenDepthImageView = createImageView(offscreenDepthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+--- replace:
+        offscreenDepthImageView = createImageView(offscreenDepthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
+--- file: main.cpp
+--- find:
+        depthImageView = createImageView(depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+--- replace:
+        depthImageView = createImageView(depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
+--- file: main.cpp
+--- find:
+        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL; // ready to be sampled after the pass
+
+        VkAttachmentDescription depthAttachment{};
+        depthAttachment.format = findDepthFormat();
+        depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+--- replace:
+        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL; // ready to be sampled after the pass
+
+        VkAttachmentDescription depthAttachment{};
+        depthAttachment.format = findDepthFormat();
+        depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR; // the stencil buffer starts at 0 every frame
+--- file: main.cpp
+--- find:
+    void createPipeline(const std::string& vertShaderFile, const std::string& fragShaderFile, VkRenderPass pipelineRenderPass, uint32_t attributeCount, VkBool32 depthTestEnable, VkCompareOp depthCompareOp, VkPipeline& pipeline) {
+--- replace:
+    void createPipeline(const std::string& vertShaderFile, const std::string& fragShaderFile, VkRenderPass pipelineRenderPass, uint32_t attributeCount, VkBool32 depthTestEnable, VkCompareOp depthCompareOp, VkCompareOp stencilCompareOp, uint32_t stencilWriteMask, VkPipeline& pipeline) {
+--- file: main.cpp
+--- find:
+        depthStencil.stencilTestEnable = VK_FALSE;
+--- replace:
+        depthStencil.stencilTestEnable = VK_TRUE;
+        depthStencil.front.failOp = VK_STENCIL_OP_KEEP;      // the stencil test fails: keep the stored value
+        depthStencil.front.depthFailOp = VK_STENCIL_OP_KEEP; // the stencil test passes, the depth test fails: keep it
+        depthStencil.front.passOp = VK_STENCIL_OP_REPLACE;   // both pass: store the reference value
+        depthStencil.front.compareOp = stencilCompareOp;
+        depthStencil.front.compareMask = 0xFF;
+        depthStencil.front.writeMask = stencilWriteMask;
+        depthStencil.front.reference = 1;
+        depthStencil.back = depthStencil.front; // the same for triangles seen from behind
+--- file: main.cpp
+--- find:
+        createPipeline("shaders/framebuffers.vert.spv", "shaders/framebuffers.frag.spv", offscreenRenderPass, 2, VK_TRUE, VK_COMPARE_OP_LESS, graphicsPipeline);
+        // the screen quad: for the window's render pass, without the depth test (it must never be hidden)
+        createPipeline("shaders/framebuffers_screen.vert.spv", "shaders/framebuffers_screen.frag.spv", renderPass, 2, VK_FALSE, VK_COMPARE_OP_LESS, screenPipeline);
+        createPipeline("shaders/columns.vert.spv", "shaders/framebuffers.frag.spv", offscreenRenderPass, 2, VK_TRUE, VK_COMPARE_OP_LESS, columnPipeline);
+        // the sky, drawn last at depth 1.0: it passes where the depth buffer still holds the 1.0 it was cleared to.
+        // It only needs the position: the first of the two vertex attributes
+        createPipeline("shaders/skybox.vert.spv", "shaders/skybox.frag.spv", offscreenRenderPass, 1, VK_TRUE, VK_COMPARE_OP_LESS_OR_EQUAL, skyboxPipeline);
+--- replace:
+        // (the stencil test passes ALWAYS and writes nothing (write mask 0x00) unless a pipeline says otherwise)
+        createPipeline("shaders/framebuffers.vert.spv", "shaders/framebuffers.frag.spv", offscreenRenderPass, 2, VK_TRUE, VK_COMPARE_OP_LESS, VK_COMPARE_OP_ALWAYS, 0x00, graphicsPipeline);
+        // the selected sculpture writes 1 into the stencil buffer wherever it is drawn
+        createPipeline("shaders/framebuffers.vert.spv", "shaders/framebuffers.frag.spv", offscreenRenderPass, 2, VK_TRUE, VK_COMPARE_OP_LESS, VK_COMPARE_OP_ALWAYS, 0xFF, selectedPipeline);
+        // the outline: one colour, only where the stencil value is not 1, no depth test (nothing hides it)
+        createPipeline("shaders/framebuffers.vert.spv", "shaders/outline.frag.spv", offscreenRenderPass, 2, VK_FALSE, VK_COMPARE_OP_LESS, VK_COMPARE_OP_NOT_EQUAL, 0x00, outlinePipeline);
+        // the screen quad: for the window's render pass, without the depth test (it must never be hidden)
+        createPipeline("shaders/framebuffers_screen.vert.spv", "shaders/framebuffers_screen.frag.spv", renderPass, 2, VK_FALSE, VK_COMPARE_OP_LESS, VK_COMPARE_OP_ALWAYS, 0x00, screenPipeline);
+        createPipeline("shaders/columns.vert.spv", "shaders/framebuffers.frag.spv", offscreenRenderPass, 2, VK_TRUE, VK_COMPARE_OP_LESS, VK_COMPARE_OP_ALWAYS, 0x00, columnPipeline);
+        // the sky, drawn last at depth 1.0: it passes where the depth buffer still holds the 1.0 it was cleared to.
+        // It only needs the position: the first of the two vertex attributes
+        createPipeline("shaders/skybox.vert.spv", "shaders/skybox.frag.spv", offscreenRenderPass, 1, VK_TRUE, VK_COMPARE_OP_LESS_OR_EQUAL, VK_COMPARE_OP_ALWAYS, 0x00, skyboxPipeline);
+--- file: main.cpp
+--- find:
+    VkPipeline columnPipeline; // the colonnade: one instanced draw
+--- replace:
+    VkPipeline columnPipeline; // the colonnade: one instanced draw
+    VkPipeline selectedPipeline; // the selected sculpture: writes the stencil buffer
+    VkPipeline outlinePipeline; // its outline: where the stencil buffer is not 1
+--- file: main.cpp
+--- find:
+        vkDestroyPipeline(device, columnPipeline, nullptr);
+--- replace:
+        vkDestroyPipeline(device, columnPipeline, nullptr);
+        vkDestroyPipeline(device, selectedPipeline, nullptr);
+        vkDestroyPipeline(device, outlinePipeline, nullptr);
+--- file: main.cpp
+--- find:
+        model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdDraw(commandBuffer, 36, 1, 0, 0);
+--- replace:
+        model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, selectedPipeline); // the selected one: stencil 1
+        vkCmdDraw(commandBuffer, 36, 1, 0, 0);
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+--- file: main.cpp
+--- find:
+        vkCmdDraw(commandBuffer, 36, 1, 48, 0); // the skybox's 36 vertices start at vertex 48
+--- replace:
+        vkCmdDraw(commandBuffer, 36, 1, 48, 0); // the skybox's 36 vertices start at vertex 48
+
+        // the outline: the selected sculpture once more, a little larger, in one colour - only around the sculpture,
+        // where the stencil buffer is not 1
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, outlinePipeline);
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &cubeDescriptorSet, 0, nullptr);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+        model = glm::scale(model, glm::vec3(1.1f));
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdDraw(commandBuffer, 36, 1, 0, 0);
+
+=== task: glass
+--- file: main.cpp
+--- find:
+    {{ 1.0f, -1.0f,  1.0f}}
+};
+--- replace:
+    {{ 1.0f, -1.0f,  1.0f}},
+
+    // the glass pane: vertices 84..89, learnopengl's transparentVertices - a quad from x = 0 to 1, y = -0.5 to 0.5 -
+    // with v = 0 at its top (the image's first row)
+    {{ 0.0f,  0.5f,  0.0f}, {0.0f, 0.0f}},
+    {{ 0.0f, -0.5f,  0.0f}, {0.0f, 1.0f}},
+    {{ 1.0f, -0.5f,  0.0f}, {1.0f, 1.0f}},
+
+    {{ 0.0f,  0.5f,  0.0f}, {0.0f, 0.0f}},
+    {{ 1.0f, -0.5f,  0.0f}, {1.0f, 1.0f}},
+    {{ 1.0f,  0.5f,  0.0f}, {1.0f, 0.0f}}
+};
+--- file: main.cpp
+--- find:
+    VkPipeline outlinePipeline; // its outline: where the stencil buffer is not 1
+--- replace:
+    VkPipeline outlinePipeline; // its outline: where the stencil buffer is not 1
+    VkPipeline glassPipeline; // the glass pane: blended over what is behind it
+--- file: main.cpp
+--- find:
+    VkImageView floorTextureImageView;
+--- replace:
+    VkImageView floorTextureImageView;
+
+    VkImage glassTextureImage;
+    VkDeviceMemory glassTextureImageMemory;
+    VkImageView glassTextureImageView;
+--- file: main.cpp
+--- find:
+    VkDescriptorSet skyboxDescriptorSet; // the uniform buffer and the cube map
+--- replace:
+    VkDescriptorSet skyboxDescriptorSet; // the uniform buffer and the cube map
+    VkDescriptorSet glassDescriptorSet; // the uniform buffer and the window texture
+--- file: main.cpp
+--- find:
+    void createPipeline(const std::string& vertShaderFile, const std::string& fragShaderFile, VkRenderPass pipelineRenderPass, uint32_t attributeCount, VkBool32 depthTestEnable, VkCompareOp depthCompareOp, VkCompareOp stencilCompareOp, uint32_t stencilWriteMask, VkPipeline& pipeline) {
+--- replace:
+    void createPipeline(const std::string& vertShaderFile, const std::string& fragShaderFile, VkRenderPass pipelineRenderPass, uint32_t attributeCount, VkBool32 depthTestEnable, VkCompareOp depthCompareOp, VkCompareOp stencilCompareOp, uint32_t stencilWriteMask, VkBool32 blendEnable, VkPipeline& pipeline) {
+--- file: main.cpp
+--- find:
+        colorBlendAttachment.blendEnable = VK_FALSE;
+--- replace:
+        colorBlendAttachment.blendEnable = blendEnable;
+        // result = src * src.alpha + dst * (1 - src.alpha) (learnopengl: glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA))
+        colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+        colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+        colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
+        colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+        colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+        colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
+--- file: main.cpp
+--- find:
+        createPipeline("shaders/framebuffers.vert.spv", "shaders/framebuffers.frag.spv", offscreenRenderPass, 2, VK_TRUE, VK_COMPARE_OP_LESS, VK_COMPARE_OP_ALWAYS, 0x00, graphicsPipeline);
+        // the selected sculpture writes 1 into the stencil buffer wherever it is drawn
+        createPipeline("shaders/framebuffers.vert.spv", "shaders/framebuffers.frag.spv", offscreenRenderPass, 2, VK_TRUE, VK_COMPARE_OP_LESS, VK_COMPARE_OP_ALWAYS, 0xFF, selectedPipeline);
+        // the outline: one colour, only where the stencil value is not 1, no depth test (nothing hides it)
+        createPipeline("shaders/framebuffers.vert.spv", "shaders/outline.frag.spv", offscreenRenderPass, 2, VK_FALSE, VK_COMPARE_OP_LESS, VK_COMPARE_OP_NOT_EQUAL, 0x00, outlinePipeline);
+        // the screen quad: for the window's render pass, without the depth test (it must never be hidden)
+        createPipeline("shaders/framebuffers_screen.vert.spv", "shaders/framebuffers_screen.frag.spv", renderPass, 2, VK_FALSE, VK_COMPARE_OP_LESS, VK_COMPARE_OP_ALWAYS, 0x00, screenPipeline);
+        createPipeline("shaders/columns.vert.spv", "shaders/framebuffers.frag.spv", offscreenRenderPass, 2, VK_TRUE, VK_COMPARE_OP_LESS, VK_COMPARE_OP_ALWAYS, 0x00, columnPipeline);
+        // the sky, drawn last at depth 1.0: it passes where the depth buffer still holds the 1.0 it was cleared to.
+        // It only needs the position: the first of the two vertex attributes
+        createPipeline("shaders/skybox.vert.spv", "shaders/skybox.frag.spv", offscreenRenderPass, 1, VK_TRUE, VK_COMPARE_OP_LESS_OR_EQUAL, VK_COMPARE_OP_ALWAYS, 0x00, skyboxPipeline);
+--- replace:
+        // (the stencil test passes ALWAYS and writes nothing (write mask 0x00) unless a pipeline says otherwise; only
+        // the glass blends)
+        createPipeline("shaders/framebuffers.vert.spv", "shaders/framebuffers.frag.spv", offscreenRenderPass, 2, VK_TRUE, VK_COMPARE_OP_LESS, VK_COMPARE_OP_ALWAYS, 0x00, VK_FALSE, graphicsPipeline);
+        // the selected sculpture writes 1 into the stencil buffer wherever it is drawn
+        createPipeline("shaders/framebuffers.vert.spv", "shaders/framebuffers.frag.spv", offscreenRenderPass, 2, VK_TRUE, VK_COMPARE_OP_LESS, VK_COMPARE_OP_ALWAYS, 0xFF, VK_FALSE, selectedPipeline);
+        // the outline: one colour, only where the stencil value is not 1, no depth test (nothing hides it)
+        createPipeline("shaders/framebuffers.vert.spv", "shaders/outline.frag.spv", offscreenRenderPass, 2, VK_FALSE, VK_COMPARE_OP_LESS, VK_COMPARE_OP_NOT_EQUAL, 0x00, VK_FALSE, outlinePipeline);
+        // the glass: the scene's shaders, with blending
+        createPipeline("shaders/framebuffers.vert.spv", "shaders/framebuffers.frag.spv", offscreenRenderPass, 2, VK_TRUE, VK_COMPARE_OP_LESS, VK_COMPARE_OP_ALWAYS, 0x00, VK_TRUE, glassPipeline);
+        // the screen quad: for the window's render pass, without the depth test (it must never be hidden)
+        createPipeline("shaders/framebuffers_screen.vert.spv", "shaders/framebuffers_screen.frag.spv", renderPass, 2, VK_FALSE, VK_COMPARE_OP_LESS, VK_COMPARE_OP_ALWAYS, 0x00, VK_FALSE, screenPipeline);
+        createPipeline("shaders/columns.vert.spv", "shaders/framebuffers.frag.spv", offscreenRenderPass, 2, VK_TRUE, VK_COMPARE_OP_LESS, VK_COMPARE_OP_ALWAYS, 0x00, VK_FALSE, columnPipeline);
+        // the sky, drawn last at depth 1.0: it passes where the depth buffer still holds the 1.0 it was cleared to.
+        // It only needs the position: the first of the two vertex attributes
+        createPipeline("shaders/skybox.vert.spv", "shaders/skybox.frag.spv", offscreenRenderPass, 1, VK_TRUE, VK_COMPARE_OP_LESS_OR_EQUAL, VK_COMPARE_OP_ALWAYS, 0x00, VK_FALSE, skyboxPipeline);
+--- file: main.cpp
+--- find:
+        loadTexture("textures/metal.png", floorTextureImage, floorTextureImageMemory, floorTextureImageView);
+--- replace:
+        loadTexture("textures/metal.png", floorTextureImage, floorTextureImageMemory, floorTextureImageView);
+        loadTexture("textures/window.png", glassTextureImage, glassTextureImageMemory, glassTextureImageView);
+--- file: main.cpp
+--- find:
+        createDescriptorSet(cubemapImageView, cubemapSampler, skyboxDescriptorSet);
+--- replace:
+        createDescriptorSet(cubemapImageView, cubemapSampler, skyboxDescriptorSet);
+        createDescriptorSet(glassTextureImageView, textureSampler, glassDescriptorSet);
+--- file: main.cpp
+--- find:
+        poolSizes[0].descriptorCount = 4;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 4;
+--- replace:
+        poolSizes[0].descriptorCount = 5;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = 5;
+--- file: main.cpp
+--- find:
+        poolInfo.maxSets = 4;
+--- replace:
+        poolInfo.maxSets = 5;
+--- file: main.cpp
+--- find:
+        vkDestroyImageView(device, floorTextureImageView, nullptr);
+        vkDestroyImage(device, floorTextureImage, nullptr);
+        vkFreeMemory(device, floorTextureImageMemory, nullptr);
+--- replace:
+        vkDestroyImageView(device, floorTextureImageView, nullptr);
+        vkDestroyImage(device, floorTextureImage, nullptr);
+        vkFreeMemory(device, floorTextureImageMemory, nullptr);
+
+        vkDestroyImageView(device, glassTextureImageView, nullptr);
+        vkDestroyImage(device, glassTextureImage, nullptr);
+        vkFreeMemory(device, glassTextureImageMemory, nullptr);
+--- file: main.cpp
+--- find:
+        vkDestroyPipeline(device, outlinePipeline, nullptr);
+--- replace:
+        vkDestroyPipeline(device, outlinePipeline, nullptr);
+        vkDestroyPipeline(device, glassPipeline, nullptr);
+--- file: main.cpp
+--- find:
+        model = glm::scale(model, glm::vec3(1.1f));
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdDraw(commandBuffer, 36, 1, 0, 0);
+--- replace:
+        model = glm::scale(model, glm::vec3(1.1f));
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdDraw(commandBuffer, 36, 1, 0, 0);
+
+        // the glass pane last, after everything opaque, blended over what is behind it
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, glassPipeline);
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &glassDescriptorSet, 0, nullptr);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.3f, 0.0f, -0.2f)); // between the two sculptures
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdDraw(commandBuffer, 6, 1, 84, 0); // the glass pane's 6 vertices start at vertex 84

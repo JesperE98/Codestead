@@ -11,4 +11,9 @@ export class CourseChapter {
   get isLesson(): boolean {
     return this.kind === ChapterKinds.Lesson;
   }
+
+  /** The optional project after the part's exam. */
+  get isProject(): boolean {
+    return this.kind === ChapterKinds.Project;
+  }
 }

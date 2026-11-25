@@ -1,0 +1,49 @@
+{
+  "title": "Projekt: Lyktnatt på strandpromenaden",
+  "tasks": {
+    "lamps": {
+      "text": "Byt ut de fyra färgade testlamporna mot fyra lyktor med ett varmt, gulorange ljus (rött över grönt över blått), var och en mycket starkare än 1.0, i (-2.5, 1, -1), (2.5, 1, -1), (-2.5, 1, -5) och (2.5, 1, -5).",
+      "hint": {
+        "opengl": "Bara värdena i `lightPositions` och `lightColors` ändras. Något i stil med (10, 6, 2) är en bra natriumlampsfärg.",
+        "vulkan": "Bara värdena i vektorerna `lightPositions` och `lightColors` ändras. Något i stil med (10, 6, 2) är en bra natriumlampsfärg.",
+        "d3d12": "Bara värdena i arrayerna `lightPositions` och `lightColors` ändras. Något i stil med (10, 6, 2) är en bra natriumlampsfärg."
+      }
+    },
+    "moonlight": {
+      "text": "Lägg till ett svagt, kallt månsken: där ingen lykta når ska lådorna vara mörkblå i stället för svarta.",
+      "hint": {
+        "opengl": "Ambient-termen i `bloom.fs` är `0.0 * color`. En liten blåaktig färg i stället för 0.0 – några hundradelar – är månsken.",
+        "vulkan": "Ambient-termen i `shaders/bloom.frag` är `0.0 * color`. En liten blåaktig färg i stället för 0.0 – några hundradelar – är månsken.",
+        "d3d12": "Ambient-termen i `bloom.hlsl` är `0.0f * color`. En liten blåaktig färg i stället för 0.0 – några hundradelar – är månsken."
+      }
+    },
+    "wet-boards": {
+      "text": "Låt de våta planken och lådorna spegla lyktorna: lägg till en spekulär Blinn-Phong-term i scenens belysning, med halfway-vektorn mellan riktningarna mot ljuset och mot kameran.",
+      "hint": {
+        "opengl": "I ljusloopen i `bloom.fs`: `normalize(lightDir + viewDir)`, sedan `pow(max(dot(normal, halfwayDir), 0.0), …)` gånger ljusets färg, adderat före dämpningen. `viewDir` finns redan.",
+        "vulkan": "I ljusloopen i `shaders/bloom.frag`: `normalize(lightDir + viewDir)`, sedan `pow(max(dot(normal, halfwayDir), 0.0), …)` gånger ljusets färg, adderat före dämpningen. `viewDir` finns redan.",
+        "d3d12": "I ljusloopen i `bloom.hlsl`: riktningen mot kameran från `viewPos`, `normalize(lightDir + viewDir)`, sedan `pow(max(dot(normal, halfwayDir), 0.0f), …)` gånger ljusets färg, adderat före dämpningen."
+      }
+    },
+    "mist": {
+      "text": "Gör lyktornas glöd starkare, som om deras ljus fastnade i dimma.",
+      "hint": {
+        "opengl": "`hdrColor += bloomColor;` i `bloom_final.fs` kan addera bluren med en faktor över 1 – eller blurra fler gånger (`amount` i `main.cpp`, håll det jämnt).",
+        "vulkan": "`hdrColor += bloomColor;` i `shaders/bloom_final.frag` kan addera bluren med en faktor över 1 – eller blurra fler gånger (`amount` i `recordCommandBuffer()`, håll det jämnt).",
+        "d3d12": "`hdrColor += bloomColor;` i `bloom_final.hlsl` kan addera bluren med en faktor över 1 – eller blurra fler gånger (`amount` i `PopulateCommandList()`, håll det jämnt)."
+      }
+    },
+    "exposure": {
+      "text": "Skruva ner exponeringen (under 1.0) tills promenaden ser ut som natt igen: planken mellan lyktorna mörka, lyktorna fortfarande ljusa.",
+      "hint": "Den globala `exposure` i `main.cpp` går till det sista passets tone mapping. Prova värden mellan 0.1 och 0.8 – lösningen använder 0.25."
+    },
+    "flicker": {
+      "text": "Låt lyktan längst bak till vänster fladdra: dess ljus ska dala och komma tillbaka med tiden.",
+      "hint": {
+        "opengl": "I renderloopen, innan ljusens uniforms sätts: `lightColors[2]` = lyktans färg gånger en faktor som ändras med `currentFrame`, till exempel `0.55f + 0.45f * sin(currentFrame * 6.0f)`.",
+        "vulkan": "I `updateUniformBuffer()`, innan ljusen läggs i uniform-buffern: `lightColors[2]` = lyktans färg gånger en faktor som `0.55f + 0.45f * sin(time * 6.0f)`, med `time` från `glfwGetTime()`. Ta bort `const` från vektorn.",
+        "d3d12": "I `OnUpdate()`, innan ljusen läggs i konstantbufferten: `lightColors[2]` = lyktans färg gånger en faktor som `0.55f + 0.45f * std::sin(time * 6.0f)`, med `time` från en `static` starttid och `std::chrono`."
+      }
+    }
+  }
+}

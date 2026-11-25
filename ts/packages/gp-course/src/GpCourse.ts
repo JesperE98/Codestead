@@ -87,7 +87,7 @@ function build(): CourseChapter[] {
   const list: CourseChapter[] = [];
   for (const part of parts) {
     list.push(...lessonList.filter(([, p]) => p === part).map(([id]) => new CourseChapter(id, part, ChapterKinds.Lesson)));
-    for (const kind of [ChapterKinds.Summary, ChapterKinds.Exam])
+    for (const kind of [ChapterKinds.Summary, ChapterKinds.Exam, ChapterKinds.Project])
       if (Resources.read(`chapters/en/${part}-${kind}.md`) !== null) list.push(new CourseChapter(`${part}-${kind}`, part, kind));
   }
   return list;
@@ -113,7 +113,8 @@ function order(files: [string, string][]): [string, string][] {
 /**
  * The Codestead GP course: learnopengl.com's structure, section by section, for OpenGL, Vulkan and DirectX 12.
  * Parts and lessons are listed here in course order; each part ends with a summary and an exam when their texts
- * exist (chapters/en/&lt;part&gt;-summary.md and -exam.md).
+ * exist (chapters/en/&lt;part&gt;-summary.md and -exam.md), and then an optional project (-project.md): a brief whose
+ * milestones are tasks like a lesson's (projects/&lt;api&gt;/&lt;part&gt;-project/: its own start/, edits.txt and solution/).
  */
 export const GpCourse = {
   parts,
@@ -138,6 +139,7 @@ export const GpCourse = {
             p,
             GpCourse.lessonsIn(p).map((l) => l.id),
             GpCourse.chapters.some((c) => c.part === p && c.kind === ChapterKinds.Exam),
+            GpCourse.chapters.some((c) => c.part === p && c.isProject),
           ),
       ),
     ));
@@ -148,7 +150,7 @@ export const GpCourse = {
     return `${chapterId}/${taskId}@${api}`;
   },
 
-  /** The tasks of a chapter for an API (none for summaries and exams). */
+  /** The tasks of a chapter for an API (none for summaries and exams; a project's milestones). */
   tasks(chapterId: string, api: string): readonly CourseTask[] {
     const key = `${api}/${chapterId}`;
     let tasks = taskCache.get(key);

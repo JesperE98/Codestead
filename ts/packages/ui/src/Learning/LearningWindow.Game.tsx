@@ -265,6 +265,22 @@ export class WindowGame {
       title = this.t("celebrate.exam.title", { percent });
       subtitle = this.t("celebrate.exam.subtitle", { part: this.t(`part.${examPart}`) });
       next = after((c) => c.part === examPart && c.kind === ChapterKinds.Exam);
+      nextText =
+        next === undefined
+          ? null
+          : next.isProject
+            ? this.t("celebrate.toProject")
+            : this.t("celebrate.nextPart", { title: this.t(`part.${next.part}`) });
+    } else if (ev.projectsCompleted.length > 0) {
+      const part = ev.projectsCompleted[ev.projectsCompleted.length - 1]!;
+      const project = chapters.find((c) => c.part === part && c.isProject);
+      big = true;
+      icon = "🛠️";
+      title = this.t("celebrate.project.title");
+      subtitle = project !== undefined ? w.tool.chapterTitle(project.id, w.lang) : this.t(`part.${part}`);
+      commands = project !== undefined ? w.tool.chapterCommands(project.id).slice(0, 16) : [];
+      seconds = project !== undefined ? secondsOf(project.id) : 0;
+      next = project !== undefined ? after((c) => c.id === project.id) : undefined;
       nextText = next === undefined ? null : this.t("celebrate.nextPart", { title: this.t(`part.${next.part}`) });
     } else if (ev.partsCompleted.length > 0) {
       const part = ev.partsCompleted[ev.partsCompleted.length - 1]!;

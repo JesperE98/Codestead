@@ -1,0 +1,33 @@
+{
+  "title": "Project: Pack your dotfiles",
+  "tasks": {
+    "repo": {
+      "text": "Create the directory `~/{{dotfilesDir}}` and make it a git repository.",
+      "hint": "`mkdir`, `cd` and then `git init`. Is git not installed? Install it with the package manager, as in the chapter on git."
+    },
+    "pack": {
+      "text": "Pack the settings you already have: copy `~/.bashrc` and `~/.gitconfig` to `~/{{dotfilesDir}}`.",
+      "hint": "`cp` takes several files at once: `cp ~/.bashrc ~/.gitconfig ~/{{dotfilesDir}}/`. Is `~/.gitconfig` missing? Then you haven't told git who you are yet – do it with `git config --global`."
+    },
+    "aliases": {
+      "text": "Write the file `{{aliasFile}}` in the repository, with at least two aliases you find useful.",
+      "hint": "One alias per line, e.g. `alias ll='ls -la'`. Write the lines with `echo \"…\" >> {{aliasFile}}` – double quotes outside, single quotes inside."
+    },
+    "first-commit": {
+      "text": "Save the state: make a commit that contains both copies and `{{aliasFile}}`.",
+      "hint": "`git add` and then `git commit -m \"…\"`. Check with `git status` first, so you know what goes in."
+    },
+    "secret": {
+      "text": "The Wi-Fi password is going to live in `~/{{dotfilesDir}}/{{secretFile}}`, but it must never end up in the history. Create the file, make git ignore it and commit what that takes.",
+      "hint": "Write the file's name in `.gitignore` and commit `.gitignore`. `git status` should no longer show `{{secretFile}}`. Has the file already gone into a commit? Then `git rm --cached` removes it from the repository but not from the disk."
+    },
+    "branch": {
+      "text": "Try new aliases on a branch: create the branch `{{aliasBranch}}`, add at least one more alias to `{{aliasFile}}` and commit on the branch.",
+      "hint": "`git switch -c {{aliasBranch}}`, then `echo \"…\" >> {{aliasFile}}` and `git commit -am \"…\"`."
+    },
+    "merge-and-use": {
+      "text": "The aliases work – merge `{{aliasBranch}}` into the main branch. Then load `{{aliasFile}}` into the shell with `source` and run one of your aliases.",
+      "hint": "`git switch main` and `git merge {{aliasBranch}}`. Then `source {{aliasFile}}` – and type the name of an alias as if it were a command."
+    }
+  }
+}

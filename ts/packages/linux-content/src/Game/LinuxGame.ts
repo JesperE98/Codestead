@@ -15,6 +15,7 @@ export const outline: CourseOutline = new CourseOutline(
         p.id,
         ChaptersLib.lessonsIn(p.id).map((l) => l.id),
         ChaptersLib.chapters.some((c) => c.part === p.id && c.kind === ChapterKinds.Exam),
+        ChaptersLib.chapters.some((c) => c.part === p.id && c.kind === ChapterKinds.Project),
       ),
   ),
 );

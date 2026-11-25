@@ -46,6 +46,8 @@ export const all: readonly Achievement[] = [
   partDone("verktyg", "🧰"),
   count("all-families", "🐧", AchievementCategory.Learning, families, 3),
   checkpoints(50, "🤔"),
+  CommonAchievements.projectFirst,
+  CommonAchievements.projectAll,
   // Exams
   CommonAchievements.examFirst,
   CommonAchievements.examPerfect,
@@ -87,6 +89,8 @@ export const all: readonly Achievement[] = [
   ),
   new Achievement("answer-42", "🌌", AchievementCategory.Hidden, (c) => cmd(c, (x) => x.output.trim() === "42")),
   new Achievement("night-owl", "🦉", AchievementCategory.Hidden, (c) => c.solvedNow.length > 0 && c.now.getHours() < 4),
+  CommonAchievements.projectUnaided,
+  CommonAchievements.projectPerfect,
 ];
 
 export function find(id: string): Achievement | null {

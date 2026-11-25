@@ -1,0 +1,33 @@
+{
+  "title": "Projet : Le repaire",
+  "tasks": {
+    "clubhouse": {
+      "text": "Construisez le repaire : le répertoire `~/{{clubDir}}`, où **vous seul** pouvez lire, écrire et entrer (`rwx------`).",
+      "hint": "Créez le répertoire avec `mkdir` et changez les permissions avec `chmod`. r = 4, w = 2, x = 1 – et le groupe et les autres ont 0."
+    },
+    "knock": {
+      "text": "Écrivez le script du portier `~/{{clubDir}}/{{knockScript}}`, qui affiche le mot de passe du club avec `echo`. Rendez-le exécutable et lancez-le.",
+      "hint": "Écrivez la ligne dans le fichier avec `echo '…' > fichier` (guillemets simples autour de la ligne), rendez-le exécutable avec `chmod +x` et lancez-le avec son chemin, par exemple `./{{knockScript}}` quand vous êtes dans le repaire."
+    },
+    "variable": {
+      "text": "Créez la variable d'environnement `{{clubVar}}` avec le chemin complet du repaire, pour que `cd ${{clubVar}}` vous y emmène.",
+      "hint": "`export NOM=valeur` – sans espaces autour du `=`. La valeur peut être `~/{{clubDir}}` ou `$HOME/{{clubDir}}`."
+    },
+    "wardrobe": {
+      "text": "Cachez une entrée secrète : un lien symbolique `~/{{documents}}/{{wardrobe}}` qui mène tout droit au repaire.",
+      "hint": "`ln -s CIBLE NOM_DU_LIEN` – la cible d'abord. Avec un chemin absolu comme cible, peu importe où vous êtes."
+    },
+    "night-watch": {
+      "text": "Postez une sentinelle : lancez `sleep 3600` en arrière-plan, pour qu'elle monte la garde pendant une heure – et continue même si vous vous déconnectez.",
+      "hint": "`&` à la fin de la ligne lance la commande en arrière-plan, et `nohup` au début la fait survivre à votre déconnexion."
+    },
+    "backup": {
+      "text": "Faites une sauvegarde de tout le repaire : l'archive compressée `~/{{clubBackup}}`.",
+      "hint": "Placez-vous dans votre répertoire personnel et utilisez `tar` avec `c` (créer), `z` (gzip) et `f` suivi du nom de l'archive – et le répertoire à archiver en dernier."
+    },
+    "dismiss": {
+      "text": "Le matin est là : renvoyez la sentinelle chez elle en terminant le processus.",
+      "hint": "`jobs` montre le numéro de job de la sentinelle et `ps` son PID. Terminez-la avec `kill %NUMÉRO`, `kill PID` ou `pkill sleep`."
+    }
+  }
+}

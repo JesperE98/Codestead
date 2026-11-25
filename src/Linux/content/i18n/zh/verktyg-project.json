@@ -1,0 +1,33 @@
+{
+  "title": "项目：打包你的 dotfiles",
+  "tasks": {
+    "repo": {
+      "text": "创建目录 `~/{{dotfilesDir}}`，并把它变成一个 git 仓库。",
+      "hint": "`mkdir`、`cd`，然后 `git init`。没有安装 git？像在 git 那一章里一样，用包管理器安装它。"
+    },
+    "pack": {
+      "text": "打包你已有的设置：把 `~/.bashrc` 和 `~/.gitconfig` 复制到 `~/{{dotfilesDir}}`。",
+      "hint": "`cp` 一次可以接受多个文件：`cp ~/.bashrc ~/.gitconfig ~/{{dotfilesDir}}/`。没有 `~/.gitconfig`？那说明你还没告诉 git 你是谁——用 `git config --global` 来设置。"
+    },
+    "aliases": {
+      "text": "在仓库里写文件 `{{aliasFile}}`，里面至少有两个对你有用的别名。",
+      "hint": "每行一个别名，例如 `alias ll='ls -la'`。用 `echo \"…\" >> {{aliasFile}}` 写这些行——外面用双引号，里面用单引号。"
+    },
+    "first-commit": {
+      "text": "保存当前状态：做一次提交，包含两个副本和 `{{aliasFile}}`。",
+      "hint": "先 `git add`，再 `git commit -m \"…\"`。提交前用 `git status` 检查一下，这样你就知道哪些内容会被提交。"
+    },
+    "secret": {
+      "text": "Wi-Fi 密码将放在 `~/{{dotfilesDir}}/{{secretFile}}` 里，但它绝不能进入历史记录。创建这个文件，让 git 忽略它，并提交为此需要提交的内容。",
+      "hint": "把文件名写进 `.gitignore`，并提交 `.gitignore`。`git status` 应该不再显示 `{{secretFile}}`。这个文件已经进了某次提交？那就用 `git rm --cached` 把它从仓库里移除，但不从磁盘上删除。"
+    },
+    "branch": {
+      "text": "在分支上试试新别名：创建分支 `{{aliasBranch}}`，在 `{{aliasFile}}` 中至少再加一个别名，并在这个分支上提交。",
+      "hint": "`git switch -c {{aliasBranch}}`，然后 `echo \"…\" >> {{aliasFile}}` 和 `git commit -am \"…\"`。"
+    },
+    "merge-and-use": {
+      "text": "别名都能用——把 `{{aliasBranch}}` 合并到主分支。然后用 `source` 把 `{{aliasFile}}` 读进 shell，并运行你的一个别名。",
+      "hint": "`git switch main` 和 `git merge {{aliasBranch}}`。然后 `source {{aliasFile}}`——再像输入命令一样输入一个别名的名字。"
+    }
+  }
+}

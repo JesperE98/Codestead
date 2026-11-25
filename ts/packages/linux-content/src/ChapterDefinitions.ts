@@ -5,7 +5,9 @@
 import { anvandare } from "./Chapters/admin/anvandare.js";
 import { diskar } from "./Chapters/admin/diskar.js";
 import { systemd } from "./Chapters/admin/systemd.js";
+import { adminProject } from "./Chapters/admin/admin-project.js";
 import { distributioner } from "./Chapters/distro/distributioner.js";
+import { distroProject } from "./Chapters/distro/distro-project.js";
 import { familjArch } from "./Chapters/distro/familj-arch.js";
 import { familjDebian } from "./Chapters/distro/familj-debian.js";
 import { familjRedhat } from "./Chapters/distro/familj-redhat.js";
@@ -14,10 +16,13 @@ import { filer } from "./Chapters/grunder/filer.js";
 import { lasaText } from "./Chapters/grunder/lasa-text.js";
 import { navigera } from "./Chapters/grunder/navigera.js";
 import { pipes } from "./Chapters/grunder/pipes.js";
+import { grunderProject } from "./Chapters/grunder/grunder-project.js";
 import { filoverforing } from "./Chapters/natverk/filoverforing.js";
 import { natverk } from "./Chapters/natverk/natverk.js";
+import { natverkProject } from "./Chapters/natverk/natverk-project.js";
 import { schemalaggning } from "./Chapters/skript/schemalaggning.js";
 import { skript } from "./Chapters/skript/skript.js";
+import { skriptProject } from "./Chapters/skript/skript-project.js";
 import { textbearbetning } from "./Chapters/skript/textbearbetning.js";
 import { valkommen } from "./Chapters/start/valkommen.js";
 import { arkiv } from "./Chapters/system/arkiv.js";
@@ -25,9 +30,28 @@ import { lankar } from "./Chapters/system/lankar.js";
 import { miljo } from "./Chapters/system/miljo.js";
 import { processer } from "./Chapters/system/processer.js";
 import { rattigheter } from "./Chapters/system/rattigheter.js";
+import { systemProject } from "./Chapters/system/system-project.js";
 import { git } from "./Chapters/verktyg/git.js";
 import { skal } from "./Chapters/verktyg/skal.js";
+import { verktygProject } from "./Chapters/verktyg/verktyg-project.js";
 import type { Chapter } from "./Types/Chapter.js";
+
+/**
+ * The optional projects, one per main chapter at most (kind "project", id "&lt;part&gt;-project"): a brief in
+ * src/Linux/content/chapters/&lt;lang&gt;/&lt;id&gt;.md and milestones that are checked like a lesson's tasks. They come
+ * after the main chapter's exam and do not count towards the course's progress.
+ */
+export function defineProjects(): Chapter[] {
+  return [
+    grunderProject(),
+    systemProject(),
+    distroProject(),
+    adminProject(),
+    natverkProject(),
+    skriptProject(),
+    verktygProject(),
+  ];
+}
 
 export function defineChapters(): Chapter[] {
   return [

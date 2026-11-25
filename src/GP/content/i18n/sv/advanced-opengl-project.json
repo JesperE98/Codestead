@@ -1,0 +1,45 @@
+{
+  "title": "Projekt: Glaspaviljongen",
+  "tasks": {
+    "vignette": {
+      "text": "Broschyrkänslan: byt ut kantdetekteringen mot en vinjett – bildens mitt som den är, utonad till svart mot hörnen.",
+      "hint": {
+        "opengl": "Bara `framebuffers_screen.fs` ändras: färgen från `screenTexture` vid `TexCoords`, multiplicerad med `1.0 - smoothstep(0.4, 0.7, length(TexCoords - vec2(0.5)))`.",
+        "vulkan": "Bara `shaders/framebuffers_screen.frag` ändras: färgen från `screenTexture` vid `fragTexCoord`, multiplicerad med `1.0 - smoothstep(0.4, 0.7, length(fragTexCoord - vec2(0.5)))`. Kompilera om den.",
+        "d3d12": "Bara `framebuffers_screen.hlsl` ändras: pixel-shaderns sampling vid `input.texCoord`, multiplicerad med `1.0f - smoothstep(0.4f, 0.7f, length(input.texCoord - float2(0.5f, 0.5f)))`."
+      }
+    },
+    "sky": {
+      "text": "Öppna himlen: ta in cubemap-himlen från *Cubemaps* i framebuffern utanför skärmen, ritad efter skulpturerna och golvet, så att den bara fyller de pixlar som inget annat har täckt.",
+      "hint": {
+        "opengl": "Från *Cubemaps*: `loadCubemap` med de sex bilderna i `skybox/`, `skyboxVertices` med sin VAO, `skybox.vs` (med `gl_Position = pos.xyww`) och `skybox.fs`. Rita den efter golvet med `glDepthFunc(GL_LEQUAL)` och vymatrisen utan förflyttning.",
+        "vulkan": "Från *Cubemaps*: `loadCubemap`, en sampler som klämmer vid kanten, en descriptor set med cubemapen, himlens 36 vertexar efter de andra och `shaders/skybox.vert` (`pos.xyww`) / `.frag`. Dess pipeline: ett vertexattribut och djupjämförelsen `VK_COMPARE_OP_LESS_OR_EQUAL` – pipeline-hjälpfunktionen behöver två parametrar till. En descriptor set till i poolen.",
+        "d3d12": "Från *Cubemaps*: `LoadCubemap` till plats 4 i en större CBV/SRV-heap, den statiska samplern `s1` som klämmer vid kanten, himlens 36 vertexar efter de andra, `skybox.hlsl` (`pos.xyww`) och en pipeline state med `D3D12_COMPARISON_FUNC_LESS_EQUAL` utan djupskrivning. Rita den efter golvet."
+      }
+    },
+    "columns": {
+      "text": "Bygg pelargången: fem marmorpelare bakom skulpturerna – kuben utsträckt till 0,5 × 3 × 0,5, stående på golvet, vid x = −4, −2, 0, 2, 4 och z = −4 – med ett enda instansierat ritanrop; vertex-shadern placerar varje instans.",
+      "hint": {
+        "opengl": "I `columns.vs`: `aPos * vec3(0.5, 3.0, 0.5) + vec3(-4.0 + 2.0 * gl_InstanceID, 1.0, -4.0)`. En `Shader` av `columns.vs` och `framebuffers.fs`, marmortexturen och `glDrawArraysInstanced(GL_TRIANGLES, 0, 36, 5)` före himlen.",
+        "vulkan": "I `shaders/columns.vert`: `inPosition * vec3(0.5, 3.0, 0.5) + vec3(-4.0 + 2.0 * gl_InstanceIndex, 1.0, -4.0)`. En pipeline av `columns.vert` och `framebuffers.frag`, marmorns descriptor set och `vkCmdDraw(commandBuffer, 36, 5, 0, 0)` före himlen.",
+        "d3d12": "I `columns.hlsl`: `position * float3(0.5f, 3.0f, 0.5f) + float3(-4.0f + 2.0f * instanceID, 1.0f, -4.0f)` med `uint instanceID : SV_InstanceID`. En pipeline state med den vertex-shadern och scenens pixel-shader, marmortexturen och `DrawInstanced(36, 5, 0, 0)` före himlen."
+      }
+    },
+    "outline": {
+      "text": "Utställningens stjärna: ge den vänstra skulpturen, vid (−1, 0, −1), en gyllene kontur – till exempel (1,0, 0,8, 0,2) – med stencilbufferten: skulpturen en gång till, ungefär 1,1 gånger större, bara runt omkring sig själv.",
+      "hint": {
+        "opengl": "`glEnable(GL_STENCIL_TEST)`, `glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE)`, rensa även `GL_STENCIL_BUFFER_BIT`. Skulpturen med `glStencilFunc(GL_ALWAYS, 1, 0xFF)` och `glStencilMask(0xFF)`, allt annat med masken `0x00`; efter himlen `glStencilFunc(GL_NOTEQUAL, 1, 0xFF)`, inget djuptest, `outline.fs` och den förstorade kuben.",
+        "vulkan": "Ett djupformat med stencil (`VK_FORMAT_D32_SFLOAT_S8_UINT` …) med stencilaspekten i sina vyer, `stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR` i renderpasset utanför skärmen och stencilparametrar till pipeline-hjälpfunktionen: skulpturens pipeline `ALWAYS` med skrivmasken `0xFF`, konturens `NOT_EQUAL` utan djuptest och med `outline.frag`, ritad efter himlen.",
+        "d3d12": "`DXGI_FORMAT_D24_UNORM_S8_UINT` för djupbufferten, dess vy och pipeline states, `D3D12_CLEAR_FLAG_STENCIL` och `OMSetStencilRef(1)`. Två pipeline states: skulpturens med `StencilEnable`, `StencilFunc ALWAYS`, `StencilPassOp REPLACE` och skrivmasken `0xFF`; konturens med `NOT_EQUAL`, skrivmasken `0x00`, inget djuptest och `outline.hlsl`."
+      }
+    },
+    "glass": {
+      "text": "Glasväggen: mellan skulpturerna en ruta av tonat glas – fönstertexturen på den 1 × 1 stora quaden från *Blending*, flyttad till (0,3, 0, −0,2) – blendad över det som finns bakom, ritad efter allt ogenomskinligt.",
+      "hint": {
+        "opengl": "`loadTexture(\"window.png\")`, quadens vertexar och VAO, och som det sista ritanropet i passet utanför skärmen: `glEnable(GL_BLEND)`, `glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)` och scenens shader med glasets modellmatris.",
+        "vulkan": "`loadTexture(\"textures/window.png\", …)`, dess descriptor set (en till i poolen), quadens 6 vertexar efter himlens och en pipeline med `blendEnable` och `SRC_ALPHA` / `ONE_MINUS_SRC_ALPHA` – en parameter till för hjälpfunktionen. Ritas sist i passet utanför skärmen.",
+        "d3d12": "`LoadTexture(\"window.png\", …)` till plats 5 (en deskriptor till i heapen), quadens 6 vertexar efter himlens och en pipeline state med `BlendEnable`, `D3D12_BLEND_SRC_ALPHA` och `D3D12_BLEND_INV_SRC_ALPHA`. Ritas sist i passet utanför skärmen."
+      }
+    }
+  }
+}

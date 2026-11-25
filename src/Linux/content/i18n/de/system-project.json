@@ -1,0 +1,33 @@
+{
+  "title": "Projekt: Das Clubhaus",
+  "tasks": {
+    "clubhouse": {
+      "text": "Bau das Clubhaus: das Verzeichnis `~/{{clubDir}}`, in dem **nur du** lesen, schreiben und hineingehen darfst (`rwx------`).",
+      "hint": "Leg das Verzeichnis mit `mkdir` an und ändere die Rechte mit `chmod`. r = 4, w = 2, x = 1 – und die Gruppe und alle anderen bekommen 0."
+    },
+    "knock": {
+      "text": "Schreib das Türsteher-Skript `~/{{clubDir}}/{{knockScript}}`, das mit `echo` das Passwort des Clubs ausgibt. Mach es ausführbar und führe es aus.",
+      "hint": "Schreib die Zeile mit `echo '…' > datei` in die Datei (einfache Anführungszeichen um die Zeile), mach sie mit `chmod +x` ausführbar und starte sie mit ihrem Pfad, z. B. `./{{knockScript}}`, wenn du im Clubhaus bist."
+    },
+    "variable": {
+      "text": "Lege die Umgebungsvariable `{{clubVar}}` mit dem vollständigen Pfad zum Clubhaus an, sodass `cd ${{clubVar}}` dich dorthin bringt.",
+      "hint": "`export NAME=wert` – ohne Leerzeichen um `=`. Der Wert kann `~/{{clubDir}}` oder `$HOME/{{clubDir}}` sein."
+    },
+    "wardrobe": {
+      "text": "Versteck einen geheimen Eingang: einen symbolischen Link `~/{{documents}}/{{wardrobe}}`, der direkt ins Clubhaus führt.",
+      "hint": "`ln -s ZIEL LINKNAME` – das Ziel zuerst. Mit einem absoluten Pfad als Ziel ist es egal, wo du gerade bist."
+    },
+    "night-watch": {
+      "text": "Stell eine Nachtwache auf: Lass `sleep 3600` im Hintergrund laufen, damit sie eine Stunde lang Wache hält – und weiterläuft, auch wenn du dich abmeldest.",
+      "hint": "`&` am Ende der Zeile lässt den Befehl im Hintergrund laufen, und `nohup` am Anfang sorgt dafür, dass er das Abmelden übersteht."
+    },
+    "backup": {
+      "text": "Mach eine Sicherungskopie des ganzen Clubhauses: das komprimierte Archiv `~/{{clubBackup}}`.",
+      "hint": "Geh in dein Home-Verzeichnis und verwende `tar` mit `c` (erstellen), `z` (gzip) und `f` gefolgt vom Namen des Archivs – und zuletzt das Verzeichnis, das gepackt werden soll."
+    },
+    "dismiss": {
+      "text": "Der Morgen ist da: Schick die Nachtwache nach Hause, indem du den Prozess beendest.",
+      "hint": "`jobs` zeigt die Jobnummer der Nachtwache und `ps` ihre PID. Beende sie mit `kill %NUMMER`, `kill PID` oder `pkill sleep`."
+    }
+  }
+}

@@ -1,0 +1,494 @@
+=== task: vignette
+--- file: framebuffers_screen.fs
+--- find:
+const float offset = 1.0 / 300.0; // the distance to the neighbouring samples
+
+void main()
+{
+    vec2 offsets[9] = vec2[](
+        vec2(-offset,  offset), // top-left
+        vec2( 0.0,     offset), // top-center
+        vec2( offset,  offset), // top-right
+        vec2(-offset,  0.0),    // center-left
+        vec2( 0.0,     0.0),    // center-center
+        vec2( offset,  0.0),    // center-right
+        vec2(-offset, -offset), // bottom-left
+        vec2( 0.0,    -offset), // bottom-center
+        vec2( offset, -offset)  // bottom-right
+    );
+
+    float kernel[9] = float[](
+        1.0,  1.0, 1.0,
+        1.0, -8.0, 1.0,
+        1.0,  1.0, 1.0
+    );
+
+    vec3 sampleTex[9];
+    for(int i = 0; i < 9; i++)
+    {
+        sampleTex[i] = vec3(texture(screenTexture, TexCoords.st + offsets[i]));
+    }
+    vec3 col = vec3(0.0);
+    for(int i = 0; i < 9; i++)
+        col += sampleTex[i] * kernel[i];
+
+    FragColor = vec4(col, 1.0);
+}
+--- replace:
+void main()
+{
+    vec3 col = texture(screenTexture, TexCoords).rgb;
+    // a vignette: full brightness in the middle, fading to black towards the corners
+    float distanceFromCentre = length(TexCoords - vec2(0.5));
+    col *= 1.0 - smoothstep(0.4, 0.7, distanceFromCentre);
+    FragColor = vec4(col, 1.0);
+}
+
+=== task: sky
+--- file: skybox.vs
+--- find:
+    // TODO: the sky's vertex shader (Cubemaps): the direction to the vertex, and the position at the largest depth
+--- replace:
+    TexCoords = aPos; // the direction from the centre of the cube to the vertex
+    vec4 pos = projection * view * vec4(aPos, 1.0);
+    gl_Position = pos.xyww; // z = w: after the perspective divide the depth is 1.0, the largest depth value
+--- file: skybox.fs
+--- find:
+    // TODO: the sky's colour in the direction TexCoords
+--- replace:
+    FragColor = texture(skybox, TexCoords);
+--- file: main.cpp
+--- find:
+#include <iostream>
+--- replace:
+#include <iostream>
+#include <string>
+#include <vector>
+--- file: main.cpp
+--- find:
+unsigned int loadTexture(const char *path);
+--- replace:
+unsigned int loadTexture(const char *path);
+unsigned int loadCubemap(std::vector<std::string> faces);
+--- file: main.cpp
+--- find:
+    Shader screenShader("framebuffers_screen.vs", "framebuffers_screen.fs");
+--- replace:
+    Shader skyboxShader("skybox.vs", "skybox.fs");
+    Shader screenShader("framebuffers_screen.vs", "framebuffers_screen.fs");
+--- file: main.cpp
+--- find:
+    float quadVertices[] = {
+--- replace:
+    float skyboxVertices[] = {
+        // positions
+        -1.0f,  1.0f, -1.0f,
+        -1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+         1.0f,  1.0f, -1.0f,
+        -1.0f,  1.0f, -1.0f,
+
+        -1.0f, -1.0f,  1.0f,
+        -1.0f, -1.0f, -1.0f,
+        -1.0f,  1.0f, -1.0f,
+        -1.0f,  1.0f, -1.0f,
+        -1.0f,  1.0f,  1.0f,
+        -1.0f, -1.0f,  1.0f,
+
+         1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+
+        -1.0f, -1.0f,  1.0f,
+        -1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f, -1.0f,  1.0f,
+        -1.0f, -1.0f,  1.0f,
+
+        -1.0f,  1.0f, -1.0f,
+         1.0f,  1.0f, -1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+        -1.0f,  1.0f,  1.0f,
+        -1.0f,  1.0f, -1.0f,
+
+        -1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f,  1.0f,
+         1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f,  1.0f,
+         1.0f, -1.0f,  1.0f
+    };
+    float quadVertices[] = {
+--- file: main.cpp
+--- find:
+    // screen quad VAO
+--- replace:
+    // skybox VAO
+    unsigned int skyboxVAO, skyboxVBO;
+    glGenVertexArrays(1, &skyboxVAO);
+    glGenBuffers(1, &skyboxVBO);
+    glBindVertexArray(skyboxVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glBindVertexArray(0);
+    // screen quad VAO
+--- file: main.cpp
+--- find:
+    unsigned int floorTexture = loadTexture("metal.png");
+--- replace:
+    unsigned int floorTexture = loadTexture("metal.png");
+    std::vector<std::string> faces
+    {
+        "skybox/right.png",
+        "skybox/left.png",
+        "skybox/top.png",
+        "skybox/bottom.png",
+        "skybox/front.png",
+        "skybox/back.png"
+    };
+    unsigned int cubemapTexture = loadCubemap(faces);
+--- file: main.cpp
+--- find:
+    screenShader.use();
+    screenShader.setInt("screenTexture", 0);
+--- replace:
+    skyboxShader.use();
+    skyboxShader.setInt("skybox", 0);
+
+    screenShader.use();
+    screenShader.setInt("screenTexture", 0);
+--- file: main.cpp
+--- find:
+        shader.setMat4("model", glm::mat4(1.0f));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+--- replace:
+        shader.setMat4("model", glm::mat4(1.0f));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        // the sky last: at depth 1.0 it only fills the pixels nothing else has covered
+        glDepthFunc(GL_LEQUAL); // pass at the depth 1.0 the depth buffer was cleared to
+        skyboxShader.use();
+        skyboxShader.setMat4("view", glm::mat4(glm::mat3(view))); // remove translation from the view matrix
+        skyboxShader.setMat4("projection", projection);
+        glBindVertexArray(skyboxVAO);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glDepthFunc(GL_LESS); // set depth function back to default
+--- file: main.cpp
+--- find:
+    glDeleteVertexArrays(1, &quadVAO);
+--- replace:
+    glDeleteVertexArrays(1, &skyboxVAO);
+    glDeleteVertexArrays(1, &quadVAO);
+--- file: main.cpp
+--- find:
+    glDeleteBuffers(1, &quadVBO);
+--- replace:
+    glDeleteBuffers(1, &skyboxVBO);
+    glDeleteBuffers(1, &quadVBO);
+--- file: main.cpp
+--- find:
+    glDeleteTextures(1, &floorTexture);
+--- replace:
+    glDeleteTextures(1, &floorTexture);
+    glDeleteTextures(1, &cubemapTexture);
+--- file: main.cpp
+--- find:
+unsigned int loadTexture(const char *path)
+{
+    unsigned int textureID;
+    glGenTextures(1, &textureID);
+
+    int width, height, nrComponents;
+    stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded textures on the y-axis (the image's first row is its top, OpenGL's v = 0 is the bottom)
+    unsigned char *data = stbi_load(path, &width, &height, &nrComponents, 0);
+    if (data)
+    {
+        GLenum format = GL_RGB;
+        if (nrComponents == 1)
+            format = GL_RED;
+        else if (nrComponents == 3)
+            format = GL_RGB;
+        else if (nrComponents == 4)
+            format = GL_RGBA;
+
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        stbi_image_free(data);
+    }
+    else
+    {
+        std::cout << "Texture failed to load at path: " << path << std::endl;
+        stbi_image_free(data);
+    }
+
+    return textureID;
+}
+--- replace:
+unsigned int loadTexture(const char *path)
+{
+    unsigned int textureID;
+    glGenTextures(1, &textureID);
+
+    int width, height, nrComponents;
+    stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded textures on the y-axis (the image's first row is its top, OpenGL's v = 0 is the bottom)
+    unsigned char *data = stbi_load(path, &width, &height, &nrComponents, 0);
+    if (data)
+    {
+        GLenum format = GL_RGB;
+        if (nrComponents == 1)
+            format = GL_RED;
+        else if (nrComponents == 3)
+            format = GL_RGB;
+        else if (nrComponents == 4)
+            format = GL_RGBA;
+
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        stbi_image_free(data);
+    }
+    else
+    {
+        std::cout << "Texture failed to load at path: " << path << std::endl;
+        stbi_image_free(data);
+    }
+
+    return textureID;
+}
+
+// loads a cubemap texture from 6 individual texture faces
+// order:
+// +X (right)
+// -X (left)
+// +Y (top)
+// -Y (bottom)
+// +Z (front)
+// -Z (back)
+// -------------------------------------------------------
+unsigned int loadCubemap(std::vector<std::string> faces)
+{
+    unsigned int textureID;
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+
+    // no flip: the cube map rule puts each image's first row (its top) at the top of the face
+    stbi_set_flip_vertically_on_load(false);
+    int width, height, nrComponents;
+    for (unsigned int i = 0; i < faces.size(); i++)
+    {
+        unsigned char *data = stbi_load(faces[i].c_str(), &width, &height, &nrComponents, 0);
+        if (data)
+        {
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+            stbi_image_free(data);
+        }
+        else
+        {
+            std::cout << "Cubemap texture failed to load at path: " << faces[i] << std::endl;
+            stbi_image_free(data);
+        }
+    }
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    return textureID;
+}
+
+=== task: columns
+--- file: columns.vs
+--- find:
+    // TODO: turn the cube into a column and give every instance (gl_InstanceID) a place of its own
+    vec3 position = aPos;
+--- replace:
+    // the cube stretched into a column 0.5 x 3 x 0.5 standing on the floor (y from -0.5 to 2.5); instance i stands at
+    // x = -4 + 2i, 4 units behind the sculptures
+    vec3 position = aPos * vec3(0.5, 3.0, 0.5) + vec3(-4.0 + 2.0 * gl_InstanceID, 1.0, -4.0);
+--- file: main.cpp
+--- find:
+    Shader screenShader("framebuffers_screen.vs", "framebuffers_screen.fs");
+--- replace:
+    Shader columnShader("columns.vs", "framebuffers.fs");
+    Shader screenShader("framebuffers_screen.vs", "framebuffers_screen.fs");
+--- file: main.cpp
+--- find:
+    shader.setInt("texture1", 0);
+--- replace:
+    shader.setInt("texture1", 0);
+
+    columnShader.use();
+    columnShader.setInt("texture1", 0);
+--- file: main.cpp
+--- find:
+        // the sky last: at depth 1.0 it only fills the pixels nothing else has covered
+--- replace:
+        // the colonnade at the back: five marble columns in one instanced draw call
+        columnShader.use();
+        columnShader.setMat4("view", view);
+        columnShader.setMat4("projection", projection);
+        glBindVertexArray(cubeVAO);
+        glBindTexture(GL_TEXTURE_2D, cubeTexture);
+        glDrawArraysInstanced(GL_TRIANGLES, 0, 36, 5);
+
+        // the sky last: at depth 1.0 it only fills the pixels nothing else has covered
+
+=== task: outline
+--- file: outline.fs
+--- find:
+    // TODO: every fragment of the outline gets the same colour
+--- replace:
+    FragColor = vec4(1.0, 0.8, 0.2, 1.0); // gold
+--- file: main.cpp
+--- find:
+    glDepthFunc(GL_LESS); // pass when the fragment is closer than the stored depth (OpenGL's default)
+--- replace:
+    glDepthFunc(GL_LESS); // pass when the fragment is closer than the stored depth (OpenGL's default)
+    glEnable(GL_STENCIL_TEST);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE); // where both tests pass, store the reference value
+--- file: main.cpp
+--- find:
+    Shader columnShader("columns.vs", "framebuffers.fs");
+--- replace:
+    Shader columnShader("columns.vs", "framebuffers.fs");
+    Shader outlineShader("framebuffers.vs", "outline.fs");
+--- file: main.cpp
+--- find:
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+--- replace:
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); // the stencil buffer too: all 0
+--- file: main.cpp
+--- find:
+        model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+        shader.setMat4("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+--- replace:
+        model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+        shader.setMat4("model", model);
+        // the selected sculpture writes 1 into the stencil buffer wherever it is drawn
+        glStencilFunc(GL_ALWAYS, 1, 0xFF);
+        glStencilMask(0xFF);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glStencilMask(0x00); // everything else leaves the stencil buffer alone
+--- file: main.cpp
+--- find:
+        glDepthFunc(GL_LESS); // set depth function back to default
+--- replace:
+        glDepthFunc(GL_LESS); // set depth function back to default
+
+        // the outline: the selected sculpture once more, a little larger and in one colour, only where the stencil
+        // buffer is not 1 - around the sculpture - and without the depth test, so nothing hides it
+        glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+        glDisable(GL_DEPTH_TEST);
+        outlineShader.use();
+        outlineShader.setMat4("view", view);
+        outlineShader.setMat4("projection", projection);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+        model = glm::scale(model, glm::vec3(1.1f));
+        outlineShader.setMat4("model", model);
+        glBindVertexArray(cubeVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glStencilMask(0xFF); // let glClear clear the whole stencil buffer again
+        glStencilFunc(GL_ALWAYS, 0, 0xFF);
+        glEnable(GL_DEPTH_TEST);
+
+=== task: glass
+--- file: main.cpp
+--- find:
+    float quadVertices[] = {
+--- replace:
+    float glassVertices[] = {
+        // positions         // texture Coords (the image is flipped on load, so v = 1.0 is its top row)
+        0.0f,  0.5f,  0.0f,  0.0f,  1.0f,
+        0.0f, -0.5f,  0.0f,  0.0f,  0.0f,
+        1.0f, -0.5f,  0.0f,  1.0f,  0.0f,
+
+        0.0f,  0.5f,  0.0f,  0.0f,  1.0f,
+        1.0f, -0.5f,  0.0f,  1.0f,  0.0f,
+        1.0f,  0.5f,  0.0f,  1.0f,  1.0f
+    };
+    float quadVertices[] = {
+--- file: main.cpp
+--- find:
+    // screen quad VAO
+--- replace:
+    // glass VAO
+    unsigned int glassVAO, glassVBO;
+    glGenVertexArrays(1, &glassVAO);
+    glGenBuffers(1, &glassVBO);
+    glBindVertexArray(glassVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, glassVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(glassVertices), &glassVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glBindVertexArray(0);
+    // screen quad VAO
+--- file: main.cpp
+--- find:
+    unsigned int floorTexture = loadTexture("metal.png");
+--- replace:
+    unsigned int floorTexture = loadTexture("metal.png");
+    unsigned int glassTexture = loadTexture("window.png");
+--- file: main.cpp
+--- find:
+        glStencilFunc(GL_ALWAYS, 0, 0xFF);
+        glEnable(GL_DEPTH_TEST);
+--- replace:
+        glStencilFunc(GL_ALWAYS, 0, 0xFF);
+        glEnable(GL_DEPTH_TEST);
+
+        // the glass pane last, after everything opaque, blended over what is behind it
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // result = src * src.alpha + dst * (1 - src.alpha)
+        shader.use();
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.3f, 0.0f, -0.2f)); // between the two sculptures
+        shader.setMat4("model", model);
+        glBindVertexArray(glassVAO);
+        glBindTexture(GL_TEXTURE_2D, glassTexture);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDisable(GL_BLEND);
+--- file: main.cpp
+--- find:
+    glDeleteVertexArrays(1, &quadVAO);
+--- replace:
+    glDeleteVertexArrays(1, &glassVAO);
+    glDeleteVertexArrays(1, &quadVAO);
+--- file: main.cpp
+--- find:
+    glDeleteBuffers(1, &quadVBO);
+--- replace:
+    glDeleteBuffers(1, &glassVBO);
+    glDeleteBuffers(1, &quadVBO);
+--- file: main.cpp
+--- find:
+    glDeleteTextures(1, &floorTexture);
+--- replace:
+    glDeleteTextures(1, &floorTexture);
+    glDeleteTextures(1, &glassTexture);

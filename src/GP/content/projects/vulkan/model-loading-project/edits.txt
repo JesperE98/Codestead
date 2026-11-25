@@ -1,0 +1,134 @@
+=== task: make-room
+--- file: main.cpp
+--- find:
+glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
+--- replace:
+glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  6.0f); // a step back: room for the whole exhibition
+
+=== task: exhibits
+--- file: main.cpp
+--- find:
+        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+
+--- replace:
+        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+
+        // the exhibit on the left: smaller, its ring turned towards the visitors
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(-2.2f, 0.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(50.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.4f));
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+
+        // the exhibit on the right: smaller, leaning to the side
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(2.2f, 0.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(-20.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        model = glm::rotate(model, glm::radians(15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.4f));
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+
+=== task: turntable
+--- file: main.cpp
+--- find:
+        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // the centre of the scene
+--- replace:
+        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // the centre of the scene
+        model = glm::rotate(model, static_cast<float>(glfwGetTime()) * 0.5f, glm::vec3(0.0f, 1.0f, 0.0f)); // the turntable: half a radian per second about the vertical axis
+
+=== task: shelf
+--- file: main.cpp
+--- find:
+        vkCmdEndRenderPass(commandBuffer);
+--- replace:
+        // the shelf at the back: five small planets in a row, each tilted a little more than the one before
+        for (uint32_t i = 0; i < 5; i++) {
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(-4.0f + 2.0f * i, 1.5f, -3.0f));
+            model = glm::rotate(model, glm::radians(15.0f * i), glm::vec3(1.0f, 0.0f, 0.0f));
+            model = glm::scale(model, glm::vec3(0.2f));
+            constants.model = model;
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+            vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+        }
+
+        vkCmdEndRenderPass(commandBuffer);
+
+=== task: bronze
+--- file: main.cpp
+--- find:
+// The same layout as the push constant block in the vertex shader: the model matrix of one draw.
+struct PushConstants {
+    glm::mat4 model;
+};
+--- replace:
+// The same layout as the push constant blocks of the shaders: the model matrix of one draw, and the tint the fragment
+// shader multiplies its colour by (std430: the vec3 right after the matrix, at offset 64).
+struct PushConstants {
+    glm::mat4 model;
+    glm::vec3 tint;
+};
+--- file: main.cpp
+--- find:
+        pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+--- replace:
+        pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT; // the tint is read by the fragment shader
+--- file: main.cpp
+--- find:
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+
+        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+--- replace:
+        constants.model = model;
+        constants.tint = glm::vec3(1.0f); // the planets keep their own colours
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
+
+        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+--- file: main.cpp
+--- find:
+        model = glm::rotate(model, glm::radians(50.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.4f));
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+--- replace:
+        model = glm::rotate(model, glm::radians(50.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.4f));
+        constants.model = model;
+        constants.tint = glm::vec3(1.0f, 0.6f, 0.25f); // a cast in bronze
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
+--- file: main.cpp
+--- find:
+        model = glm::scale(model, glm::vec3(0.4f));
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+--- replace:
+        model = glm::scale(model, glm::vec3(0.4f));
+        constants.model = model;
+        constants.tint = glm::vec3(1.0f);
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
+--- file: main.cpp
+--- find:
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+--- replace:
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
+--- file: shaders/model_loading.frag
+--- find:
+layout(location = 0) in vec3 fragPos;
+--- replace:
+// the same push constant block as the vertex shader's, with the tint after the model matrix
+layout(push_constant) uniform PushConstants {
+    mat4 model;
+    vec3 tint;
+} pc;
+
+layout(location = 0) in vec3 fragPos;
+--- file: shaders/model_loading.frag
+--- find:
+    outColor = vec4(result, 1.0);
+--- replace:
+    outColor = vec4(result * pc.tint, 1.0); // white keeps the colours, bronze tints them
