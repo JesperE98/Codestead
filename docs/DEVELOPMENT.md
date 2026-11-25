@@ -369,6 +369,13 @@ i själv). Panelen visar stegen under "Follow along" och övningarna under "Exer
 `TaskTests` kräver att varje övning byggs rent och att en övning med kontroll inte
 godkänns av kapitlets program men av sin lösning; `CODESTEAD_GP_CHAPTERS=a,b` kör testerna för några kapitel (`!a` hoppar över ett).
 
+**Projekt.** Efter provet kan en del ha ett frivilligt projekt, kapitlet `<del>-project` (se "Frivilliga projekt" i
+avsnittet om Codestead Linux för hur det visas och räknas). `GpCourse` lägger till det när
+`chapters/en/<del>-project.md` finns; dess delmål är uppgifter som en lektions: `projects/<api>/<del>-project/` med
+egen `start/`, `edits.txt` (delmålen, vanliga id utan `ex-`), `solution/` och `tasks.md`, texterna i
+`i18n/<språk>/<del>-project.json` och kontrollerna i `Checks/TaskChecks.Project.<Del>.ts` (registrerade i
+`TaskChecks.Projects.ts`). `TaskTests` och CI:s uppgiftsjobb testar dem som lektioner.
+
 **Bilder i kapitlen.** Ett stycke som bara är en bild, `![alt](images/namn.webp "bildtext")`, visas av textvyn
 (`AnimatedImage` i `ts/packages/ui`: PNG, JPEG, WebP och animerad GIF/WebP; bildrutor på en sekund eller mer är ett bildspel som tonar
 över). Ett klick (eller Enter) visar bilden större i fönstrets dialog (`onPictureEnlarge` i
@@ -559,6 +566,7 @@ det den förstår kan ge en annan bild än en riktig körning. Nya kapitel
    - **Sammanfattning och prov** för ett huvudkapitel: `<huvudkapitel>-summary.md` och
      `<huvudkapitel>-exam.md` (t.ex. `grunder-exam.md`). De läggs till sist i huvudkapitlet av sig själva.
      Provet består av kontrollfrågor (minst 10), öppnas när alla sub-kapitel är klara och kräver 80 %.
+   - **Frivilligt projekt** efter provet: `<huvudkapitel>-project.md` (se "Frivilliga projekt" nedan).
 2. Lägg till kapitlet med uppgifter i en egen fil, `ts/packages/linux-content/src/Chapters/<huvudkapitel>/<id>.ts`,
    och lägg till det i listan i `ChapterDefinitions.ts` (ordningen där är kursens ordning). Varje uppgift har
    en kontroll som körs efter varje kommando och en lösning (lista med kommandon).
@@ -567,6 +575,22 @@ det den förstår kan ge en annan bild än en riktig körning. Nya kapitel
 
 Behövs ett nytt kommando lägger du det i `ts/packages/linux-shell/src/Commands/`. Ska det installeras med
 pakethanteraren lägger du också till ett paket i `ts/packages/linux-shell/src/Packages/PackagesLib.Catalog.ts`.
+
+## Frivilliga projekt
+
+Efter varje huvudkapitels prov kan ett frivilligt projekt följa (kapitelslaget `project`, id `<huvudkapitel>-project`,
+i både Codestead Linux och Codestead GP): en liten berättelse med ett uppdrag som använder det huvudkapitlet lärde ut,
+och 5–7 delmål som kontrolleras som en lektions uppgifter. Projektet öppnas när provet är godkänt (i ett huvudkapitel
+utan prov: när alla sub-kapitel är klara), märks "frivilligt" och räknas **inte** in i kursens framsteg
+(`LearningWindow.totalProgress`). Delmålen ger XP som uppgifter, ett klart projekt ger `XpRules.Project` (100) och
+utmärkelserna `project-first`, `project-all` och de dolda `project-unaided` och `project-perfect`
+(`CommonAchievements`).
+
+I Codestead Linux: delmålen i `ts/packages/linux-content/src/Chapters/<huvudkapitel>/<huvudkapitel>-project.ts`
+(`kind: ChapterKinds.Project`), registrerade i `defineProjects()` i `ChapterDefinitions.ts`; texten
+`src/Linux/content/chapters/<språk>/<id>.md` på appens språk, delmålens texter i `i18n/<språk>/<id>.json` och en
+granskningslogg i `docs/verification/`. Testerna kör projektens lösningar i samma skal som resten av kursen, så ett
+projekt får inte förstöra något som senare kapitel behöver. Förlagan är *Loggdetektiven* (`grunder-project`).
 
 ## Bilder i Codestead Linux
 
