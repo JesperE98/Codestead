@@ -1,0 +1,49 @@
+{
+  "title": "Project: Lantern night on the boardwalk",
+  "tasks": {
+    "lamps": {
+      "text": "Replace the four coloured test lights with four lanterns with a warm, yellow-orange light (red above green above blue), each much brighter than 1.0, at (-2.5, 1, -1), (2.5, 1, -1), (-2.5, 1, -5) and (2.5, 1, -5).",
+      "hint": {
+        "opengl": "Only the values in `lightPositions` and `lightColors` change. Something like (10, 6, 2) is a good sodium-lamp colour.",
+        "vulkan": "Only the values in the vectors `lightPositions` and `lightColors` change. Something like (10, 6, 2) is a good sodium-lamp colour.",
+        "d3d12": "Only the values in the arrays `lightPositions` and `lightColors` change. Something like (10, 6, 2) is a good sodium-lamp colour."
+      }
+    },
+    "moonlight": {
+      "text": "Add a faint, cold moonlight: where no lantern reaches, the crates should be dark blue instead of black.",
+      "hint": {
+        "opengl": "The ambient term in `bloom.fs` is `0.0 * color`. A small bluish colour instead of 0.0 – a few hundredths – is moonlight.",
+        "vulkan": "The ambient term in `shaders/bloom.frag` is `0.0 * color`. A small bluish colour instead of 0.0 – a few hundredths – is moonlight.",
+        "d3d12": "The ambient term in `bloom.hlsl` is `0.0f * color`. A small bluish colour instead of 0.0 – a few hundredths – is moonlight."
+      }
+    },
+    "wet-boards": {
+      "text": "Let the wet boards and crates reflect the lanterns: add a Blinn-Phong specular term to the scene's lighting, with the halfway vector between the directions to the light and to the camera.",
+      "hint": {
+        "opengl": "In the light loop of `bloom.fs`: `normalize(lightDir + viewDir)`, then `pow(max(dot(normal, halfwayDir), 0.0), …)` times the light's colour, added before the attenuation. `viewDir` is already there.",
+        "vulkan": "In the light loop of `shaders/bloom.frag`: `normalize(lightDir + viewDir)`, then `pow(max(dot(normal, halfwayDir), 0.0), …)` times the light's colour, added before the attenuation. `viewDir` is already there.",
+        "d3d12": "In the light loop of `bloom.hlsl`: the direction to the camera from `viewPos`, `normalize(lightDir + viewDir)`, then `pow(max(dot(normal, halfwayDir), 0.0f), …)` times the light's colour, added before the attenuation."
+      }
+    },
+    "mist": {
+      "text": "Make the lanterns' glow stronger, as if their light were caught in mist.",
+      "hint": {
+        "opengl": "`hdrColor += bloomColor;` in `bloom_final.fs` can add the blur with a factor above 1 – or blur more often (`amount` in `main.cpp`, keep it even).",
+        "vulkan": "`hdrColor += bloomColor;` in `shaders/bloom_final.frag` can add the blur with a factor above 1 – or blur more often (`amount` in `recordCommandBuffer()`, keep it even).",
+        "d3d12": "`hdrColor += bloomColor;` in `bloom_final.hlsl` can add the blur with a factor above 1 – or blur more often (`amount` in `PopulateCommandList()`, keep it even)."
+      }
+    },
+    "exposure": {
+      "text": "Turn the exposure down (below 1.0) until the boardwalk looks like night again: the boards between the lanterns dark, the lanterns still bright.",
+      "hint": "The global `exposure` in `main.cpp` goes to the final pass's tone mapping. Try values between 0.1 and 0.8 – the solution uses 0.25."
+    },
+    "flicker": {
+      "text": "Let the lantern at the back on the left flicker: its light should dip and come back over time.",
+      "hint": {
+        "opengl": "In the render loop, before the light uniforms are set: `lightColors[2]` = the lantern's colour times a factor that changes with `currentFrame`, for example `0.55f + 0.45f * sin(currentFrame * 6.0f)`.",
+        "vulkan": "In `updateUniformBuffer()`, before the lights go into the uniform buffer: `lightColors[2]` = the lantern's colour times a factor such as `0.55f + 0.45f * sin(time * 6.0f)`, with `time` from `glfwGetTime()`. Remove `const` from the vector.",
+        "d3d12": "In `OnUpdate()`, before the lights go into the constant buffer: `lightColors[2]` = the lantern's colour times a factor such as `0.55f + 0.45f * std::sin(time * 6.0f)`, with `time` from a `static` start time and `std::chrono`."
+      }
+    }
+  }
+}

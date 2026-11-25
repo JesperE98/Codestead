@@ -1,0 +1,37 @@
+{
+  "title": "Projekt: Materialutställningen",
+  "tasks": {
+    "showroom": {
+      "text": "Byt ut rutnätet med 3 × 3 klot mot utställningen: huvudklotet (fortfarande med kartorna) i (0, 2, 0), skalat 3.6, och tre prov skalade 2.4 i (-6, -6, 0), (0, -6, 0) och (6, -6, 0).",
+      "hint": {
+        "opengl": "Fyra draws i stället för de två looparna: var och en en modellmatris (translate, rotationen som vänder texturernas mitt mot kameran, scale), normalmatrisen och `renderSphere()`.",
+        "vulkan": "Fyra draws i stället för de två looparna: var och en en modellmatris (translate, rotationen som vänder texturernas mitt mot kameran, scale) i push constants och `renderSphere(commandBuffer)`.",
+        "d3d12": "Fyra draws i stället för de två looparna: var och en en modellmatris (scale, rotationen som vänder texturernas mitt mot kameran, translate), dess normalmatris i root constants och `RenderSphere()`."
+      }
+    },
+    "gold": {
+      "text": "Gör det vänstra provet till guld: ett prov tar sitt albedo, sin metallic och sin roughness från egna värden i stället för kartorna (huvudklotet behåller sina kartor). Guld: metalliskt, albedo ungefär (1.0, 0.71, 0.29), ganska slätt.",
+      "hint": {
+        "opengl": "I `pbr.fs`: uniforms `albedoValue`, `metallicValue`, `roughnessValue` och en `bool useMaps`; utan kartorna `N = normalize(Normal)` och `ao = 1.0`. I `main.cpp`, före varje `renderSphere()`: `pbrShader.setBool(\"useMaps\", …)` och värdena med `setVec3` / `setFloat`. Roughness 0.2–0.4.",
+        "vulkan": "`PushConstants` får `glm::vec3 albedo; float metallic; float roughness; VkBool32 useMaps;` efter matrisen; `pbr.frag` deklarerar samma `layout(push_constant)`-block och använder `pc.albedo` … om inte `pc.useMaps`; utan kartorna `N = normalize(fragNormal)` och `ao = 1.0`. Sätt fälten före varje push. Roughness 0.2–0.4.",
+        "d3d12": "`ModelConstants` får `XMFLOAT3 albedoValue; float metallicValue; float roughnessValue; BOOL useMaps;` efter matriserna, `cbuffer`:n i `pbr.hlsl` detsamma, med samma namn (`float3`, `float`, `float`, `bool`), och root parameter 0 `sizeof(ModelConstants) / 4` värden. Utan kartorna `N = normalize(input.normal)` och `ao = 1.0f`. Roughness 0.2–0.4."
+      }
+    },
+    "plastic": {
+      "text": "Gör mittprovet till matt plast i en stark färg du väljer själv: ingen metall, och sträv nog för en mjuk, bred högdager.",
+      "hint": "Metallic 0.0, roughness 0.6–1.0, och ett albedo med en stark kanal – till exempel (0.1, 0.35, 0.8)."
+    },
+    "polished-metal": {
+      "text": "Gör det högra provet till polerat silver: en metall med ljusgrått albedo och nästan ingen roughness, som speglar rummet.",
+      "hint": "Metallic 1.0, ett albedo som (0.95, 0.93, 0.88) och roughness 0.1 eller mindre: den förfiltrerade kartans skarpaste mipnivå."
+    },
+    "turntable": {
+      "text": "Låt huvudklotet sakta snurra runt sin lodräta axel med tiden.",
+      "hint": {
+        "opengl": "Ytterligare en `glm::rotate` runt (0, 1, 0) i huvudklotets modellmatris, med en vinkel som växer med `currentFrame` – till exempel en halv radian per sekund.",
+        "vulkan": "Ytterligare en `glm::rotate` runt (0, 1, 0) i huvudklotets modellmatris, med en vinkel som växer med `glfwGetTime()` – till exempel en halv radian per sekund.",
+        "d3d12": "Ytterligare en `XMMatrixRotationY` i huvudklotets modellmatris (före translationen), med en vinkel som växer med tiden sedan en `static` starttid (`std::chrono`) – till exempel en halv radian per sekund."
+      }
+    }
+  }
+}

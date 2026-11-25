@@ -1,0 +1,175 @@
+=== task: showroom
+--- file: main.cpp
+--- find:
+    // a few large spheres, so the material's details can be seen
+    int nrRows    = 3;
+    int nrColumns = 3;
+    float spacing = 6.0;
+--- replace:
+    // the showroom: the hero in the middle, the three samples on a row below it, 6 apart
+    float spacing = 6.0;
+--- file: main.cpp
+--- find:
+        // render rows*column number of spheres with material properties defined by textures (they all have the same material properties)
+        glm::mat4 model = glm::mat4(1.0f);
+        for (int row = 0; row < nrRows; ++row)
+        {
+            for (int col = 0; col < nrColumns; ++col)
+            {
+                model = glm::mat4(1.0f);
+                model = glm::translate(model, glm::vec3(
+                    (float)(col - (nrColumns / 2)) * spacing,
+                    (float)(row - (nrRows / 2)) * spacing,
+                    0.0f
+                ));
+                model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f)); // turn the middle of the textures towards the camera
+                model = glm::scale(model, glm::vec3(2.4f));
+                pbrShader.setMat4("model", model);
+                pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
+                renderSphere();
+            }
+        }
+--- replace:
+        // the hero: a large sphere in the middle, above the samples
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, 2.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f)); // turn the middle of the textures towards the camera
+        model = glm::scale(model, glm::vec3(3.6f));
+        pbrShader.setMat4("model", model);
+        pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
+        renderSphere();
+
+        // the three samples on the bottom row: left, middle and right
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(-spacing, -6.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(2.4f));
+        pbrShader.setMat4("model", model);
+        pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
+        renderSphere();
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, -6.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(2.4f));
+        pbrShader.setMat4("model", model);
+        pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
+        renderSphere();
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(spacing, -6.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(2.4f));
+        pbrShader.setMat4("model", model);
+        pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
+        renderSphere();
+=== task: gold
+--- file: pbr.fs
+--- find:
+uniform vec3 camPos;
+--- replace:
+uniform vec3 camPos;
+
+// a sample's own material: the same values all over the sphere (useMaps false), or the maps (useMaps true)
+uniform bool useMaps;
+uniform vec3 albedoValue;
+uniform float metallicValue;
+uniform float roughnessValue;
+--- file: pbr.fs
+--- find:
+    // material properties
+    vec3 albedo     = pow(texture(albedoMap, TexCoords).rgb, vec3(2.2));
+    float metallic  = texture(metallicMap, TexCoords).r;
+    float roughness = texture(roughnessMap, TexCoords).r;
+    float ao        = texture(aoMap, TexCoords).r;
+
+    // input lighting data
+    vec3 N = getNormalFromMap();
+--- replace:
+    // material properties: a sample's own values, or the maps
+    vec3 albedo     = albedoValue;
+    float metallic  = metallicValue;
+    float roughness = roughnessValue;
+    float ao        = 1.0;
+    vec3 N          = normalize(Normal);
+    if (useMaps)
+    {
+        albedo    = pow(texture(albedoMap, TexCoords).rgb, vec3(2.2));
+        metallic  = texture(metallicMap, TexCoords).r;
+        roughness = texture(roughnessMap, TexCoords).r;
+        ao        = texture(aoMap, TexCoords).r;
+        N         = getNormalFromMap();
+    }
+
+    // input lighting data
+--- file: main.cpp
+--- find:
+        // the hero: a large sphere in the middle, above the samples
+        glm::mat4 model = glm::mat4(1.0f);
+--- replace:
+        // the hero: a large sphere in the middle, above the samples - with the material's maps
+        pbrShader.setBool("useMaps", true);
+        glm::mat4 model = glm::mat4(1.0f);
+--- file: main.cpp
+--- find:
+        // the three samples on the bottom row: left, middle and right
+        model = glm::mat4(1.0f);
+--- replace:
+        // the three samples on the bottom row: left, middle and right
+        // gold: a metal, its albedo the colour of its reflections, fairly smooth
+        pbrShader.setBool("useMaps", false);
+        pbrShader.setVec3("albedoValue", glm::vec3(1.0f, 0.71f, 0.29f));
+        pbrShader.setFloat("metallicValue", 1.0f);
+        pbrShader.setFloat("roughnessValue", 0.25f);
+        model = glm::mat4(1.0f);
+--- file: main.cpp
+--- find:
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, -6.0f, 0.0f));
+--- replace:
+        pbrShader.setBool("useMaps", true); // the others keep the maps for now
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, -6.0f, 0.0f));
+=== task: plastic
+--- file: main.cpp
+--- find:
+        pbrShader.setBool("useMaps", true); // the others keep the maps for now
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, -6.0f, 0.0f));
+--- replace:
+        // rough plastic: not a metal, a strong colour, a soft wide highlight
+        pbrShader.setVec3("albedoValue", glm::vec3(0.1f, 0.35f, 0.8f));
+        pbrShader.setFloat("metallicValue", 0.0f);
+        pbrShader.setFloat("roughnessValue", 0.8f);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, -6.0f, 0.0f));
+--- file: main.cpp
+--- find:
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(spacing, -6.0f, 0.0f));
+--- replace:
+        pbrShader.setBool("useMaps", true); // the last one keeps the maps for now
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(spacing, -6.0f, 0.0f));
+=== task: polished-metal
+--- file: main.cpp
+--- find:
+        pbrShader.setBool("useMaps", true); // the last one keeps the maps for now
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(spacing, -6.0f, 0.0f));
+--- replace:
+        // polished metal: almost no roughness - a mirror of the room
+        pbrShader.setVec3("albedoValue", glm::vec3(0.95f, 0.93f, 0.88f));
+        pbrShader.setFloat("metallicValue", 1.0f);
+        pbrShader.setFloat("roughnessValue", 0.05f);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(spacing, -6.0f, 0.0f));
+=== task: turntable
+--- file: main.cpp
+--- find:
+        model = glm::translate(model, glm::vec3(0.0f, 2.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f)); // turn the middle of the textures towards the camera
+--- replace:
+        model = glm::translate(model, glm::vec3(0.0f, 2.0f, 0.0f));
+        model = glm::rotate(model, currentFrame * 0.5f, glm::vec3(0.0f, 1.0f, 0.0f)); // the turntable: half a radian per second
+        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f)); // turn the middle of the textures towards the camera
