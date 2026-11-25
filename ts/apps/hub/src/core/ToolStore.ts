@@ -123,8 +123,12 @@ export class ToolStore {
     return { ...rolled, directory: dir };
   }
 
-  private static readonly UninstallAttempts = 10;
-  private static readonly UninstallRetryDelayMs = 300;
+  /**
+   * How long an uninstall keeps trying (about 15 s): an Electron tool's helper processes (GPU, utility) run the tool's own
+   * executable and can hold it on Windows for several seconds after the tool's main process has exited.
+   */
+  private static readonly UninstallAttempts = 30;
+  private static readonly UninstallRetryDelayMs = 500;
 
   /** Removes a tool and all of its versions. Throws if it is running (Windows) and stays locked. */
   async uninstall(id: string): Promise<void> {
