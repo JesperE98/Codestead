@@ -231,7 +231,8 @@ src/
                                  changelog.json, description.json, release-notes.md
 packaging/                       Byggskript, installations- och uppgraderingstester, products.json (vilka produkter
                                  som byggs), plan.py (release-planen), catalog.py (hubbens katalog), hub-e2e.sh
-                                 (hubben installerar Codestead Linux), ts/package-app.mjs (appens mapp)
+                                 (hubben installerar Codestead Linux), sandbox-test.sh (Chromiums sandlåda under
+                                 AppArmor), ts/package-app.mjs (appens mapp)
 ```
 
 Mappnamnen under `src/` (`Codestead.Shell`, `Codestead.Content` …) kommer från C#-projekten som datan en gång låg
@@ -729,8 +730,9 @@ app-mapp, sedan tar nfpm och `vpk` fram paketen):
      GP:s skull – och en delad buggfix som Linux märker får en rad i `src/Linux/changelog.json` och släpps.
 
 Flödet bygger alla produkter och installerar och startar dem på rena system (Windows Server 2022/2025,
-Ubuntu 22.04/24.04, Fedora, Arch Linux, CachyOS). Hubben får dessutom installera och starta Codestead
-Linux från en signerad katalog. **Uppgraderingsspärren** (`upgrade-linux`, `upgrade-windows`): varje produkt som får
+Ubuntu 22.04/24.04, Fedora, Arch Linux, CachyOS). Hubbens `.deb` måste dessutom köra med Chromiums sandlåda under
+AppArmor på en Ubuntu 24.04-runner (`test-sandbox`, `packaging/sandbox-test.sh`; se "Chromiums sandlåda på Linux"), och
+hubben får installera och starta Codestead Linux från en signerad katalog. **Uppgraderingsspärren** (`upgrade-linux`, `upgrade-windows`): varje produkt som får
 en ny version uppdateras till bygget från en användares installation av dess sista C#-release (`lastCSharpRelease`,
 hämtad från release-repot; C#-appens egen Velopack tillämpar uppdateringen, sedan uppdaterar bygget sig en gång
 till, TS → TS) och, när det finns en, av dess föregående release – AppImage på Ubuntu och Fedora, Setup.exe på
@@ -977,8 +979,20 @@ provar texten, sökvägarna, när hubben erbjuder sandlådan och rootskriptet sj
 och en temporär mapp för `/etc/apparmor.d`); där AppArmor 4:s `apparmor_parser` finns (Ubuntu 24.04, CI) granskar den
 även båda profilerna. `packaging/install-test.sh` kontrollerar att paketen lägger profilen i `/etc/apparmor.d` på Ubuntu
 24.04 men inte på 22.04 och tar bort den igen. Att kärnan laddar profilen och att appen då verkligen kör med sandlådan
-går inte att prova i docker (containrar har ingen egen AppArmor): det görs för hand på ett riktigt Ubuntu 24.04
-([RELEASE-CHECKLIST.md](RELEASE-CHECKLIST.md)).
+går inte att prova i docker (containrar har ingen egen AppArmor), så release-flödets jobb `test-sandbox` gör det på
+GitHubs ubuntu-24.04-runner själv, där `kernel.apparmor_restrict_unprivileged_userns` är 1
+(`packaging/sandbox-test.sh`, som vanlig användare med sudo; går att köra för hand på ett Ubuntu 24.04 utan paketet
+installerat: `packaging/sandbox-test.sh codestead-hub_<version>_amd64.deb`). Skriptet kontrollerar att begränsningen
+verkligen stoppar `unshare --user` utan profil, installerar hubbens `.deb` med apt, att `/etc/apparmor.d/codestead-hub`
+finns och att kärnan har laddat profilen, och startar hubben med `--smoke-test` (Xvfb), först med `chrome-sandbox`
+icke-setuid (bara profilen kan ge sandlådan; startskriptet frågar då Electron om etiketten) och sedan som installerat.
+Medan appen kör läser skriptet som root appens processer i `/proc` (webbläsarprocessen stoppad med `SIGSTOP` under
+ögonblicket): webbläsarprocessen har inte `--no-sandbox`, dess AppArmor-etikett är `codestead-hub (unconfined)` och den
+kör i systemets användarnamnrymd, medan Chromiums sandlådade zygot (som varje renderare föds ur) och renderaren har egna
+användar- och PID-namnrymder och renderaren seccomp-bpf. Renderaren lever bara de tiondelar smoke-testet tar; hinner
+skriptet inte se den blir det en varning (zygoten räcker som bevis). Sist: en ominstallation (dpkg kör det gamla paketets
+`postrm upgrade`) behåller profilen, och `apt remove` tar bort och laddar ur den. Verktyg som hubben installerat och
+användarens profil (pkexec) provas fortfarande för hand ([RELEASE-CHECKLIST.md](RELEASE-CHECKLIST.md)).
 
 ### Secrets i det här repot
 
