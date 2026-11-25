@@ -271,7 +271,10 @@ permissions को बेहतर तरीक़े से बचाकर र
 
 प्रोग्राम `zip` और `unzip` हमेशा पहले से इंस्टॉल नहीं होते, और इस टर्मिनल में आपको
 उन्हें पहले इंस्टॉल करना होगा। यह पैकेज मैनेजर से होता है – इसके बारे में आप
-डिस्ट्रीब्यूशन और पैकेज वाले भाग में सब कुछ सीखेंगे। Ubuntu पर यह ऐसे होता है:
+डिस्ट्रीब्यूशन और पैकेज वाले भाग में सब कुछ सीखेंगे।
+
+:::debian
+{{distro}} पर आप इन्हें apt से इंस्टॉल करते हैं:
 
 ```sh
 sudo apt update
@@ -280,6 +283,23 @@ sudo apt install zip unzip
 
 `apt update` उपलब्ध packages की list download करता है। इसके बिना apt को कोई package
 मिलता ही नहीं।
+:::
+
+:::arch
+{{distro}} पर आप इन्हें pacman से इंस्टॉल करते हैं:
+
+```sh
+sudo pacman -S zip unzip
+```
+:::
+
+:::redhat
+{{distro}} पर आप इन्हें dnf से इंस्टॉल करते हैं:
+
+```sh
+sudo dnf install zip unzip
+```
+:::
 
 फिर directory को pack कीजिए। `-r` (*recursive*) मत भूलिए – इसके बिना zip सिर्फ़ ख़ाली
 directory जोड़ता है, उसके अंदर की files नहीं:

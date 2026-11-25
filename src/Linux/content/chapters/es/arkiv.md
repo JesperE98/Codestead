@@ -280,8 +280,10 @@ mejor los propietarios y los permisos.
 
 Los programas `zip` y `unzip` no siempre vienen preinstalados, y en esta
 terminal tienes que instalarlos primero. Eso se hace con el gestor de paquetes:
-lo aprenderás todo sobre él en la parte sobre distribuciones y paquetes. En
-Ubuntu se hace así:
+lo aprenderás todo sobre él en la parte sobre distribuciones y paquetes.
+
+:::debian
+En {{distro}} se instalan con apt:
 
 ```sh
 sudo apt update
@@ -290,6 +292,23 @@ sudo apt install zip unzip
 
 `apt update` descarga la lista de paquetes disponibles. Sin este paso, apt no
 encuentra ningún paquete.
+:::
+
+:::arch
+En {{distro}} se instalan con pacman:
+
+```sh
+sudo pacman -S zip unzip
+```
+:::
+
+:::redhat
+En {{distro}} se instalan con dnf:
+
+```sh
+sudo dnf install zip unzip
+```
+:::
 
 Después empaqueta el directorio. No olvides `-r` (*recursive*): sin esta opción, zip
 solo añade el directorio vacío, no los archivos que contiene:

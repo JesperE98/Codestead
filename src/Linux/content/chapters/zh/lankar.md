@@ -95,8 +95,8 @@ ls -li {{notes}} {{todo}}
 ```
 
 ```text
-1310722 -rw-r--r-- 2 {{user}} {{user}} 186 Nov  3 10:20 {{notes}}
-1310722 -rw-r--r-- 2 {{user}} {{user}} 186 Nov  3 10:20 {{todo}}
+1310721 -rw-r--r-- 2 {{user}} {{user}} 151 Nov  3 10:20 {{notes}}
+1310721 -rw-r--r-- 2 {{user}} {{user}} 151 Nov  3 10:20 {{todo}}
 ```
 
 两个名字的 inode 编号相同，权限后面的数字——**链接计数**——现在是 2。它们是同一个文件：通过一个名字做的修改，通过另一个名字也能看到。如果删除其中一个名字，只要文件还剩至少一个名字，内容就依然存在。
@@ -143,7 +143,7 @@ stat /etc/hostname
 ```text
   File: /etc/hostname
   Size: 7         	Blocks: 8          IO Block: 4096   regular file
-Device: 8,3	Inode: 1310755     Links: 1
+Device: 8,3	Inode: 1310722     Links: 1
 Access: (0644/-rw-r--r--)  Uid: (    0/    root)   Gid: (    0/    root)
 Access: 2026-11-03 10:15:22.000000000 +0100
 Modify: 2026-11-03 10:15:22.000000000 +0100
