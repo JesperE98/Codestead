@@ -1,34 +1,54 @@
 [
   {
+    "version": "0.2.11",
+    "date": "2026-11-25",
+    "changes": {
+      "en": [
+        "**A project after every exam**: once you have passed a part's exam, an optional project opens in all three APIs – a small story with an assignment that puts the part to use, like a solar system made of crates, opening night with coloured spotlights, your own level and power-up for Hedgerow, or a museum's orrery as a scene graph. Its milestones are checked by *Check my code* like a chapter's tasks, they don't count towards your progress in the course, and a finished project gives 100 bonus XP. Four new achievements go with them – two of them hidden."
+      ],
+      "sv": [
+        "**Ett projekt efter varje prov**: när du har klarat provet i en del öppnas ett frivilligt projekt i alla tre API:erna – en liten berättelse med ett uppdrag där du får använda det delen lärde ut, som ett solsystem av lådor, en premiärkväll med färgade strålkastare, en egen bana och power-up i Hedgerow eller ett museums planetarium som scengraf. Delmålen kontrolleras av *Check my code* som ett kapitels uppgifter, de räknas inte in i hur långt du har kommit i kursen, och ett klart projekt ger 100 bonus-XP. Med dem kommer fyra nya utmärkelser – två av dem dolda."
+      ],
+      "de": [
+        "**Ein Projekt nach jeder Prüfung**: Wenn du die Prüfung eines Teils bestanden hast, öffnet sich in allen drei APIs ein freiwilliges Projekt – eine kleine Geschichte mit einem Auftrag, bei dem du den Teil anwendest: ein Sonnensystem aus Kisten, eine Premiere mit farbigen Scheinwerfern, ein eigenes Level mit Power-up für Hedgerow oder das Planetarium eines Museums als Szenengraph. *Check my code* prüft die Etappen wie die Aufgaben eines Kapitels; sie zählen nicht zu deinem Kursfortschritt, und ein fertiges Projekt bringt 100 Bonus-XP. Dazu kommen vier neue Erfolge – zwei davon versteckt."
+      ],
+      "fr": [
+        "**Un projet après chaque examen** : une fois l'examen d'une partie réussi, un projet facultatif s'ouvre dans les trois API – une petite histoire avec une mission qui met la partie en pratique, comme un système solaire en caisses, une première avec des projecteurs colorés, votre propre niveau et bonus pour Hedgerow ou le planétaire d'un musée en graphe de scène. *Check my code* vérifie ses étapes comme les tâches d'un chapitre ; elles ne comptent pas dans votre progression du cours, et un projet terminé rapporte 100 XP bonus. Quatre nouveaux succès les accompagnent – dont deux cachés."
+      ],
+      "es": [
+        "**Un proyecto después de cada examen**: cuando apruebas el examen de una parte se abre un proyecto opcional en las tres API, una pequeña historia con una misión en la que usas lo que enseñó esa parte, como un sistema solar hecho de cajas, una noche de estreno con focos de colores, tu propio nivel y power-up para Hedgerow o el planetario de un museo como grafo de escena. *Check my code* comprueba los hitos como las tareas de un capítulo; no cuentan para tu progreso en el curso y un proyecto terminado da 100 XP extra. Con ellos llegan cuatro logros nuevos, dos de ellos ocultos."
+      ],
+      "zh": [
+        "**每次考试后都有一个项目**：通过一个部分的考试后，三种 API 都会开放一个可选项目——一个带任务的小故事，让你用上这一部分学到的东西，比如用箱子搭一个太阳系、用彩色聚光灯布置首演之夜、为 Hedgerow 设计自己的关卡和道具，或者把博物馆的太阳系仪做成场景图。*Check my code* 会像检查章节任务一样检查里程碑；它们不计入课程进度，完成一个项目可获得 100 额外 XP。同时新增四个成就，其中两个是隐藏的。"
+      ],
+      "ja": [
+        "**試験のあとにプロジェクト**: パートの試験に合格すると、3 つの API すべてで任意のプロジェクトが開きます。そのパートで学んだことを使うミッション付きの小さな物語で、木箱で作る太陽系、色付きスポットライトの初日の舞台、Hedgerow の自作レベルとパワーアップ、シーングラフで作る博物館の太陽系儀などがあります。マイルストーンは章のタスクと同じく *Check my code* でチェックされ、コースの進み具合には数えられません。完成したプロジェクトはボーナス 100 XP。新しい実績も 4 つ加わり、そのうち 2 つは隠し実績です。"
+      ]
+    }
+  },
+  {
     "version": "0.2.10",
     "date": "2026-11-25",
     "changes": {
       "en": [
-        "**A project after every exam**: once you have passed a part's exam, an optional project opens in all three APIs – a small story with an assignment that puts the part to use, like a solar system made of crates, opening night with coloured spotlights, your own level and power-up for Hedgerow, or a museum's orrery as a scene graph. Its milestones are checked by *Check my code* like a chapter's tasks, they don't count towards your progress in the course, and a finished project gives 100 bonus XP. Four new achievements go with them – two of them hidden.",
         "**Pipeline scenes in the light theme**: see-through parts of a scene now keep their colour on the light background – the file's text in the overview's first step was white inside coloured edges and hard to read; now it is coloured like the rest of the scene."
       ],
       "sv": [
-        "**Ett projekt efter varje prov**: när du har klarat provet i en del öppnas ett frivilligt projekt i alla tre API:erna – en liten berättelse med ett uppdrag där du får använda det delen lärde ut, som ett solsystem av lådor, en premiärkväll med färgade strålkastare, en egen bana och power-up i Hedgerow eller ett museums planetarium som scengraf. Delmålen kontrolleras av *Check my code* som ett kapitels uppgifter, de räknas inte in i hur långt du har kommit i kursen, och ett klart projekt ger 100 bonus-XP. Med dem kommer fyra nya utmärkelser – två av dem dolda.",
         "**Pipelinescener i det ljusa temat**: genomskinliga delar av en scen behåller nu sin färg på den ljusa bakgrunden – filens text i översiktens första steg var vit innanför färgade kanter och svår att läsa; nu har den färg som resten av scenen."
       ],
       "de": [
-        "**Ein Projekt nach jeder Prüfung**: Wenn du die Prüfung eines Teils bestanden hast, öffnet sich in allen drei APIs ein freiwilliges Projekt – eine kleine Geschichte mit einem Auftrag, bei dem du den Teil anwendest: ein Sonnensystem aus Kisten, eine Premiere mit farbigen Scheinwerfern, ein eigenes Level mit Power-up für Hedgerow oder das Planetarium eines Museums als Szenengraph. *Check my code* prüft die Etappen wie die Aufgaben eines Kapitels; sie zählen nicht zu deinem Kursfortschritt, und ein fertiges Projekt bringt 100 Bonus-XP. Dazu kommen vier neue Erfolge – zwei davon versteckt.",
         "**Pipeline-Szenen im hellen Design**: Durchscheinende Teile einer Szene behalten jetzt auf dem hellen Hintergrund ihre Farbe – der Text der Datei im ersten Schritt der Übersicht war innerhalb farbiger Ränder weiß und schwer zu lesen; jetzt ist er farbig wie der Rest der Szene."
       ],
       "fr": [
-        "**Un projet après chaque examen** : une fois l'examen d'une partie réussi, un projet facultatif s'ouvre dans les trois API – une petite histoire avec une mission qui met la partie en pratique, comme un système solaire en caisses, une première avec des projecteurs colorés, votre propre niveau et bonus pour Hedgerow ou le planétaire d'un musée en graphe de scène. *Check my code* vérifie ses étapes comme les tâches d'un chapitre ; elles ne comptent pas dans votre progression du cours, et un projet terminé rapporte 100 XP bonus. Quatre nouveaux succès les accompagnent – dont deux cachés.",
         "**Les scènes du pipeline dans le thème clair** : les parties transparentes d'une scène gardent maintenant leur couleur sur le fond clair – le texte du fichier, à la première étape de la vue d'ensemble, était blanc entre des bords colorés et difficile à lire ; il est désormais en couleur comme le reste de la scène."
       ],
       "es": [
-        "**Un proyecto después de cada examen**: cuando apruebas el examen de una parte se abre un proyecto opcional en las tres API, una pequeña historia con una misión en la que usas lo que enseñó esa parte, como un sistema solar hecho de cajas, una noche de estreno con focos de colores, tu propio nivel y power-up para Hedgerow o el planetario de un museo como grafo de escena. *Check my code* comprueba los hitos como las tareas de un capítulo; no cuentan para tu progreso en el curso y un proyecto terminado da 100 XP extra. Con ellos llegan cuatro logros nuevos, dos de ellos ocultos.",
         "**Escenas del pipeline en el tema claro**: las partes transparentes de una escena conservan ahora su color sobre el fondo claro; el texto del archivo en el primer paso de la vista general era blanco dentro de bordes de color y costaba leerlo; ahora tiene color como el resto de la escena."
       ],
       "zh": [
-        "**每次考试后都有一个项目**：通过一个部分的考试后，三种 API 都会开放一个可选项目——一个带任务的小故事，让你用上这一部分学到的东西，比如用箱子搭一个太阳系、用彩色聚光灯布置首演之夜、为 Hedgerow 设计自己的关卡和道具，或者把博物馆的太阳系仪做成场景图。*Check my code* 会像检查章节任务一样检查里程碑；它们不计入课程进度，完成一个项目可获得 100 额外 XP。同时新增四个成就，其中两个是隐藏的。",
         "**浅色主题下的管线场景**：场景中半透明的部分现在在浅色背景上也保持自己的颜色——概览第一步中的文件文本原本是彩色边缘里的白字，难以阅读；现在它和场景的其他部分一样带有颜色。"
       ],
       "ja": [
-        "**試験のあとにプロジェクト**: パートの試験に合格すると、3 つの API すべてで任意のプロジェクトが開きます。そのパートで学んだことを使うミッション付きの小さな物語で、木箱で作る太陽系、色付きスポットライトの初日の舞台、Hedgerow の自作レベルとパワーアップ、シーングラフで作る博物館の太陽系儀などがあります。マイルストーンは章のタスクと同じく *Check my code* でチェックされ、コースの進み具合には数えられません。完成したプロジェクトはボーナス 100 XP。新しい実績も 4 つ加わり、そのうち 2 つは隠し実績です。",
         "**ライトテーマのパイプラインシーン**：シーンの半透明な部分が、明るい背景の上でも本来の色で表示されるようになりました。概要の最初のステップのファイルのテキストは、色付きの縁の内側が白くて読みにくかったのですが、今はシーンのほかの部分と同じく色が付いています。"
       ]
     }
