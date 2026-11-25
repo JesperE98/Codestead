@@ -43,7 +43,11 @@
     "caseDir": "enquete",
     "evidence": "preuves",
     "errorsFile": "erreurs.txt",
-    "caseReport": "rapport.txt"
+    "caseReport": "rapport.txt",
+    "newUser": "camille",
+    "teamGroup": "assistance",
+    "incidentDir": "panne",
+    "incidentLog": "journal.txt"
   },
   "words": {
     "userFull": "Élève",

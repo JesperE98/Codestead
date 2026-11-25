@@ -1,0 +1,33 @@
+{
+  "title": "Projekt: Neu im Team ab Montag",
+  "tasks": {
+    "account": {
+      "text": "Lege ein Konto für `{{newUser}}` an – mit Home-Verzeichnis, `/bin/bash` als Shell und einem Passwort, sodass man sich damit anmelden kann.",
+      "hint": "`useradd` mit `-m` und `-s` legt das Konto an, und `passwd` setzt das Passwort. Beides braucht `sudo`."
+    },
+    "team": {
+      "text": "Lege die Gruppe `{{teamGroup}}` an und füge sowohl `{{newUser}}` als auch dich selbst hinzu. sudo-Rechte bekommt `{{newUser}}` nicht – noch nicht.",
+      "hint": "`groupadd` legt die Gruppe an, und `usermod -aG` fügt ein Mitglied nach dem anderen hinzu. Vergiss das `-a` nicht!"
+    },
+    "shared": {
+      "text": "Lege den gemeinsamen Ordner `/srv/{{teamGroup}}` an. Er soll der Gruppe `{{teamGroup}}` gehören, und die Gruppe soll ihn lesen, beschreiben und betreten dürfen – alle anderen nichts.",
+      "hint": "`sudo mkdir`, dann `chgrp` für die Gruppe und `chmod` für die Rechte. Die Ziffern für *rwx* für Besitzer und Gruppe und nichts für alle anderen sind `770`."
+    },
+    "try-access": {
+      "text": "Teste das Konto: Werde zu `{{newUser}}`, lege eine Datei in `/srv/{{teamGroup}}` an und kehre dann zu deinem eigenen Konto zurück.",
+      "hint": "`su - {{newUser}}` mit dem Passwort, das du gewählt hast, dann `touch` und zuletzt `exit`."
+    },
+    "welcome-pack": {
+      "text": "Die Lektüre für die erste Woche, `{{report}}`, liegt auf dem USB-Stick (`/dev/sdb1`). Lege eine Kopie ins Home-Verzeichnis von `{{newUser}}` – die Datei soll `{{newUser}}` gehören, nicht root – und hänge den Stick aus, wenn du fertig bist.",
+      "hint": "Hänge den Stick mit `sudo mount` unter `/mnt/usb` ein. Kopierst du als `{{newUser}}` (`sudo -u {{newUser}} cp …`), gehört die Kopie `{{newUser}}`. Zum Schluss `sudo umount` – und steh dann nicht selbst in `/mnt/usb`."
+    },
+    "intranet": {
+      "text": "Das Intranet des Teams ist der Dienst `myserver`. Sorge mit `systemctl` dafür, dass er jetzt läuft **und** von selbst startet, wenn der Rechner bootet.",
+      "hint": "`systemctl is-active` und `is-enabled` zeigen den Stand. `enable --now` erledigt beides auf einmal."
+    },
+    "monday": {
+      "text": "Generalprobe für Montagmorgen: Starte den Rechner neu und zeige dann im Journal, dass das Intranet bei diesem Bootvorgang von selbst gestartet ist.",
+      "hint": "`sudo systemctl reboot` startet neu. Danach zeigt `journalctl` mit `-u` für den Dienst und `-b` für diesen Bootvorgang die Zeilen, die du suchst."
+    }
+  }
+}

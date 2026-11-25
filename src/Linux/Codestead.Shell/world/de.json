@@ -43,7 +43,11 @@
     "caseDir": "ermittlung",
     "evidence": "beweise",
     "errorsFile": "fehler.txt",
-    "caseReport": "bericht.txt"
+    "caseReport": "bericht.txt",
+    "newUser": "luca",
+    "teamGroup": "kundendienst",
+    "incidentDir": "stoerung",
+    "incidentLog": "protokoll.txt"
   },
   "words": {
     "userFull": "Schüler",

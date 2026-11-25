@@ -5,6 +5,7 @@
 import { anvandare } from "./Chapters/admin/anvandare.js";
 import { diskar } from "./Chapters/admin/diskar.js";
 import { systemd } from "./Chapters/admin/systemd.js";
+import { adminProject } from "./Chapters/admin/admin-project.js";
 import { distributioner } from "./Chapters/distro/distributioner.js";
 import { familjArch } from "./Chapters/distro/familj-arch.js";
 import { familjDebian } from "./Chapters/distro/familj-debian.js";
@@ -17,6 +18,7 @@ import { pipes } from "./Chapters/grunder/pipes.js";
 import { grunderProject } from "./Chapters/grunder/grunder-project.js";
 import { filoverforing } from "./Chapters/natverk/filoverforing.js";
 import { natverk } from "./Chapters/natverk/natverk.js";
+import { natverkProject } from "./Chapters/natverk/natverk-project.js";
 import { schemalaggning } from "./Chapters/skript/schemalaggning.js";
 import { skript } from "./Chapters/skript/skript.js";
 import { textbearbetning } from "./Chapters/skript/textbearbetning.js";
@@ -36,7 +38,7 @@ import type { Chapter } from "./Types/Chapter.js";
  * after the main chapter's exam and do not count towards the course's progress.
  */
 export function defineProjects(): Chapter[] {
-  return [grunderProject()];
+  return [grunderProject(), adminProject(), natverkProject()];
 }
 
 export function defineChapters(): Chapter[] {

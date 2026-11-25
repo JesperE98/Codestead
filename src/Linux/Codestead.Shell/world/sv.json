@@ -43,7 +43,11 @@
     "caseDir": "utredning",
     "evidence": "bevis",
     "errorsFile": "fel.txt",
-    "caseReport": "rapport.txt"
+    "caseReport": "rapport.txt",
+    "newUser": "robin",
+    "teamGroup": "kundtjanst",
+    "incidentDir": "storning",
+    "incidentLog": "logg.txt"
   },
   "words": {
     "userFull": "Elev",

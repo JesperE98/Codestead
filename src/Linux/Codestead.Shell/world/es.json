@@ -43,7 +43,11 @@
     "caseDir": "investigacion",
     "evidence": "pruebas",
     "errorsFile": "errores.txt",
-    "caseReport": "informe.txt"
+    "caseReport": "informe.txt",
+    "newUser": "dani",
+    "teamGroup": "soporte",
+    "incidentDir": "incidencia",
+    "incidentLog": "registro.txt"
   },
   "words": {
     "userFull": "Alumno",

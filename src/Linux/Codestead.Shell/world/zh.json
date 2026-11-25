@@ -43,7 +43,11 @@
     "caseDir": "case-files",
     "evidence": "evidence",
     "errorsFile": "errors.txt",
-    "caseReport": "report.txt"
+    "caseReport": "report.txt",
+    "newUser": "alex",
+    "teamGroup": "helpdesk",
+    "incidentDir": "incident",
+    "incidentLog": "log.txt"
   },
   "words": {
     "userFull": "学生",
