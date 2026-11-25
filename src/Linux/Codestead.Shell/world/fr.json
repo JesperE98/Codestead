@@ -43,7 +43,12 @@
     "caseDir": "enquete",
     "evidence": "preuves",
     "errorsFile": "erreurs.txt",
-    "caseReport": "rapport.txt"
+    "caseReport": "rapport.txt",
+    "clubDir": "repaire",
+    "knockScript": "toctoc.sh",
+    "clubVar": "REPAIRE",
+    "wardrobe": "armoire",
+    "clubBackup": "repaire-sauvegarde.tar.gz"
   },
   "words": {
     "userFull": "Élève",

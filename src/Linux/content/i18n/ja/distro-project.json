@@ -1,0 +1,57 @@
+{
+  "title": "プロジェクト: 中古のノートパソコン",
+  "tasks": {
+    "upgrade": {
+      "text": "まずは退屈な作業から: 最新のパッケージリストを取得し、インストール済みのパッケージをすべてアップグレードします。",
+      "hint": {
+        "debian": "apt では 2 段階です。`sudo apt update` のあとに `sudo apt upgrade`。",
+        "arch": "pacman ではコマンド 1 つで両方できます。sudo を付けて `-Syu` です。",
+        "redhat": "dnf はパッケージ情報を自分で取得するので、`sudo dnf upgrade` だけで十分です。"
+      }
+    },
+    "search": {
+      "text": "Alex はプログラミング言語 Go の講座を受けます。パッケージリストを検索して、Go のパッケージがあなたのディストリビューションで何という名前なのかを調べましょう。",
+      "hint": {
+        "debian": "`apt search` は名前と説明の両方を検索します。`golang` か `\"Go programming\"` を試しましょう。",
+        "arch": "`pacman -Ss` は名前と説明の両方を検索します。`\"Go programming\"` を試しましょう。",
+        "redhat": "`dnf search` は名前と説明の両方を検索します。`golang` を試しましょう。"
+      }
+    },
+    "install": {
+      "text": "Alex の希望リストをすべてインストールします。プロセスビューアー `htop`、プログラミング言語 Go、テキストエディター Vim です。",
+      "hint": {
+        "debian": "`sudo apt install` には複数のパッケージを一度に渡せます。Go は `golang-go`、Vim は `vim` です。",
+        "arch": "`sudo pacman -S` には複数のパッケージを一度に渡せます。Go は `go`、Vim は `vim` です。",
+        "redhat": "`sudo dnf install` には複数のパッケージを一度に渡せます。Go は `golang`、そして Red Hat ファミリーでは Vim は `vim-enhanced` という名前です。"
+      }
+    },
+    "list-installed": {
+      "text": "再確認: **インストール済み** のパッケージの一覧で Go を探します。",
+      "hint": {
+        "debian": "`apt list --installed` はインストール済みのパッケージをすべて一覧表示します。一覧を `grep` に渡せば、探す手間が省けます。",
+        "arch": "`pacman -Q` はインストール済みのパッケージをすべて、またはうしろに書いたパッケージだけを一覧表示します。",
+        "redhat": "`dnf list --installed` はインストール済みのパッケージをすべて一覧表示します。一覧を `grep` に渡せば、探す手間が省けます。"
+      }
+    },
+    "remove": {
+      "text": "Alex は Vim を試して、抜け出し方がわからなくなりました。「消して！」Vim をアンインストールします。",
+      "hint": {
+        "debian": "`sudo apt remove` とパッケージ名です。",
+        "arch": "`sudo pacman -R` とパッケージ名です。",
+        "redhat": "`sudo dnf remove` とパッケージ名です。インストールしたときと同じ名前を使います。"
+      }
+    },
+    "vlc": {
+      "text": "Alex は映画を見たいそうです。メディアプレーヤー VLC（`org.videolan.VLC`）を Flatpak として Flathub からインストールします。",
+      "hint": {
+        "debian": "`flatpak install flathub org.videolan.VLC`。Flatpak や Flathub がない？ パッケージ `flatpak` をインストールして、`flatpak remote-add` で Flathub を追加しましょう。",
+        "arch": "`flatpak install flathub org.videolan.VLC`。Flatpak や Flathub がない？ パッケージ `flatpak` をインストールして、`flatpak remote-add` で Flathub を追加しましょう。",
+        "redhat": "`flatpak install flathub org.videolan.VLC`。Flathub がない？ `flatpak remote-add` で追加しましょう。"
+      }
+    },
+    "go-version": {
+      "text": "ノートパソコンを返す前の試運転: Go にバージョンを表示させて、講座を始められることを Alex に見せましょう。",
+      "hint": "プログラムの名前は `go` で、サブコマンド `version` がバージョンを表示します。"
+    }
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "title": "Projekt: Der gebrauchte Laptop",
+  "tasks": {
+    "upgrade": {
+      "text": "Zuerst das Langweilige: Hol die neuesten Paketlisten und aktualisiere alle installierten Pakete.",
+      "hint": {
+        "debian": "Zwei Schritte mit apt: `sudo apt update` und dann `sudo apt upgrade`.",
+        "arch": "In pacman erledigt ein einziger Befehl beides: `-Syu`, mit sudo.",
+        "redhat": "dnf holt die Paketinformationen selbst, also reicht `sudo dnf upgrade`."
+      }
+    },
+    "search": {
+      "text": "Alex macht einen Kurs in der Programmiersprache Go. Durchsuche die Paketlisten und finde heraus, wie das Paket mit Go in deiner Distribution heißt.",
+      "hint": {
+        "debian": "`apt search` sucht in Namen und Beschreibungen – probier `golang` oder `\"Go programming\"`.",
+        "arch": "`pacman -Ss` sucht in Namen und Beschreibungen – probier `\"Go programming\"`.",
+        "redhat": "`dnf search` sucht in Namen und Beschreibungen – probier `golang`."
+      }
+    },
+    "install": {
+      "text": "Installiere alles von Alex' Wunschliste: den Prozessbetrachter `htop`, die Programmiersprache Go und den Texteditor Vim.",
+      "hint": {
+        "debian": "Du kannst `sudo apt install` mehrere Pakete auf einmal geben. Go heißt `golang-go` und Vim `vim`.",
+        "arch": "Du kannst `sudo pacman -S` mehrere Pakete auf einmal geben. Go heißt `go` und Vim `vim`.",
+        "redhat": "Du kannst `sudo dnf install` mehrere Pakete auf einmal geben. Go heißt `golang`, und Vim heißt in der Red-Hat-Familie `vim-enhanced`."
+      }
+    },
+    "list-installed": {
+      "text": "Prüf nach: Such Go in der Liste der **installierten** Pakete.",
+      "hint": {
+        "debian": "`apt list --installed` listet alle installierten Pakete auf. Gib die Liste an `grep` weiter, dann musst du nicht suchen.",
+        "arch": "`pacman -Q` listet alle installierten Pakete auf – oder nur die Pakete, die du dahinter schreibst.",
+        "redhat": "`dnf list --installed` listet alle installierten Pakete auf. Gib die Liste an `grep` weiter, dann musst du nicht suchen."
+      }
+    },
+    "remove": {
+      "text": "Alex hat Vim ausprobiert und den Ausgang nicht mehr gefunden. „Weg damit!“ Deinstalliere Vim.",
+      "hint": {
+        "debian": "`sudo apt remove` und der Name des Pakets.",
+        "arch": "`sudo pacman -R` und der Name des Pakets.",
+        "redhat": "`sudo dnf remove` und der Name des Pakets – derselbe Name wie beim Installieren."
+      }
+    },
+    "vlc": {
+      "text": "Alex will Filme schauen. Installiere den Medienplayer VLC (`org.videolan.VLC`) als Flatpak von Flathub.",
+      "hint": {
+        "debian": "`flatpak install flathub org.videolan.VLC`. Fehlt Flatpak oder Flathub? Installiere das Paket `flatpak` und füge Flathub mit `flatpak remote-add` hinzu.",
+        "arch": "`flatpak install flathub org.videolan.VLC`. Fehlt Flatpak oder Flathub? Installiere das Paket `flatpak` und füge Flathub mit `flatpak remote-add` hinzu.",
+        "redhat": "`flatpak install flathub org.videolan.VLC`. Fehlt Flathub? Füge es mit `flatpak remote-add` hinzu."
+      }
+    },
+    "go-version": {
+      "text": "Ein Probelauf, bevor du den Laptop zurückgibst: Lass Go seine Version anzeigen, damit Alex sieht, dass der Kurs beginnen kann.",
+      "hint": "Das Programm heißt `go`, und der Unterbefehl `version` gibt die Version aus."
+    }
+  }
+}

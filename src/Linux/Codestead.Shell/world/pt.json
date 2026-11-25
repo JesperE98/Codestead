@@ -43,7 +43,12 @@
     "caseDir": "investigacao",
     "evidence": "provas",
     "errorsFile": "erros.txt",
-    "caseReport": "relatorio.txt"
+    "caseReport": "relatorio.txt",
+    "clubDir": "esconderijo",
+    "knockScript": "toctoc.sh",
+    "clubVar": "ESCONDERIJO",
+    "wardrobe": "guarda-roupa",
+    "clubBackup": "esconderijo-backup.tar.gz"
   },
   "words": {
     "userFull": "Aluno",

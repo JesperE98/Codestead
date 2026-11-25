@@ -43,7 +43,12 @@
     "caseDir": "utredning",
     "evidence": "bevis",
     "errorsFile": "fel.txt",
-    "caseReport": "rapport.txt"
+    "caseReport": "rapport.txt",
+    "clubDir": "klubbhus",
+    "knockScript": "knacka.sh",
+    "clubVar": "KLUBBHUS",
+    "wardrobe": "garderob",
+    "clubBackup": "klubbhus-backup.tar.gz"
   },
   "words": {
     "userFull": "Elev",

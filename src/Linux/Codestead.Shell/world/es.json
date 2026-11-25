@@ -43,7 +43,12 @@
     "caseDir": "investigacion",
     "evidence": "pruebas",
     "errorsFile": "errores.txt",
-    "caseReport": "informe.txt"
+    "caseReport": "informe.txt",
+    "clubDir": "guarida",
+    "knockScript": "toctoc.sh",
+    "clubVar": "GUARIDA",
+    "wardrobe": "armario",
+    "clubBackup": "guarida-copia.tar.gz"
   },
   "words": {
     "userFull": "Alumno",

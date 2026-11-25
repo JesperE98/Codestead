@@ -43,7 +43,12 @@
     "caseDir": "case-files",
     "evidence": "evidence",
     "errorsFile": "errors.txt",
-    "caseReport": "report.txt"
+    "caseReport": "report.txt",
+    "clubDir": "clubhouse",
+    "knockScript": "knock.sh",
+    "clubVar": "CLUBHOUSE",
+    "wardrobe": "wardrobe",
+    "clubBackup": "clubhouse-backup.tar.gz"
   },
   "words": {
     "userFull": "Студент",

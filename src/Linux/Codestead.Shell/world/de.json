@@ -43,7 +43,12 @@
     "caseDir": "ermittlung",
     "evidence": "beweise",
     "errorsFile": "fehler.txt",
-    "caseReport": "bericht.txt"
+    "caseReport": "bericht.txt",
+    "clubDir": "clubhaus",
+    "knockScript": "klopfen.sh",
+    "clubVar": "CLUBHAUS",
+    "wardrobe": "kleiderschrank",
+    "clubBackup": "clubhaus-backup.tar.gz"
   },
   "words": {
     "userFull": "Schüler",
