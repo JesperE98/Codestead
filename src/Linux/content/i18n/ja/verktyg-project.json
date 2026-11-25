@@ -1,0 +1,33 @@
+{
+  "title": "プロジェクト: dotfiles を荷造りしよう",
+  "tasks": {
+    "repo": {
+      "text": "ディレクトリ `~/{{dotfilesDir}}` を作り、git リポジトリにしましょう。",
+      "hint": "`mkdir`、`cd`、そして `git init` です。git がインストールされていなければ、git の章と同じようにパッケージマネージャーでインストールしましょう。"
+    },
+    "pack": {
+      "text": "今ある設定を詰めましょう。`~/.bashrc` と `~/.gitconfig` を `~/{{dotfilesDir}}` にコピーします。",
+      "hint": "`cp` は一度に複数のファイルを受け取れます: `cp ~/.bashrc ~/.gitconfig ~/{{dotfilesDir}}/`。`~/.gitconfig` がない？ それはまだ git に自分が誰かを伝えていないからです。`git config --global` で設定しましょう。"
+    },
+    "aliases": {
+      "text": "リポジトリにファイル `{{aliasFile}}` を書き、役に立つエイリアスを 2 つ以上入れましょう。",
+      "hint": "1 行に 1 つのエイリアスを書きます。たとえば `alias ll='ls -la'` です。`echo \"…\" >> {{aliasFile}}` で行を書きましょう。外側はダブルクォート、内側はシングルクォートです。"
+    },
+    "first-commit": {
+      "text": "今の状態を保存しましょう。2 つのコピーと `{{aliasFile}}` を含むコミットを作ります。",
+      "hint": "`git add` のあとに `git commit -m \"…\"` です。先に `git status` で確認すれば、何が入るかがわかります。"
+    },
+    "secret": {
+      "text": "Wi-Fi のパスワードは `~/{{dotfilesDir}}/{{secretFile}}` に置くことにしますが、履歴には絶対に入れてはいけません。ファイルを作り、git に無視させ、そのために必要なものをコミットしましょう。",
+      "hint": "ファイルの名前を `.gitignore` に書き、`.gitignore` をコミットします。`git status` に `{{secretFile}}` が表示されなくなれば成功です。もうコミットに入ってしまった？ それなら `git rm --cached` でリポジトリから外せます。ディスクからは消えません。"
+    },
+    "branch": {
+      "text": "ブランチで新しいエイリアスを試しましょう。ブランチ `{{aliasBranch}}` を作り、`{{aliasFile}}` にエイリアスを 1 つ以上追加して、そのブランチでコミットします。",
+      "hint": "`git switch -c {{aliasBranch}}`、次に `echo \"…\" >> {{aliasFile}}` と `git commit -am \"…\"` です。"
+    },
+    "merge-and-use": {
+      "text": "エイリアスは動きます。`{{aliasBranch}}` をメインのブランチにマージしましょう。それから `source` で `{{aliasFile}}` をシェルに読み込み、エイリアスを 1 つ実行します。",
+      "hint": "`git switch main` と `git merge {{aliasBranch}}` です。そのあと `source {{aliasFile}}` を実行し、エイリアスの名前をコマンドのように入力します。"
+    }
+  }
+}

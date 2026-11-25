@@ -1,0 +1,33 @@
+{
+  "title": "Projekt: Der Berichtsroboter",
+  "tasks": {
+    "robot-born": {
+      "text": "Lege das Skript `~/{{robotScript}}` mit einer Shebang-Zeile und einer Zeile an, die eine Überschrift ausgibt. Mach es ausführbar und führe es aus.",
+      "hint": "Schreib das Skript mit `cat > ~/{{robotScript}} << '{{heredocEnd}}'`, beginne mit `#!/bin/bash` und schließe mit `{{heredocEnd}}` ab. Dann `chmod +x` und `./{{robotScript}}` im Home-Verzeichnis."
+    },
+    "usage": {
+      "text": "Der Roboter bekommt die Logdatei als erstes Argument. **Ohne** Argument aufgerufen, soll er ausgeben, wie man ihn benutzt, und mit einem Exit-Code ungleich 0 aufhören. Probier es aus!",
+      "hint": "`$#` ist die Anzahl der Argumente – vergleiche sie in einem `if` mit `-eq 0`. `exit 1` beendet das Skript mit Exit-Code 1."
+    },
+    "missing-file": {
+      "text": "Gibt es die Datei im Argument nicht, soll der Roboter das sagen und mit einem Exit-Code ungleich 0 aufhören. Probier es mit einem Dateinamen aus, den es nicht gibt.",
+      "hint": "`[ -f \"$1\" ]` ist wahr, wenn die Datei existiert, und `!` kehrt die Bedingung um. Fehlermeldungen schickst du am besten mit `>&2` nach stderr."
+    },
+    "levels": {
+      "text": "Jetzt das Wichtigste: Mit `~/{{documents}}/server.log` aufgerufen, soll der Roboter ausgeben, wie viele Zeilen das Log von jeder Stufe hat – gezählt mit `awk`. `WARN` und `warn` sind dieselbe Stufe!",
+      "hint": "Die Stufe ist Feld 3: `awk '{print $3}' \"$1\"`. Mach mit `toupper($3)` Großbuchstaben daraus und zähl dann mit `sort | uniq -c`."
+    },
+    "error-list": {
+      "text": "Unter den Zahlen soll der Bericht jeden Fehler auflisten – mit Uhrzeit und Meldung, aber **ohne** das Datum, das ohnehin in jeder Zeile dasselbe ist. Entferne das Datum mit `sed`.",
+      "hint": "`grep ERROR \"$1\"` sucht die Fehler heraus, und `sed 's/^[0-9-]* //'` entfernt alles bis zum ersten Leerzeichen."
+    },
+    "schedule": {
+      "text": "Plane den Roboter ein: Er soll montags bis freitags um 06:30 mit `~/{{documents}}/server.log` laufen, und seine Ausgabe soll an `~/{{robotLog}}` angehängt werden. Behalte deine alten Jobs.",
+      "hint": "Minute 30, Stunde 6, Wochentag 1-5. Füge den Job mit `(crontab -l; echo '…') | crontab -` hinzu, ohne die alten zu entfernen, und beende die Zeile des Jobs mit `>> ~/{{robotLog}} 2>&1`."
+    },
+    "rehearsal": {
+      "text": "Generalprobe: Führe den Befehl des Jobs einmal von Hand aus, damit der heutige Bericht in `~/{{robotLog}}` landet.",
+      "hint": "Kopiere den Befehl hinter den fünf Zeitfeldern aus `crontab -l` und führe ihn aus. Sieh dir dann die Datei mit `cat` an."
+    }
+  }
+}

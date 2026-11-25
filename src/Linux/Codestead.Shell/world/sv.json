@@ -43,7 +43,13 @@
     "caseDir": "utredning",
     "evidence": "bevis",
     "errorsFile": "fel.txt",
-    "caseReport": "rapport.txt"
+    "caseReport": "rapport.txt",
+    "robotScript": "dagsrapport.sh",
+    "robotLog": "rapporter.txt",
+    "dotfilesDir": "dotfiler",
+    "aliasFile": "alias.sh",
+    "secretFile": "losenord.txt",
+    "aliasBranch": "fler-alias"
   },
   "words": {
     "userFull": "Elev",

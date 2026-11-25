@@ -1,0 +1,33 @@
+{
+  "title": "Projet : Le robot des rapports",
+  "tasks": {
+    "robot-born": {
+      "text": "Créez le script `~/{{robotScript}}` avec une ligne shebang et une ligne qui affiche un titre. Rendez-le exécutable et lancez-le.",
+      "hint": "Écrivez le script avec `cat > ~/{{robotScript}} << '{{heredocEnd}}'`, commencez par `#!/bin/bash` et terminez par `{{heredocEnd}}`. Ensuite `chmod +x` et `./{{robotScript}}` dans votre répertoire personnel."
+    },
+    "usage": {
+      "text": "Le robot reçoit le fichier journal en premier argument. Lancé **sans** argument, il doit afficher comment l'utiliser et s'arrêter avec un code de retour différent de 0. Essayez !",
+      "hint": "`$#` est le nombre d'arguments – comparez-le à 0 avec `-eq 0` dans un `if`. `exit 1` termine le script avec le code de retour 1."
+    },
+    "missing-file": {
+      "text": "Si le fichier passé en argument n'existe pas, le robot doit le dire et s'arrêter avec un code de retour différent de 0. Essayez avec un nom de fichier qui n'existe pas.",
+      "hint": "`[ -f \"$1\" ]` est vrai si le fichier existe, et `!` inverse la condition. Les messages d'erreur vont de préférence vers stderr avec `>&2`."
+    },
+    "levels": {
+      "text": "Maintenant l'essentiel : lancé sur `~/{{documents}}/server.log`, le robot doit afficher combien de lignes le journal contient de chaque niveau, comptées avec `awk`. `WARN` et `warn` sont le même niveau !",
+      "hint": "Le niveau est le champ 3 : `awk '{print $3}' \"$1\"`. Mettez-le en majuscules avec `toupper($3)`, puis comptez avec `sort | uniq -c`."
+    },
+    "error-list": {
+      "text": "Sous les chiffres, le rapport doit lister chaque erreur – avec l'heure et le message mais **sans** la date, qui est de toute façon la même sur toutes les lignes. Retirez la date avec `sed`.",
+      "hint": "`grep ERROR \"$1\"` extrait les erreurs, et `sed 's/^[0-9-]* //'` retire tout jusqu'à la première espace."
+    },
+    "schedule": {
+      "text": "Planifiez le robot : il doit tourner sur `~/{{documents}}/server.log` à 06:30 du lundi au vendredi, et sa sortie doit être ajoutée à `~/{{robotLog}}`. Gardez vos anciennes tâches.",
+      "hint": "Minute 30, heure 6, jour de la semaine 1-5. Ajoutez la tâche sans supprimer les anciennes avec `(crontab -l; echo '…') | crontab -`, et terminez la ligne de la tâche par `>> ~/{{robotLog}} 2>&1`."
+    },
+    "rehearsal": {
+      "text": "Répétition générale : lancez une fois à la main la commande de la tâche, pour que le rapport du jour arrive dans `~/{{robotLog}}`.",
+      "hint": "Copiez la commande qui suit les cinq champs horaires dans `crontab -l` et lancez-la. Regardez ensuite le fichier avec `cat`."
+    }
+  }
+}
