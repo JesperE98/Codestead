@@ -1,5 +1,6 @@
 import type { Checks } from "./TaskChecks.PerApi.js";
 import { modelLoadingProject } from "./TaskChecks.Project.ModelLoading.js";
+import { advancedOpenGLProject } from "./TaskChecks.Project.AdvancedOpenGL.js";
 
 // The milestones' checks of the optional projects after the parts' exams, by project ("<part>-project"; the milestones
 // are projects/<api>/<part>-project/edits.txt, the brief chapters/<lang>/<part>-project.md). Every milestone has a check:
@@ -8,5 +9,6 @@ import { modelLoadingProject } from "./TaskChecks.Project.ModelLoading.js";
 export function projects(): Record<string, Checks> {
   return {
     ...modelLoadingProject(),
+    ...advancedOpenGLProject(),
   };
 }

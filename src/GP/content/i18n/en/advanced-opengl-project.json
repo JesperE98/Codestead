@@ -1,0 +1,45 @@
+{
+  "title": "Project: The glass pavilion",
+  "tasks": {
+    "vignette": {
+      "text": "The brochure look: replace the edge detection with a vignette – the middle of the picture as it is, fading to black towards the corners.",
+      "hint": {
+        "opengl": "Only `framebuffers_screen.fs` changes: the colour of `screenTexture` at `TexCoords`, multiplied by `1.0 - smoothstep(0.4, 0.7, length(TexCoords - vec2(0.5)))`.",
+        "vulkan": "Only `shaders/framebuffers_screen.frag` changes: the colour of `screenTexture` at `fragTexCoord`, multiplied by `1.0 - smoothstep(0.4, 0.7, length(fragTexCoord - vec2(0.5)))`. Compile it again.",
+        "d3d12": "Only `framebuffers_screen.hlsl` changes: the pixel shader's sample at `input.texCoord`, multiplied by `1.0f - smoothstep(0.4f, 0.7f, length(input.texCoord - float2(0.5f, 0.5f)))`."
+      }
+    },
+    "sky": {
+      "text": "Open the sky: bring the cube map sky of *Cubemaps* into the off-screen framebuffer, drawn after the sculptures and the floor, so that it only fills the pixels nothing else has covered.",
+      "hint": {
+        "opengl": "From *Cubemaps*: `loadCubemap` with the six `skybox/` images, `skyboxVertices` with its VAO, `skybox.vs` (with `gl_Position = pos.xyww`) and `skybox.fs`. Draw it after the floor with `glDepthFunc(GL_LEQUAL)`, and the view matrix without its translation.",
+        "vulkan": "From *Cubemaps*: `loadCubemap`, a clamping sampler, a descriptor set with the cube map, the 36 sky vertices after the others and `shaders/skybox.vert` (`pos.xyww`) / `.frag`. Its pipeline: one vertex attribute and the depth compare op `VK_COMPARE_OP_LESS_OR_EQUAL` – the pipeline helper needs two more parameters. One descriptor set more in the pool.",
+        "d3d12": "From *Cubemaps*: `LoadCubemap` into slot 4 of a bigger CBV/SRV heap, the clamping static sampler `s1`, the 36 sky vertices after the others, `skybox.hlsl` (`pos.xyww`) and a pipeline state with `D3D12_COMPARISON_FUNC_LESS_EQUAL` and no depth writes. Draw it after the floor."
+      }
+    },
+    "columns": {
+      "text": "Build the colonnade: five marble columns behind the sculptures – the cube stretched to 0.5 × 3 × 0.5, standing on the floor, at x = −4, −2, 0, 2, 4 and z = −4 – with one instanced draw call; the vertex shader places each instance.",
+      "hint": {
+        "opengl": "In `columns.vs`: `aPos * vec3(0.5, 3.0, 0.5) + vec3(-4.0 + 2.0 * gl_InstanceID, 1.0, -4.0)`. A `Shader` from `columns.vs` and `framebuffers.fs`, the marble texture, and `glDrawArraysInstanced(GL_TRIANGLES, 0, 36, 5)` before the sky.",
+        "vulkan": "In `shaders/columns.vert`: `inPosition * vec3(0.5, 3.0, 0.5) + vec3(-4.0 + 2.0 * gl_InstanceIndex, 1.0, -4.0)`. A pipeline from `columns.vert` and `framebuffers.frag`, the marble's descriptor set, and `vkCmdDraw(commandBuffer, 36, 5, 0, 0)` before the sky.",
+        "d3d12": "In `columns.hlsl`: `position * float3(0.5f, 3.0f, 0.5f) + float3(-4.0f + 2.0f * instanceID, 1.0f, -4.0f)` with `uint instanceID : SV_InstanceID`. A pipeline state with that vertex shader and the scene's pixel shader, the marble texture, and `DrawInstanced(36, 5, 0, 0)` before the sky."
+      }
+    },
+    "outline": {
+      "text": "The star of the show: give the left sculpture, at (−1, 0, −1), a golden outline – for example (1.0, 0.8, 0.2) – with the stencil buffer: the sculpture once more, about 1.1 times larger, only around itself.",
+      "hint": {
+        "opengl": "`glEnable(GL_STENCIL_TEST)`, `glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE)`, clear `GL_STENCIL_BUFFER_BIT` too. The sculpture with `glStencilFunc(GL_ALWAYS, 1, 0xFF)` and `glStencilMask(0xFF)`, everything else with mask `0x00`; after the sky, `glStencilFunc(GL_NOTEQUAL, 1, 0xFF)`, no depth test, `outline.fs` and the scaled cube.",
+        "vulkan": "A depth format with stencil (`VK_FORMAT_D32_SFLOAT_S8_UINT` …) with the stencil aspect in its views, `stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR` in the offscreen render pass, and stencil parameters for the pipeline helper: the sculpture's pipeline `ALWAYS` with write mask `0xFF`, the outline's `NOT_EQUAL` with no depth test and `outline.frag`, drawn after the sky.",
+        "d3d12": "`DXGI_FORMAT_D24_UNORM_S8_UINT` for the depth buffer, its view and the pipeline states, `D3D12_CLEAR_FLAG_STENCIL` and `OMSetStencilRef(1)`. Two pipeline states: the sculpture's with `StencilEnable`, `StencilFunc ALWAYS`, `StencilPassOp REPLACE`, write mask `0xFF`; the outline's with `NOT_EQUAL`, write mask `0x00`, no depth test and `outline.hlsl`."
+      }
+    },
+    "glass": {
+      "text": "The glass wall: between the sculptures, a pane of tinted glass – the window texture on the 1 × 1 quad of *Blending*, moved to (0.3, 0, −0.2) – blended over what is behind it, drawn after everything opaque.",
+      "hint": {
+        "opengl": "`loadTexture(\"window.png\")`, the quad's vertices and VAO, and as the last draw of the off-screen pass: `glEnable(GL_BLEND)`, `glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)`, the scene's shader with the glass's model matrix.",
+        "vulkan": "`loadTexture(\"textures/window.png\", …)`, its descriptor set (one more in the pool), the quad's 6 vertices after the sky's, and a pipeline with `blendEnable` and `SRC_ALPHA` / `ONE_MINUS_SRC_ALPHA` – one more parameter for the helper. Drawn last in the offscreen pass.",
+        "d3d12": "`LoadTexture(\"window.png\", …)` into slot 5 (one more descriptor in the heap), the quad's 6 vertices after the sky's, and a pipeline state with `BlendEnable`, `D3D12_BLEND_SRC_ALPHA` and `D3D12_BLEND_INV_SRC_ALPHA`. Drawn last in the off-screen pass."
+      }
+    }
+  }
+}

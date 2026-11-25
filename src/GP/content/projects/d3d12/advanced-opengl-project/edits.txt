@@ -1,0 +1,574 @@
+=== task: vignette
+--- file: framebuffers_screen.hlsl
+--- find:
+// The distance to the neighbouring samples, in texture coordinates.
+static const float offset = 1.0f / 300.0f;
+
+// The pixel shader: the colour of the window's pixel.
+float4 PSMain(PSInput input) : SV_TARGET
+{
+    // The 3x3 samples around the pixel. v grows downwards in Direct3D, so the top row
+    // is at -offset (learnopengl's GLSL, where v grows upwards, has +offset there).
+    float2 offsets[9] =
+    {
+        float2(-offset, -offset),    // top-left
+        float2( 0.0f,   -offset),    // top-center
+        float2( offset, -offset),    // top-right
+        float2(-offset,  0.0f),      // center-left
+        float2( 0.0f,    0.0f),      // center-center
+        float2( offset,  0.0f),      // center-right
+        float2(-offset,  offset),    // bottom-left
+        float2( 0.0f,    offset),    // bottom-center
+        float2( offset,  offset)     // bottom-right
+    };
+
+    // The kernel: how much each sample counts.
+    float kernel[9] =
+    {
+        1.0f,  1.0f, 1.0f,
+        1.0f, -8.0f, 1.0f,
+        1.0f,  1.0f, 1.0f
+    };
+
+    float3 sampleTex[9];
+    for (int i = 0; i < 9; i++)
+    {
+        sampleTex[i] = screenTexture.Sample(wrapSampler, input.texCoord + offsets[i]).rgb;
+    }
+    float3 col = float3(0.0f, 0.0f, 0.0f);
+    for (int k = 0; k < 9; k++)
+        col += sampleTex[k] * kernel[k];
+
+    return float4(col, 1.0f);
+}
+--- replace:
+// The pixel shader: the colour of the window's pixel.
+float4 PSMain(PSInput input) : SV_TARGET
+{
+    float3 col = screenTexture.Sample(wrapSampler, input.texCoord).rgb;
+    // a vignette: full brightness in the middle, fading to black towards the corners
+    float distanceFromCentre = length(input.texCoord - float2(0.5f, 0.5f));
+    col *= 1.0f - smoothstep(0.4f, 0.7f, distanceFromCentre);
+    return float4(col, 1.0f);
+}
+
+=== task: sky
+--- file: skybox.hlsl
+--- find:
+    // TODO: the sky's vertex shader (Cubemaps): the direction to the vertex, and the position at the largest depth
+    result.texCoords = position;
+    result.position = float4(0.0f, 0.0f, 0.0f, 1.0f);
+--- replace:
+    // The direction from the centre of the cube to the vertex.
+    result.texCoords = position;
+    // (float3x3)view is the view matrix without its translation (learnopengl:
+    // mat4(mat3(view))): the camera turns, but never gets nearer to the sky.
+    float3 viewPosition = mul(position, (float3x3)view);
+    float4 pos = mul(float4(viewPosition, 1.0f), projection);
+    // z = w: after the perspective divide the depth is 1.0, the largest depth value.
+    result.position = pos.xyww;
+--- file: skybox.hlsl
+--- find:
+    // TODO: the cube map's colour in the direction texCoords
+    return float4(0.0f, 0.0f, 0.0f, 1.0f);
+--- replace:
+    return skybox.Sample(clampSampler, input.texCoords);
+--- file: main.cpp
+--- find:
+#include <string>
+
+--- replace:
+#include <string>
+#include <vector>
+
+--- file: main.cpp
+--- find:
+// and the depth buffer of the D3D12Bundles sample: the scene is drawn into an off-screen
+// render target, then onto the window with a post-processing effect.
+--- replace:
+// and the depth buffer of the D3D12Bundles sample: the scene, under a sky from a cube map,
+// is drawn into an off-screen render target, then onto the window with a post-processing effect.
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12PipelineState> m_screenPipelineState;    // the screen quad's
+--- replace:
+    ComPtr<ID3D12PipelineState> m_screenPipelineState;    // the screen quad's
+    ComPtr<ID3D12PipelineState> m_skyboxPipelineState;    // the sky's
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12Resource> m_floorTexture;
+--- replace:
+    ComPtr<ID3D12Resource> m_floorTexture;
+    ComPtr<ID3D12Resource> m_skyboxTexture;    // the cube map
+--- file: main.cpp
+--- find:
+    void LoadTexture(const char* path, ComPtr<ID3D12Resource>& texture, ComPtr<ID3D12Resource>& uploadHeap, UINT descriptorIndex);
+--- replace:
+    void LoadTexture(const char* path, ComPtr<ID3D12Resource>& texture, ComPtr<ID3D12Resource>& uploadHeap, UINT descriptorIndex);
+    void LoadCubemap(const std::vector<std::string>& faces, ComPtr<ID3D12Resource>& texture, ComPtr<ID3D12Resource>& uploadHeap, UINT descriptorIndex);
+--- file: main.cpp
+--- find:
+        cbvSrvHeapDesc.NumDescriptors = 4;    // one CBV + one SRV per texture + the off-screen render target's SRV
+--- replace:
+        cbvSrvHeapDesc.NumDescriptors = 5;    // one CBV + one SRV per texture + the off-screen render target's SRV + the cube map's
+--- file: main.cpp
+--- find:
+        D3D12_STATIC_SAMPLER_DESC samplers[1] = {};
+--- replace:
+        D3D12_STATIC_SAMPLER_DESC samplers[2] = {};
+--- file: main.cpp
+--- find:
+        CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
+--- replace:
+        // Sampler s1: the same, but texture coordinates are clamped to the edge (learnopengl's
+        // GL_CLAMP_TO_EDGE for the cube map): no filtering across the seams between the faces.
+        samplers[1] = samplers[0];
+        samplers[1].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        samplers[1].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        samplers[1].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        samplers[1].ShaderRegister = 1;
+
+        CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
+--- file: main.cpp
+--- find:
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState)));
+
+--- replace:
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState)));
+
+        // The sky's pipeline state: the same description with the shaders of skybox.hlsl,
+        // and the depth function LESS_EQUAL: the sky's depth is 1.0, the value the depth
+        // buffer is cleared to, and it must pass there (learnopengl: glDepthFunc(GL_LEQUAL)).
+        // It writes no depth: drawn last, nothing needs it.
+        ComPtr<ID3DBlob> skyboxVertexShader;
+        ComPtr<ID3DBlob> skyboxPixelShader;
+        ThrowIfFailed(D3DCompileFromFile(L"skybox.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &skyboxVertexShader, nullptr));
+        ThrowIfFailed(D3DCompileFromFile(L"skybox.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &skyboxPixelShader, nullptr));
+        psoDesc.VS = CD3DX12_SHADER_BYTECODE(skyboxVertexShader.Get());
+        psoDesc.PS = CD3DX12_SHADER_BYTECODE(skyboxPixelShader.Get());
+        psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+        psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_skyboxPipelineState)));
+        psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+        psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+
+--- file: main.cpp
+--- find:
+            { {  1.0f,  1.0f, 0.0f }, { 1.0f, 0.0f } }
+        };
+--- replace:
+            { {  1.0f,  1.0f, 0.0f }, { 1.0f, 0.0f } },
+
+            // the skybox: vertices 48 to 83 - a cube from -1 to 1 around the origin. Only the
+            // positions matter: they are the directions the skybox shader samples the cube
+            // map in. {} leaves the other attribute at zero (the skybox shader does not read it).
+            { { -1.0f,  1.0f, -1.0f }, {} },
+            { { -1.0f, -1.0f, -1.0f }, {} },
+            { {  1.0f, -1.0f, -1.0f }, {} },
+            { {  1.0f, -1.0f, -1.0f }, {} },
+            { {  1.0f,  1.0f, -1.0f }, {} },
+            { { -1.0f,  1.0f, -1.0f }, {} },
+
+            { { -1.0f, -1.0f,  1.0f }, {} },
+            { { -1.0f, -1.0f, -1.0f }, {} },
+            { { -1.0f,  1.0f, -1.0f }, {} },
+            { { -1.0f,  1.0f, -1.0f }, {} },
+            { { -1.0f,  1.0f,  1.0f }, {} },
+            { { -1.0f, -1.0f,  1.0f }, {} },
+
+            { {  1.0f, -1.0f, -1.0f }, {} },
+            { {  1.0f, -1.0f,  1.0f }, {} },
+            { {  1.0f,  1.0f,  1.0f }, {} },
+            { {  1.0f,  1.0f,  1.0f }, {} },
+            { {  1.0f,  1.0f, -1.0f }, {} },
+            { {  1.0f, -1.0f, -1.0f }, {} },
+
+            { { -1.0f, -1.0f,  1.0f }, {} },
+            { { -1.0f,  1.0f,  1.0f }, {} },
+            { {  1.0f,  1.0f,  1.0f }, {} },
+            { {  1.0f,  1.0f,  1.0f }, {} },
+            { {  1.0f, -1.0f,  1.0f }, {} },
+            { { -1.0f, -1.0f,  1.0f }, {} },
+
+            { { -1.0f,  1.0f, -1.0f }, {} },
+            { {  1.0f,  1.0f, -1.0f }, {} },
+            { {  1.0f,  1.0f,  1.0f }, {} },
+            { {  1.0f,  1.0f,  1.0f }, {} },
+            { { -1.0f,  1.0f,  1.0f }, {} },
+            { { -1.0f,  1.0f, -1.0f }, {} },
+
+            { { -1.0f, -1.0f, -1.0f }, {} },
+            { { -1.0f, -1.0f,  1.0f }, {} },
+            { {  1.0f, -1.0f, -1.0f }, {} },
+            { {  1.0f, -1.0f, -1.0f }, {} },
+            { { -1.0f, -1.0f,  1.0f }, {} },
+            { {  1.0f, -1.0f,  1.0f }, {} }
+        };
+--- file: main.cpp
+--- find:
+    LoadTexture("metal.png", m_floorTexture, floorTextureUploadHeap, 2);
+--- replace:
+    LoadTexture("metal.png", m_floorTexture, floorTextureUploadHeap, 2);
+    // The sky's cube map: slot 4 (slot 3 is the off-screen render target's SRV).
+    std::vector<std::string> faces =
+    {
+        "skybox/right.png",
+        "skybox/left.png",
+        "skybox/top.png",
+        "skybox/bottom.png",
+        "skybox/front.png",
+        "skybox/back.png"
+    };
+    ComPtr<ID3D12Resource> skyboxTextureUploadHeap;
+    LoadCubemap(faces, m_skyboxTexture, skyboxTextureUploadHeap, 4);
+--- file: main.cpp
+--- find:
+    CD3DX12_GPU_DESCRIPTOR_HANDLE floorTexture(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 2, m_cbvSrvDescriptorSize);
+--- replace:
+    CD3DX12_GPU_DESCRIPTOR_HANDLE floorTexture(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 2, m_cbvSrvDescriptorSize);
+    CD3DX12_GPU_DESCRIPTOR_HANDLE skyboxTexture(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 4, m_cbvSrvDescriptorSize);
+--- file: main.cpp
+--- find:
+    m_commandList->DrawInstanced(6, 1, 36, 0);
+--- replace:
+    m_commandList->DrawInstanced(6, 1, 36, 0);
+
+    // the sky last: at depth 1.0 it only fills the pixels nothing else has covered - its
+    // pipeline state, the cube map (root parameter 2), 36 vertices from vertex 48 on
+    m_commandList->SetPipelineState(m_skyboxPipelineState.Get());
+    m_commandList->SetGraphicsRootDescriptorTable(2, skyboxTexture);
+    m_commandList->DrawInstanced(36, 1, 48, 0);
+--- file: main.cpp
+--- find:
+// Mouse look: WindowProc calls this
+--- replace:
+// Utility function for loading a cube map from six image files, in the order +X (right),
+// -X (left), +Y (top), -Y (bottom), +Z (front), -Z (back): creates one texture with six
+// array slices (the faces) in a default heap and its shader resource view (TEXTURECUBE) in
+// slot descriptorIndex of the CBV/SRV heap, and records the copy of the pixels into it.
+// The copy reads from uploadHeap, so that must stay alive until the command list has executed.
+void D3D12App::LoadCubemap(const std::vector<std::string>& faces, ComPtr<ID3D12Resource>& texture, ComPtr<ID3D12Resource>& uploadHeap, UINT descriptorIndex)
+{
+    // Load the six images as RGBA. No vertical flip: a face's first row is its top
+    // (learnopengl also loads its cube map without the flip).
+    int width = 0, height = 0, nrChannels = 0;
+    unsigned char* data[6] = {};
+    for (UINT i = 0; i < 6; i++)
+    {
+        data[i] = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 4);
+        if (data[i] == nullptr)
+        {
+            throw std::runtime_error("Cubemap texture failed to load at path: " + faces[i]);
+        }
+    }
+
+    // Describe and create the texture: like a 2D texture, but with 6 array slices
+    // (DepthOrArraySize), one per face, all the same size. It starts in the COPY_DEST state.
+    D3D12_RESOURCE_DESC textureDesc = {};
+    textureDesc.MipLevels = 1;
+    textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    textureDesc.Width = static_cast<UINT64>(width);
+    textureDesc.Height = static_cast<UINT>(height);
+    textureDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+    textureDesc.DepthOrArraySize = 6;
+    textureDesc.SampleDesc.Count = 1;
+    textureDesc.SampleDesc.Quality = 0;
+    textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+
+    CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
+    ThrowIfFailed(m_device->CreateCommittedResource(
+        &heapProperties,
+        D3D12_HEAP_FLAG_NONE,
+        &textureDesc,
+        D3D12_RESOURCE_STATE_COPY_DEST,
+        nullptr,
+        IID_PPV_ARGS(&texture)));
+
+    // The upload heap: big enough for all six subresources (the faces) as the GPU lays them out.
+    const UINT64 uploadBufferSize = GetRequiredIntermediateSize(texture.Get(), 0, 6);
+
+    CD3DX12_HEAP_PROPERTIES uploadHeapProperties(D3D12_HEAP_TYPE_UPLOAD);
+    CD3DX12_RESOURCE_DESC uploadBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
+    ThrowIfFailed(m_device->CreateCommittedResource(
+        &uploadHeapProperties,
+        D3D12_HEAP_FLAG_NONE,
+        &uploadBufferDesc,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(&uploadHeap)));
+
+    // One D3D12_SUBRESOURCE_DATA per face: subresource i is array slice i, the face
+    // GL_TEXTURE_CUBE_MAP_POSITIVE_X + i in OpenGL. UpdateSubresources copies all six into
+    // the upload heap now and schedules the copy into the texture.
+    D3D12_SUBRESOURCE_DATA faceData[6] = {};
+    for (UINT i = 0; i < 6; i++)
+    {
+        faceData[i].pData = data[i];
+        faceData[i].RowPitch = width * 4;
+        faceData[i].SlicePitch = faceData[i].RowPitch * height;
+    }
+    UpdateSubresources(m_commandList.Get(), texture.Get(), uploadHeap.Get(), 0, 0, 6, faceData);
+
+    // After the copy, the texture is read by the pixel shader.
+    CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(texture.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    m_commandList->ResourceBarrier(1, &barrier);
+
+    // Describe and create a SRV that sees the six slices as one cube (a TextureCube in HLSL).
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    srvDesc.Format = textureDesc.Format;
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+    srvDesc.TextureCube.MostDetailedMip = 0;
+    srvDesc.TextureCube.MipLevels = 1;
+    CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_cbvSrvHeap->GetCPUDescriptorHandleForHeapStart(), descriptorIndex, m_cbvSrvDescriptorSize);
+    m_device->CreateShaderResourceView(texture.Get(), &srvDesc, srvHandle);
+
+    // Free the image memory (UpdateSubresources has copied it into the upload heap).
+    for (UINT i = 0; i < 6; i++)
+    {
+        stbi_image_free(data[i]);
+    }
+}
+
+// Mouse look: WindowProc calls this
+
+=== task: columns
+--- file: columns.hlsl
+--- find:
+    // TODO: turn the cube into a column and give every instance (instanceID) a place of its own
+    float3 worldPosition = position;
+--- replace:
+    // The cube stretched into a column 0.5 x 3 x 0.5 standing on the floor (y from -0.5 to
+    // 2.5); instance i stands at x = -4 + 2i, 4 units behind the sculptures.
+    float3 worldPosition = position * float3(0.5f, 3.0f, 0.5f) + float3(-4.0f + 2.0f * instanceID, 1.0f, -4.0f);
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12PipelineState> m_skyboxPipelineState;    // the sky's
+--- replace:
+    ComPtr<ID3D12PipelineState> m_skyboxPipelineState;    // the sky's
+    ComPtr<ID3D12PipelineState> m_columnPipelineState;    // the colonnade's: one instanced draw
+--- file: main.cpp
+--- find:
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState)));
+
+--- replace:
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState)));
+
+        // The colonnade's pipeline state: the vertex shader of columns.hlsl, which places
+        // each instance itself, with the scene's pixel shader.
+        ComPtr<ID3DBlob> columnVertexShader;
+        ThrowIfFailed(D3DCompileFromFile(L"columns.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &columnVertexShader, nullptr));
+        psoDesc.VS = CD3DX12_SHADER_BYTECODE(columnVertexShader.Get());
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_columnPipelineState)));
+
+--- file: main.cpp
+--- find:
+    // the sky last: at depth 1.0 it only fills the pixels nothing else has covered - its
+--- replace:
+    // the colonnade at the back: five marble columns in one instanced draw call (the cube's
+    // 36 vertices, 5 instances)
+    m_commandList->SetPipelineState(m_columnPipelineState.Get());
+    m_commandList->SetGraphicsRootDescriptorTable(2, cubeTexture);
+    m_commandList->DrawInstanced(36, 5, 0, 0);
+
+    // the sky last: at depth 1.0 it only fills the pixels nothing else has covered - its
+
+=== task: outline
+--- file: outline.hlsl
+--- find:
+    // TODO: every pixel of the outline gets the same colour
+    return float4(0.0f, 0.0f, 0.0f, 1.0f);
+--- replace:
+    return float4(1.0f, 0.8f, 0.2f, 1.0f);    // gold
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12PipelineState> m_columnPipelineState;    // the colonnade's: one instanced draw
+--- replace:
+    ComPtr<ID3D12PipelineState> m_columnPipelineState;    // the colonnade's: one instanced draw
+    ComPtr<ID3D12PipelineState> m_selectedPipelineState;    // the selected sculpture's: writes the stencil buffer
+    ComPtr<ID3D12PipelineState> m_outlinePipelineState;    // its outline's: where the stencil buffer is not 1
+--- file: main.cpp
+--- find:
+        psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+--- replace:
+        psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;    // depth with an 8-bit stencil buffer
+--- file: main.cpp
+--- find:
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState)));
+
+--- replace:
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState)));
+
+        // The selected sculpture's pipeline state: the stencil test on, it always passes and
+        // writes the reference value (OMSetStencilRef: 1) wherever the sculpture is drawn.
+        psoDesc.DepthStencilState.StencilEnable = TRUE;
+        psoDesc.DepthStencilState.StencilReadMask = 0xFF;
+        psoDesc.DepthStencilState.StencilWriteMask = 0xFF;
+        psoDesc.DepthStencilState.FrontFace.StencilFailOp = D3D12_STENCIL_OP_KEEP;
+        psoDesc.DepthStencilState.FrontFace.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
+        psoDesc.DepthStencilState.FrontFace.StencilPassOp = D3D12_STENCIL_OP_REPLACE;
+        psoDesc.DepthStencilState.FrontFace.StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+        psoDesc.DepthStencilState.BackFace = psoDesc.DepthStencilState.FrontFace;    // the same for triangles seen from behind
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_selectedPipelineState)));
+
+        // The outline's pipeline state: the shaders of outline.hlsl (one colour), only where
+        // the stencil value is not 1, no stencil writes and no depth test (nothing hides it).
+        ComPtr<ID3DBlob> outlineVertexShader;
+        ComPtr<ID3DBlob> outlinePixelShader;
+        ThrowIfFailed(D3DCompileFromFile(L"outline.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &outlineVertexShader, nullptr));
+        ThrowIfFailed(D3DCompileFromFile(L"outline.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &outlinePixelShader, nullptr));
+        psoDesc.VS = CD3DX12_SHADER_BYTECODE(outlineVertexShader.Get());
+        psoDesc.PS = CD3DX12_SHADER_BYTECODE(outlinePixelShader.Get());
+        psoDesc.DepthStencilState.StencilWriteMask = 0x00;
+        psoDesc.DepthStencilState.FrontFace.StencilFunc = D3D12_COMPARISON_FUNC_NOT_EQUAL;
+        psoDesc.DepthStencilState.BackFace = psoDesc.DepthStencilState.FrontFace;
+        psoDesc.DepthStencilState.DepthEnable = FALSE;
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_outlinePipelineState)));
+
+        // Back to the scene's description for the pipeline states below: its shaders, the
+        // depth test on, the stencil test off.
+        psoDesc.VS = CD3DX12_SHADER_BYTECODE(vertexShader.Get());
+        psoDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShader.Get());
+        psoDesc.DepthStencilState.DepthEnable = TRUE;
+        psoDesc.DepthStencilState.StencilEnable = FALSE;
+
+--- file: main.cpp
+--- find:
+        depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
+--- replace:
+        depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+--- file: main.cpp
+--- find:
+        depthOptimizedClearValue.Format = DXGI_FORMAT_D32_FLOAT;
+--- replace:
+        depthOptimizedClearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+--- file: main.cpp
+--- find:
+        // A texture as big as the window, one 32-bit float depth per pixel (1 array
+        // slice, 1 mip level), in a default heap and in the DEPTH_WRITE state.
+        CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
+        CD3DX12_RESOURCE_DESC depthDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, m_width, m_height, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
+--- replace:
+        // A texture as big as the window, a 24-bit depth and an 8-bit stencil value per
+        // pixel (1 array slice, 1 mip level), in a default heap and in the DEPTH_WRITE state.
+        CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
+        CD3DX12_RESOURCE_DESC depthDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D24_UNORM_S8_UINT, m_width, m_height, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
+--- file: main.cpp
+--- find:
+    m_commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+--- replace:
+    m_commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);    // the stencil buffer too: all 0
+    m_commandList->OMSetStencilRef(1);    // the reference value of the stencil tests
+--- file: main.cpp
+--- find:
+    XMMATRIX model = XMMatrixTranslation(-1.0f, 0.0f, -1.0f);
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_commandList->DrawInstanced(36, 1, 0, 0);
+--- replace:
+    XMMATRIX model = XMMatrixTranslation(-1.0f, 0.0f, -1.0f);
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_commandList->SetPipelineState(m_selectedPipelineState.Get());    // the selected one: stencil 1
+    m_commandList->DrawInstanced(36, 1, 0, 0);
+    m_commandList->SetPipelineState(m_pipelineState.Get());
+--- file: main.cpp
+--- find:
+    m_commandList->DrawInstanced(36, 1, 48, 0);
+--- replace:
+    m_commandList->DrawInstanced(36, 1, 48, 0);
+
+    // the outline: the selected sculpture once more, a little larger, in one colour - only
+    // around the sculpture, where the stencil buffer is not 1
+    m_commandList->SetPipelineState(m_outlinePipelineState.Get());
+    model = XMMatrixScaling(1.1f, 1.1f, 1.1f) * XMMatrixTranslation(-1.0f, 0.0f, -1.0f);
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_commandList->DrawInstanced(36, 1, 0, 0);
+
+=== task: glass
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12PipelineState> m_outlinePipelineState;    // its outline's: where the stencil buffer is not 1
+--- replace:
+    ComPtr<ID3D12PipelineState> m_outlinePipelineState;    // its outline's: where the stencil buffer is not 1
+    ComPtr<ID3D12PipelineState> m_glassPipelineState;    // the glass pane's: blended over what is behind it
+--- file: main.cpp
+--- find:
+    ComPtr<ID3D12Resource> m_skyboxTexture;    // the cube map
+--- replace:
+    ComPtr<ID3D12Resource> m_skyboxTexture;    // the cube map
+    ComPtr<ID3D12Resource> m_glassTexture;
+--- file: main.cpp
+--- find:
+        cbvSrvHeapDesc.NumDescriptors = 5;    // one CBV + one SRV per texture + the off-screen render target's SRV + the cube map's
+--- replace:
+        cbvSrvHeapDesc.NumDescriptors = 6;    // one CBV + one SRV per texture + the off-screen render target's SRV + the cube map's + the glass's
+--- file: main.cpp
+--- find:
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState)));
+
+--- replace:
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState)));
+
+        // The glass pane's pipeline state: the scene's shaders, with blending:
+        // result = src * src.alpha + dst * (1 - src.alpha)
+        // (learnopengl: glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)).
+        psoDesc.BlendState.RenderTarget[0].BlendEnable = TRUE;
+        psoDesc.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+        psoDesc.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+        psoDesc.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_glassPipelineState)));
+        psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);    // no blending for the pipeline states below
+
+--- file: main.cpp
+--- find:
+            { {  1.0f, -1.0f,  1.0f }, {} }
+        };
+--- replace:
+            { {  1.0f, -1.0f,  1.0f }, {} },
+
+            // the glass pane: vertices 84 to 89 - learnopengl's transparentVertices, a quad from
+            // x = 0 to 1 and y = -0.5 to 0.5, with v flipped: v = 0 at its top.
+            { {  0.0f,  0.5f,  0.0f }, { 0.0f, 0.0f } },
+            { {  0.0f, -0.5f,  0.0f }, { 0.0f, 1.0f } },
+            { {  1.0f, -0.5f,  0.0f }, { 1.0f, 1.0f } },
+
+            { {  0.0f,  0.5f,  0.0f }, { 0.0f, 0.0f } },
+            { {  1.0f, -0.5f,  0.0f }, { 1.0f, 1.0f } },
+            { {  1.0f,  0.5f,  0.0f }, { 1.0f, 0.0f } }
+        };
+--- file: main.cpp
+--- find:
+    LoadCubemap(faces, m_skyboxTexture, skyboxTextureUploadHeap, 4);
+--- replace:
+    LoadCubemap(faces, m_skyboxTexture, skyboxTextureUploadHeap, 4);
+    // The glass's window texture: slot 5.
+    ComPtr<ID3D12Resource> glassTextureUploadHeap;
+    LoadTexture("window.png", m_glassTexture, glassTextureUploadHeap, 5);
+--- file: main.cpp
+--- find:
+    CD3DX12_GPU_DESCRIPTOR_HANDLE skyboxTexture(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 4, m_cbvSrvDescriptorSize);
+--- replace:
+    CD3DX12_GPU_DESCRIPTOR_HANDLE skyboxTexture(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 4, m_cbvSrvDescriptorSize);
+    CD3DX12_GPU_DESCRIPTOR_HANDLE glassTexture(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 5, m_cbvSrvDescriptorSize);
+--- file: main.cpp
+--- find:
+    model = XMMatrixScaling(1.1f, 1.1f, 1.1f) * XMMatrixTranslation(-1.0f, 0.0f, -1.0f);
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_commandList->DrawInstanced(36, 1, 0, 0);
+--- replace:
+    model = XMMatrixScaling(1.1f, 1.1f, 1.1f) * XMMatrixTranslation(-1.0f, 0.0f, -1.0f);
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_commandList->DrawInstanced(36, 1, 0, 0);
+
+    // the glass pane last, after everything opaque, blended over what is behind it: the
+    // window texture, 6 vertices from vertex 84 on
+    m_commandList->SetPipelineState(m_glassPipelineState.Get());
+    m_commandList->SetGraphicsRootDescriptorTable(2, glassTexture);
+    model = XMMatrixTranslation(0.3f, 0.0f, -0.2f);    // between the two sculptures
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_commandList->DrawInstanced(6, 1, 84, 0);
