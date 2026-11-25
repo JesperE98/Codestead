@@ -1,0 +1,116 @@
+=== task: sun
+--- file: main.cpp
+--- find:
+    // load entities: the root planet and a 10 x 10 grid of smaller planets around it, all
+    // children of the root
+    m_ourEntity.pModel = &m_model;
+    m_ourEntity.boundingVolume = generateAABB(m_model);
+    setLocalPosition(m_ourEntity.transform, XMFLOAT3(0.0f, 0.0f, 0.0f));
+    const float scale = 0.5f;
+    {
+        Entity* lastEntity = &m_ourEntity;
+
+        for (unsigned int x = 0; x < 10; ++x)
+        {
+            for (unsigned int z = 0; z < 10; ++z)
+            {
+                addChild(m_ourEntity, m_model);
+                lastEntity = &m_ourEntity.children.back();
+
+                // set transform values: 5 units apart, half the root's size
+                setLocalPosition(lastEntity->transform, XMFLOAT3(x * 5.0f - 22.5f, 0.0f, z * 5.0f - 22.5f));
+                setLocalScale(lastEntity->transform, XMFLOAT3(scale, scale, scale));
+            }
+        }
+    }
+    updateSelfAndChild(m_ourEntity, XMMatrixIdentity());
+--- replace:
+    // load entities: the orrery - the sun at the root of the scene graph, one and a half
+    // times the model's size
+    m_ourEntity.pModel = &m_model;
+    m_ourEntity.boundingVolume = generateAABB(m_model);
+    setLocalPosition(m_ourEntity.transform, XMFLOAT3(0.0f, 0.0f, 0.0f));
+    setLocalScale(m_ourEntity.transform, XMFLOAT3(1.5f, 1.5f, 1.5f));
+    updateSelfAndChild(m_ourEntity, XMMatrixIdentity());
+--- file: main.cpp
+--- find:
+    // turn the root about its y axis (20 degrees per second): its children follow it
+    static auto startTime = std::chrono::high_resolution_clock::now();
+    float time = std::chrono::duration<float, std::chrono::seconds::period>(currentFrame - startTime).count();
+    setLocalRotation(m_ourEntity.transform, XMFLOAT3(0.0f, 20.0f * time, 0.0f));
+    updateSelfAndChild(m_ourEntity, XMMatrixIdentity());
+--- replace:
+    // the time since the start, in seconds
+    static auto startTime = std::chrono::high_resolution_clock::now();
+    float time = std::chrono::duration<float, std::chrono::seconds::period>(currentFrame - startTime).count();
+    // the sun stands still on its stand: only what changed is updated
+    updateSelfAndChild(m_ourEntity, XMMatrixIdentity());
+
+=== task: planets
+--- file: main.cpp
+--- find:
+    setLocalScale(m_ourEntity.transform, XMFLOAT3(1.5f, 1.5f, 1.5f));
+    updateSelfAndChild(m_ourEntity, XMMatrixIdentity());
+--- replace:
+    setLocalScale(m_ourEntity.transform, XMFLOAT3(1.5f, 1.5f, 1.5f));
+
+    // the three planets: children of the sun, so their positions and sizes are in the sun's units
+    const float planetDistances[3] = { 2.4f, 4.0f, 6.0f }; // Pip, Bramble, Old Gourd
+    const float planetScales[3] = { 0.2f, 0.35f, 0.4f };
+    for (unsigned int i = 0; i < 3; ++i)
+    {
+        addChild(m_ourEntity, m_model);
+        Entity& planet = m_ourEntity.children.back();
+        setLocalPosition(planet.transform, XMFLOAT3(planetDistances[i], 0.0f, 0.0f));
+        setLocalScale(planet.transform, XMFLOAT3(planetScales[i], planetScales[i], planetScales[i]));
+    }
+    updateSelfAndChild(m_ourEntity, XMMatrixIdentity());
+
+=== task: orbits
+--- file: main.cpp
+--- find:
+    // the sun stands still on its stand: only what changed is updated
+    updateSelfAndChild(m_ourEntity, XMMatrixIdentity());
+--- replace:
+    // every planet on its own orbit, counter-clockwise seen from above: Pip 80, Bramble 40,
+    // Old Gourd 20 degrees per second
+    const float orbitDistances[3] = { 2.4f, 4.0f, 6.0f };
+    const float orbitSpeeds[3] = { 80.0f, 40.0f, 20.0f };
+    for (unsigned int i = 0; i < 3; ++i)
+    {
+        float angle = XMConvertToRadians(orbitSpeeds[i] * time);
+        setLocalPosition(m_ourEntity.children[i].transform, XMFLOAT3(orbitDistances[i] * cosf(angle), 0.0f, -orbitDistances[i] * sinf(angle)));
+    }
+    // the sun stands still on its stand: only what changed is updated
+    updateSelfAndChild(m_ourEntity, XMMatrixIdentity());
+
+=== task: moon
+--- file: main.cpp
+--- find:
+        setLocalScale(planet.transform, XMFLOAT3(planetScales[i], planetScales[i], planetScales[i]));
+    }
+--- replace:
+        setLocalScale(planet.transform, XMFLOAT3(planetScales[i], planetScales[i], planetScales[i]));
+    }
+    // Bramble's moon: a child of Bramble (added after all the planets: adding to the sun's
+    // children could move them in memory)
+    addChild(m_ourEntity.children[1], m_model);
+    Entity& moon = m_ourEntity.children[1].children.back();
+    setLocalPosition(moon.transform, XMFLOAT3(2.5f, 0.0f, 0.0f));
+    setLocalScale(moon.transform, XMFLOAT3(0.35f, 0.35f, 0.35f));
+--- file: main.cpp
+--- find:
+    // the sun stands still on its stand: only what changed is updated
+--- replace:
+    // Bramble turns about its own axis (120 degrees per second) and carries its moon round with it
+    setLocalRotation(m_ourEntity.children[1].transform, XMFLOAT3(0.0f, 120.0f * time, 0.0f));
+    // the sun stands still on its stand: only what changed is updated
+
+=== task: counter
+--- file: main.cpp
+--- find:
+    // show how many entities were drawn in the window's title
+    std::wstring title = L"LearnDirectX - drawn: " + std::to_wstring(display) + L" / " + std::to_wstring(total);
+--- replace:
+    // show how many of the orrery's bodies were drawn and how many the frustum culled in the window's title
+    std::wstring title = L"Orrery - drawn: " + std::to_wstring(display) + L", culled: " + std::to_wstring(total - display);

@@ -1,0 +1,29 @@
+{
+  "title": "Projekt: Museets planetarium",
+  "tasks": {
+    "sun": {
+      "text": "Byt ut rutnätet av planeter mot planetariets sol: rotentiteten ensam, i origo, 1,5 gånger så stor som modellen – och den snurrar inte längre.",
+      "hint": "De två nästlade looparna försvinner, och så gör rotens `setLocalRotation` i renderingsloopen (`updateSelfAndChild` stannar kvar). `setLocalScale` på roten."
+    },
+    "planets": {
+      "text": "Häng tre planeter på solen som dess barn, på rad längs dess x-axel i solens enheter: Pip på 2,4 (skala 0,2), Bramble på 4 (0,35) och Old Gourd på 6 (0,4).",
+      "hint": "`addChild` på roten, sedan `setLocalPosition` och `setLocalScale` på `children.back()` – tre gånger, eller i en loop över två små arrayer."
+    },
+    "orbits": {
+      "text": "Låt varje planet kretsa runt solen moturs sett ovanifrån, med start på x-axeln: Pip med 80, Bramble med 40 och Old Gourd med 20 grader per sekund.",
+      "hint": "Varje bildruta innan grafen uppdateras: `angle = radians(fart × tid)` och `setLocalPosition(children[i].transform, (r · cos(angle), 0, −r · sin(angle)))` med planetens avstånd `r` i solens enheter."
+    },
+    "moon": {
+      "text": "Ge Bramble en måne: ett barn till Bramble på 2,5 Bramble-enheter med skalan 0,35; Bramble snurrar runt sin egen axel med 120 grader per sekund och tar månen med sig runt.",
+      "hint": "`addChild(children[1], …)` när alla tre planeterna är tillagda; i loopen `setLocalRotation` på Bramble med `120 × tid` grader runt y."
+    },
+    "counter": {
+      "text": "Visa i fönstrets titel hur många av planetariets himlakroppar som ritas och hur många som frustumet sorterade bort.",
+      "hint": {
+        "opengl": "De bortsorterade kropparna är `total - display`; bygg titeln med `std::to_string` som förut.",
+        "vulkan": "De bortsorterade kropparna är `total - display`; bygg titeln med `std::to_string` som förut.",
+        "d3d12": "De bortsorterade kropparna är `total - display`; bygg titeln med `std::to_wstring` som förut."
+      }
+    }
+  }
+}
