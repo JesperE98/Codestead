@@ -49,7 +49,12 @@
     "dotfilesDir": "dotfiles",
     "aliasFile": "aliase.sh",
     "secretFile": "passwoerter.txt",
-    "aliasBranch": "mehr-aliase"
+    "aliasBranch": "mehr-aliase",
+    "clubDir": "clubhaus",
+    "knockScript": "klopfen.sh",
+    "clubVar": "CLUBHAUS",
+    "wardrobe": "kleiderschrank",
+    "clubBackup": "clubhaus-backup.tar.gz"
   },
   "words": {
     "userFull": "Schüler",

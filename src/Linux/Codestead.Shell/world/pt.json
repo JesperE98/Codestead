@@ -49,7 +49,12 @@
     "dotfilesDir": "dotfiles",
     "aliasFile": "aliases.sh",
     "secretFile": "senhas.txt",
-    "aliasBranch": "mais-aliases"
+    "aliasBranch": "mais-aliases",
+    "clubDir": "esconderijo",
+    "knockScript": "toctoc.sh",
+    "clubVar": "ESCONDERIJO",
+    "wardrobe": "guarda-roupa",
+    "clubBackup": "esconderijo-backup.tar.gz"
   },
   "words": {
     "userFull": "Aluno",

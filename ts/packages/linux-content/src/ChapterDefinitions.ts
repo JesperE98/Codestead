@@ -6,6 +6,7 @@ import { anvandare } from "./Chapters/admin/anvandare.js";
 import { diskar } from "./Chapters/admin/diskar.js";
 import { systemd } from "./Chapters/admin/systemd.js";
 import { distributioner } from "./Chapters/distro/distributioner.js";
+import { distroProject } from "./Chapters/distro/distro-project.js";
 import { familjArch } from "./Chapters/distro/familj-arch.js";
 import { familjDebian } from "./Chapters/distro/familj-debian.js";
 import { familjRedhat } from "./Chapters/distro/familj-redhat.js";
@@ -27,6 +28,7 @@ import { lankar } from "./Chapters/system/lankar.js";
 import { miljo } from "./Chapters/system/miljo.js";
 import { processer } from "./Chapters/system/processer.js";
 import { rattigheter } from "./Chapters/system/rattigheter.js";
+import { systemProject } from "./Chapters/system/system-project.js";
 import { git } from "./Chapters/verktyg/git.js";
 import { skal } from "./Chapters/verktyg/skal.js";
 import { verktygProject } from "./Chapters/verktyg/verktyg-project.js";
@@ -40,6 +42,8 @@ import type { Chapter } from "./Types/Chapter.js";
 export function defineProjects(): Chapter[] {
   return [
     grunderProject(),
+    systemProject(),
+    distroProject(),
     skriptProject(),
     verktygProject(),
   ];

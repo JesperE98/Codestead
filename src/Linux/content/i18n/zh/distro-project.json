@@ -1,0 +1,57 @@
+{
+  "title": "项目：二手笔记本",
+  "tasks": {
+    "upgrade": {
+      "text": "先做无聊的部分：获取最新的软件包列表，并升级所有已安装的软件包。",
+      "hint": {
+        "debian": "apt 要分两步：先 `sudo apt update`，再 `sudo apt upgrade`。",
+        "arch": "pacman 用一条命令就能同时完成两件事：`-Syu`，加上 sudo。",
+        "redhat": "dnf 会自己获取软件包信息，所以 `sudo dnf upgrade` 就够了。"
+      }
+    },
+    "search": {
+      "text": "Alex 要上 Go 编程语言的课。在软件包列表中搜索，查出 Go 的软件包在你的发行版中叫什么。",
+      "hint": {
+        "debian": "`apt search` 会同时搜索名称和描述——试试 `golang` 或 `\"Go programming\"`。",
+        "arch": "`pacman -Ss` 会同时搜索名称和描述——试试 `\"Go programming\"`。",
+        "redhat": "`dnf search` 会同时搜索名称和描述——试试 `golang`。"
+      }
+    },
+    "install": {
+      "text": "安装 Alex 愿望清单上的所有东西：进程查看器 `htop`、Go 编程语言和文本编辑器 Vim。",
+      "hint": {
+        "debian": "可以一次给 `sudo apt install` 多个软件包。Go 叫 `golang-go`，Vim 叫 `vim`。",
+        "arch": "可以一次给 `sudo pacman -S` 多个软件包。Go 叫 `go`，Vim 叫 `vim`。",
+        "redhat": "可以一次给 `sudo dnf install` 多个软件包。Go 叫 `golang`，而在 Red Hat 家族中 Vim 叫 `vim-enhanced`。"
+      }
+    },
+    "list-installed": {
+      "text": "再确认一遍：在**已安装**软件包的列表中找到 Go。",
+      "hint": {
+        "debian": "`apt list --installed` 列出所有已安装的软件包。把列表交给 `grep`，就不用自己找了。",
+        "arch": "`pacman -Q` 列出所有已安装的软件包——或者只列出你写在后面的那些。",
+        "redhat": "`dnf list --installed` 列出所有已安装的软件包。把列表交给 `grep`，就不用自己找了。"
+      }
+    },
+    "remove": {
+      "text": "Alex 试了一下 Vim，结果找不到出口了。\"把它弄走！\"卸载 Vim。",
+      "hint": {
+        "debian": "`sudo apt remove` 加上软件包的名字。",
+        "arch": "`sudo pacman -R` 加上软件包的名字。",
+        "redhat": "`sudo dnf remove` 加上软件包的名字——和安装时用的名字一样。"
+      }
+    },
+    "vlc": {
+      "text": "Alex 想看电影。从 Flathub 以 Flatpak 形式安装媒体播放器 VLC（`org.videolan.VLC`）。",
+      "hint": {
+        "debian": "`flatpak install flathub org.videolan.VLC`。没有 Flatpak 或 Flathub？安装软件包 `flatpak`，再用 `flatpak remote-add` 添加 Flathub。",
+        "arch": "`flatpak install flathub org.videolan.VLC`。没有 Flatpak 或 Flathub？安装软件包 `flatpak`，再用 `flatpak remote-add` 添加 Flathub。",
+        "redhat": "`flatpak install flathub org.videolan.VLC`。没有 Flathub？用 `flatpak remote-add` 添加它。"
+      }
+    },
+    "go-version": {
+      "text": "把电脑还回去之前试运行一下：让 Go 显示它的版本，好让 Alex 看到课程可以开始了。",
+      "hint": "程序叫 `go`，子命令 `version` 会打印版本。"
+    }
+  }
+}

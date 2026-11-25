@@ -49,7 +49,12 @@
     "dotfilesDir": "dotfiles",
     "aliasFile": "alias.sh",
     "secretFile": "contrasenas.txt",
-    "aliasBranch": "mas-alias"
+    "aliasBranch": "mas-alias",
+    "clubDir": "guarida",
+    "knockScript": "toctoc.sh",
+    "clubVar": "GUARIDA",
+    "wardrobe": "armario",
+    "clubBackup": "guarida-copia.tar.gz"
   },
   "words": {
     "userFull": "Alumno",

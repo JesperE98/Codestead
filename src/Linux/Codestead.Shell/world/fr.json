@@ -49,7 +49,12 @@
     "dotfilesDir": "dotfiles",
     "aliasFile": "alias.sh",
     "secretFile": "mots-de-passe.txt",
-    "aliasBranch": "plus-d-alias"
+    "aliasBranch": "plus-d-alias",
+    "clubDir": "repaire",
+    "knockScript": "toctoc.sh",
+    "clubVar": "REPAIRE",
+    "wardrobe": "armoire",
+    "clubBackup": "repaire-sauvegarde.tar.gz"
   },
   "words": {
     "userFull": "Élève",

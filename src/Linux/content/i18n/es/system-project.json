@@ -1,0 +1,33 @@
+{
+  "title": "Proyecto: La guarida",
+  "tasks": {
+    "clubhouse": {
+      "text": "Construye la guarida: el directorio `~/{{clubDir}}`, donde **solo tú** puedes leer, escribir y entrar (`rwx------`).",
+      "hint": "Crea el directorio con `mkdir` y cambia los permisos con `chmod`. r = 4, w = 2, x = 1, y el grupo y los demás reciben 0."
+    },
+    "knock": {
+      "text": "Escribe el script del portero `~/{{clubDir}}/{{knockScript}}`, que muestra la contraseña del club con `echo`. Hazlo ejecutable y ejecútalo.",
+      "hint": "Escribe la línea en el archivo con `echo '…' > archivo` (comillas simples alrededor de la línea), hazlo ejecutable con `chmod +x` y ejecútalo con su ruta, por ejemplo `./{{knockScript}}` cuando estés en la guarida."
+    },
+    "variable": {
+      "text": "Crea la variable de entorno `{{clubVar}}` con la ruta completa de la guarida, para que `cd ${{clubVar}}` te lleve hasta allí.",
+      "hint": "`export NOMBRE=valor`, sin espacios alrededor del `=`. El valor puede ser `~/{{clubDir}}` o `$HOME/{{clubDir}}`."
+    },
+    "wardrobe": {
+      "text": "Esconde una entrada secreta: un enlace simbólico `~/{{documents}}/{{wardrobe}}` que lleve directamente a la guarida.",
+      "hint": "`ln -s DESTINO NOMBRE_DEL_ENLACE`: primero el destino. Con una ruta absoluta como destino da igual dónde estés."
+    },
+    "night-watch": {
+      "text": "Pon un vigilante nocturno: ejecuta `sleep 3600` en segundo plano, para que haga guardia durante una hora y siga aunque cierres la sesión.",
+      "hint": "`&` al final de la línea ejecuta el comando en segundo plano, y `nohup` al principio hace que sobreviva a que cierres la sesión."
+    },
+    "backup": {
+      "text": "Haz una copia de seguridad de toda la guarida: el archivo comprimido `~/{{clubBackup}}`.",
+      "hint": "Ve a tu directorio personal y usa `tar` con `c` (crear), `z` (gzip) y `f` seguido del nombre del archivo, y al final el directorio que quieres empaquetar."
+    },
+    "dismiss": {
+      "text": "Ya es de día: manda al vigilante a casa terminando el proceso.",
+      "hint": "`jobs` muestra el número de trabajo del vigilante y `ps` su PID. Termínalo con `kill %NÚMERO`, `kill PID` o `pkill sleep`."
+    }
+  }
+}

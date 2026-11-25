@@ -49,7 +49,12 @@
     "dotfilesDir": "dotfiler",
     "aliasFile": "alias.sh",
     "secretFile": "losenord.txt",
-    "aliasBranch": "fler-alias"
+    "aliasBranch": "fler-alias",
+    "clubDir": "klubbhus",
+    "knockScript": "knacka.sh",
+    "clubVar": "KLUBBHUS",
+    "wardrobe": "garderob",
+    "clubBackup": "klubbhus-backup.tar.gz"
   },
   "words": {
     "userFull": "Elev",

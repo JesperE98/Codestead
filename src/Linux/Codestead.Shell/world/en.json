@@ -49,7 +49,12 @@
     "dotfilesDir": "dotfiles",
     "aliasFile": "aliases.sh",
     "secretFile": "passwords.txt",
-    "aliasBranch": "more-aliases"
+    "aliasBranch": "more-aliases",
+    "clubDir": "clubhouse",
+    "knockScript": "knock.sh",
+    "clubVar": "CLUBHOUSE",
+    "wardrobe": "wardrobe",
+    "clubBackup": "clubhouse-backup.tar.gz"
   },
   "words": {
     "userFull": "Student",
