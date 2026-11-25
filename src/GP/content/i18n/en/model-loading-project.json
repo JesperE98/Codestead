@@ -1,0 +1,45 @@
+{
+  "title": "Project: The hall of worlds",
+  "tasks": {
+    "make-room": {
+      "text": "Make room for the exhibition: step back so that the planet in the middle looks about half as large – the camera six units in front of it.",
+      "hint": {
+        "opengl": "Nothing about the model changes – only where the camera starts: the global `cameraPos`.",
+        "vulkan": "Nothing about the model changes – only where the camera starts: the global `cameraPos`.",
+        "d3d12": "Nothing about the model changes – only where the camera starts: the global `cameraPos` (an `XMVectorSet`)."
+      }
+    },
+    "exhibits": {
+      "text": "Fill the hall: draw the model twice more, about 2.2 units to the left and to the right of the first one, smaller (around 0.4) and each with a tilt of its own – the left one's ring turned towards the visitors, the right one leaning to the side.",
+      "hint": {
+        "opengl": "After `ourModel.Draw(ourShader)`: a new model matrix (translate, rotate, scale), `setMat4(\"model\", …)` and `Draw` again – twice. The model is loaded only once.",
+        "vulkan": "After `vkCmdDrawIndexed`: a new model matrix (translate, rotate, scale) in `constants.model`, `vkCmdPushConstants` and the same `vkCmdDrawIndexed` again – twice.",
+        "d3d12": "After `m_model.Draw(…)`: a new `model` (scale, rotate, translate – DirectXMath's order), its normal matrix, `SetGraphicsRoot32BitConstants` and `m_model.Draw` again – twice."
+      }
+    },
+    "turntable": {
+      "text": "Put the middle exhibit on a turntable: let it turn slowly about the vertical axis, for example half a radian per second. The other exhibits stand still.",
+      "hint": {
+        "opengl": "One more `glm::rotate` in the middle exhibit's matrix, by `(float)glfwGetTime() * 0.5f` about (0, 1, 0) – right after the translation, so it turns the tilted planet about the hall's vertical axis.",
+        "vulkan": "One more `glm::rotate` in the middle exhibit's matrix in `recordCommandBuffer`, by `glfwGetTime()` times 0.5 about (0, 1, 0) – right after the translation, so it turns the tilted planet about the hall's vertical axis.",
+        "d3d12": "The time since the start with `std::chrono` (as in *Transformations*), and `XMMatrixRotationY(time * 0.5f)` in the middle exhibit's chain – after the tilt and before the translation."
+      }
+    },
+    "shelf": {
+      "text": "Build the shelf of small worlds: a row of five small planets (about 0.2) two units apart, 1.5 units higher than the exhibits and 3 units further back, drawn in a loop – each tilted a little more than the one before.",
+      "hint": {
+        "opengl": "A `for` loop over `i` from 0 to 4: translate to `(-4.0f + 2.0f * i, 1.5f, -3.0f)`, rotate by `15.0f * i` degrees, scale by 0.2, then `setMat4` and `Draw`.",
+        "vulkan": "A `for` loop over `i` from 0 to 4 before `vkCmdEndRenderPass`: translate to `(-4.0f + 2.0f * i, 1.5f, -3.0f)`, rotate by `15.0f * i` degrees, scale by 0.2, then push the matrix and draw.",
+        "d3d12": "A `for` loop over `i` from 0 to 4 after the exhibits: scale by 0.2, rotate by `15.0f * i` degrees, translate to `(-4.0f + 2.0f * i, 1.5f, -3.0f)`, then the root constants and `m_model.Draw`."
+      }
+    },
+    "bronze": {
+      "text": "Cast the left exhibit in bronze: multiply its lit colour by a bronze tint such as (1.0, 0.6, 0.25), a value given per draw. All the other planets keep their own colours (a tint of white).",
+      "hint": {
+        "opengl": "A `uniform vec3 tint;` in the fragment shader and `FragColor = vec4(result * tint, 1.0);`. In `main.cpp`, `ourShader.setVec3(\"tint\", …)` before each draw – white for the planets, bronze for the cast. A uniform keeps its value until you set it again.",
+        "vulkan": "A `glm::vec3 tint` after the matrix in `PushConstants`, the same push constant block (with `vec3 tint`) in the fragment shader, `outColor = vec4(result * pc.tint, 1.0);`. The fragment stage reads it now: add `VK_SHADER_STAGE_FRAGMENT_BIT` to the push constant range and to every `vkCmdPushConstants`.",
+        "d3d12": "An `XMFLOAT3 tint` after the matrices in `ModelConstants` and a `float3 tint` in the shaders' `cbuffer ModelConstants`; the pixel shader returns `float4(result * tint, 1.0f)`. The pixel shader reads the root constants now: root parameter 0 needs `D3D12_SHADER_VISIBILITY_ALL`."
+      }
+    }
+  }
+}

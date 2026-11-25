@@ -1,6 +1,8 @@
 import type { Checks } from "./TaskChecks.PerApi.js";
 import { gettingStartedProject } from "./TaskChecks.Project.GettingStarted.js";
 import { lightingProject } from "./TaskChecks.Project.Lighting.js";
+import { modelLoadingProject } from "./TaskChecks.Project.ModelLoading.js";
+import { advancedOpenGLProject } from "./TaskChecks.Project.AdvancedOpenGL.js";
 import { inPracticeProject } from "./TaskChecks.Project.InPractice.js";
 import { guestArticlesProject } from "./TaskChecks.Project.GuestArticles.js";
 
@@ -12,6 +14,8 @@ export function projects(): Record<string, Checks> {
   return {
     ...gettingStartedProject(),
     ...lightingProject(),
+    ...modelLoadingProject(),
+    ...advancedOpenGLProject(),
     ...inPracticeProject(),
     ...guestArticlesProject(),
   };
