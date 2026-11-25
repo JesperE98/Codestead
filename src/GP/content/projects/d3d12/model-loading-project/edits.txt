@@ -1,0 +1,123 @@
+=== task: make-room
+--- file: main.cpp
+--- find:
+XMVECTOR cameraPos   = XMVectorSet(0.0f, 0.0f,  3.0f, 0.0f);
+--- replace:
+XMVECTOR cameraPos   = XMVectorSet(0.0f, 0.0f,  6.0f, 0.0f); // a step back: room for the whole exhibition
+
+=== task: exhibits
+--- file: main.cpp
+--- find:
+    m_model.Draw(m_commandList.Get());
+
+--- replace:
+    m_model.Draw(m_commandList.Get());
+
+    // the exhibit on the left: smaller, its ring turned towards the visitors
+    model = XMMatrixScaling(0.4f, 0.4f, 0.4f)
+        * XMMatrixRotationAxis(XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f), XMConvertToRadians(50.0f))
+        * XMMatrixTranslation(-2.2f, 0.0f, 0.0f);
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    XMStoreFloat4x4(&modelConstants.normalMatrix, XMMatrixInverse(nullptr, model)); // transpose(inverse(model)), transposed for HLSL
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_model.Draw(m_commandList.Get());
+
+    // the exhibit on the right: smaller, leaning to the side
+    model = XMMatrixScaling(0.4f, 0.4f, 0.4f)
+        * XMMatrixRotationAxis(XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f), XMConvertToRadians(15.0f))
+        * XMMatrixRotationAxis(XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f), XMConvertToRadians(-20.0f))
+        * XMMatrixTranslation(2.2f, 0.0f, 0.0f);
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    XMStoreFloat4x4(&modelConstants.normalMatrix, XMMatrixInverse(nullptr, model));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_model.Draw(m_commandList.Get());
+
+=== task: turntable
+--- file: main.cpp
+--- find:
+    XMMATRIX model = XMMatrixScaling(0.5f, 0.5f, 0.5f)                                            // planet radius 0.5, ring up to 1.0
+        * XMMatrixRotationAxis(XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f), XMConvertToRadians(25.0f))   // tilt it so the ring shows
+--- replace:
+    // the time since the first frame, in seconds
+    static auto startTime = std::chrono::high_resolution_clock::now();
+    float time = std::chrono::duration<float, std::chrono::seconds::period>(std::chrono::high_resolution_clock::now() - startTime).count();
+    XMMATRIX model = XMMatrixScaling(0.5f, 0.5f, 0.5f)                                            // planet radius 0.5, ring up to 1.0
+        * XMMatrixRotationAxis(XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f), XMConvertToRadians(25.0f))   // tilt it so the ring shows
+        * XMMatrixRotationY(time * 0.5f)                                                          // the turntable: half a radian per second about the vertical axis
+
+=== task: shelf
+--- file: main.cpp
+--- find:
+    // Indicate that the back buffer will now be used to present.
+--- replace:
+    // the shelf at the back: five small planets in a row, each tilted a little more than the one before
+    for (UINT i = 0; i < 5; i++)
+    {
+        model = XMMatrixScaling(0.2f, 0.2f, 0.2f)
+            * XMMatrixRotationAxis(XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f), XMConvertToRadians(15.0f * i))
+            * XMMatrixTranslation(-4.0f + 2.0f * i, 1.5f, -3.0f);
+        XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+        XMStoreFloat4x4(&modelConstants.normalMatrix, XMMatrixInverse(nullptr, model));
+        m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+        m_model.Draw(m_commandList.Get());
+    }
+
+    // Indicate that the back buffer will now be used to present.
+
+=== task: bronze
+--- file: main.cpp
+--- find:
+    // The root constants: what the vertex shader sees as cbuffer ModelConstants.
+    // Two 4x4 matrices are 32 floats: 32 32-bit root constants.
+    struct ModelConstants
+    {
+        XMFLOAT4X4 model;
+        XMFLOAT4X4 normalMatrix;
+    };
+--- replace:
+    // The root constants: what the shaders see as cbuffer ModelConstants.
+    // Two 4x4 matrices and the tint are 35 floats: 35 32-bit root constants.
+    struct ModelConstants
+    {
+        XMFLOAT4X4 model;
+        XMFLOAT4X4 normalMatrix;
+        XMFLOAT3 tint;    // the pixel shader multiplies its colour by it
+    };
+--- file: main.cpp
+--- find:
+        rootParameters[0].InitAsConstants(sizeof(ModelConstants) / 4, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
+--- replace:
+        rootParameters[0].InitAsConstants(sizeof(ModelConstants) / 4, 0, 0, D3D12_SHADER_VISIBILITY_ALL);    // the pixel shader reads the tint
+--- file: main.cpp
+--- find:
+    XMStoreFloat4x4(&modelConstants.normalMatrix, XMMatrixTranspose(normalMatrix));
+--- replace:
+    XMStoreFloat4x4(&modelConstants.normalMatrix, XMMatrixTranspose(normalMatrix));
+    modelConstants.tint = XMFLOAT3(1.0f, 1.0f, 1.0f);    // the planets keep their own colours
+--- file: main.cpp
+--- find:
+    XMStoreFloat4x4(&modelConstants.normalMatrix, XMMatrixInverse(nullptr, model)); // transpose(inverse(model)), transposed for HLSL
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_model.Draw(m_commandList.Get());
+--- replace:
+    XMStoreFloat4x4(&modelConstants.normalMatrix, XMMatrixInverse(nullptr, model)); // transpose(inverse(model)), transposed for HLSL
+    modelConstants.tint = XMFLOAT3(1.0f, 0.6f, 0.25f);    // a cast in bronze
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_model.Draw(m_commandList.Get());
+    modelConstants.tint = XMFLOAT3(1.0f, 1.0f, 1.0f);    // and the planets after it in their own colours again
+--- file: model_loading.hlsl
+--- find:
+// the vertex shader sees them as a constant buffer at register b0.
+--- replace:
+// the vertex shader and the pixel shader see them as a constant buffer at register b0.
+--- file: model_loading.hlsl
+--- find:
+    float4x4 normalMatrix;    // transpose(inverse(model)), computed in main.cpp
+--- replace:
+    float4x4 normalMatrix;    // transpose(inverse(model)), computed in main.cpp
+    float3 tint;              // the pixel shader multiplies its colour by it: white keeps the colours
+--- file: model_loading.hlsl
+--- find:
+    return float4(result, 1.0f);
+--- replace:
+    return float4(result * tint, 1.0f);

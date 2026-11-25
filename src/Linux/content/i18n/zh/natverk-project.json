@@ -1,0 +1,33 @@
+{
+  "title": "项目：网站挂了！",
+  "tasks": {
+    "facts": {
+      "text": "开始写一份故障日志 `~/{{incidentDir}}/{{incidentLog}}`，写入计算机的 IP 地址和网关的地址。",
+      "hint": "`ip a` 显示地址，`ip route` 显示网关（`default via` 那一行）。用 `>` 和 `>>` 把输出写进日志。"
+    },
+    "ping-out": {
+      "text": "证明网络一路通到互联网——包括名字解析。在日志中加入一次向互联网上某个名字发送三个数据包的 ping。",
+      "hint": "ping 一个**名字**而不是地址，这样也顺便测试了 DNS：`ping -c 3 example.com`，最后加上 `>>`。"
+    },
+    "listening": {
+      "text": "网站就是 8080 端口上的 myserver。查明有没有程序在这个端口上监听——如果没有，就启动 Web 服务器，然后再检查一次。",
+      "hint": "`ss -tulpn` 显示正在监听的端口。如果没有 8080，就用 `myserver`（或者 `systemctl`）启动服务器。"
+    },
+    "headers": {
+      "text": "网站的响应正常吗？把首页 `http://localhost:8080` 的响应头加到日志里。状态码应该是 200。",
+      "hint": "`curl -I` 只获取响应头。在 Ubuntu 上要先安装 curl：`sudo apt install curl`。"
+    },
+    "key": {
+      "text": "下次你想不用密码就登录服务器 `server.lan`。创建一个密钥对，并把公钥放到服务器上。",
+      "hint": "`ssh-keygen` 创建密钥对——遇到提问就按 Enter。然后用 `ssh-copy-id` 把公钥放到服务器上，例如 `ssh-copy-id srv`。"
+    },
+    "backup": {
+      "text": "把整个文件夹 `~/{{incidentDir}}` 备份到服务器上你的主目录，这样即使你的计算机罢工，日志也还在。",
+      "hint": "源后面带斜杠的 `rsync -av` 会复制里面的内容：`rsync -av ~/{{incidentDir}}/ srv:{{incidentDir}}/`。`scp -r` 也可以。"
+    },
+    "remote-read": {
+      "text": "用 `ssh` 显示服务器上的那份日志——不能有任何人问你要密码。",
+      "hint": "把命令写在主机后面：`ssh srv cat {{incidentDir}}/{{incidentLog}}`。如果 ssh 要密码，说明密钥还没放好。"
+    }
+  }
+}

@@ -392,9 +392,10 @@ export class GpTool implements LearningTool {
   /** Nothing runs inside the app: the learner runs the program in the IDE. */
   run(_command: string): void {}
 
-  /** Shows the chapter's main file for the chosen API (summaries and exams keep the last one). */
+  /** Shows the chapter's main file for the chosen API (summaries and exams keep the last one; a project has its own). */
   chapterShown(chapterId: string): void {
-    if (!GpCourse.chapter(chapterId).isLesson) return;
+    const chapter = GpCourse.chapter(chapterId);
+    if (!chapter.isLesson && !chapter.isProject) return;
     if (chapterId === this.chapter && this.api === this.shownApi) return;
     this.chapter = chapterId;
     this.shownApi = this.api;

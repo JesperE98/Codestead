@@ -1,0 +1,33 @@
+{
+  "title": "Projet : Une nouvelle recrue lundi",
+  "tasks": {
+    "account": {
+      "text": "Créez un compte pour `{{newUser}}` – avec un répertoire personnel, `/bin/bash` comme shell et un mot de passe, pour qu'on puisse se connecter au compte.",
+      "hint": "`useradd` avec `-m` et `-s` crée le compte, et `passwd` définit le mot de passe. Les deux nécessitent `sudo`."
+    },
+    "team": {
+      "text": "Créez le groupe `{{teamGroup}}` et ajoutez-y à la fois `{{newUser}}` et vous-même. `{{newUser}}` ne doit pas avoir les droits sudo – pas encore.",
+      "hint": "`groupadd` crée le groupe et `usermod -aG` ajoute un membre à la fois. N'oubliez pas le `-a` !"
+    },
+    "shared": {
+      "text": "Créez le dossier partagé `/srv/{{teamGroup}}`. Il doit appartenir au groupe `{{teamGroup}}`, et le groupe doit pouvoir le lire, y écrire et y entrer – tous les autres, rien.",
+      "hint": "`sudo mkdir`, puis `chgrp` pour le groupe et `chmod` pour les droits. Les chiffres pour *rwx* pour le propriétaire et le groupe, et rien pour les autres, sont `770`."
+    },
+    "try-access": {
+      "text": "Testez le compte : devenez `{{newUser}}`, créez un fichier dans `/srv/{{teamGroup}}`, puis revenez à votre propre compte.",
+      "hint": "`su - {{newUser}}` avec le mot de passe que vous avez choisi, puis `touch` et enfin `exit`."
+    },
+    "welcome-pack": {
+      "text": "La lecture de la première semaine, `{{report}}`, est sur la clé USB (`/dev/sdb1`). Mettez-en une copie dans le répertoire personnel de `{{newUser}}` – le fichier doit appartenir à `{{newUser}}`, pas à root – et démontez la clé quand vous avez fini.",
+      "hint": "Montez la clé sur `/mnt/usb` avec `sudo mount`. Si vous copiez en tant que `{{newUser}}` (`sudo -u {{newUser}} cp …`), c'est `{{newUser}}` qui possède la copie. Terminez par `sudo umount` – sans vous trouver vous-même dans `/mnt/usb`."
+    },
+    "intranet": {
+      "text": "L'intranet de l'équipe est le service `myserver`. Avec `systemctl`, faites en sorte qu'il tourne maintenant **et** démarre tout seul quand l'ordinateur démarre.",
+      "hint": "`systemctl is-active` et `is-enabled` montrent l'état. `enable --now` règle les deux d'un coup."
+    },
+    "monday": {
+      "text": "Répétition générale pour lundi matin : redémarrez l'ordinateur, puis montrez dans le journal que l'intranet a démarré tout seul lors de ce démarrage.",
+      "hint": "`sudo systemctl reboot` redémarre. Ensuite, `journalctl` avec `-u` pour le service et `-b` pour ce démarrage montre les lignes que vous cherchez."
+    }
+  }
+}

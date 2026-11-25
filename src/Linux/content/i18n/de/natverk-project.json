@@ -1,0 +1,33 @@
+{
+  "title": "Projekt: Die Website ist down!",
+  "tasks": {
+    "facts": {
+      "text": "Beginne ein Störungsprotokoll, `~/{{incidentDir}}/{{incidentLog}}`, mit der IP-Adresse des Rechners und der Adresse des Gateways.",
+      "hint": "`ip a` zeigt die Adresse und `ip route` das Gateway (die Zeile `default via`). Schick die Ausgabe mit `>` und `>>` ins Protokoll."
+    },
+    "ping-out": {
+      "text": "Zeige, dass das Netz bis hinaus ins Internet funktioniert – Namensauflösung inklusive. Füge dem Protokoll einen Ping mit drei Paketen an einen Namen im Internet hinzu.",
+      "hint": "Pinge einen **Namen**, keine Adresse, dann testest du DNS gleich mit: `ping -c 3 example.com`, und zum Schluss `>>`."
+    },
+    "listening": {
+      "text": "Die Website ist myserver auf Port 8080. Finde heraus, ob etwas auf dem Port lauscht – und wenn nicht, starte den Webserver und prüfe noch einmal.",
+      "hint": "`ss -tulpn` zeigt die lauschenden Ports. Fehlt 8080, startest du den Server mit `myserver` (oder mit `systemctl`)."
+    },
+    "headers": {
+      "text": "Antwortet die Website, wie sie soll? Füge dem Protokoll die Antwort-Header der Startseite, `http://localhost:8080`, hinzu. Der Statuscode soll 200 sein.",
+      "hint": "`curl -I` holt nur die Header. Unter Ubuntu muss curl zuerst installiert werden: `sudo apt install curl`."
+    },
+    "key": {
+      "text": "Beim nächsten Mal willst du ohne Passwort auf den Server `server.lan`. Erzeuge ein Schlüsselpaar und lege den öffentlichen Schlüssel auf den Server.",
+      "hint": "`ssh-keygen` erzeugt das Schlüsselpaar – drück bei den Fragen Enter. `ssh-copy-id` legt dann den öffentlichen Schlüssel auf den Server, zum Beispiel `ssh-copy-id srv`."
+    },
+    "backup": {
+      "text": "Sichere den ganzen Ordner `~/{{incidentDir}}` in dein Home-Verzeichnis auf dem Server, damit das Protokoll erhalten bleibt, selbst wenn dein Rechner aufgibt.",
+      "hint": "`rsync -av` mit einem Schrägstrich nach der Quelle kopiert den Inhalt: `rsync -av ~/{{incidentDir}}/ srv:{{incidentDir}}/`. `scp -r` geht auch."
+    },
+    "remote-read": {
+      "text": "Zeige das Protokoll, das auf dem Server liegt, mit `ssh` an – ohne dass jemand nach einem Passwort fragt.",
+      "hint": "Schreib den Befehl hinter den Host: `ssh srv cat {{incidentDir}}/{{incidentLog}}`. Fragt ssh nach einem Passwort, ist der Schlüssel nicht an seinem Platz."
+    }
+  }
+}

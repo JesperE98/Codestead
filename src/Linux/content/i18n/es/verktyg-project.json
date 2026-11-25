@@ -1,0 +1,33 @@
+{
+  "title": "Proyecto: Empaqueta tus dotfiles",
+  "tasks": {
+    "repo": {
+      "text": "Crea el directorio `~/{{dotfilesDir}}` y conviértelo en un repositorio git.",
+      "hint": "`mkdir`, `cd` y luego `git init`. ¿No está instalado git? Instálalo con el gestor de paquetes, como en el capítulo sobre git."
+    },
+    "pack": {
+      "text": "Empaqueta la configuración que ya tienes: copia `~/.bashrc` y `~/.gitconfig` a `~/{{dotfilesDir}}`.",
+      "hint": "`cp` acepta varios archivos a la vez: `cp ~/.bashrc ~/.gitconfig ~/{{dotfilesDir}}/`. ¿Falta `~/.gitconfig`? Entonces todavía no le has dicho a git quién eres: hazlo con `git config --global`."
+    },
+    "aliases": {
+      "text": "Escribe el archivo `{{aliasFile}}` en el repositorio, con al menos dos alias que te resulten útiles.",
+      "hint": "Un alias por línea, por ejemplo `alias ll='ls -la'`. Escribe las líneas con `echo \"…\" >> {{aliasFile}}`: comillas dobles por fuera y simples por dentro."
+    },
+    "first-commit": {
+      "text": "Guarda el estado: haz un commit que contenga las dos copias y `{{aliasFile}}`.",
+      "hint": "`git add` y luego `git commit -m \"…\"`. Compruébalo antes con `git status`, para saber qué entra."
+    },
+    "secret": {
+      "text": "La contraseña del wifi va a vivir en `~/{{dotfilesDir}}/{{secretFile}}`, pero nunca debe acabar en el historial. Crea el archivo, haz que git lo ignore y haz commit de lo que haga falta para ello.",
+      "hint": "Escribe el nombre del archivo en `.gitignore` y haz commit de `.gitignore`. `git status` ya no debería mostrar `{{secretFile}}`. ¿El archivo ya entró en un commit? Entonces `git rm --cached` lo saca del repositorio, pero no del disco."
+    },
+    "branch": {
+      "text": "Prueba alias nuevos en una rama: crea la rama `{{aliasBranch}}`, añade al menos un alias más a `{{aliasFile}}` y haz commit en la rama.",
+      "hint": "`git switch -c {{aliasBranch}}`, luego `echo \"…\" >> {{aliasFile}}` y `git commit -am \"…\"`."
+    },
+    "merge-and-use": {
+      "text": "Los alias funcionan: fusiona `{{aliasBranch}}` con la rama principal. Después carga `{{aliasFile}}` en el shell con `source` y ejecuta uno de tus alias.",
+      "hint": "`git switch main` y `git merge {{aliasBranch}}`. Luego `source {{aliasFile}}`, y escribe el nombre de un alias como si fuera un comando."
+    }
+  }
+}

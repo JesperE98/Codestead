@@ -1,0 +1,29 @@
+{
+  "title": "Project: The museum's orrery",
+  "tasks": {
+    "sun": {
+      "text": "Replace the grid of planets with the orrery's sun: the root entity alone, at the origin, 1.5 times the model's size – and it no longer turns.",
+      "hint": "The two nested loops go, and so does the root's `setLocalRotation` in the render loop (the `updateSelfAndChild` stays). `setLocalScale` on the root."
+    },
+    "planets": {
+      "text": "Hang three planets on the sun as its children, lined up on its x axis in the sun's units: Pip at 2.4 (scale 0.2), Bramble at 4 (0.35) and Old Gourd at 6 (0.4).",
+      "hint": "`addChild` on the root, then `setLocalPosition` and `setLocalScale` on `children.back()` – three times, or in a loop over two small arrays."
+    },
+    "orbits": {
+      "text": "Let every planet circle the sun counter-clockwise seen from above, starting from the x axis: Pip at 80, Bramble at 40 and Old Gourd at 20 degrees per second.",
+      "hint": "Every frame before the graph is updated: `angle = radians(speed × time)` and `setLocalPosition(children[i].transform, (r · cos(angle), 0, −r · sin(angle)))` with the planet's distance `r` in sun units."
+    },
+    "moon": {
+      "text": "Give Bramble a moon: a child of Bramble at 2.5 Bramble units with the scale 0.35; Bramble turns about its own axis at 120 degrees per second and carries the moon round.",
+      "hint": "`addChild(children[1], …)` once all three planets are added; in the loop `setLocalRotation` on Bramble with `120 × time` degrees about y."
+    },
+    "counter": {
+      "text": "Show in the window title how many of the orrery's bodies are drawn and how many the frustum culled.",
+      "hint": {
+        "opengl": "The culled bodies are `total - display`; build the title with `std::to_string` as before.",
+        "vulkan": "The culled bodies are `total - display`; build the title with `std::to_string` as before.",
+        "d3d12": "The culled bodies are `total - display`; build the title with `std::to_wstring` as before."
+      }
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "title": "Project: The material showroom",
+  "tasks": {
+    "showroom": {
+      "text": "Replace the 3 × 3 grid with the showroom: the hero (still with the maps) at (0, 2, 0), scaled 3.6, and three samples scaled 2.4 at (-6, -6, 0), (0, -6, 0) and (6, -6, 0).",
+      "hint": {
+        "opengl": "Four draws instead of the two loops: each a model matrix (translate, the rotation that turns the textures' middle to the camera, scale), the normal matrix and `renderSphere()`.",
+        "vulkan": "Four draws instead of the two loops: each a model matrix (translate, the rotation that turns the textures' middle to the camera, scale) in the push constants and `renderSphere(commandBuffer)`.",
+        "d3d12": "Four draws instead of the two loops: each a model matrix (scale, the rotation that turns the textures' middle to the camera, translate), its normal matrix in the root constants and `RenderSphere()`."
+      }
+    },
+    "gold": {
+      "text": "Make the left sample gold: a sample takes its albedo, metallic and roughness from values of its own instead of the maps (the hero keeps its maps). Gold: metallic, albedo about (1.0, 0.71, 0.29), fairly smooth.",
+      "hint": {
+        "opengl": "In `pbr.fs`: uniforms `albedoValue`, `metallicValue`, `roughnessValue` and a `bool useMaps`; without the maps `N = normalize(Normal)` and `ao = 1.0`. In `main.cpp`, before each `renderSphere()`: `pbrShader.setBool(\"useMaps\", …)` and the values with `setVec3` / `setFloat`. Roughness 0.2–0.4.",
+        "vulkan": "`PushConstants` gets `glm::vec3 albedo; float metallic; float roughness; VkBool32 useMaps;` after the matrix; `pbr.frag` declares the same `layout(push_constant)` block and uses `pc.albedo` … unless `pc.useMaps`; without the maps `N = normalize(fragNormal)` and `ao = 1.0`. Set the fields before each push. Roughness 0.2–0.4.",
+        "d3d12": "`ModelConstants` gets `XMFLOAT3 albedoValue; float metallicValue; float roughnessValue; BOOL useMaps;` after the matrices, the `cbuffer` in `pbr.hlsl` the same, with the same names (`float3`, `float`, `float`, `bool`), and root parameter 0 `sizeof(ModelConstants) / 4` values. Without the maps `N = normalize(input.normal)` and `ao = 1.0f`. Roughness 0.2–0.4."
+      }
+    },
+    "plastic": {
+      "text": "Make the middle sample rough plastic in a strong colour of your choice: not a metal, rough enough for a soft, wide highlight.",
+      "hint": "Metallic 0.0, roughness 0.6–1.0, and an albedo with one strong channel – for example (0.1, 0.35, 0.8)."
+    },
+    "polished-metal": {
+      "text": "Make the right sample polished silver: a metal with a light grey albedo and almost no roughness, mirroring the room.",
+      "hint": "Metallic 1.0, an albedo such as (0.95, 0.93, 0.88) and roughness 0.1 or less: the pre-filtered map's sharpest mip level."
+    },
+    "turntable": {
+      "text": "Let the hero turn slowly about its vertical axis over time.",
+      "hint": {
+        "opengl": "One more `glm::rotate` about (0, 1, 0) in the hero's model matrix, with an angle that grows with `currentFrame` – for example half a radian per second.",
+        "vulkan": "One more `glm::rotate` about (0, 1, 0) in the hero's model matrix, with an angle that grows with `glfwGetTime()` – for example half a radian per second.",
+        "d3d12": "One more `XMMatrixRotationY` in the hero's model matrix (before the translation), with an angle that grows with the time since a `static` start time (`std::chrono`) – for example half a radian per second."
+      }
+    }
+  }
+}

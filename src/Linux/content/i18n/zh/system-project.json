@@ -1,0 +1,33 @@
+{
+  "title": "项目：俱乐部会所",
+  "tasks": {
+    "clubhouse": {
+      "text": "建造会所：目录 `~/{{clubDir}}`，**只有你**可以读取、写入和进入（`rwx------`）。",
+      "hint": "用 `mkdir` 创建目录，用 `chmod` 修改权限。r = 4，w = 2，x = 1——所属组和其他人都是 0。"
+    },
+    "knock": {
+      "text": "编写门卫脚本 `~/{{clubDir}}/{{knockScript}}`，用 `echo` 打印出俱乐部的密码。让它可以执行，然后运行它。",
+      "hint": "用 `echo '…' > 文件` 把这一行写进文件（这一行用单引号括起来），用 `chmod +x` 让它可以执行，再用路径运行它，例如在会所里时用 `./{{knockScript}}`。"
+    },
+    "variable": {
+      "text": "创建环境变量 `{{clubVar}}`，值为会所的完整路径，这样 `cd ${{clubVar}}` 就能带你过去。",
+      "hint": "`export NAME=value`——`=` 两边不能有空格。值可以是 `~/{{clubDir}}` 或 `$HOME/{{clubDir}}`。"
+    },
+    "wardrobe": {
+      "text": "藏一个秘密入口：一个直通会所的符号链接 `~/{{documents}}/{{wardrobe}}`。",
+      "hint": "`ln -s 目标 链接名`——先写目标。目标用绝对路径的话，你在哪个目录都没关系。"
+    },
+    "night-watch": {
+      "text": "安排夜间守卫：在后台运行 `sleep 3600`，让它守夜一小时——即使你退出登录也继续守着。",
+      "hint": "行末的 `&` 让命令在后台运行，行首的 `nohup` 让它在你退出登录后继续运行。"
+    },
+    "backup": {
+      "text": "给整个会所做一份备份：压缩归档 `~/{{clubBackup}}`。",
+      "hint": "进入主目录，用 `tar` 加上 `c`（创建）、`z`（gzip）和 `f`，`f` 后面跟归档的名字——最后写要打包的目录。"
+    },
+    "dismiss": {
+      "text": "天亮了：结束这个进程，让守卫下班。",
+      "hint": "`jobs` 显示守卫的作业编号，`ps` 显示它的 PID。用 `kill %编号`、`kill PID` 或 `pkill sleep` 结束它。"
+    }
+  }
+}

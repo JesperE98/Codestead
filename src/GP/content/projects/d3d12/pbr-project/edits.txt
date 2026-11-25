@@ -1,0 +1,225 @@
+=== task: showroom
+--- file: main.cpp
+--- find:
+// The grid of spheres: a few large spheres, so the material's details can be seen.
+int nrRows    = 3;
+int nrColumns = 3;
+float spacing = 6.0f;
+--- replace:
+// The showroom: the hero in the middle, the three samples on a row below it, 6 apart.
+float spacing = 6.0f;
+--- file: main.cpp
+--- find:
+// The scene (learnopengl's ibl_specular_textured.cpp): 3 x 3 large spheres, each with its
+--- replace:
+// The scene: the showroom's hero and three samples, each with its
+--- file: main.cpp
+--- find:
+    // render rows*column number of spheres with material properties defined by textures (they all have the same material properties)
+    for (int row = 0; row < nrRows; ++row)
+    {
+        for (int col = 0; col < nrColumns; ++col)
+        {
+            XMMATRIX model = XMMatrixScaling(2.4f, 2.4f, 2.4f)
+                * XMMatrixRotationY(XMConvertToRadians(90.0f)) // turn the middle of the textures towards the camera
+                * XMMatrixTranslation(
+                    (float)(col - (nrColumns / 2)) * spacing,
+                    (float)(row - (nrRows / 2)) * spacing,
+                    0.0f);
+            XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+            XMStoreFloat4x4(&modelConstants.normalMatrix, XMMatrixInverse(nullptr, model));
+            m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+            RenderSphere();
+        }
+    }
+--- replace:
+    // the hero: a large sphere in the middle, above the samples
+    XMMATRIX model = XMMatrixScaling(3.6f, 3.6f, 3.6f)
+        * XMMatrixRotationY(XMConvertToRadians(90.0f)) // turn the middle of the textures towards the camera
+        * XMMatrixTranslation(0.0f, 2.0f, 0.0f);
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    XMStoreFloat4x4(&modelConstants.normalMatrix, XMMatrixInverse(nullptr, model));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    RenderSphere();
+
+    // the three samples on the bottom row: left, middle and right
+    model = XMMatrixScaling(2.4f, 2.4f, 2.4f)
+        * XMMatrixRotationY(XMConvertToRadians(90.0f))
+        * XMMatrixTranslation(-spacing, -6.0f, 0.0f);
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    XMStoreFloat4x4(&modelConstants.normalMatrix, XMMatrixInverse(nullptr, model));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    RenderSphere();
+
+    model = XMMatrixScaling(2.4f, 2.4f, 2.4f)
+        * XMMatrixRotationY(XMConvertToRadians(90.0f))
+        * XMMatrixTranslation(0.0f, -6.0f, 0.0f);
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    XMStoreFloat4x4(&modelConstants.normalMatrix, XMMatrixInverse(nullptr, model));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    RenderSphere();
+
+    model = XMMatrixScaling(2.4f, 2.4f, 2.4f)
+        * XMMatrixRotationY(XMConvertToRadians(90.0f))
+        * XMMatrixTranslation(spacing, -6.0f, 0.0f);
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    XMStoreFloat4x4(&modelConstants.normalMatrix, XMMatrixInverse(nullptr, model));
+    m_commandList->SetGraphicsRoot32BitConstants(0, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    RenderSphere();
+=== task: gold
+--- file: main.cpp
+--- find:
+    // The root constants: what the shaders see as cbuffer ModelConstants - the values of
+    // one draw. Two 4x4 matrices are 32 floats. (The material comes from textures now.)
+    struct ModelConstants
+    {
+        XMFLOAT4X4 model;
+        XMFLOAT4X4 normalMatrix;    // transpose(inverse(model)), for the normals
+    };
+--- replace:
+    // The root constants: what the shaders see as cbuffer ModelConstants - the values of
+    // one draw: two 4x4 matrices (32 floats) and a sample's own material, 6 values more.
+    // (albedoValue and metallicValue share a 16-byte row in HLSL, as they do here.)
+    struct ModelConstants
+    {
+        XMFLOAT4X4 model;
+        XMFLOAT4X4 normalMatrix;    // transpose(inverse(model)), for the normals
+        XMFLOAT3 albedoValue;
+        float metallicValue;
+        float roughnessValue;
+        BOOL useMaps;               // TRUE: the material's maps instead of the values
+    };
+--- file: main.cpp
+--- find:
+    // 33 values (one more than ModelConstants now: root parameter 0 has this struct's size).
+--- replace:
+    // 33 values (fewer than ModelConstants now: root parameter 0 has that struct's size).
+--- file: main.cpp
+--- find:
+        // many values as the largest of them has: CaptureConstants.
+--- replace:
+        // many values as the largest of them has: ModelConstants.
+--- file: main.cpp
+--- find:
+        rootParameters[0].InitAsConstants(sizeof(CaptureConstants) / 4, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
+--- replace:
+        rootParameters[0].InitAsConstants(sizeof(ModelConstants) / 4, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
+--- file: pbr.hlsl
+--- find:
+    float4x4 normalMatrix;    // transpose(inverse(model)), computed in main.cpp
+};
+--- replace:
+    float4x4 normalMatrix;    // transpose(inverse(model)), computed in main.cpp
+    // a sample's own material: the same values all over the sphere (useMaps false), or the maps
+    float3 albedoValue;
+    float metallicValue;
+    float roughnessValue;
+    bool useMaps;
+};
+--- file: pbr.hlsl
+--- find:
+    // material properties
+    float3 albedo   = pow(albedoMap.Sample(wrapSampler, input.texCoords).rgb, 2.2f);
+    float metallic  = metallicMap.Sample(wrapSampler, input.texCoords).r;
+    float roughness = roughnessMap.Sample(wrapSampler, input.texCoords).r;
+    float ao        = aoMap.Sample(wrapSampler, input.texCoords).r;
+
+    // input lighting data
+    float3 N = getNormalFromMap(input);
+--- replace:
+    // material properties: a sample's own values, or the maps
+    float3 albedo   = albedoValue;
+    float metallic  = metallicValue;
+    float roughness = roughnessValue;
+    float ao        = 1.0f;
+    float3 N        = normalize(input.normal);
+    if (useMaps)
+    {
+        albedo    = pow(albedoMap.Sample(wrapSampler, input.texCoords).rgb, 2.2f);
+        metallic  = metallicMap.Sample(wrapSampler, input.texCoords).r;
+        roughness = roughnessMap.Sample(wrapSampler, input.texCoords).r;
+        ao        = aoMap.Sample(wrapSampler, input.texCoords).r;
+        N         = getNormalFromMap(input);
+    }
+
+    // input lighting data
+--- file: main.cpp
+--- find:
+    // the hero: a large sphere in the middle, above the samples
+--- replace:
+    // the hero: a large sphere in the middle, above the samples - with the material's maps
+    modelConstants.useMaps = TRUE;
+--- file: main.cpp
+--- find:
+    // the three samples on the bottom row: left, middle and right
+--- replace:
+    // the three samples on the bottom row: left, middle and right
+    // gold: a metal, its albedo the colour of its reflections, fairly smooth
+    modelConstants.useMaps = FALSE;
+    modelConstants.albedoValue = XMFLOAT3(1.0f, 0.71f, 0.29f);
+    modelConstants.metallicValue = 1.0f;
+    modelConstants.roughnessValue = 0.25f;
+--- file: main.cpp
+--- find:
+    model = XMMatrixScaling(2.4f, 2.4f, 2.4f)
+        * XMMatrixRotationY(XMConvertToRadians(90.0f))
+        * XMMatrixTranslation(0.0f, -6.0f, 0.0f);
+--- replace:
+    modelConstants.useMaps = TRUE; // the others keep the maps for now
+    model = XMMatrixScaling(2.4f, 2.4f, 2.4f)
+        * XMMatrixRotationY(XMConvertToRadians(90.0f))
+        * XMMatrixTranslation(0.0f, -6.0f, 0.0f);
+=== task: plastic
+--- file: main.cpp
+--- find:
+    modelConstants.useMaps = TRUE; // the others keep the maps for now
+    model = XMMatrixScaling(2.4f, 2.4f, 2.4f)
+        * XMMatrixRotationY(XMConvertToRadians(90.0f))
+        * XMMatrixTranslation(0.0f, -6.0f, 0.0f);
+--- replace:
+    // rough plastic: not a metal, a strong colour, a soft wide highlight
+    modelConstants.albedoValue = XMFLOAT3(0.1f, 0.35f, 0.8f);
+    modelConstants.metallicValue = 0.0f;
+    modelConstants.roughnessValue = 0.8f;
+    model = XMMatrixScaling(2.4f, 2.4f, 2.4f)
+        * XMMatrixRotationY(XMConvertToRadians(90.0f))
+        * XMMatrixTranslation(0.0f, -6.0f, 0.0f);
+--- file: main.cpp
+--- find:
+    model = XMMatrixScaling(2.4f, 2.4f, 2.4f)
+        * XMMatrixRotationY(XMConvertToRadians(90.0f))
+        * XMMatrixTranslation(spacing, -6.0f, 0.0f);
+--- replace:
+    modelConstants.useMaps = TRUE; // the last one keeps the maps for now
+    model = XMMatrixScaling(2.4f, 2.4f, 2.4f)
+        * XMMatrixRotationY(XMConvertToRadians(90.0f))
+        * XMMatrixTranslation(spacing, -6.0f, 0.0f);
+=== task: polished-metal
+--- file: main.cpp
+--- find:
+    modelConstants.useMaps = TRUE; // the last one keeps the maps for now
+    model = XMMatrixScaling(2.4f, 2.4f, 2.4f)
+        * XMMatrixRotationY(XMConvertToRadians(90.0f))
+        * XMMatrixTranslation(spacing, -6.0f, 0.0f);
+--- replace:
+    // polished metal: almost no roughness - a mirror of the room
+    modelConstants.albedoValue = XMFLOAT3(0.95f, 0.93f, 0.88f);
+    modelConstants.metallicValue = 1.0f;
+    modelConstants.roughnessValue = 0.05f;
+    model = XMMatrixScaling(2.4f, 2.4f, 2.4f)
+        * XMMatrixRotationY(XMConvertToRadians(90.0f))
+        * XMMatrixTranslation(spacing, -6.0f, 0.0f);
+=== task: turntable
+--- file: main.cpp
+--- find:
+    XMMATRIX model = XMMatrixScaling(3.6f, 3.6f, 3.6f)
+        * XMMatrixRotationY(XMConvertToRadians(90.0f)) // turn the middle of the textures towards the camera
+        * XMMatrixTranslation(0.0f, 2.0f, 0.0f);
+--- replace:
+    // the turntable: half a radian per second
+    static auto startTime = std::chrono::high_resolution_clock::now();
+    float time = std::chrono::duration<float, std::chrono::seconds::period>(std::chrono::high_resolution_clock::now() - startTime).count();
+    XMMATRIX model = XMMatrixScaling(3.6f, 3.6f, 3.6f)
+        * XMMatrixRotationY(XMConvertToRadians(90.0f)) // turn the middle of the textures towards the camera
+        * XMMatrixRotationY(time * 0.5f)
+        * XMMatrixTranslation(0.0f, 2.0f, 0.0f);

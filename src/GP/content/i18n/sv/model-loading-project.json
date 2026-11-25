@@ -1,0 +1,45 @@
+{
+  "title": "Projekt: Världarnas sal",
+  "tasks": {
+    "make-room": {
+      "text": "Gör plats för utställningen: ta ett steg bakåt så att planeten i mitten ser ungefär hälften så stor ut – kameran sex enheter framför den.",
+      "hint": {
+        "opengl": "Ingenting i modellen ändras – bara var kameran börjar: den globala `cameraPos`.",
+        "vulkan": "Ingenting i modellen ändras – bara var kameran börjar: den globala `cameraPos`.",
+        "d3d12": "Ingenting i modellen ändras – bara var kameran börjar: den globala `cameraPos` (en `XMVectorSet`)."
+      }
+    },
+    "exhibits": {
+      "text": "Fyll salen: rita modellen två gånger till, ungefär 2,2 enheter till vänster och till höger om den första, mindre (runt 0,4) och med var sin lutning – det vänstra föremålets ring vänd mot besökarna, det högra lutat åt sidan.",
+      "hint": {
+        "opengl": "Efter `ourModel.Draw(ourShader)`: en ny modellmatris (translate, rotate, scale), `setMat4(\"model\", …)` och `Draw` igen – två gånger. Modellen läses bara in en gång.",
+        "vulkan": "Efter `vkCmdDrawIndexed`: en ny modellmatris (translate, rotate, scale) i `constants.model`, `vkCmdPushConstants` och samma `vkCmdDrawIndexed` igen – två gånger.",
+        "d3d12": "Efter `m_model.Draw(…)`: en ny `model` (scale, rotate, translate – DirectXMaths ordning), dess normalmatris, `SetGraphicsRoot32BitConstants` och `m_model.Draw` igen – två gånger."
+      }
+    },
+    "turntable": {
+      "text": "Ställ föremålet i mitten på en roterande sockel: låt det snurra långsamt kring den lodräta axeln, till exempel en halv radian per sekund. De andra föremålen står still.",
+      "hint": {
+        "opengl": "Ytterligare en `glm::rotate` i mittföremålets matris, med `(float)glfwGetTime() * 0.5f` kring (0, 1, 0) – direkt efter förflyttningen, så att den vrider den lutande planeten kring salens lodräta axel.",
+        "vulkan": "Ytterligare en `glm::rotate` i mittföremålets matris i `recordCommandBuffer`, med `glfwGetTime()` gånger 0,5 kring (0, 1, 0) – direkt efter förflyttningen, så att den vrider den lutande planeten kring salens lodräta axel.",
+        "d3d12": "Tiden sedan starten med `std::chrono` (som i *Transformationer*) och `XMMatrixRotationY(time * 0.5f)` i mittföremålets kedja – efter lutningen och före förflyttningen."
+      }
+    },
+    "shelf": {
+      "text": "Bygg hyllan med småvärldar: en rad med fem små planeter (runt 0,2) två enheter från varandra, 1,5 enheter högre än föremålen och 3 enheter längre bak, ritade i en loop – var och en lite mer lutad än den före.",
+      "hint": {
+        "opengl": "En `for`-loop över `i` från 0 till 4: translate till `(-4.0f + 2.0f * i, 1.5f, -3.0f)`, rotate med `15.0f * i` grader, scale med 0,2, sedan `setMat4` och `Draw`.",
+        "vulkan": "En `for`-loop över `i` från 0 till 4 före `vkCmdEndRenderPass`: translate till `(-4.0f + 2.0f * i, 1.5f, -3.0f)`, rotate med `15.0f * i` grader, scale med 0,2, sedan push-konstanterna och ritanropet.",
+        "d3d12": "En `for`-loop över `i` från 0 till 4 efter föremålen: scale med 0,2, rotate med `15.0f * i` grader, translate till `(-4.0f + 2.0f * i, 1.5f, -3.0f)`, sedan rotkonstanterna och `m_model.Draw`."
+      }
+    },
+    "bronze": {
+      "text": "Gjut det vänstra föremålet i brons: multiplicera dess belysta färg med en bronston, till exempel (1,0, 0,6, 0,25), ett värde som ges per ritanrop. Alla andra planeter behåller sina egna färger (en ton av vitt).",
+      "hint": {
+        "opengl": "En `uniform vec3 tint;` i fragment-shadern och `FragColor = vec4(result * tint, 1.0);`. I `main.cpp` `ourShader.setVec3(\"tint\", …)` före varje ritanrop – vitt för planeterna, brons för avgjutningen. En uniform behåller sitt värde tills du sätter den igen.",
+        "vulkan": "En `glm::vec3 tint` efter matrisen i `PushConstants`, samma push-konstantblock (med `vec3 tint`) i fragment-shadern, `outColor = vec4(result * pc.tint, 1.0);`. Nu läser fragmentsteget den: lägg till `VK_SHADER_STAGE_FRAGMENT_BIT` i push-konstantområdet och i varje `vkCmdPushConstants`.",
+        "d3d12": "En `XMFLOAT3 tint` efter matriserna i `ModelConstants` och en `float3 tint` i shadernas `cbuffer ModelConstants`; pixel-shadern returnerar `float4(result * tint, 1.0f)`. Nu läser pixel-shadern rotkonstanterna: rotparameter 0 behöver `D3D12_SHADER_VISIBILITY_ALL`."
+      }
+    }
+  }
+}

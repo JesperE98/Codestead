@@ -124,8 +124,9 @@ describe("LearningContentTests", () => {
       expect(parse(exam, "en").length >= 10, `${exam.id}: an exam needs at least 10 questions`).toBe(true);
       expect(ChaptersLib.chapters.some((c) => c.part === exam.part && c.kind === ChapterKinds.Summary)).toBe(true);
       expect(
-        ChaptersLib.chapters.findIndex((c) => c.id === exam.id) === ChaptersLib.chapters.findLastIndex((c) => c.part === exam.part),
-        `${exam.id}: the exam must come last in its main chapter`,
+        ChaptersLib.chapters.findIndex((c) => c.id === exam.id) ===
+          ChaptersLib.chapters.findLastIndex((c) => c.part === exam.part && c.kind !== ChapterKinds.Project),
+        `${exam.id}: the exam must come last in its main chapter (only its optional project may follow it)`,
       ).toBe(true);
     }
   });

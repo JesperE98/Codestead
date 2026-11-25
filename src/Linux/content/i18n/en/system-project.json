@@ -1,0 +1,33 @@
+{
+  "title": "Project: The clubhouse",
+  "tasks": {
+    "clubhouse": {
+      "text": "Build the clubhouse: the directory `~/{{clubDir}}`, where **only you** may read, write and enter (`rwx------`).",
+      "hint": "Create the directory with `mkdir` and change the permissions with `chmod`. r = 4, w = 2, x = 1 – and the group and others get 0."
+    },
+    "knock": {
+      "text": "Write the doorkeeper script `~/{{clubDir}}/{{knockScript}}`, which prints the club's password with `echo`. Make it executable and run it.",
+      "hint": "Write the line to the file with `echo '…' > file` (single quotes around the line), make it executable with `chmod +x` and run it with its path, e.g. `./{{knockScript}}` when you're in the clubhouse."
+    },
+    "variable": {
+      "text": "Create the environment variable `{{clubVar}}` with the full path to the clubhouse, so that `cd ${{clubVar}}` takes you there.",
+      "hint": "`export NAME=value` – no spaces around `=`. The value can be `~/{{clubDir}}` or `$HOME/{{clubDir}}`."
+    },
+    "wardrobe": {
+      "text": "Hide a secret entrance: a symbolic link `~/{{documents}}/{{wardrobe}}` that leads straight into the clubhouse.",
+      "hint": "`ln -s TARGET LINKNAME` – the target first. With an absolute path as the target it doesn't matter where you are."
+    },
+    "night-watch": {
+      "text": "Post a night watch: run `sleep 3600` in the background, so that it keeps watch for an hour – and keeps going even if you log out.",
+      "hint": "`&` at the end of the line runs the command in the background, and `nohup` at the start makes it survive you logging out."
+    },
+    "backup": {
+      "text": "Make a backup of the whole clubhouse: the compressed archive `~/{{clubBackup}}`.",
+      "hint": "Go to your home directory and use `tar` with `c` (create), `z` (gzip) and `f` followed by the archive's name – and the directory to pack last."
+    },
+    "dismiss": {
+      "text": "Morning has come: send the night watch home by ending the process.",
+      "hint": "`jobs` shows the night watch's job number and `ps` its PID. End it with `kill %NUMBER`, `kill PID` or `pkill sleep`."
+    }
+  }
+}

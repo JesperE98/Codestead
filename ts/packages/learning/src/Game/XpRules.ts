@@ -16,6 +16,8 @@ export const XpRules = {
   Part: 50,
   ExamPass: 100,
   ExamPerfect: 50,
+  /** An optional project finished (its milestones count as tasks besides). */
+  Project: 100,
 
   total(g: GameState, p: ProgressView): number {
     return (
@@ -25,7 +27,8 @@ export const XpRules = {
       XpRules.Chapter * g.completedChapters.length +
       XpRules.Part * g.completedParts.length +
       XpRules.ExamPass * g.examsPassed.length +
-      XpRules.ExamPerfect * g.examsPerfect.length
+      XpRules.ExamPerfect * g.examsPerfect.length +
+      XpRules.Project * g.completedProjects.length
     );
   },
 } as const;

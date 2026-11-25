@@ -233,6 +233,7 @@ export class LearningWindow extends Store {
    * Chapters where a task is already done stay unlocked.
    */
   isUnlocked(chapter: CourseChapter): boolean {
+    if (chapter.isProject) return this.isProjectOpen(chapter);
     if (this.taskKeys(chapter).some((k) => this.state.progress.has(k))) return true;
     const total = this.checkpointCount(chapter);
     return total > 0 ? this.solvedCheckpoints(chapter) === total : this.state.read.includes(chapter.id);
@@ -247,6 +248,33 @@ export class LearningWindow extends Store {
   /** An exam opens when every sub-chapter of its main chapter is complete. */
   isExamOpen(exam: CourseChapter): boolean {
     return this.lessonsIn(exam.part).every((l) => this.isLessonComplete(l));
+  }
+
+  /** The exam of a main chapter, if it has one. */
+  examOf(part: string): CourseChapter | undefined {
+    return this.chapters.find((c) => c.part === part && c.kind === ChapterKinds.Exam);
+  }
+
+  /** The optional project of a main chapter, if it has one. */
+  projectOf(part: string): CourseChapter | undefined {
+    return this.chapters.find((c) => c.part === part && c.isProject);
+  }
+
+  /**
+   * The optional project opens when its main chapter's exam is passed (in a main chapter without an exam: when every
+   * sub-chapter is complete). A project where a milestone is already done stays open.
+   */
+  isProjectOpen(project: CourseChapter): boolean {
+    if (this.taskKeys(project).some((k) => this.state.progress.has(k))) return true;
+    const exam = this.examOf(project.part);
+    if (exam === undefined) return this.isExamOpen(project);
+    return (this.state.exams.get(project.part) ?? 0) >= LearningWindow.ExamPassPercent;
+  }
+
+  /** A project is complete when it is open and every milestone is done. */
+  isProjectComplete(project: CourseChapter): boolean {
+    const { done, total } = this.chapterProgress(project);
+    return total > 0 && done === total && this.isProjectOpen(project);
   }
 
   checkpointTexts(): CheckpointTexts {
@@ -305,13 +333,7 @@ export class LearningWindow extends Store {
 
   /** The progress as the game rules see it. */
   snapshot(): ProgressView {
-    let done = 0;
-    let total = 0;
-    for (const ch of this.chapters) {
-      const p = this.chapterProgress(ch);
-      done += p.done;
-      total += p.total;
-    }
+    const { done, total } = this.totalProgress();
     const s = this.state;
     return new ProgressView(
       [...s.progress].filter(([, v]) => v).map(([k]) => k),
@@ -320,14 +342,16 @@ export class LearningWindow extends Store {
       new Set(this.lessons.filter((c) => this.isLessonComplete(c)).map((c) => c.id)),
       done,
       total,
+      new Set(this.chapters.filter((c) => c.isProject && this.isProjectComplete(c)).map((c) => c.part)),
     );
   }
 
-  /** The total progress (top bar): tasks done of all tasks. */
+  /** The total progress (top bar): tasks done of all tasks. The optional projects are not counted. */
   totalProgress(): { done: number; total: number } {
     let done = 0;
     let total = 0;
     for (const ch of this.chapters) {
+      if (ch.isProject) continue;
       const p = this.chapterProgress(ch);
       done += p.done;
       total += p.total;
@@ -478,7 +502,7 @@ export class LearningWindow extends Store {
     const chapter = this.chapter;
     const state = this.state;
     // Locked tasks are not checked: the text comes first, even though the terminal is already there.
-    const tasksOpen = chapter.kind === ChapterKinds.Lesson && this.isUnlocked(chapter);
+    const tasksOpen = (chapter.kind === ChapterKinds.Lesson || chapter.isProject) && this.isUnlocked(chapter);
     const newly = tasksOpen ? [...this.tool.evaluate(chapter.id, result, state.progress)] : [];
     // Every finished command line counts as an attempt for the tasks that are not done yet.
     let solutionUnlocked = false;

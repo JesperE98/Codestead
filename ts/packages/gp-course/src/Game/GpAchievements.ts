@@ -52,6 +52,8 @@ export const GpAchievements = {
       CommonAchievements.checkpoints(25, "🤔"),
       CommonAchievements.count("exercise-first", "🏋️", AchievementCategory.Learning, exercisesSolved, 1),
       CommonAchievements.count("exercises-25", "🥇", AchievementCategory.Learning, exercisesSolved, 25),
+      CommonAchievements.projectFirst,
+      CommonAchievements.projectAll,
       // Exams
       CommonAchievements.examFirst,
       CommonAchievements.examPerfect,
@@ -76,6 +78,8 @@ export const GpAchievements = {
         build(c, (b) => b.clearColor !== null && b.clearColor[0]! > 0.99 && b.clearColor[1]! < 0.01 && b.clearColor[2]! > 0.99),
       ),
       new Achievement("night-owl", "🦉", AchievementCategory.Hidden, (c) => c.solvedNow.length > 0 && c.now.getHours() < 4),
+      CommonAchievements.projectUnaided,
+      CommonAchievements.projectPerfect,
       new Achievement("cornflower", "💙", AchievementCategory.Hidden, (c) => build(c, (b) => b.showsFrames && isColor(b.clearColor, 100, 149, 237))),
       new Achievement("tiny", "🔬", AchievementCategory.Hidden, (c) => build(c, (b) => b.drawnPixels >= 1 && b.drawnPixels <= 8)),
       new Achievement("triangles-1m", "⛰️", AchievementCategory.Hidden, (c) => build(c, (b) => b.showsFrames && b.triangles >= 1_000_000)),

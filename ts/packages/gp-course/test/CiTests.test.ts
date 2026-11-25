@@ -1,6 +1,6 @@
 // CI runs the TaskTests in parallel jobs, each a group of course parts, narrowed to some chapters or without some
 // (CODESTEAD_GP_PARTS and CODESTEAD_GP_CHAPTERS in the gp-tasks jobs' matrices of ci.yml and release.yml, see
-// TaskSelection.ts). A lesson missing from every job would never be tested there, one in two jobs would run twice: a new
+// TaskSelection.ts). A lesson (or project) missing from every job would never be tested there, one in two jobs would run twice: a new
 // part or chapter must be in exactly one job of both.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -37,7 +37,8 @@ describe("CiTests", () => {
       expect(job).toContain("CODESTEAD_GP_PARTS: ${{ matrix.shard.parts }}");
       expect(job).toContain("CODESTEAD_GP_CHAPTERS: ${{ matrix.shard.chapters }}");
       expect(job).toContain("packages/gp-course/test/TaskTests.test.ts");
-      const lessons = GpCourse.chapters.filter((c) => c.isLesson);
+      // The optional projects' milestones are tested like a lesson's tasks.
+      const lessons = GpCourse.chapters.filter((c) => c.isLesson || c.isProject);
       const ids = new Set(lessons.map((c) => c.id));
       const times = new Map<string, string[]>();
       for (const s of list) {

@@ -1,0 +1,33 @@
+{
+  "title": "Project: Hedgerow goes to the fair",
+  "tasks": {
+    "own-level": {
+      "text": "Design a level of your own in `levels/five.lvl` – with some bricks the ball can break – load it as the fifth level and let the game start on it.",
+      "hint": "Numbers 0–5, one row per line (0 empty, 1 stone, 2 blue, 3 green, 4 yellow, 5 orange). Init loads the four levels with LoadLevel and pushes them into `game.Levels`; yours becomes number 4, and `game.Level` says which one is played."
+    },
+    "level-menu": {
+      "text": "Make your level a full member of the menu: W and S cycle through all five levels, and ResetLevel can reload your level after a game over.",
+      "hint": "Look for `% 4` and `game.Level = 3;` in ProcessInput, and at the `if … else if` chain in ResetLevel."
+    },
+    "score": {
+      "text": "Keep score: points for every brick the ball destroys, shown as `Score:` and the points at the top right; a new game starts at zero.",
+      "hint": "A new field in `Game`; DoCollisions knows when a brick is destroyed, ResetLevel when a new game begins. The text like the lives' (`std::to_string`), with x about `game.Width - 120.0f`."
+    },
+    "sparks": {
+      "text": "Give the sparks a colour of the fair (not grey) and put up a sparkler: a fixed point in the lower half of the window, away from the paddle, from which sparks keep rising.",
+      "hint": "The colour is set in respawnParticle (`rColor` is a random brightness). The sparkler can be a `GameObject` that is never drawn: one more `Update(Particles, dt, …, 2)` call in Update spawns sparks at its `Position`, and they move against its `Velocity` – (0, 1200) makes them rise."
+    },
+    "extra-life": {
+      "text": "Add a power-up that gives an extra life, spawned from destroyed bricks like the others; as a welcome gift, drop one onto the paddle from the middle of the window (y = 300) when the program starts.",
+      "hint": "Copy one of SpawnPowerUps' lines with a type name of your own and handle that type in ActivatePowerUp (the lives are `Hedgerow.Lives`). The gift: `game.PowerUps.push_back(MakePowerUp(…))` at the end of Init, at x = 370, y = 300."
+    },
+    "fade-in": {
+      "text": "Write a new post-processing effect: the picture fades in from black over the first two seconds (the text stays as it is).",
+      "hint": {
+        "opengl": "Multiply `color.rgb` at the end of `post_processing.fs` by a factor that grows from 0 to 1 in two seconds – `clamp` keeps it at 1 afterwards. The fragment shader needs its own `uniform float time;`.",
+        "vulkan": "Multiply `color.rgb` at the end of `shaders/post_processing.frag` by a factor that grows from 0 to 1 in two seconds (`pc.time`) – `clamp` keeps it at 1 afterwards.",
+        "d3d12": "Multiply `color.rgb` before PSMain's `return color;` in `post_processing.hlsl` by a factor that grows from 0 to 1 in two seconds (`time`) – `saturate` keeps it at 1 afterwards."
+      }
+    }
+  }
+}

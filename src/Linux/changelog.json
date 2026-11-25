@@ -1,5 +1,32 @@
 [
   {
+    "version": "0.6.11",
+    "date": "2026-11-25",
+    "changes": {
+      "en": [
+        "**A project after every exam**: once you have passed a main chapter's exam, an optional project opens – a small story with an assignment that puts what you learnt to use, like solving the log detective's case, building a clubhouse with the right permissions or a report robot that cron starts every morning. Its milestones are ticked off as you go, they don't count towards your progress in the course, and a finished project gives 100 bonus XP. Four new achievements go with them – two of them hidden."
+      ],
+      "sv": [
+        "**Ett projekt efter varje prov**: när du har klarat provet i ett huvudkapitel öppnas ett frivilligt projekt – en liten berättelse med ett uppdrag där du får använda det du har lärt dig, som att lösa loggdetektivens fall, bygga ett klubbhus med rätt rättigheter eller en rapportrobot som cron startar varje morgon. Delmålen bockas av medan du arbetar, de räknas inte in i hur långt du har kommit i kursen, och ett klart projekt ger 100 bonus-XP. Med dem kommer fyra nya utmärkelser – två av dem dolda."
+      ],
+      "de": [
+        "**Ein Projekt nach jeder Prüfung**: Wenn du die Prüfung eines Hauptkapitels bestanden hast, öffnet sich ein freiwilliges Projekt – eine kleine Geschichte mit einem Auftrag, bei dem du das Gelernte anwendest: den Fall des Log-Detektivs lösen, ein Clubhaus mit den richtigen Rechten einrichten oder einen Berichtsroboter bauen, den cron jeden Morgen startet. Die Etappen werden beim Arbeiten abgehakt, zählen nicht zu deinem Kursfortschritt, und ein fertiges Projekt bringt 100 Bonus-XP. Dazu kommen vier neue Erfolge – zwei davon versteckt."
+      ],
+      "fr": [
+        "**Un projet après chaque examen** : une fois l'examen d'un chapitre principal réussi, un projet facultatif s'ouvre – une petite histoire avec une mission qui met en pratique ce que vous avez appris, comme résoudre l'affaire du détective des logs, monter un club avec les bonnes permissions ou un robot à rapports que cron lance chaque matin. Ses étapes se cochent au fil de votre travail, elles ne comptent pas dans votre progression du cours, et un projet terminé rapporte 100 XP bonus. Quatre nouveaux succès les accompagnent – dont deux cachés."
+      ],
+      "es": [
+        "**Un proyecto después de cada examen**: cuando apruebas el examen de un capítulo principal se abre un proyecto opcional, una pequeña historia con una misión en la que usas lo que has aprendido, como resolver el caso del detective de logs, montar un club con los permisos adecuados o un robot de informes que cron pone en marcha cada mañana. Los hitos se marcan mientras trabajas, no cuentan para tu progreso en el curso y un proyecto terminado da 100 XP extra. Con ellos llegan cuatro logros nuevos, dos de ellos ocultos."
+      ],
+      "zh": [
+        "**每次考试后都有一个项目**：通过一个大章的考试后，就会开放一个可选项目——一个带任务的小故事，让你用上学到的东西，比如破解日志侦探的案子、用正确的权限搭建俱乐部，或者做一个每天早上由 cron 启动的报告机器人。里程碑会在你操作时自动勾选，不计入课程进度，完成一个项目可获得 100 额外 XP。同时新增四个成就，其中两个是隐藏的。"
+      ],
+      "ja": [
+        "**試験のあとにプロジェクト**: 大章の試験に合格すると、任意のプロジェクトが開きます。学んだことを使うミッション付きの小さな物語で、ログ探偵の事件を解いたり、正しいパーミッションでクラブハウスを作ったり、cron が毎朝起動するレポートロボットを作ったりします。マイルストーンは作業に合わせて自動でチェックされ、コースの進み具合には数えられません。完成したプロジェクトはボーナス 100 XP。新しい実績も 4 つ加わり、そのうち 2 つは隠し実績です。"
+      ]
+    }
+  },
+  {
     "version": "0.6.10",
     "date": "2026-11-25",
     "changes": {

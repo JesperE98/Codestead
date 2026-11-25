@@ -60,7 +60,9 @@ function LessonContent({ window: w }: { window: LearningWindow }) {
       ? w.t(`part.${chapter.part}`) + " · " + w.t("summary.label")
       : chapter.kind === ChapterKinds.Exam
         ? w.t(`part.${chapter.part}`) + " · " + w.t("exam.label")
-        : // Numbered like the sidebar: lessons only (summaries and exams are not counted).
+        : chapter.isProject
+          ? w.t(`part.${chapter.part}`) + " · " + w.t("project.label")
+          : // Numbered like the sidebar: lessons only (summaries and exams are not counted).
           w.t("lesson.chapter", { n: lessons.indexOf(chapter) + 1, total: lessons.length });
 
   const text = tool.lessonText(chapter.id, w.lang);
@@ -95,7 +97,13 @@ function LessonContent({ window: w }: { window: LearningWindow }) {
     <div className="cs-lesson">
       {UiParts.text(eyebrow.toUpperCase(), 12.5, undefined, "eyebrow")}
       {!available.has(w.lang) && <div className="cs-fallback-note cs-text">{w.t("lesson.fallback")}</div>}
-      {chapter.kind === ChapterKinds.Exam ? <Exam window={w} chapter={chapter} markdown={markdown(true)} /> : markdown(false)}
+      {chapter.kind === ChapterKinds.Exam ? (
+        <Exam window={w} chapter={chapter} markdown={markdown(true)} />
+      ) : chapter.isProject ? (
+        <Project window={w} chapter={chapter} markdown={markdown(false)} />
+      ) : (
+        markdown(false)
+      )}
 
       {readButton && (
         <button type="button" className="primary" style={{ marginTop: 18, alignSelf: "flex-start" }} onClick={() => w.markRead(chapter)}>
@@ -179,6 +187,37 @@ function Exam({ window: w, chapter, markdown }: { window: LearningWindow; chapte
           </>
         )}
       </div>
+    </>
+  );
+}
+
+/**
+ * The optional project after a main chapter's exam: locked until the exam is passed, then its brief with the
+ * milestones as the chapter's tasks. It never counts towards the course's progress.
+ */
+function Project({ window: w, chapter, markdown }: { window: LearningWindow; chapter: CourseChapter; markdown: ReactNode }) {
+  if (!w.isProjectOpen(chapter)) {
+    const exam = w.examOf(chapter.part);
+    return (
+      <div className="cs-stack" style={{ gap: 8, marginTop: 10 }}>
+        {UiParts.text(w.tool.chapterTitle(chapter.id, w.lang), 30, 700)}
+        {UiParts.text("🔒  " + w.t(exam !== undefined ? "project.locked" : "project.lockedNoExam"), 15)}
+        {UiParts.text(w.t("project.optional"), 14, undefined, "muted")}
+        {exam !== undefined && (
+          <button type="button" className="flat" style={{ alignSelf: "flex-start" }} onClick={() => w.navigate(exam.id)}>
+            {"→  " + w.tool.chapterTitle(exam.id, w.lang)}
+          </button>
+        )}
+      </div>
+    );
+  }
+  const complete = w.isProjectComplete(chapter);
+  return (
+    <>
+      <div className={"cs-project-note cs-text" + (complete ? " complete" : "")}>
+        {complete ? "✓  " + w.t("project.complete") : "🛠️  " + w.t("project.optional")}
+      </div>
+      {markdown}
     </>
   );
 }

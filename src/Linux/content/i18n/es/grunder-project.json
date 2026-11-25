@@ -1,0 +1,32 @@
+{
+  "title": "Proyecto: El detective de logs",
+  "tasks": {
+    "case-folder": {
+      "text": "Crea una carpeta para la investigación, `~/{{caseDir}}`, con la subcarpeta `{{evidence}}`, con **un solo** comando.",
+      "hint": "`mkdir -p` crea de una vez todas las carpetas del camino."
+    },
+    "copy-log": {
+      "text": "Asegura las pruebas: copia `~/{{documents}}/server.log` a `~/{{caseDir}}/{{evidence}}/`. El original debe quedarse donde está.",
+      "hint": "Copia con `cp`, no con `mv`: un detective nunca se lleva las pruebas de la escena del crimen."
+    },
+    "errors": {
+      "text": "Guarda todas las líneas del log con `ERROR` en el archivo `~/{{caseDir}}/{{errorsFile}}`.",
+      "hint": "`grep` encuentra las líneas y `>` las envía a un archivo en lugar de a la pantalla."
+    },
+    "count-warnings": {
+      "text": "¿Cuántas advertencias hay? Cuenta las líneas con `WARN`, en mayúsculas o minúsculas, y escribe el número como primera línea del informe `~/{{caseDir}}/{{caseReport}}`.",
+      "hint": "`grep -i` no distingue entre mayúsculas y minúsculas, y `wc -l` cuenta las líneas. Conéctalos con un pipe y termina con `>`."
+    },
+    "first-error": {
+      "text": "¿Cuándo empezaron los problemas? Añade **la primera** línea de error al informe, sin sobrescribir el número que ya está ahí.",
+      "hint": "`head -n 1` toma solo la primera línea. `>>` añade al final del archivo, mientras que `>` lo sobrescribe."
+    },
+    "times": {
+      "text": "Añade al informe **solo las horas** de todos los errores, una por línea y ordenadas de la más reciente a la más antigua.",
+      "hint": "Los campos del log están separados por espacios y la hora es el campo 2: `cut -d' ' -f2`. `sort -r` ordena al revés. Construye un pipe de `grep` a `cut` y `sort`, y termina con `>>`."
+    },
+    "show-report": {
+      "text": "¡Caso resuelto! Muestra el informe completo en la terminal y comprueba que no falta nada."
+    }
+  }
+}

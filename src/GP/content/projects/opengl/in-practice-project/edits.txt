@@ -1,0 +1,160 @@
+=== task: own-level
+--- file: levels/five.lvl
+--- find:
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+--- replace:
+0 0 0 0 0 0 0 3 0 0 0 0 0 0 0
+0 0 0 0 0 0 3 3 0 0 0 0 0 0 0
+0 0 0 5 5 5 5 5 5 5 5 5 0 0 0
+0 0 5 5 4 4 5 5 5 4 4 5 5 0 0
+0 0 5 5 5 5 5 4 5 5 5 5 5 0 0
+0 0 5 4 5 5 5 5 5 5 5 4 5 0 0
+0 0 0 5 4 4 4 4 4 4 4 5 0 0 0
+1 1 0 0 5 5 5 5 5 5 5 0 0 1 1
+--- file: main.cpp
+--- find:
+    GameLevel four; LoadLevel(four, "levels/four.lvl", game.Width, game.Height / 2);
+    game.Levels.push_back(one);
+    game.Levels.push_back(two);
+    game.Levels.push_back(three);
+    game.Levels.push_back(four);
+    game.Level = 0;
+--- replace:
+    GameLevel four; LoadLevel(four, "levels/four.lvl", game.Width, game.Height / 2);
+    GameLevel five; LoadLevel(five, "levels/five.lvl", game.Width, game.Height / 2);
+    game.Levels.push_back(one);
+    game.Levels.push_back(two);
+    game.Levels.push_back(three);
+    game.Levels.push_back(four);
+    game.Levels.push_back(five);
+    // the fair's own level comes first
+    game.Level = 4;
+
+=== task: level-menu
+--- file: main.cpp
+--- find:
+            game.Level = (game.Level + 1) % 4;
+--- replace:
+            game.Level = (game.Level + 1) % 5;
+--- file: main.cpp
+--- find:
+                game.Level = 3;
+--- replace:
+                game.Level = 4;
+--- file: main.cpp
+--- find:
+        LoadLevel(game.Levels[3], "levels/four.lvl", game.Width, game.Height / 2);
+
+--- replace:
+        LoadLevel(game.Levels[3], "levels/four.lvl", game.Width, game.Height / 2);
+    else if (game.Level == 4)
+        LoadLevel(game.Levels[4], "levels/five.lvl", game.Width, game.Height / 2);
+
+=== task: score
+--- file: main.cpp
+--- find:
+    unsigned int            Lives = 3;
+--- replace:
+    unsigned int            Lives = 3;
+    unsigned int            Score = 0;
+--- file: main.cpp
+--- find:
+                    box.Destroyed = true;
+--- replace:
+                    box.Destroyed = true;
+                    game.Score += 10;
+--- file: main.cpp
+--- find:
+    game.Lives = 3;
+}
+--- replace:
+    game.Lives = 3;
+    game.Score = 0;
+}
+--- file: main.cpp
+--- find:
+        RenderText(Text, "Lives:" + std::to_string(game.Lives), 5.0f, 5.0f, 1.0f);
+--- replace:
+        RenderText(Text, "Lives:" + std::to_string(game.Lives), 5.0f, 5.0f, 1.0f);
+        RenderText(Text, "Score:" + std::to_string(game.Score), game.Width - 120.0f, 5.0f, 1.0f);
+
+=== task: sparks
+--- file: main.cpp
+--- find:
+    particle.Color = glm::vec4(rColor, rColor, rColor, 1.0f);
+--- replace:
+    // golden sparks: full red, less green, hardly any blue
+    particle.Color = glm::vec4(rColor, rColor * 0.7f, rColor * 0.1f, 1.0f);
+--- file: main.cpp
+--- find:
+ParticleGenerator Particles;
+--- replace:
+ParticleGenerator Particles;
+GameObject     Sparkler; // a fixed point the fair's sparks rise from
+--- file: main.cpp
+--- find:
+    InitParticles(Particles);
+--- replace:
+    InitParticles(Particles);
+    // the sparkler stands at the left, in front of the hills; its sparks rise (they move against its velocity)
+    Sparkler.Position = glm::vec2(120.0f, 500.0f);
+    Sparkler.Velocity = glm::vec2(0.0f, 1200.0f);
+--- file: main.cpp
+--- find:
+    Update(Particles, dt, Ball, 2, glm::vec2(Ball.Radius / 2.0f));
+--- replace:
+    Update(Particles, dt, Ball, 2, glm::vec2(Ball.Radius / 2.0f));
+    Update(Particles, dt, Sparkler, 2);
+
+=== task: extra-life
+--- file: main.cpp
+--- find:
+    if (ShouldSpawn(15)) // Negative powerups should spawn more often
+--- replace:
+    if (ShouldSpawn(100)) // an extra life: rarer than the others (1 in 100)
+        game.PowerUps.push_back(MakePowerUp("extra-life", glm::vec3(1.0f, 0.4f, 0.6f), 0.0f, block.Position, GetTexture("powerup_increase").ID));
+    if (ShouldSpawn(15)) // Negative powerups should spawn more often
+--- file: main.cpp
+--- find:
+    else if (powerUp.Type == "confuse")
+    {
+        if (!Effects.Chaos)
+--- replace:
+    else if (powerUp.Type == "extra-life")
+    {
+        ++Hedgerow.Lives;
+    }
+    else if (powerUp.Type == "confuse")
+    {
+        if (!Effects.Chaos)
+--- file: main.cpp
+--- find:
+    Ball = MakeBallObject(ballPos, BALL_RADIUS, INITIAL_BALL_VELOCITY, GetTexture("ball").ID);
+--- replace:
+    Ball = MakeBallObject(ballPos, BALL_RADIUS, INITIAL_BALL_VELOCITY, GetTexture("ball").ID);
+    // the fair's welcome gift: an extra life falls from the middle of the screen onto the paddle
+    game.PowerUps.push_back(MakePowerUp("extra-life", glm::vec3(1.0f, 0.4f, 0.6f), 0.0f, glm::vec2(370.0f, 300.0f), GetTexture("powerup_increase").ID));
+
+=== task: fade-in
+--- file: post_processing.fs
+--- find:
+uniform bool shake;
+--- replace:
+uniform bool shake;
+uniform float time;
+--- file: post_processing.fs
+--- find:
+        color = texture(scene, TexCoords);
+    }
+--- replace:
+        color = texture(scene, TexCoords);
+    }
+    // the show opens with a fade from black: full brightness after two seconds
+    color.rgb *= clamp(time / 2.0, 0.0, 1.0);

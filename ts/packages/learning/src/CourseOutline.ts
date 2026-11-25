@@ -20,4 +20,9 @@ export class CourseOutline {
   get examCount(): number {
     return this.parts.filter((p) => p.hasExam).length;
   }
+
+  /** The number of (optional) projects in the course. */
+  get projectCount(): number {
+    return this.parts.filter((p) => p.hasProject).length;
+  }
 }

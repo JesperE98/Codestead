@@ -1,0 +1,32 @@
+{
+  "title": "Projet : Le détective des logs",
+  "tasks": {
+    "case-folder": {
+      "text": "Créez un dossier pour l'enquête, `~/{{caseDir}}`, avec le sous-dossier `{{evidence}}` – en **une seule** commande.",
+      "hint": "`mkdir -p` crée tous les dossiers du chemin en une fois."
+    },
+    "copy-log": {
+      "text": "Mettez les preuves en sécurité : copiez `~/{{documents}}/server.log` dans `~/{{caseDir}}/{{evidence}}/`. L'original doit rester à sa place.",
+      "hint": "Copiez avec `cp`, pas avec `mv` – un détective ne déplace jamais les preuves de la scène du crime."
+    },
+    "errors": {
+      "text": "Enregistrez toutes les lignes du log contenant `ERROR` dans le fichier `~/{{caseDir}}/{{errorsFile}}`.",
+      "hint": "`grep` trouve les lignes et `>` les envoie dans un fichier au lieu de l'écran."
+    },
+    "count-warnings": {
+      "text": "Combien y a-t-il d'avertissements ? Comptez les lignes avec `WARN` – en majuscules ou en minuscules – et écrivez le nombre en première ligne du rapport `~/{{caseDir}}/{{caseReport}}`.",
+      "hint": "`grep -i` ignore les majuscules et les minuscules, et `wc -l` compte les lignes. Reliez-les par un pipe et terminez par `>`."
+    },
+    "first-error": {
+      "text": "Quand les ennuis ont-ils commencé ? Ajoutez **la première** ligne d'erreur au rapport – sans écraser le nombre qui s'y trouve déjà.",
+      "hint": "`head -n 1` ne garde que la première ligne. `>>` ajoute à la fin du fichier, alors que `>` l'écrase."
+    },
+    "times": {
+      "text": "Ajoutez **seulement les heures** de toutes les erreurs au rapport, une par ligne, triées de la plus récente à la plus ancienne.",
+      "hint": "Les champs du log sont séparés par des espaces, et l'heure est le champ 2 : `cut -d' ' -f2`. `sort -r` trie à l'envers. Construisez un pipe de `grep` à `cut` puis `sort`, et terminez par `>>`."
+    },
+    "show-report": {
+      "text": "Affaire résolue ! Affichez tout le rapport dans le terminal et vérifiez que rien ne manque."
+    }
+  }
+}

@@ -1,0 +1,64 @@
+=== task: lamps
+--- file: main.cpp
+--- find:
+    // positions
+    std::vector<glm::vec3> lightPositions;
+    lightPositions.push_back(glm::vec3( 0.0f, 0.5f,  1.5f));
+    lightPositions.push_back(glm::vec3(-4.0f, 0.5f, -3.0f));
+    lightPositions.push_back(glm::vec3( 3.0f, 0.5f,  1.0f));
+    lightPositions.push_back(glm::vec3(-.8f,  2.4f, -1.0f));
+    // colors
+    std::vector<glm::vec3> lightColors;
+    lightColors.push_back(glm::vec3(5.0f,   5.0f,  5.0f));
+    lightColors.push_back(glm::vec3(10.0f,  0.0f,  0.0f));
+    lightColors.push_back(glm::vec3(0.0f,   0.0f,  15.0f));
+    lightColors.push_back(glm::vec3(0.0f,   5.0f,  0.0f));
+--- replace:
+    // positions: four lanterns in two rows along the boardwalk, 1.5 above the boards
+    std::vector<glm::vec3> lightPositions;
+    lightPositions.push_back(glm::vec3(-2.5f, 1.0f, -1.0f));
+    lightPositions.push_back(glm::vec3( 2.5f, 1.0f, -1.0f));
+    lightPositions.push_back(glm::vec3(-2.5f, 1.0f, -5.0f));
+    lightPositions.push_back(glm::vec3( 2.5f, 1.0f, -5.0f));
+    // colors: warm sodium light, far brighter than 1.0
+    std::vector<glm::vec3> lightColors;
+    lightColors.push_back(glm::vec3(10.0f, 6.0f, 2.0f));
+    lightColors.push_back(glm::vec3(10.0f, 6.0f, 2.0f));
+    lightColors.push_back(glm::vec3(10.0f, 6.0f, 2.0f));
+    lightColors.push_back(glm::vec3(10.0f, 6.0f, 2.0f));
+=== task: moonlight
+--- file: bloom.fs
+--- find:
+    vec3 ambient = 0.0 * color;
+--- replace:
+    vec3 ambient = vec3(0.02, 0.03, 0.08) * color; // faint, cold moonlight
+=== task: wet-boards
+--- file: bloom.fs
+--- find:
+        vec3 result = lights[i].Color * diff * color;
+--- replace:
+        vec3 result = lights[i].Color * diff * color;
+        // specular (Blinn-Phong): the wet boards mirror the lamps
+        vec3 halfwayDir = normalize(lightDir + viewDir);
+        float spec = pow(max(dot(normal, halfwayDir), 0.0), 64.0);
+        result += lights[i].Color * spec;
+=== task: mist
+--- file: bloom_final.fs
+--- find:
+    hdrColor += bloomColor; // additive blending
+--- replace:
+    hdrColor += bloomColor * 2.0; // additive blending: a misty night, twice the glow
+=== task: exposure
+--- file: main.cpp
+--- find:
+float exposure = 1.0f;
+--- replace:
+float exposure = 0.25f;
+=== task: flicker
+--- file: main.cpp
+--- find:
+        // set lighting uniforms
+--- replace:
+        // the lamp at the back left flickers: its light dips and comes back
+        lightColors[2] = glm::vec3(10.0f, 6.0f, 2.0f) * (0.55f + 0.45f * sin(currentFrame * 6.0f));
+        // set lighting uniforms

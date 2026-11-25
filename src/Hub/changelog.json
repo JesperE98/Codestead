@@ -1,5 +1,32 @@
 [
   {
+    "version": "0.2.9",
+    "date": "2026-11-25",
+    "changes": {
+      "en": [
+        "**Removing a tool on Windows**: right after a tool has been closed, Windows can keep its files locked for several seconds while the tool's last helper processes shut down. Removing it now waits up to about 15 seconds for that instead of 3, so it no longer fails with “Permission denied”."
+      ],
+      "sv": [
+        "**Ta bort ett verktyg i Windows**: precis efter att ett verktyg har stängts kan Windows hålla dess filer låsta i flera sekunder medan verktygets sista hjälpprocesser avslutas. Att ta bort det väntar nu upp till ungefär 15 sekunder på det i stället för 3, så det misslyckas inte längre med ”Permission denied”."
+      ],
+      "de": [
+        "**Ein Tool unter Windows entfernen**: Direkt nachdem ein Tool geschlossen wurde, kann Windows seine Dateien noch einige Sekunden gesperrt halten, während die letzten Hilfsprozesse des Tools beendet werden. Das Entfernen wartet darauf jetzt bis zu etwa 15 Sekunden statt 3 und scheitert nicht mehr mit „Permission denied“."
+      ],
+      "fr": [
+        "**Supprimer un outil sous Windows** : juste après la fermeture d'un outil, Windows peut garder ses fichiers verrouillés plusieurs secondes, le temps que ses derniers processus auxiliaires s'arrêtent. La suppression attend maintenant jusqu'à 15 secondes environ au lieu de 3, et n'échoue plus avec « Permission denied »."
+      ],
+      "es": [
+        "**Quitar una herramienta en Windows**: justo después de cerrar una herramienta, Windows puede mantener sus archivos bloqueados varios segundos mientras terminan sus últimos procesos auxiliares. Ahora, al quitarla se espera hasta unos 15 segundos en lugar de 3, así que ya no falla con «Permission denied»."
+      ],
+      "zh": [
+        "**在 Windows 上移除工具**：工具刚关闭时，在它最后的辅助进程退出之前，Windows 可能会把它的文件锁定好几秒。现在移除工具时会为此最多等待约 15 秒（以前是 3 秒），不会再因“Permission denied”而失败。"
+      ],
+      "ja": [
+        "**Windows でのツールの削除**: ツールを閉じた直後は、最後の補助プロセスが終了するまで Windows がそのファイルを数秒間ロックしていることがあります。削除時の待ち時間を 3 秒から最大約 15 秒に延ばしたので、「Permission denied」で失敗しなくなりました。"
+      ]
+    }
+  },
+  {
     "version": "0.2.8",
     "date": "2026-11-20",
     "changes": {

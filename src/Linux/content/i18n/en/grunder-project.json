@@ -1,0 +1,32 @@
+{
+  "title": "Project: The log detective",
+  "tasks": {
+    "case-folder": {
+      "text": "Create a folder for the case, `~/{{caseDir}}`, with the subfolder `{{evidence}}` – with **one** command.",
+      "hint": "`mkdir -p` creates every folder along the way in one go."
+    },
+    "copy-log": {
+      "text": "Secure the evidence: copy `~/{{documents}}/server.log` to `~/{{caseDir}}/{{evidence}}/`. The original must stay where it is.",
+      "hint": "Copy with `cp`, not `mv` – a detective never moves the evidence from the crime scene."
+    },
+    "errors": {
+      "text": "Save every line with `ERROR` from the log in the file `~/{{caseDir}}/{{errorsFile}}`.",
+      "hint": "`grep` finds the lines and `>` sends them to a file instead of the screen."
+    },
+    "count-warnings": {
+      "text": "How many warnings are there? Count the lines with `WARN` – in upper or lower case – and write the number as the first line of the report `~/{{caseDir}}/{{caseReport}}`.",
+      "hint": "`grep -i` ignores upper and lower case, and `wc -l` counts the lines. Connect them with a pipe and finish with `>`."
+    },
+    "first-error": {
+      "text": "When did the trouble start? Add **the first** error line to the report – without overwriting the number that is already there.",
+      "hint": "`head -n 1` takes only the first line. `>>` adds to the end of the file, while `>` overwrites it."
+    },
+    "times": {
+      "text": "Add **only the times** of all the errors to the report, one per line and sorted from the latest to the earliest.",
+      "hint": "The fields of the log are separated by spaces, and the time is field 2: `cut -d' ' -f2`. `sort -r` sorts backwards. Build a pipe from `grep` through `cut` and `sort` and finish with `>>`."
+    },
+    "show-report": {
+      "text": "Case solved! Show the whole report in the terminal and check that everything is there."
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "title": "Proyecto: El robot de los informes",
+  "tasks": {
+    "robot-born": {
+      "text": "Crea el script `~/{{robotScript}}` con una línea shebang y una línea que imprima un título. Hazlo ejecutable y ejecútalo.",
+      "hint": "Escribe el script con `cat > ~/{{robotScript}} << '{{heredocEnd}}'`, empieza por `#!/bin/bash` y termina con `{{heredocEnd}}`. Luego `chmod +x` y `./{{robotScript}}` en tu directorio personal."
+    },
+    "usage": {
+      "text": "El robot recibe el archivo de log como primer argumento. Si se ejecuta **sin** argumentos, debe imprimir cómo se usa y terminar con un código de salida distinto de 0. ¡Pruébalo!",
+      "hint": "`$#` es el número de argumentos: compáralo con `-eq 0` en un `if`. `exit 1` termina el script con el código de salida 1."
+    },
+    "missing-file": {
+      "text": "Si el archivo del argumento no existe, el robot debe decirlo y terminar con un código de salida distinto de 0. Pruébalo con un nombre de archivo que no exista.",
+      "hint": "`[ -f \"$1\" ]` es verdadero si el archivo existe, y `!` invierte la condición. Los mensajes de error conviene enviarlos a stderr con `>&2`."
+    },
+    "levels": {
+      "text": "Ahora lo importante: ejecutado sobre `~/{{documents}}/server.log`, el robot debe imprimir cuántas líneas tiene el log de cada nivel, contadas con `awk`. ¡`WARN` y `warn` son el mismo nivel!",
+      "hint": "El nivel es el campo 3: `awk '{print $3}' \"$1\"`. Pásalo a mayúsculas con `toupper($3)` y cuenta después con `sort | uniq -c`."
+    },
+    "error-list": {
+      "text": "Debajo de los números, el informe debe listar cada error, con hora y mensaje pero **sin** la fecha, que de todos modos es la misma en todas las líneas. Quita la fecha con `sed`.",
+      "hint": "`grep ERROR \"$1\"` saca los errores, y `sed 's/^[0-9-]* //'` quita todo hasta el primer espacio."
+    },
+    "schedule": {
+      "text": "Programa el robot: debe ejecutarse sobre `~/{{documents}}/server.log` a las 06:30 de lunes a viernes, y su salida debe añadirse a `~/{{robotLog}}`. Conserva tus tareas antiguas.",
+      "hint": "Minuto 30, hora 6, día de la semana 1-5. Añade la tarea sin borrar las antiguas con `(crontab -l; echo '…') | crontab -`, y termina la línea de la tarea con `>> ~/{{robotLog}} 2>&1`."
+    },
+    "rehearsal": {
+      "text": "Ensayo general: ejecuta a mano una vez el comando de la tarea, para que el informe de hoy acabe en `~/{{robotLog}}`.",
+      "hint": "Copia el comando que va después de los cinco campos de tiempo en `crontab -l` y ejecútalo. Luego mira el archivo con `cat`."
+    }
+  }
+}

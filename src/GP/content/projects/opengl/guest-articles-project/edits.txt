@@ -1,0 +1,112 @@
+=== task: sun
+--- file: main.cpp
+--- find:
+    // load entities: the root planet and a 10 x 10 grid of smaller planets around it, all children of the root
+    // -------------
+    Entity ourEntity;
+    ourEntity.pModel = &ourModel;
+    ourEntity.boundingVolume = generateAABB(ourModel);
+    setLocalPosition(ourEntity.transform, glm::vec3(0.0f, 0.0f, 0.0f));
+    const float scale = 0.5f;
+
+    {
+        Entity* lastEntity = &ourEntity;
+
+        for (unsigned int x = 0; x < 10; ++x)
+        {
+            for (unsigned int z = 0; z < 10; ++z)
+            {
+                addChild(ourEntity, ourModel);
+                lastEntity = &ourEntity.children.back();
+
+                // set transform values: 5 units apart, half the root's size
+                setLocalPosition(lastEntity->transform, glm::vec3(x * 5.0f - 22.5f, 0.0f, z * 5.0f - 22.5f));
+                setLocalScale(lastEntity->transform, glm::vec3(scale, scale, scale));
+            }
+        }
+    }
+    updateSelfAndChild(ourEntity, glm::mat4(1.0f));
+--- replace:
+    // load entities: the orrery - the sun at the root of the scene graph, one and a half times the model's size
+    // -------------
+    Entity ourEntity;
+    ourEntity.pModel = &ourModel;
+    ourEntity.boundingVolume = generateAABB(ourModel);
+    setLocalPosition(ourEntity.transform, glm::vec3(0.0f, 0.0f, 0.0f));
+    setLocalScale(ourEntity.transform, glm::vec3(1.5f, 1.5f, 1.5f));
+    updateSelfAndChild(ourEntity, glm::mat4(1.0f));
+--- file: main.cpp
+--- find:
+        // turn the root about its y axis (20 degrees per second): its children follow it
+        setLocalRotation(ourEntity.transform, glm::vec3(0.0f, 20.0f * currentFrame, 0.0f));
+        updateSelfAndChild(ourEntity, glm::mat4(1.0f));
+--- replace:
+        // the sun stands still on its stand: only what changed is updated
+        updateSelfAndChild(ourEntity, glm::mat4(1.0f));
+
+=== task: planets
+--- file: main.cpp
+--- find:
+    setLocalScale(ourEntity.transform, glm::vec3(1.5f, 1.5f, 1.5f));
+    updateSelfAndChild(ourEntity, glm::mat4(1.0f));
+--- replace:
+    setLocalScale(ourEntity.transform, glm::vec3(1.5f, 1.5f, 1.5f));
+
+    // the three planets: children of the sun, so their positions and sizes are in the sun's units
+    const float planetDistances[3] = { 2.4f, 4.0f, 6.0f }; // Pip, Bramble, Old Gourd
+    const float planetScales[3] = { 0.2f, 0.35f, 0.4f };
+    for (unsigned int i = 0; i < 3; ++i)
+    {
+        addChild(ourEntity, ourModel);
+        Entity& planet = ourEntity.children.back();
+        setLocalPosition(planet.transform, glm::vec3(planetDistances[i], 0.0f, 0.0f));
+        setLocalScale(planet.transform, glm::vec3(planetScales[i], planetScales[i], planetScales[i]));
+    }
+    updateSelfAndChild(ourEntity, glm::mat4(1.0f));
+
+=== task: orbits
+--- file: main.cpp
+--- find:
+        // the sun stands still on its stand: only what changed is updated
+        updateSelfAndChild(ourEntity, glm::mat4(1.0f));
+--- replace:
+        // every planet on its own orbit, counter-clockwise seen from above: Pip 80, Bramble 40, Old Gourd 20 degrees per second
+        const float orbitDistances[3] = { 2.4f, 4.0f, 6.0f };
+        const float orbitSpeeds[3] = { 80.0f, 40.0f, 20.0f };
+        for (unsigned int i = 0; i < 3; ++i)
+        {
+            float angle = glm::radians(orbitSpeeds[i] * currentFrame);
+            setLocalPosition(ourEntity.children[i].transform, glm::vec3(orbitDistances[i] * cos(angle), 0.0f, -orbitDistances[i] * sin(angle)));
+        }
+        // the sun stands still on its stand: only what changed is updated
+        updateSelfAndChild(ourEntity, glm::mat4(1.0f));
+
+=== task: moon
+--- file: main.cpp
+--- find:
+        setLocalScale(planet.transform, glm::vec3(planetScales[i], planetScales[i], planetScales[i]));
+    }
+--- replace:
+        setLocalScale(planet.transform, glm::vec3(planetScales[i], planetScales[i], planetScales[i]));
+    }
+    // Bramble's moon: a child of Bramble (added after all the planets: adding to the sun's children could move them in memory)
+    addChild(ourEntity.children[1], ourModel);
+    Entity& moon = ourEntity.children[1].children.back();
+    setLocalPosition(moon.transform, glm::vec3(2.5f, 0.0f, 0.0f));
+    setLocalScale(moon.transform, glm::vec3(0.35f, 0.35f, 0.35f));
+--- file: main.cpp
+--- find:
+        // the sun stands still on its stand: only what changed is updated
+--- replace:
+        // Bramble turns about its own axis (120 degrees per second) and carries its moon round with it
+        setLocalRotation(ourEntity.children[1].transform, glm::vec3(0.0f, 120.0f * currentFrame, 0.0f));
+        // the sun stands still on its stand: only what changed is updated
+
+=== task: counter
+--- file: main.cpp
+--- find:
+        // show how many entities were drawn in the window's title
+        std::string title = "LearnOpenGL - drawn: " + std::to_string(display) + " / " + std::to_string(total);
+--- replace:
+        // show how many of the orrery's bodies were drawn and how many the frustum culled in the window's title
+        std::string title = "Orrery - drawn: " + std::to_string(display) + ", culled: " + std::to_string(total - display);

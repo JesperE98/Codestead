@@ -1,0 +1,57 @@
+{
+  "title": "Project: A tiny solar system",
+  "tasks": {
+    "night-sky": {
+      "text": "Night falls: clear the window to a night sky – almost black, perhaps with a hint of blue.",
+      "hint": {
+        "opengl": "It is the clear colour of the render loop: `glClearColor`. Something like (0.02, 0.02, 0.08) – every channel well below the old teal.",
+        "vulkan": "It is the clear value of the colour attachment in `recordCommandBuffer()`: `clearValues[0].color`. Something like (0.02, 0.02, 0.08).",
+        "d3d12": "It is the `clearColor` array that `PopulateCommandList` hands `ClearRenderTargetView`. Something like (0.02, 0.02, 0.08)."
+      }
+    },
+    "observatory": {
+      "text": "A seat in the gallery: start the camera above and behind the middle of the world, looking down at it from an angle – for example 6 units up and 8 back – and keep the free camera working.",
+      "hint": {
+        "opengl": "Change the globals: `cameraPos` (0, 6, 8) and `cameraFront` pointing back at the origin, (0, -0.6, -0.8). Start `pitch` at about -36.87° (its sine is -0.6), so the first mouse movement doesn't make the view jump.",
+        "vulkan": "Change the globals: `cameraPos` (0, 6, 8) and `cameraFront` pointing back at the origin, (0, -0.6, -0.8). Start `pitch` at about -36.87° (its sine is -0.6), so the first mouse movement doesn't make the view jump.",
+        "d3d12": "Change the global `XMVECTOR`s: `cameraPos` (0, 6, 8) and `cameraFront` pointing back at the origin, (0, -0.6, -0.8). Start `pitch` at about -36.87° (its sine is -0.6), so the first mouse movement doesn't make the view jump."
+      }
+    },
+    "sun": {
+      "text": "Let there be a sun: instead of the ten crates, draw one crate in the middle of the world, about twice as big, slowly turning around its own vertical (y) axis.",
+      "hint": {
+        "opengl": "Replace the `for` loop with one draw. Its model matrix: `glm::rotate` by the time around (0, 1, 0), then `glm::scale` by 2 – no translation, the sun stays at the origin. The cube positions are not needed any more.",
+        "vulkan": "Replace the `for` loop in `recordCommandBuffer()` with one push and one draw. The model matrix: `glm::rotate` by `glfwGetTime()` around (0, 1, 0), then `glm::scale` by 2 – no translation, the sun stays at the origin.",
+        "d3d12": "Replace the `for` loop in `PopulateCommandList` with one draw. The model matrix: `XMMatrixScaling(2.0f, 2.0f, 2.0f) * XMMatrixRotationY(…)` with the time – no translation, the sun stays at the origin."
+      }
+    },
+    "planet": {
+      "text": "A planet: a second, smaller crate that circles the sun at a fixed distance, a few units out.",
+      "hint": {
+        "opengl": "Keep the orbit in a matrix of its own: `rotate` by the time around (0, 1, 0), then `translate` out along x. Read from the bottom up: first moved out, then turned around the sun. Scale a copy of it for the draw.",
+        "vulkan": "Keep the orbit in a matrix of its own: `rotate` by the time around (0, 1, 0), then `translate` out along x. Read from the bottom up: first moved out, then turned around the sun. Scale a copy of it, push it and draw.",
+        "d3d12": "Keep the orbit in a matrix of its own: `XMMatrixTranslation(3.0f, 0.0f, 0.0f) * XMMatrixRotationY(…)` – first moved out, then turned around the sun. The planet's model matrix is a scaling times that."
+      }
+    },
+    "moon": {
+      "text": "A moon: a third, even smaller crate that circles the planet while the planet circles the sun.",
+      "hint": {
+        "opengl": "Start the moon's matrix from the planet's orbit matrix (before its scale): `glm::rotate(planet, …)` faster, then `translate` a little way out, then a small `scale`.",
+        "vulkan": "Start the moon's matrix from the planet's orbit matrix (before its scale): `glm::rotate(planet, …)` faster, then `translate` a little way out, then a small `scale`.",
+        "d3d12": "End the moon's chain with the planet's orbit matrix (before its scale): scaling, then a short translation, then a faster rotation around y, then `* planet`."
+      }
+    },
+    "colours": {
+      "text": {
+        "opengl": "Colour: give every body its own colour – a uniform in `shader.fs`, set before each draw – and mix it with the crate's texture so the wood still shows.",
+        "vulkan": "Colour: give every body its own colour – after the model matrix in the push constants, read by the fragment shader – and mix it with the crate's texture so the wood still shows.",
+        "d3d12": "Colour: give every body its own colour – after the model matrix in the root constants, read by the pixel shader – and blend it with the crate's texture so the wood still shows."
+      },
+      "hint": {
+        "opengl": "`uniform vec3 bodyColor;` in `shader.fs`, `FragColor = mix(texColor, vec4(bodyColor, 1.0), 0.6);`, and `ourShader.setVec3(\"bodyColor\", …)` before each `glDrawArrays`.",
+        "vulkan": "Add `vec3 color` to the push constant block in both shaders and `glm::vec3 color` to the C++ struct; the range and every `vkCmdPushConstants` need `VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT`.",
+        "d3d12": "Add `float3 color` to `cbuffer ModelConstants` and `XMFLOAT3 color` to the C++ struct; make the root constants visible to every stage (`D3D12_SHADER_VISIBILITY_ALL`) and `lerp` in `PSMain`."
+      }
+    }
+  }
+}
