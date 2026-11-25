@@ -1,0 +1,33 @@
+{
+  "title": "项目：周一来了位新同事",
+  "tasks": {
+    "account": {
+      "text": "为 `{{newUser}}` 创建一个账户——带主目录、以 `/bin/bash` 为 shell，并设置密码，让这个账户可以登录。",
+      "hint": "带 `-m` 和 `-s` 的 `useradd` 创建账户，`passwd` 设置密码。两者都需要 `sudo`。"
+    },
+    "team": {
+      "text": "创建组 `{{teamGroup}}`，把 `{{newUser}}` 和你自己都加进去。`{{newUser}}` 不能有 sudo 权限——暂时还不能。",
+      "hint": "`groupadd` 创建组，`usermod -aG` 一次添加一个成员。别忘了 `-a`！"
+    },
+    "shared": {
+      "text": "创建共享文件夹 `/srv/{{teamGroup}}`。它应该属于组 `{{teamGroup}}`，组可以读、写和进入它——其他人什么都不能做。",
+      "hint": "先 `sudo mkdir`，然后用 `chgrp` 设置组、用 `chmod` 设置权限。所有者和组都是 *rwx*、其他人什么都没有，对应的数字是 `770`。"
+    },
+    "try-access": {
+      "text": "试用这个账户：切换成 `{{newUser}}`，在 `/srv/{{teamGroup}}` 中创建一个文件，然后回到你自己的账户。",
+      "hint": "用你设置的密码执行 `su - {{newUser}}`，然后 `touch`，最后 `exit`。"
+    },
+    "welcome-pack": {
+      "text": "第一周的阅读材料 `{{report}}` 在 U 盘（`/dev/sdb1`）上。在 `{{newUser}}` 的主目录里放一份副本——文件应该归 `{{newUser}}` 所有，而不是 root——完成后卸载 U 盘。",
+      "hint": "用 `sudo mount` 把 U 盘挂载到 `/mnt/usb`。如果以 `{{newUser}}` 的身份复制（`sudo -u {{newUser}} cp …`），副本就归 `{{newUser}}` 所有。最后执行 `sudo umount`——那时你自己不要待在 `/mnt/usb` 里。"
+    },
+    "intranet": {
+      "text": "团队的内网是服务 `myserver`。用 `systemctl` 确保它现在正在运行，**并且**在计算机开机时自动启动。",
+      "hint": "`systemctl is-active` 和 `is-enabled` 显示当前状态。`enable --now` 一次搞定两件事。"
+    },
+    "monday": {
+      "text": "周一早上的彩排：重启计算机，然后在 journal 中证明内网在这次启动时自动启动了。",
+      "hint": "`sudo systemctl reboot` 会重启。之后用 `journalctl` 加上表示服务的 `-u` 和表示本次启动的 `-b`，就能看到你要找的那几行。"
+    }
+  }
+}

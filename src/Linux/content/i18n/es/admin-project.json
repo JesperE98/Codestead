@@ -1,0 +1,33 @@
+{
+  "title": "Proyecto: Incorporación el lunes",
+  "tasks": {
+    "account": {
+      "text": "Crea una cuenta para `{{newUser}}`, con directorio personal, `/bin/bash` como shell y una contraseña, para que se pueda iniciar sesión con ella.",
+      "hint": "`useradd` con `-m` y `-s` crea la cuenta, y `passwd` fija la contraseña. Las dos cosas necesitan `sudo`."
+    },
+    "team": {
+      "text": "Crea el grupo `{{teamGroup}}` y añade tanto a `{{newUser}}` como a ti. `{{newUser}}` no debe tener derechos de sudo; todavía no.",
+      "hint": "`groupadd` crea el grupo y `usermod -aG` añade un miembro cada vez. ¡No olvides la `-a`!"
+    },
+    "shared": {
+      "text": "Crea la carpeta compartida `/srv/{{teamGroup}}`. Debe pertenecer al grupo `{{teamGroup}}`, y el grupo debe poder leer, escribir y entrar en ella; los demás, nada.",
+      "hint": "`sudo mkdir`, luego `chgrp` para el grupo y `chmod` para los permisos. Las cifras para *rwx* para el propietario y el grupo y nada para los demás son `770`."
+    },
+    "try-access": {
+      "text": "Prueba la cuenta: conviértete en `{{newUser}}`, crea un archivo en `/srv/{{teamGroup}}` y vuelve después a tu propia cuenta.",
+      "hint": "`su - {{newUser}}` con la contraseña que elegiste, luego `touch` y por último `exit`."
+    },
+    "welcome-pack": {
+      "text": "La lectura de la primera semana, `{{report}}`, está en la memoria USB (`/dev/sdb1`). Pon una copia en el directorio personal de `{{newUser}}` (el archivo debe pertenecer a `{{newUser}}`, no a root) y desmonta la memoria cuando termines.",
+      "hint": "Monta la memoria en `/mnt/usb` con `sudo mount`. Si copias como `{{newUser}}` (`sudo -u {{newUser}} cp …`), la copia es de `{{newUser}}`. Termina con `sudo umount`, y no estés tú dentro de `/mnt/usb` en ese momento."
+    },
+    "intranet": {
+      "text": "La intranet del equipo es el servicio `myserver`. Asegúrate con `systemctl` de que se está ejecutando ahora **y** de que arranca solo cuando arranca el ordenador.",
+      "hint": "`systemctl is-active` y `is-enabled` muestran el estado. `enable --now` se encarga de las dos cosas a la vez."
+    },
+    "monday": {
+      "text": "Ensayo general para el lunes por la mañana: reinicia el ordenador y muestra después en el journal que la intranet arrancó sola en este arranque.",
+      "hint": "`sudo systemctl reboot` reinicia. Después, `journalctl` con `-u` para el servicio y `-b` para este arranque muestra las líneas que buscas."
+    }
+  }
+}

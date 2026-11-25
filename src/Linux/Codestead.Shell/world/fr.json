@@ -54,7 +54,11 @@
     "knockScript": "toctoc.sh",
     "clubVar": "REPAIRE",
     "wardrobe": "armoire",
-    "clubBackup": "repaire-sauvegarde.tar.gz"
+    "clubBackup": "repaire-sauvegarde.tar.gz",
+    "newUser": "camille",
+    "teamGroup": "assistance",
+    "incidentDir": "panne",
+    "incidentLog": "journal.txt"
   },
   "words": {
     "userFull": "Élève",

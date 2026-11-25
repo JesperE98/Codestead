@@ -54,7 +54,11 @@
     "knockScript": "knock.sh",
     "clubVar": "CLUBHOUSE",
     "wardrobe": "wardrobe",
-    "clubBackup": "clubhouse-backup.tar.gz"
+    "clubBackup": "clubhouse-backup.tar.gz",
+    "newUser": "alex",
+    "teamGroup": "helpdesk",
+    "incidentDir": "incident",
+    "incidentLog": "log.txt"
   },
   "words": {
     "userFull": "Студент",

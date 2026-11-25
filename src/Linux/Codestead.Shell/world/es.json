@@ -54,7 +54,11 @@
     "knockScript": "toctoc.sh",
     "clubVar": "GUARIDA",
     "wardrobe": "armario",
-    "clubBackup": "guarida-copia.tar.gz"
+    "clubBackup": "guarida-copia.tar.gz",
+    "newUser": "dani",
+    "teamGroup": "soporte",
+    "incidentDir": "incidencia",
+    "incidentLog": "registro.txt"
   },
   "words": {
     "userFull": "Alumno",

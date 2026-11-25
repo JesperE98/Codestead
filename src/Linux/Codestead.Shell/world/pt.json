@@ -54,7 +54,11 @@
     "knockScript": "toctoc.sh",
     "clubVar": "ESCONDERIJO",
     "wardrobe": "guarda-roupa",
-    "clubBackup": "esconderijo-backup.tar.gz"
+    "clubBackup": "esconderijo-backup.tar.gz",
+    "newUser": "rafa",
+    "teamGroup": "suporte",
+    "incidentDir": "incidente",
+    "incidentLog": "registro.txt"
   },
   "words": {
     "userFull": "Aluno",

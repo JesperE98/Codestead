@@ -1,0 +1,33 @@
+{
+  "title": "Project: A new colleague on Monday",
+  "tasks": {
+    "account": {
+      "text": "Create an account for `{{newUser}}` – with a home directory, `/bin/bash` as the shell and a password, so that the account can be logged in to.",
+      "hint": "`useradd` with `-m` and `-s` creates the account, and `passwd` sets the password. Both need `sudo`."
+    },
+    "team": {
+      "text": "Create the group `{{teamGroup}}` and add both `{{newUser}}` and yourself to it. `{{newUser}}` must not have sudo rights – not yet.",
+      "hint": "`groupadd` creates the group and `usermod -aG` adds one member at a time. Don't forget the `-a`!"
+    },
+    "shared": {
+      "text": "Create the shared folder `/srv/{{teamGroup}}`. It should belong to the group `{{teamGroup}}`, and the group should be able to read, write and enter it – everyone else nothing.",
+      "hint": "`sudo mkdir`, then `chgrp` for the group and `chmod` for the permissions. The digits for *rwx* for the owner and the group and nothing for others are `770`."
+    },
+    "try-access": {
+      "text": "Test the account: become `{{newUser}}`, create a file in `/srv/{{teamGroup}}` and then go back to your own account.",
+      "hint": "`su - {{newUser}}` with the password you chose, then `touch` and last `exit`."
+    },
+    "welcome-pack": {
+      "text": "The reading for the first week, `{{report}}`, is on the USB stick (`/dev/sdb1`). Put a copy in the home directory of `{{newUser}}` – the file should be owned by `{{newUser}}`, not by root – and unmount the stick when you are done.",
+      "hint": "Mount the stick on `/mnt/usb` with `sudo mount`. If you copy as `{{newUser}}` (`sudo -u {{newUser}} cp …`), `{{newUser}}` owns the copy. Finish with `sudo umount` – and don't stand in `/mnt/usb` yourself then."
+    },
+    "intranet": {
+      "text": "The team's intranet is the service `myserver`. Use `systemctl` to make sure it is running now **and** starts by itself when the computer boots.",
+      "hint": "`systemctl is-active` and `is-enabled` show the state. `enable --now` takes care of both at once."
+    },
+    "monday": {
+      "text": "Dress rehearsal for Monday morning: restart the computer and then show in the journal that the intranet started by itself on this boot.",
+      "hint": "`sudo systemctl reboot` restarts. Then `journalctl` with `-u` for the service and `-b` for this boot shows the lines you are looking for."
+    }
+  }
+}

@@ -54,7 +54,11 @@
     "knockScript": "klopfen.sh",
     "clubVar": "CLUBHAUS",
     "wardrobe": "kleiderschrank",
-    "clubBackup": "clubhaus-backup.tar.gz"
+    "clubBackup": "clubhaus-backup.tar.gz",
+    "newUser": "luca",
+    "teamGroup": "kundendienst",
+    "incidentDir": "stoerung",
+    "incidentLog": "protokoll.txt"
   },
   "words": {
     "userFull": "Schüler",

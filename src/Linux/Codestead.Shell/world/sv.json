@@ -54,7 +54,11 @@
     "knockScript": "knacka.sh",
     "clubVar": "KLUBBHUS",
     "wardrobe": "garderob",
-    "clubBackup": "klubbhus-backup.tar.gz"
+    "clubBackup": "klubbhus-backup.tar.gz",
+    "newUser": "robin",
+    "teamGroup": "kundtjanst",
+    "incidentDir": "storning",
+    "incidentLog": "logg.txt"
   },
   "words": {
     "userFull": "Elev",
