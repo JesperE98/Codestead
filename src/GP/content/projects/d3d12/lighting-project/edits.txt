@@ -1,0 +1,172 @@
+=== task: house-lights
+--- file: main.cpp
+--- find:
+    const float clearColor[] = { 0.1f, 0.1f, 0.1f, 1.0f };
+--- replace:
+    const float clearColor[] = { 0.01f, 0.01f, 0.01f, 1.0f };    // the theatre is dark
+--- file: main.cpp
+--- find:
+    // directional light
+    constantBufferData.dirLight.direction = XMFLOAT3(-0.2f, -1.0f, -0.3f);
+    constantBufferData.dirLight.ambient = XMFLOAT3(0.05f, 0.05f, 0.05f);
+    constantBufferData.dirLight.diffuse = XMFLOAT3(0.4f, 0.4f, 0.4f);
+    constantBufferData.dirLight.specular = XMFLOAT3(0.5f, 0.5f, 0.5f);
+--- replace:
+    // directional light: the hall's work light, switched off for the show
+    constantBufferData.dirLight.direction = XMFLOAT3(-0.2f, -1.0f, -0.3f);
+    constantBufferData.dirLight.ambient = XMFLOAT3(0.0f, 0.0f, 0.0f);
+    constantBufferData.dirLight.diffuse = XMFLOAT3(0.0f, 0.0f, 0.0f);
+    constantBufferData.dirLight.specular = XMFLOAT3(0.0f, 0.0f, 0.0f);
+
+=== task: gels
+--- file: main.cpp
+--- find:
+    XMFLOAT3( 0.0f,  0.0f, -3.0f)
+};
+--- replace:
+    XMFLOAT3( 0.0f,  0.0f, -3.0f)
+};
+
+// the colours of the point lights' gels: blue from the front, green, pink and red from behind the cast
+XMFLOAT3 pointLightColors[] =
+{
+    XMFLOAT3(0.2f, 0.3f, 1.0f),
+    XMFLOAT3(0.2f, 1.0f, 0.3f),
+    XMFLOAT3(1.0f, 0.3f, 0.8f),
+    XMFLOAT3(1.0f, 0.2f, 0.2f)
+};
+--- file: main.cpp
+--- find:
+    constantBufferData.pointLights[0].ambient = XMFLOAT3(0.05f, 0.05f, 0.05f);
+    constantBufferData.pointLights[0].diffuse = XMFLOAT3(0.8f, 0.8f, 0.8f);
+    constantBufferData.pointLights[0].specular = XMFLOAT3(1.0f, 1.0f, 1.0f);
+--- replace:
+    XMStoreFloat3(&constantBufferData.pointLights[0].ambient, 0.1f * XMLoadFloat3(&pointLightColors[0]));
+    constantBufferData.pointLights[0].diffuse = pointLightColors[0];
+    constantBufferData.pointLights[0].specular = pointLightColors[0];
+--- file: main.cpp
+--- find:
+    constantBufferData.pointLights[1].ambient = XMFLOAT3(0.05f, 0.05f, 0.05f);
+    constantBufferData.pointLights[1].diffuse = XMFLOAT3(0.8f, 0.8f, 0.8f);
+    constantBufferData.pointLights[1].specular = XMFLOAT3(1.0f, 1.0f, 1.0f);
+--- replace:
+    XMStoreFloat3(&constantBufferData.pointLights[1].ambient, 0.1f * XMLoadFloat3(&pointLightColors[1]));
+    constantBufferData.pointLights[1].diffuse = pointLightColors[1];
+    constantBufferData.pointLights[1].specular = pointLightColors[1];
+--- file: main.cpp
+--- find:
+    constantBufferData.pointLights[2].ambient = XMFLOAT3(0.05f, 0.05f, 0.05f);
+    constantBufferData.pointLights[2].diffuse = XMFLOAT3(0.8f, 0.8f, 0.8f);
+    constantBufferData.pointLights[2].specular = XMFLOAT3(1.0f, 1.0f, 1.0f);
+--- replace:
+    XMStoreFloat3(&constantBufferData.pointLights[2].ambient, 0.1f * XMLoadFloat3(&pointLightColors[2]));
+    constantBufferData.pointLights[2].diffuse = pointLightColors[2];
+    constantBufferData.pointLights[2].specular = pointLightColors[2];
+--- file: main.cpp
+--- find:
+    constantBufferData.pointLights[3].ambient = XMFLOAT3(0.05f, 0.05f, 0.05f);
+    constantBufferData.pointLights[3].diffuse = XMFLOAT3(0.8f, 0.8f, 0.8f);
+    constantBufferData.pointLights[3].specular = XMFLOAT3(1.0f, 1.0f, 1.0f);
+--- replace:
+    XMStoreFloat3(&constantBufferData.pointLights[3].ambient, 0.1f * XMLoadFloat3(&pointLightColors[3]));
+    constantBufferData.pointLights[3].diffuse = pointLightColors[3];
+    constantBufferData.pointLights[3].specular = pointLightColors[3];
+
+=== task: lamp-colours
+--- file: light_cube.hlsl
+--- find:
+// Root constants (root parameter 0): the lamp's model matrix.
+cbuffer ModelConstants : register(b0)
+{
+    float4x4 model;
+};
+--- replace:
+// Root constants (root parameter 0): the lamp's model matrix, and its colour.
+cbuffer ModelConstants : register(b0)
+{
+    float4x4 model;
+    float4x4 normalMatrix;    // not used by the lamp, but declared so that color is where main.cpp puts it
+    float3 color;             // the colour of the light this lamp stands for
+};
+--- file: light_cube.hlsl
+--- find:
+    return float4(1.0f, 1.0f, 1.0f, 1.0f); // set all 4 vector values to 1.0
+--- replace:
+    return float4(color, 1.0f);
+--- file: main.cpp
+--- find:
+    // The root constants: what the vertex shader sees as cbuffer ModelConstants.
+    // Two 4x4 matrices are 32 floats: 32 32-bit root constants.
+    struct ModelConstants
+    {
+        XMFLOAT4X4 model;
+        XMFLOAT4X4 normalMatrix;
+    };
+--- replace:
+    // The root constants: what the shaders see as cbuffer ModelConstants.
+    // Two 4x4 matrices and a colour are 35 floats: 35 32-bit root constants.
+    struct ModelConstants
+    {
+        XMFLOAT4X4 model;
+        XMFLOAT4X4 normalMatrix;
+        XMFLOAT3 color;    // read by the lamps' pixel shader
+    };
+--- file: main.cpp
+--- find:
+        // Root parameter 0: root constants for register b0 (the model and normal matrices).
+        // Only the vertex shader reads them.
+--- replace:
+        // Root parameter 0: root constants for register b0 (the model and normal matrices,
+        // and the lamp's colour). The vertex shader reads the matrices, the lamps' pixel
+        // shader the colour.
+--- file: main.cpp
+--- find:
+        rootParameters[0].InitAsConstants(sizeof(ModelConstants) / 4, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
+--- replace:
+        rootParameters[0].InitAsConstants(sizeof(ModelConstants) / 4, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
+--- file: main.cpp
+--- find:
+        XMMATRIX model = XMMatrixScaling(0.2f, 0.2f, 0.2f) * XMMatrixTranslation(pointLightPositions[i].x, pointLightPositions[i].y, pointLightPositions[i].z);
+        XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+--- replace:
+        XMMATRIX model = XMMatrixScaling(0.2f, 0.2f, 0.2f) * XMMatrixTranslation(pointLightPositions[i].x, pointLightPositions[i].y, pointLightPositions[i].z);
+        XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+        modelConstants.color = pointLightColors[i];    // each lamp shows its gel's colour
+
+=== task: follow-spot
+--- file: main.cpp
+--- find:
+    // spotLight
+    XMStoreFloat3(&constantBufferData.spotLight.position, cameraPos);
+    XMStoreFloat3(&constantBufferData.spotLight.direction, cameraFront);
+    constantBufferData.spotLight.ambient = XMFLOAT3(0.0f, 0.0f, 0.0f);
+    constantBufferData.spotLight.diffuse = XMFLOAT3(1.0f, 1.0f, 1.0f);
+    constantBufferData.spotLight.specular = XMFLOAT3(1.0f, 1.0f, 1.0f);
+--- replace:
+    // spotLight: the follow spot, hanging 2 units above the audience's heads (the camera),
+    // aimed at a point on the stage
+    XMVECTOR spotPos = XMVectorSet(0.0f, 2.0f, 3.0f, 0.0f);
+    XMVECTOR spotTarget = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);    // the star: container 0
+    XMStoreFloat3(&constantBufferData.spotLight.position, spotPos);
+    XMStoreFloat3(&constantBufferData.spotLight.direction, XMVector3Normalize(spotTarget - spotPos));
+    constantBufferData.spotLight.ambient = XMFLOAT3(0.0f, 0.0f, 0.0f);
+    constantBufferData.spotLight.diffuse = XMFLOAT3(1.0f, 0.9f, 0.7f);    // a warm white
+    constantBufferData.spotLight.specular = XMFLOAT3(1.0f, 0.9f, 0.7f);
+
+=== task: sweep
+--- file: main.cpp
+--- find:
+    XMVECTOR spotTarget = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);    // the star: container 0
+--- replace:
+    // The spot sweeps over the star: its target swings from x = -1 to x = 1 and back, once
+    // every π seconds (the time in seconds since the first frame).
+    static auto startTime = std::chrono::high_resolution_clock::now();
+    float time = std::chrono::duration<float, std::chrono::seconds::period>(currentFrame - startTime).count();
+    XMVECTOR spotTarget = XMVectorSet(std::sin(2.0f * time), 0.0f, 0.0f, 0.0f);
+
+=== task: polish
+--- file: main.cpp
+--- find:
+    constantBufferData.material.shininess = 32.0f;
+--- replace:
+    constantBufferData.material.shininess = 128.0f;    // polished for opening night: small, sharp highlights

@@ -1,0 +1,193 @@
+=== task: night-sky
+--- file: main.cpp
+--- find:
+    const float clearColor[] = { 0.2f, 0.3f, 0.3f, 1.0f };
+--- replace:
+    const float clearColor[] = { 0.02f, 0.02f, 0.08f, 1.0f }; // the night sky: almost black, a touch of blue
+
+=== task: observatory
+--- file: main.cpp
+--- find:
+XMVECTOR cameraPos   = XMVectorSet(0.0f, 0.0f,  3.0f, 0.0f);
+XMVECTOR cameraFront = XMVectorSet(0.0f, 0.0f, -1.0f, 0.0f);
+--- replace:
+// Up in the gallery: 6 units above the planets' plane and 8 back, looking down at the sun in the
+// middle (cameraFront points from there to the origin: (0, -6, -8) is 10 long, so (0, -0.6, -0.8)
+// has length 1).
+XMVECTOR cameraPos   = XMVectorSet(0.0f, 6.0f,  8.0f, 0.0f);
+XMVECTOR cameraFront = XMVectorSet(0.0f, -0.6f, -0.8f, 0.0f);
+--- file: main.cpp
+--- find:
+float pitch =  0.0f;
+--- replace:
+float pitch = -36.87f;   // the camera starts looking down: sin(pitch) = cameraFront.y = -0.6
+
+=== task: sun
+--- file: main.cpp
+--- find:
+    // World space positions of our cubes.
+    XMFLOAT3 cubePositions[] =
+    {
+        XMFLOAT3( 0.0f,  0.0f,  0.0f),
+        XMFLOAT3( 2.0f,  5.0f, -15.0f),
+        XMFLOAT3(-1.5f, -2.2f, -2.5f),
+        XMFLOAT3(-3.8f, -2.0f, -12.3f),
+        XMFLOAT3( 2.4f, -0.4f, -3.5f),
+        XMFLOAT3(-1.7f,  3.0f, -7.5f),
+        XMFLOAT3( 1.3f, -2.0f, -2.5f),
+        XMFLOAT3( 1.5f,  2.0f, -2.5f),
+        XMFLOAT3( 1.5f,  0.2f, -1.5f),
+        XMFLOAT3(-1.3f,  1.0f, -1.5f)
+    };
+
+    // Draw the cube 10 times, each with its own model matrix: rotate by 20 degrees
+    // per cube about the axis (1, 0.3, 0.5), then move it to its position.
+    for (UINT i = 0; i < 10; i++)
+    {
+        float angle = 20.0f * i;
+        if (i % 3 == 0)    // every 3rd cube (including the first) rotates with the time
+            angle = time * 25.0f;
+        XMMATRIX model = XMMatrixRotationAxis(XMVectorSet(1.0f, 0.3f, 0.5f, 0.0f), XMConvertToRadians(angle))
+            * XMMatrixTranslation(cubePositions[i].x, cubePositions[i].y, cubePositions[i].z);
+
+        // Root parameter 1: this cube's model matrix. Root constants are recorded with
+        // each draw, so every cube keeps its own.
+        ModelConstants modelConstants = {};
+        XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+        m_commandList->SetGraphicsRoot32BitConstants(1, sizeof(ModelConstants) / 4, &modelConstants, 0);
+
+        m_commandList->DrawInstanced(36, 1, 0, 0);
+    }
+--- replace:
+    // The solar system: every body is the same cube with its own model matrix. Root
+    // parameter 1 holds the model matrix; root constants are recorded with each draw,
+    // so every body keeps its own.
+    ModelConstants modelConstants = {};
+
+    // The sun: in the middle, twice as big, turning around its own (y) axis. DirectXMath
+    // multiplies from left to right: first scaled, then turned.
+    XMMATRIX model = XMMatrixScaling(2.0f, 2.0f, 2.0f) * XMMatrixRotationY(XMConvertToRadians(time * 20.0f));
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    m_commandList->SetGraphicsRoot32BitConstants(1, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_commandList->DrawInstanced(36, 1, 0, 0);
+
+=== task: planet
+--- file: main.cpp
+--- find:
+    XMMATRIX model = XMMatrixScaling(2.0f, 2.0f, 2.0f) * XMMatrixRotationY(XMConvertToRadians(time * 20.0f));
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    m_commandList->SetGraphicsRoot32BitConstants(1, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_commandList->DrawInstanced(36, 1, 0, 0);
+--- replace:
+    XMMATRIX model = XMMatrixScaling(2.0f, 2.0f, 2.0f) * XMMatrixRotationY(XMConvertToRadians(time * 20.0f));
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    m_commandList->SetGraphicsRoot32BitConstants(1, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_commandList->DrawInstanced(36, 1, 0, 0);
+
+    // The planet: moved out to its orbit, then turned around the sun's axis by its orbit
+    // angle; made smaller than the sun before all that.
+    XMMATRIX planet = XMMatrixTranslation(3.0f, 0.0f, 0.0f) * XMMatrixRotationY(XMConvertToRadians(time * 30.0f));
+    model = XMMatrixScaling(0.6f, 0.6f, 0.6f) * planet;
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    m_commandList->SetGraphicsRoot32BitConstants(1, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_commandList->DrawInstanced(36, 1, 0, 0);
+
+=== task: moon
+--- file: main.cpp
+--- find:
+    model = XMMatrixScaling(0.6f, 0.6f, 0.6f) * planet;
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    m_commandList->SetGraphicsRoot32BitConstants(1, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_commandList->DrawInstanced(36, 1, 0, 0);
+--- replace:
+    model = XMMatrixScaling(0.6f, 0.6f, 0.6f) * planet;
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    m_commandList->SetGraphicsRoot32BitConstants(1, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_commandList->DrawInstanced(36, 1, 0, 0);
+
+    // The moon: its own orbit around the planet (moved out, turned, faster), and then the
+    // planet's matrix (without its scale), so it goes wherever the planet goes.
+    model = XMMatrixScaling(0.3f, 0.3f, 0.3f) * XMMatrixTranslation(1.0f, 0.0f, 0.0f)
+        * XMMatrixRotationY(XMConvertToRadians(time * 120.0f)) * planet;
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    m_commandList->SetGraphicsRoot32BitConstants(1, sizeof(ModelConstants) / 4, &modelConstants, 0);
+    m_commandList->DrawInstanced(36, 1, 0, 0);
+
+=== task: colours
+--- file: shaders.hlsl
+--- find:
+// Root constants set from main.cpp with SetGraphicsRoot32BitConstants: the vertex
+// shader sees them as a constant buffer at register b0.
+cbuffer ModelConstants : register(b0)
+{
+    float4x4 model;
+};
+--- replace:
+// Root constants set from main.cpp with SetGraphicsRoot32BitConstants: both shaders
+// see them as a constant buffer at register b0.
+cbuffer ModelConstants : register(b0)
+{
+    float4x4 model;
+    float3 color;    // the colour of the body being drawn, read by the pixel shader
+};
+--- file: shaders.hlsl
+--- find:
+    // Linearly interpolate between both textures (80% container, 20% face).
+    return lerp(texture1.Sample(wrapSampler, input.texCoord), texture2.Sample(wrapSampler, input.texCoord), 0.2f);
+--- replace:
+    // Linearly interpolate between both textures (80% container, 20% face).
+    float4 texColor = lerp(texture1.Sample(wrapSampler, input.texCoord), texture2.Sample(wrapSampler, input.texCoord), 0.2f);
+    // Then paint it: 60% the body's colour, 40% the texture (so the wood still shows through).
+    return lerp(texColor, float4(color, 1.0f), 0.6f);
+--- file: main.cpp
+--- find:
+    // The root constants: what the vertex shader sees as cbuffer ModelConstants.
+    // A 4x4 matrix is 16 floats: 16 32-bit root constants.
+    struct ModelConstants
+    {
+        XMFLOAT4X4 model;
+    };
+--- replace:
+    // The root constants: what the shaders see as cbuffer ModelConstants.
+    // A 4x4 matrix is 16 floats and the colour 3 more: 19 32-bit root constants.
+    struct ModelConstants
+    {
+        XMFLOAT4X4 model;
+        XMFLOAT3 color;
+    };
+--- file: main.cpp
+--- find:
+        // Root parameter 1: root constants for register b0 (the model matrix).
+        // Only the vertex shader reads them.
+--- replace:
+        // Root parameter 1: root constants for register b0 (the model matrix and the
+        // colour). The vertex shader reads the matrix, the pixel shader the colour.
+--- file: main.cpp
+--- find:
+        rootParameters[1].InitAsConstants(sizeof(ModelConstants) / 4, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
+--- replace:
+        rootParameters[1].InitAsConstants(sizeof(ModelConstants) / 4, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
+--- file: main.cpp
+--- find:
+    XMMATRIX model = XMMatrixScaling(2.0f, 2.0f, 2.0f) * XMMatrixRotationY(XMConvertToRadians(time * 20.0f));
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+--- replace:
+    XMMATRIX model = XMMatrixScaling(2.0f, 2.0f, 2.0f) * XMMatrixRotationY(XMConvertToRadians(time * 20.0f));
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    modelConstants.color = XMFLOAT3(1.0f, 0.8f, 0.2f);    // a yellow sun
+--- file: main.cpp
+--- find:
+    model = XMMatrixScaling(0.6f, 0.6f, 0.6f) * planet;
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+--- replace:
+    model = XMMatrixScaling(0.6f, 0.6f, 0.6f) * planet;
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    modelConstants.color = XMFLOAT3(0.2f, 0.4f, 1.0f);    // a blue planet
+--- file: main.cpp
+--- find:
+        * XMMatrixRotationY(XMConvertToRadians(time * 120.0f)) * planet;
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+--- replace:
+        * XMMatrixRotationY(XMConvertToRadians(time * 120.0f)) * planet;
+    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
+    modelConstants.color = XMFLOAT3(0.7f, 0.7f, 0.7f);    // a grey moon

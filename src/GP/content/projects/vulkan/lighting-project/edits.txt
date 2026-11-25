@@ -1,0 +1,139 @@
+=== task: house-lights
+--- file: main.cpp
+--- find:
+        clearValues[0].color = {{0.1f, 0.1f, 0.1f, 1.0f}};
+--- replace:
+        clearValues[0].color = {{0.01f, 0.01f, 0.01f, 1.0f}}; // the theatre is dark
+--- file: main.cpp
+--- find:
+        // directional light
+        ubo.dirLight.direction = glm::vec3(-0.2f, -1.0f, -0.3f);
+        ubo.dirLight.ambient   = glm::vec3(0.05f, 0.05f, 0.05f);
+        ubo.dirLight.diffuse   = glm::vec3(0.4f, 0.4f, 0.4f);
+        ubo.dirLight.specular  = glm::vec3(0.5f, 0.5f, 0.5f);
+--- replace:
+        // directional light: the hall's work light, switched off for the show
+        ubo.dirLight.direction = glm::vec3(-0.2f, -1.0f, -0.3f);
+        ubo.dirLight.ambient   = glm::vec3(0.0f, 0.0f, 0.0f);
+        ubo.dirLight.diffuse   = glm::vec3(0.0f, 0.0f, 0.0f);
+        ubo.dirLight.specular  = glm::vec3(0.0f, 0.0f, 0.0f);
+
+=== task: gels
+--- file: main.cpp
+--- find:
+    glm::vec3( 0.0f,  0.0f, -3.0f)
+};
+--- replace:
+    glm::vec3( 0.0f,  0.0f, -3.0f)
+};
+
+// the colours of the point lights' gels: blue from the front, green, pink and red from behind the cast
+const std::vector<glm::vec3> pointLightColors = {
+    glm::vec3(0.2f, 0.3f, 1.0f),
+    glm::vec3(0.2f, 1.0f, 0.3f),
+    glm::vec3(1.0f, 0.3f, 0.8f),
+    glm::vec3(1.0f, 0.2f, 0.2f)
+};
+--- file: main.cpp
+--- find:
+            ubo.pointLights[i].ambient   = glm::vec3(0.05f, 0.05f, 0.05f);
+            ubo.pointLights[i].diffuse   = glm::vec3(0.8f, 0.8f, 0.8f);
+            ubo.pointLights[i].specular  = glm::vec3(1.0f, 1.0f, 1.0f);
+--- replace:
+            ubo.pointLights[i].ambient   = pointLightColors[i] * 0.1f;
+            ubo.pointLights[i].diffuse   = pointLightColors[i];
+            ubo.pointLights[i].specular  = pointLightColors[i];
+
+=== task: lamp-colours
+--- file: shaders/light_cube.frag
+--- find:
+layout(location = 0) out vec4 outColor;
+
+void main() {
+    outColor = vec4(1.0); // set all 4 vector values to 1.0
+}
+--- replace:
+// the same push constants as in the vertex shader, and after the model matrix the colour of the light this lamp
+// stands for
+layout(push_constant) uniform PushConstants {
+    mat4 model;
+    vec3 color;
+} pc;
+
+layout(location = 0) out vec4 outColor;
+
+void main() {
+    outColor = vec4(pc.color, 1.0);
+}
+--- file: main.cpp
+--- find:
+// The same layout as the push constant block in the vertex shader: the model matrix of one draw.
+struct PushConstants {
+    glm::mat4 model;
+};
+--- replace:
+// The same layout as the push constant blocks in the shaders: the model matrix of one draw, and the colour the lamps'
+// fragment shader reads.
+struct PushConstants {
+    glm::mat4 model;
+    glm::vec3 color;
+};
+--- file: main.cpp
+--- find:
+        pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+--- replace:
+        pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT; // the lamps' fragment shader reads the colour
+--- file: main.cpp
+--- find:
+            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+            constants.model = model;
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+--- replace:
+            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+            constants.model = model;
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
+--- file: main.cpp
+--- find:
+            model = glm::scale(model, glm::vec3(0.2f)); // make it a smaller cube
+            constants.model = model;
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+--- replace:
+            model = glm::scale(model, glm::vec3(0.2f)); // make it a smaller cube
+            constants.model = model;
+            constants.color = pointLightColors[i]; // each lamp shows its gel's colour
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
+
+=== task: follow-spot
+--- file: main.cpp
+--- find:
+        // spotLight
+        ubo.spotLight.position    = cameraPos;
+        ubo.spotLight.direction   = cameraFront;
+        ubo.spotLight.ambient     = glm::vec3(0.0f, 0.0f, 0.0f);
+        ubo.spotLight.diffuse     = glm::vec3(1.0f, 1.0f, 1.0f);
+        ubo.spotLight.specular    = glm::vec3(1.0f, 1.0f, 1.0f);
+--- replace:
+        // spotLight: the follow spot, hanging 2 units above the audience's heads (the camera), aimed at a point on the stage
+        glm::vec3 spotPos    = glm::vec3(0.0f, 2.0f, 3.0f);
+        glm::vec3 spotTarget = glm::vec3(0.0f, 0.0f, 0.0f); // the star: container 0
+        ubo.spotLight.position    = spotPos;
+        ubo.spotLight.direction   = glm::normalize(spotTarget - spotPos);
+        ubo.spotLight.ambient     = glm::vec3(0.0f, 0.0f, 0.0f);
+        ubo.spotLight.diffuse     = glm::vec3(1.0f, 0.9f, 0.7f); // a warm white
+        ubo.spotLight.specular    = glm::vec3(1.0f, 0.9f, 0.7f);
+
+=== task: sweep
+--- file: main.cpp
+--- find:
+        glm::vec3 spotTarget = glm::vec3(0.0f, 0.0f, 0.0f); // the star: container 0
+--- replace:
+        // the spot sweeps over the star: its target swings from x = -1 to x = 1 and back, once every π seconds
+        float time = static_cast<float>(glfwGetTime());
+        glm::vec3 spotTarget = glm::vec3(std::sin(2.0f * time), 0.0f, 0.0f);
+
+=== task: polish
+--- file: main.cpp
+--- find:
+        ubo.material.shininess = 32.0f;
+--- replace:
+        ubo.material.shininess = 128.0f; // polished for opening night: small, sharp highlights
