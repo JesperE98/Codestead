@@ -1,5 +1,39 @@
 [
   {
+    "version": "0.6.10",
+    "date": "2026-11-25",
+    "changes": {
+      "en": [
+        "**ps as on a real system**: `ps -f` now shows only your own terminal's processes, like `ps`, just in full format (`ps -ef` still shows them all). `ps -o` and `ps -eo` let you choose the columns – pid, ppid, user, comm, cmd, %cpu, %mem, stat, etime and more, with `pid=` for no header – and an unknown column gets procps's own error. Long user names are cut to `message+` as procps does, so the columns of `ps -ef` and `ps aux` line up.",
+        "**Chapter fixes**: in the chapter on links, the example output of `ls -li` now shows the inode number and size the terminal gives you; the chapter on archives shows how to install zip and unzip in the box for the terminal's distribution family; and the Arabic chapter on processes calls a process's parent the same in its quiz as in its text."
+      ],
+      "sv": [
+        "**ps som i ett riktigt system**: `ps -f` visar nu bara processerna i din egen terminal, som `ps`, fast i fullt format (`ps -ef` visar fortfarande alla). Med `ps -o` och `ps -eo` väljer du kolumnerna själv – pid, ppid, user, comm, cmd, %cpu, %mem, stat, etime med flera, och `pid=` utan rubrik – och en okänd kolumn får procps eget felmeddelande. Långa användarnamn kortas till `message+` som i procps, så att kolumnerna i `ps -ef` och `ps aux` står rakt.",
+        "**Rättningar i kapitlen**: i kapitlet om länkar visar exemplet med `ls -li` nu det inodnummer och den storlek som terminalen ger dig; kapitlet om arkiv visar hur du installerar zip och unzip i rutan för terminalens distributionsfamilj; och det arabiska kapitlet om processer kallar en process förälder samma sak i frågan som i texten."
+      ],
+      "de": [
+        "**ps wie auf einem echten System**: `ps -f` zeigt jetzt nur die Prozesse deines eigenen Terminals, wie `ps`, nur im vollen Format (`ps -ef` zeigt weiterhin alle). Mit `ps -o` und `ps -eo` wählst du die Spalten selbst – pid, ppid, user, comm, cmd, %cpu, %mem, stat, etime und mehr, mit `pid=` ohne Überschrift –, und eine unbekannte Spalte bekommt die Fehlermeldung von procps. Lange Benutzernamen werden wie bei procps zu `message+` gekürzt, sodass die Spalten von `ps -ef` und `ps aux` sauber untereinander stehen.",
+        "**Korrekturen in den Kapiteln**: Im Kapitel über Links zeigt die Beispielausgabe von `ls -li` jetzt die Inode-Nummer und Größe, die dir das Terminal gibt; das Kapitel über Archive zeigt im Kasten für die Distributionsfamilie des Terminals, wie du zip und unzip installierst; und das arabische Kapitel über Prozesse nennt den Elternprozess im Quiz genauso wie im Text."
+      ],
+      "fr": [
+        "**ps comme sur un vrai système** : `ps -f` n'affiche plus que les processus de votre propre terminal, comme `ps`, mais au format complet (`ps -ef` les affiche toujours tous). Avec `ps -o` et `ps -eo`, vous choisissez les colonnes – pid, ppid, user, comm, cmd, %cpu, %mem, stat, etime et d'autres, avec `pid=` pour ne pas avoir d'en-tête –, et une colonne inconnue reçoit le message d'erreur de procps. Les noms d'utilisateur trop longs sont raccourcis en `message+` comme le fait procps, si bien que les colonnes de `ps -ef` et de `ps aux` restent alignées.",
+        "**Corrections dans les chapitres** : dans le chapitre sur les liens, l'exemple de sortie de `ls -li` montre maintenant le numéro d'inode et la taille que vous donne le terminal ; le chapitre sur les archives montre comment installer zip et unzip dans l'encadré de la famille de distributions du terminal ; et le chapitre arabe sur les processus désigne le parent d'un processus de la même façon dans son quiz que dans son texte."
+      ],
+      "es": [
+        "**ps como en un sistema real**: `ps -f` ahora muestra solo los procesos de tu propia terminal, como `ps`, pero en formato completo (`ps -ef` sigue mostrándolos todos). Con `ps -o` y `ps -eo` eliges tú las columnas – pid, ppid, user, comm, cmd, %cpu, %mem, stat, etime y más, con `pid=` para quitar el encabezado –, y una columna desconocida recibe el mensaje de error de procps. Los nombres de usuario largos se acortan a `message+` como hace procps, así que las columnas de `ps -ef` y `ps aux` quedan alineadas.",
+        "**Correcciones en los capítulos**: en el capítulo sobre enlaces, la salida de ejemplo de `ls -li` muestra ahora el número de inodo y el tamaño que te da la terminal; el capítulo sobre archivadores muestra cómo instalar zip y unzip en el recuadro de la familia de distribuciones de la terminal; y el capítulo árabe sobre procesos llama igual al padre de un proceso en su pregunta que en su texto."
+      ],
+      "zh": [
+        "**ps 与真实系统一致**：`ps -f` 现在只显示你自己终端中的进程，和 `ps` 一样，只是采用完整格式（`ps -ef` 仍然显示全部进程）。用 `ps -o` 和 `ps -eo` 可以自己选择列——pid、ppid、user、comm、cmd、%cpu、%mem、stat、etime 等，`pid=` 表示不显示表头——未知的列会得到 procps 自己的错误信息。过长的用户名会像 procps 那样缩写为 `message+`，因此 `ps -ef` 和 `ps aux` 的各列能够对齐。",
+        "**章节修正**：在关于链接的一章中，`ls -li` 的示例输出现在显示终端实际给出的 inode 编号和大小；关于归档的一章把安装 zip 和 unzip 的方法放进了终端所属发行版家族的框中；阿拉伯语的进程一章在测验和正文中对进程的父进程使用了相同的称呼。"
+      ],
+      "ja": [
+        "**本物のシステムと同じ ps**：`ps -f` は `ps` と同じく自分の端末のプロセスだけを、フル形式で表示するようになりました（`ps -ef` は今までどおりすべて表示します）。`ps -o` と `ps -eo` で列を自分で選べます――pid、ppid、user、comm、cmd、%cpu、%mem、stat、etime など。`pid=` とすると見出しなしになります――。知らない列名には procps と同じエラーが出ます。長いユーザー名は procps と同じく `message+` のように短縮されるので、`ps -ef` と `ps aux` の列がそろいます。",
+        "**章の修正**：リンクの章では `ls -li` の出力例が、ターミナルが実際に表示する inode 番号とサイズになりました。アーカイブの章では zip と unzip のインストール方法を、ターミナルのディストリビューションファミリー用の枠で示します。アラビア語のプロセスの章では、親プロセスの呼び方がクイズと本文でそろいました。"
+      ]
+    }
+  },
+  {
     "version": "0.6.9",
     "date": "2026-11-20",
     "changes": {

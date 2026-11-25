@@ -269,8 +269,10 @@ och rättigheter bättre.
 
 Programmen `zip` och `unzip` är inte alltid förinstallerade, och i den här
 terminalen måste du installera dem först. Det gör du med pakethanteraren – du
-lär dig allt om den i delen om distributioner och paket. I Ubuntu gör du så
-här:
+lär dig allt om den i delen om distributioner och paket.
+
+:::debian
+I {{distro}} installerar du dem med apt:
 
 ```sh
 sudo apt update
@@ -279,6 +281,23 @@ sudo apt install zip unzip
 
 `apt update` hämtar listan över vilka paket som finns. Utan den hittar apt
 inga paket alls.
+:::
+
+:::arch
+I {{distro}} installerar du dem med pacman:
+
+```sh
+sudo pacman -S zip unzip
+```
+:::
+
+:::redhat
+I {{distro}} installerar du dem med dnf:
+
+```sh
+sudo dnf install zip unzip
+```
+:::
 
 Packa sedan ihop katalogen. Glöm inte `-r` (*recursive*) – utan den lägger zip
 bara till den tomma katalogen, inte filerna i den:

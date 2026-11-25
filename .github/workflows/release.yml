@@ -11,10 +11,11 @@ name: Release
 #   since its last release then gets the next patch version: 0.6.0, 0.6.1, 0.6.2 ... For 0.7, change 0.6
 #   to 0.7. A product whose files did not change keeps its last release.
 #   => Windows and Linux artifacts are built for every product, installed and smoke-tested on clean
-#      systems (Windows Server 2022/2025, Ubuntu 22.04/24.04, Fedora, Arch Linux, CachyOS), the hub
-#      installs and starts the tool end to end, every product that gets a new version is updated to it
-#      from a user's installation of its last C# release and of its previous release, and the hub's previous
-#      release installed as a .deb/.rpm/Arch package updates itself to it (the upgrade gate),
+#      systems (Windows Server 2022/2025, Ubuntu 22.04/24.04, Fedora, Arch Linux, CachyOS), the hub's .deb
+#      runs with Chromium's sandbox under AppArmor on an Ubuntu 24.04 runner, the hub installs and starts the
+#      tool end to end, every product that gets a new version is updated to it from a user's installation
+#      of its last C# release and of its previous release, and the hub's previous release installed as a
+#      .deb/.rpm/Arch package updates itself to it (the upgrade gate),
 #      and only then the changed products are published in the public repository JesperE98/codestead-releases:
 #        <id>-v<version>   the release with all files (e.g. codestead-linux-v0.5.0)
 #        <id>-latest       the same files without version in the name + the Velopack update feed
@@ -75,8 +76,9 @@ jobs:
       upgrade_linux: ${{ steps.plan.outputs.upgrade_linux }}
       upgrade_windows: ${{ steps.plan.outputs.upgrade_windows }}
       upgrade_native: ${{ steps.plan.outputs.upgrade_native }}
+      sandbox_linux: ${{ steps.plan.outputs.sandbox_linux }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # the whole history, to see what changed since the last release
       - id: plan
@@ -102,8 +104,8 @@ jobs:
       run:
         working-directory: ts
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
@@ -137,8 +139,8 @@ jobs:
       run:
         working-directory: ts
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
@@ -154,15 +156,15 @@ jobs:
         product: ${{ fromJSON(needs.plan.outputs.products) }}
     name: Build Linux – ${{ matrix.product.name }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: ts/package-lock.json
       - run: npm ci
         working-directory: ts
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
       - name: Install packaging tools (nfpm, vpk, mksquashfs, xz, zstd)
@@ -175,7 +177,7 @@ jobs:
           PKG_SUMMARY: ${{ matrix.product.summary }}
           PKG_DESCRIPTION: ${{ matrix.product.name }} - ${{ matrix.product.summary }}.
         run: packaging/build-linux.sh "${{ matrix.product.app }}" "${{ matrix.product.id }}" "${{ matrix.product.name }}" "${{ matrix.product.exe }}" "${{ matrix.product.version }}" artifacts
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         # Pull requests and pushes only check that everything builds: a run uploads several GB of builds,
         # and the repository's artifact storage must stay free for the runs by hand that install and publish.
         if: github.event_name == 'workflow_dispatch'
@@ -195,21 +197,21 @@ jobs:
         product: ${{ fromJSON(needs.plan.outputs.products) }}
     name: Build Windows – ${{ matrix.product.name }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: ts/package-lock.json
       - run: npm ci
         working-directory: ts
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
       - run: dotnet tool install -g vpk --version $env:VPK_VERSION
       - name: Build Windows artifacts
         run: packaging/build-windows.ps1 -App "${{ matrix.product.app }}" -PackageName "${{ matrix.product.id }}" -DisplayName "${{ matrix.product.name }}" -Executable "${{ matrix.product.exe }}" -Version "${{ matrix.product.version }}" -Out artifacts
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         # Pull requests and pushes only check that everything builds: a run uploads several GB of builds,
         # and the repository's artifact storage must stay free for the runs by hand that install and publish.
         if: github.event_name == 'workflow_dispatch'
@@ -247,8 +249,8 @@ jobs:
           - { name: Arch Linux (AppImage), image: 'archlinux:latest', kind: appimage }
     name: Install test – ${{ matrix.product.name }} – ${{ matrix.target.name }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
         with:
           name: linux-${{ matrix.product.id }}
           path: artifacts
@@ -269,14 +271,43 @@ jobs:
     runs-on: ${{ matrix.os }}
     name: Install test – ${{ matrix.product.name }} – ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
         with:
           name: windows-${{ matrix.product.id }}
           path: artifacts
       - name: Install with the setup program, start, uninstall
         shell: pwsh
         run: packaging/install-test-windows.ps1 -PackageName "${{ matrix.product.id }}" -Executable "${{ matrix.product.exe }}" -Artifacts artifacts
+
+  # Chromium's sandbox under AppArmor, part of the gate: on the runner itself, not in a container (AppArmor is the host
+  # kernel's; the containers above have none). GitHub's ubuntu-24.04 runners restrict unprivileged user namespaces with
+  # AppArmor (kernel.apparmor_restrict_unprivileged_userns=1, as Ubuntu 23.10 and later do). The hub's .deb of this run is
+  # installed with apt; its profile must be in /etc/apparmor.d and loaded, the hub started as the runner user
+  # (--smoke-test, Xvfb) must run WITH Chromium's sandbox – no --no-sandbox from the launcher, the browser process under
+  # the profile, the zygote and renderer in user namespaces of their own – first with chrome-sandbox not setuid (only the
+  # profile can allow it), then as installed; reinstalling keeps the profile, removing the package removes it
+  # (packaging/sandbox-test.sh). The hub stands for every product (shared packaging/ts files) and is built in every run,
+  # so the job always has a case (packaging/plan.py). Not covered: a tool installed by the hub, and the per-user profile
+  # the hub installs through pkexec (docs/RELEASE-CHECKLIST.md).
+  test-sandbox:
+    needs: [plan, build-linux]
+    # The install tests need the uploaded builds (only runs by hand, see above).
+    if: github.event_name == 'workflow_dispatch'
+    strategy:
+      fail-fast: false
+      matrix:
+        case: ${{ fromJSON(needs.plan.outputs.sandbox_linux) }}
+    runs-on: ${{ matrix.case.runner }}
+    name: Sandbox test – ${{ matrix.case.name }} ${{ matrix.case.version }} (.deb) – ${{ matrix.case.targetName }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          name: linux-${{ matrix.case.id }}
+          path: artifacts
+      - name: Install the .deb and run it with Chromium's sandbox under AppArmor
+        run: packaging/sandbox-test.sh "artifacts/${{ matrix.case.id }}_${{ matrix.case.version }}_amd64.deb"
 
   # The hub installs, starts and removes Codestead Linux from a signed catalog (throw-away key).
   test-hub:
@@ -294,8 +325,8 @@ jobs:
     env:
       PRODUCTS: ${{ needs.plan.outputs.products }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
         with:
           pattern: ${{ matrix.platform }}-*
           path: dist
@@ -328,9 +359,9 @@ jobs:
         case: ${{ fromJSON(needs.plan.outputs.upgrade_linux) }}
     name: Upgrade test – ${{ matrix.case.name }} ${{ matrix.case.upgradeFrom }} to ${{ matrix.case.version }} – ${{ matrix.case.targetName }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       # .NET for the C# app's update button (packaging/upgrade-driver) and vpk (TS -> TS repacks the build as the next version).
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         if: matrix.case.upgradeKind == 'csharp' || matrix.case.upgradeChain
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
@@ -339,7 +370,7 @@ jobs:
         run: |
           sudo apt-get install -y squashfs-tools
           dotnet tool install -g vpk --version "$VPK_VERSION"
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: linux-${{ matrix.case.id }}
           path: artifacts
@@ -363,14 +394,14 @@ jobs:
     runs-on: ${{ matrix.case.os }}
     name: Upgrade test – ${{ matrix.case.name }} ${{ matrix.case.upgradeFrom }} to ${{ matrix.case.version }} – ${{ matrix.case.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
         if: matrix.case.upgradeKind == 'csharp' || matrix.case.upgradeChain
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
       - if: matrix.case.upgradeChain
         run: dotnet tool install -g vpk --version $env:VPK_VERSION
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: windows-${{ matrix.case.id }}
           path: artifacts
@@ -405,9 +436,9 @@ jobs:
         env:
           WHY: ${{ matrix.case.skip }}
         run: echo "::notice::No native update test in this run ($WHY)."
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         if: ${{ !matrix.case.skip }}
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         if: ${{ !matrix.case.skip }}
         with:
           name: linux-${{ matrix.case.id }}
@@ -439,7 +470,7 @@ jobs:
         run: packaging/native-update-test.sh old artifacts "${{ matrix.case.kind }}" "${{ matrix.case.image }}"
 
   publish:
-    needs: [plan, test, gp-tasks, test-linux, test-windows, test-hub, upgrade-linux, upgrade-windows, upgrade-native]
+    needs: [plan, test, gp-tasks, test-linux, test-windows, test-sandbox, test-hub, upgrade-linux, upgrade-windows, upgrade-native]
     if: needs.plan.outputs.publish != '[]'
     runs-on: ubuntu-latest
     strategy:
@@ -460,7 +491,7 @@ jobs:
       # The product's own folder: changelog.json, description.json, release-notes.md (packaging/products.json).
       DIR: ${{ matrix.product.dir }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Check the secrets
         run: |
           [[ -n "$GH_TOKEN" ]] || { echo "::error::The secret RELEASES_TOKEN is missing (a token with write access to $RELEASES_REPO)."; exit 1; }
@@ -469,11 +500,11 @@ jobs:
           # The key must match the public key built into the hub.
           diff <(openssl ec -in "$RUNNER_TEMP/key.pem" -pubout 2>/dev/null) build/catalog-signing.pub.pem \
             || { echo "::error::CATALOG_SIGNING_KEY does not match build/catalog-signing.pub.pem."; exit 1; }
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: linux-${{ matrix.product.id }}
           path: dist/linux
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: windows-${{ matrix.product.id }}
           path: dist/windows

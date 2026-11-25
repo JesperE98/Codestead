@@ -282,8 +282,10 @@ verbreiteter, weil es Besitzer und Rechte besser bewahrt.
 
 Die Programme `zip` und `unzip` sind nicht immer vorinstalliert, und in diesem
 Terminal musst du sie erst installieren. Das geht mit dem Paketmanager – alles
-darüber lernst du im Teil über Distributionen und Pakete. Unter Ubuntu geht das
-so:
+darüber lernst du im Teil über Distributionen und Pakete.
+
+:::debian
+Unter {{distro}} installierst du sie mit apt:
 
 ```sh
 sudo apt update
@@ -292,6 +294,23 @@ sudo apt install zip unzip
 
 `apt update` lädt die Liste der verfügbaren Pakete herunter. Ohne sie findet
 apt überhaupt keine Pakete.
+:::
+
+:::arch
+Unter {{distro}} installierst du sie mit pacman:
+
+```sh
+sudo pacman -S zip unzip
+```
+:::
+
+:::redhat
+Unter {{distro}} installierst du sie mit dnf:
+
+```sh
+sudo dnf install zip unzip
+```
+:::
 
 Dann pack das Verzeichnis ein. Vergiss `-r` (*recursive*) nicht – ohne diese
 Option fügt zip nur das leere Verzeichnis hinzu, nicht die Dateien darin:

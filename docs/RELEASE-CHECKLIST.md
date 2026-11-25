@@ -1,7 +1,7 @@
 # Release-checklista (manuell)
 
 Release-flödet testar automatiskt på Windows Server 2022/2025, Ubuntu 22.04/24.04, Fedora, Arch och
-CachyOS, och uppdaterar en installation av den sista C#-releasen och av den föregående releasen till den nya
+CachyOS, provar Chromiums sandlåda under AppArmor med hubbens `.deb` på en Ubuntu 24.04-runner, och uppdaterar en installation av den sista C#-releasen och av den föregående releasen till den nya
 versionen (AppImage och Setup.exe). Uppdateringen av ett native-paket med pkexec provas i docker
 (`packaging/native-update-test.sh`, med en låtsas-pkexec). Det här görs för hand på riktiga datorer före en större
 release.
@@ -22,15 +22,13 @@ release.
 - [ ] Wayland-session: appen startar (via XWayland).
 - [ ] Ubuntu 24.04 och senare (AppArmor begränsar användarnamnrymderna): `.deb` och AppImage startar som vanlig
       användare (paketen gör `chrome-sandbox` setuid root; AppImagen startar utan sandlåda där den inte går).
-- [ ] **Chromiums sandlåda med AppArmor** (ett riktigt Ubuntu 24.04-skrivbord: containrar har ingen egen AppArmor;
-      [DEVELOPMENT.md](DEVELOPMENT.md#chromiums-sandlåda-på-linux)). `sysctl kernel.apparmor_restrict_unprivileged_userns`
-      ska vara 1.
-      - Installera hubbens `.deb`: `sudo aa-status | grep codestead-hub` visar profilen. Gör hjälpen icke-setuid för att
-        prova bara profilen: `sudo chmod 0755 /opt/codestead-hub/chrome-sandbox`. Starta hubben från menyn:
-        `cat /proc/$(pgrep -f -o Codestead.Hub.bin)/attr/current` visar `codestead-hub (unconfined)`, och
-        `ps -o args= -p $(pgrep -f -o Codestead.Hub.bin)` har **inte** `--no-sandbox`, och renderaren har en egen
-        användarnamnrymd (`readlink /proc/$(pgrep -f -n 'Codestead.Hub.bin --type=renderer')/ns/user` skiljer sig från
-        `readlink /proc/self/ns/user`). Hubben startar och fungerar. `sudo chmod 4755 …/chrome-sandbox` igen efteråt.
+- [ ] **Chromiums sandlåda med AppArmor** (ett riktigt Ubuntu 24.04-skrivbord;
+      [DEVELOPMENT.md](DEVELOPMENT.md#chromiums-sandlåda-på-linux)). Hubbens `.deb` provas av release-flödets jobb
+      **test-sandbox** (`packaging/sandbox-test.sh` på GitHubs ubuntu-24.04-runner: profilen installerad och laddad,
+      hubben kör med sandlådan med och utan setuid-`chrome-sandbox`, profilen kvar efter en ominstallation och borta
+      efter `apt remove`). Kvar för hand, det som behöver ett skrivbord eller pkexec:
+      - Starta hubben (paketet) från programmenyn: `ps -o args= -p $(pgrep -f -o Codestead.Hub.bin)` har **inte**
+        `--no-sandbox`.
       - Med hubben som paket: installera Codestead Linux i hubben och öppna den. Dess process har etiketten
         `codestead-hub (unconfined)` (ärvd) och startas utan `--no-sandbox`.
       - Hubben som AppImage (avinstallera paketet först), med Codestead Linux installerat i hubben: erbjudandet
@@ -39,8 +37,8 @@ release.
         Linux: etiketten är `codestead-user-<uid> (unconfined)`, ingen `--no-sandbox`. Inställningarna säger "På".
         Avbryt lösenordsrutan en gång först: felet visas, inget installeras. **Inte nu** döljer erbjudandet även efter
         omstart. Hubben själv (AppImage) kör med `--no-sandbox`.
-      - `sudo apt remove codestead-hub`: `/etc/apparmor.d/codestead-hub` är borta och profilen urladdad
-        (`sudo aa-status`). Uppgradera paketet en gång (äldre → ny `.deb`): profilen finns kvar efteråt.
+      - Uppgradera paketet en gång från den föregående versionens `.deb`: profilen finns kvar efteråt (jobbet provar
+        en ominstallation av samma version).
 - [ ] Språk med andra skrivsystem (kinesiska, japanska) visas rätt.
 - [ ] AppImage: starta, kontrollera att den hittar uppdateringar.
 - [ ] **Uppdatering av ett native-paket** (Ubuntu med GNOME, vars polkit-agent visar lösenordsrutan; gärna även

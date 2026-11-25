@@ -223,7 +223,10 @@ zcat server.log.gz | grep ERROR
 
 `.zip` 格式同时完成两项工作：它既收集文件，*又*压缩文件。Windows 和 macOS 无需额外软件就能打开 zip 文件，所以当你要把文件发给不用 Linux 的人时，它是理所当然的选择。在 Linux 世界里，`.tar.gz` 更常见，因为它能更好地保留所有者和权限信息。
 
-`zip` 和 `unzip` 这两个程序并不总是预装的，在这个终端里你必须先安装它们。这要用包管理器来完成——在关于发行版和软件包的部分中，你会学到有关它的一切。在 Ubuntu 上，你可以这样做：
+`zip` 和 `unzip` 这两个程序并不总是预装的，在这个终端里你必须先安装它们。这要用包管理器来完成——在关于发行版和软件包的部分中，你会学到有关它的一切。
+
+:::debian
+在 {{distro}} 上，用 apt 来安装它们：
 
 ```sh
 sudo apt update
@@ -231,6 +234,23 @@ sudo apt install zip unzip
 ```
 
 `apt update` 会下载可用软件包的列表。如果不先运行它，apt 根本找不到任何软件包。
+:::
+
+:::arch
+在 {{distro}} 上，用 pacman 来安装它们：
+
+```sh
+sudo pacman -S zip unzip
+```
+:::
+
+:::redhat
+在 {{distro}} 上，用 dnf 来安装它们：
+
+```sh
+sudo dnf install zip unzip
+```
+:::
 
 然后把目录打包。别忘了 `-r`（*recursive*，递归）——如果不加，zip 只会添加空目录，而不会添加其中的文件：
 

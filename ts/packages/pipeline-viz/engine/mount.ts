@@ -22,7 +22,8 @@ import { SLIDES } from '../visualizer/slides';
 import type { SlideContext, SlideDef, SlideInstance } from '../visualizer/slides/types';
 import { ThreeStage, type StageView } from '../visualizer/views/ThreeStage';
 import type { EngineOptions, MountedScene, MountScene, SceneHosts, SceneLinks } from '../src/EngineApi';
-import { themeScene } from './light';
+import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
+import { themeOutput, themeScene } from './light';
 import { sceneSheets } from './styles';
 import { killContext, pauseContext, withContext } from './tween';
 import notices from '../THIRD-PARTY-NOTICES.txt?raw';
@@ -58,7 +59,7 @@ const GoEvent = 'rpv:go';
 
 interface StageInternals {
   frame(): void;
-  composer?: { dispose(): void };
+  composer?: { dispose(): void; passes?: unknown[] };
   bloomPass?: { enabled: boolean };
 }
 
@@ -227,11 +228,17 @@ class Scene implements MountedScene {
 
   /**
    * No glow on a light background (a dark stage has the slide's own). The view still goes through the composer, whose
-   * output pass gives the colours the slide was made with (the visualizer's shaders write linear colours).
+   * output pass gives the colours the slide was made with (the visualizer's shaders write linear colours) – on a light
+   * background as straight colours over the page (themeOutput).
    */
   private applyBloom(): void {
-    const bloom = (this.stage as unknown as StageInternals).bloomPass;
-    if (bloom && this.view && this.stage.isAttachedTo(this.view)) bloom.enabled = !!this.view.bloom && !(this.light && !this.darkStage);
+    const internals = this.stage as unknown as StageInternals;
+    const bloom = internals.bloomPass;
+    const lightStage = this.light && !this.darkStage;
+    if (bloom && this.view && this.stage.isAttachedTo(this.view)) bloom.enabled = !!this.view.bloom && !lightStage;
+    for (const pass of internals.composer?.passes ?? []) {
+      if (pass instanceof OutputPass) themeOutput(pass.material, lightStage);
+    }
   }
 
   /** Whether a step is drawn on a dark stage (in the light theme), and the stage's look for it. */

@@ -276,7 +276,10 @@ and permissions better.
 The programs `zip` and `unzip` aren't always preinstalled, and in this
 terminal you have to install them first. That's done with the package
 manager – you'll learn all about it in the part about distributions and
-packages. On Ubuntu you do it like this:
+packages.
+
+:::debian
+On {{distro}} you install them with apt:
 
 ```sh
 sudo apt update
@@ -285,6 +288,23 @@ sudo apt install zip unzip
 
 `apt update` downloads the list of available packages. Without it, apt
 can't find any packages at all.
+:::
+
+:::arch
+On {{distro}} you install them with pacman:
+
+```sh
+sudo pacman -S zip unzip
+```
+:::
+
+:::redhat
+On {{distro}} you install them with dnf:
+
+```sh
+sudo dnf install zip unzip
+```
+:::
 
 Then pack up the directory. Don't forget `-r` (*recursive*) – without it, zip
 only adds the empty directory, not the files inside it:

@@ -119,8 +119,8 @@ ls -li {{notes}} {{todo}}
 ```
 
 ```text
-1310722 -rw-r--r-- 2 {{user}} {{user}} 194 Nov  3 10:20 {{notes}}
-1310722 -rw-r--r-- 2 {{user}} {{user}} 194 Nov  3 10:20 {{todo}}
+1310721 -rw-r--r-- 2 {{user}} {{user}} 194 Nov  3 10:20 {{notes}}
+1310721 -rw-r--r-- 2 {{user}} {{user}} 194 Nov  3 10:20 {{todo}}
 ```
 
 Beide Namen haben dieselbe Inode-Nummer, und die Zahl nach den Rechten – der
@@ -172,7 +172,7 @@ stat /etc/hostname
 ```text
   File: /etc/hostname
   Size: 7         	Blocks: 8          IO Block: 4096   regular file
-Device: 8,3	Inode: 1310755     Links: 1
+Device: 8,3	Inode: 1310722     Links: 1
 Access: (0644/-rw-r--r--)  Uid: (    0/    root)   Gid: (    0/    root)
 Access: 2026-11-03 10:15:22.000000000 +0100
 Modify: 2026-11-03 10:15:22.000000000 +0100
