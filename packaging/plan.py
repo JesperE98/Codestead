@@ -33,9 +33,14 @@ itself to the new build with its one-click native update (packaging/native-updat
 through pkexec). The hub is enough: Codestead Linux and GP share the code (ts/packages/ui/src/electron). The old
 package is the previous release's, downloaded – no second build. There is no case for the hub's first release or a
 C# one; the job skips a release without that kind of package, or whose hub cannot be driven yet (--self-update-test).
-Writes products=[...], publish=[...], upgrade_linux=[...], upgrade_windows=[...] and upgrade_native=[...] to
-$GITHUB_OUTPUT (upgrade_native is never empty, so the job always runs and the gate does not depend on a skipped job: with
-nothing to test it is one entry {"skip": "<why>"}).
+The sandbox test (release.yml's test-sandbox job, also part of the gate): the hub's .deb of this run, installed on a
+GitHub runner whose kernel restricts user namespaces with AppArmor, must run with Chromium's sandbox through its AppArmor
+profile (packaging/sandbox-test.sh). The hub stands for every product (the profile, the launcher and the install scripts
+are shared, packaging/ts). Every run builds every product, so there is always a case, also when the hub gets no new
+version: the shared files it tests may have changed all the same.
+Writes products=[...], publish=[...], upgrade_linux=[...], upgrade_windows=[...], upgrade_native=[...] and
+sandbox_linux=[...] to $GITHUB_OUTPUT (upgrade_native is never empty, so the job always runs and the gate does not depend
+on a skipped job: with nothing to test it is one entry {"skip": "<why>"}).
 """
 import json
 import os
@@ -57,6 +62,10 @@ UPGRADE_NATIVE = [("Ubuntu 24.04 LTS (.deb)", "ubuntu:24.04", "deb"), ("Fedora (
                   ("Arch Linux (.pkg.tar.zst)", "archlinux:latest", "arch")]
 # The product whose native update is tested (the code is shared).
 NATIVE_PRODUCT = "hub"
+# The sandbox test's systems: (name, GitHub runner – the test runs on the runner itself, AppArmor is the host kernel's), and
+# the product whose .deb it installs (the profile, the launcher and the install scripts are shared).
+SANDBOX_LINUX = [("Ubuntu 24.04 LTS", "ubuntu-24.04")]
+SANDBOX_PRODUCT = "hub"
 
 
 def run(*cmd):
@@ -245,6 +254,8 @@ def main():
         # Never empty (see the docstring): a skipped job would skip the publish job that needs it.
         skip = [{"skip": f"{PRODUCTS_BY_KEY[NATIVE_PRODUCT].get('title', PRODUCTS_BY_KEY[NATIVE_PRODUCT]['name'])} gets no new version from a TypeScript release in this run"}]
         f.write(f"upgrade_native={json.dumps(upgrade_native or skip)}\n")
+        sandbox = next(p for p in products if p["key"] == SANDBOX_PRODUCT)
+        f.write(f"sandbox_linux={json.dumps([dict(sandbox, targetName=name, runner=runner) for (name, runner) in SANDBOX_LINUX])}\n")
 
 
 if __name__ == "__main__":
