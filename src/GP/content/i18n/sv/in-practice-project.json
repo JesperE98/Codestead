@@ -1,0 +1,33 @@
+{
+  "title": "Projekt: Hedgerow på höstmarknaden",
+  "tasks": {
+    "own-level": {
+      "text": "Rita en egen bana i `levels/five.lvl` – med några block som bollen kan slå sönder – ladda den som femte bana och låt spelet börja på den.",
+      "hint": "Talen 0–5, en rad i rutnätet per rad i filen (0 tomt, 1 sten, 2 blått, 3 grönt, 4 gult, 5 orange). Init laddar de fyra banorna med LoadLevel och lägger dem i `game.Levels`; din blir nummer 4, och `game.Level` säger vilken som spelas."
+    },
+    "level-menu": {
+      "text": "Gör din bana till en fullvärdig del av menyn: W och S går runt genom alla fem banorna, och ResetLevel kan ladda om din bana efter game over.",
+      "hint": "Leta efter `% 4` och `game.Level = 3;` i ProcessInput, och efter kedjan `if … else if` i ResetLevel."
+    },
+    "score": {
+      "text": "Räkna poäng: poäng för varje block som bollen slår sönder, visade som `Score:` och poängen uppe till höger; ett nytt spel börjar på noll.",
+      "hint": "Ett nytt fält i `Game`; DoCollisions vet när ett block går sönder, ResetLevel när ett nytt spel börjar. Texten som livens (`std::to_string`), med x ungefär `game.Width - 120.0f`."
+    },
+    "sparks": {
+      "text": "Ge gnistorna en av marknadens färger (inte grått) och sätt upp ett tomtebloss: en fast punkt i fönstrets nedre halva, en bit från racketen, där gnistor hela tiden stiger upp.",
+      "hint": "Färgen sätts i respawnParticle (`rColor` är en slumpad ljusstyrka). Tomteblosset kan vara ett `GameObject` som aldrig ritas: ett anrop till `Update(Particles, dt, …, 2)` i Update skapar gnistor vid dess `Position`, och de rör sig mot dess `Velocity` – (0, 1200) får dem att stiga."
+    },
+    "extra-life": {
+      "text": "Lägg till en power-up som ger ett extra liv och skapas från block som går sönder, som de andra; släpp en som välkomstgåva från mitten av fönstret (y = 300) ner på racketen när programmet startar.",
+      "hint": "Kopiera en av SpawnPowerUps rader med ett eget typnamn och ta hand om den typen i ActivatePowerUp (liven är `Hedgerow.Lives`). Gåvan: `game.PowerUps.push_back(MakePowerUp(…))` i slutet av Init, vid x = 370, y = 300."
+    },
+    "fade-in": {
+      "text": "Skriv en ny efterbehandlingseffekt: bilden tonar fram ur svart under de första två sekunderna (texten är som förut).",
+      "hint": {
+        "opengl": "Multiplicera `color.rgb` i slutet av `post_processing.fs` med en faktor som växer från 0 till 1 på två sekunder – `clamp` håller den på 1 sedan. Fragmentshadern behöver en egen `uniform float time;`.",
+        "vulkan": "Multiplicera `color.rgb` i slutet av `shaders/post_processing.frag` med en faktor som växer från 0 till 1 på två sekunder (`pc.time`) – `clamp` håller den på 1 sedan.",
+        "d3d12": "Multiplicera `color.rgb` före PSMains `return color;` i `post_processing.hlsl` med en faktor som växer från 0 till 1 på två sekunder (`time`) – `saturate` håller den på 1 sedan."
+      }
+    }
+  }
+}
