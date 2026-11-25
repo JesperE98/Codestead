@@ -68,6 +68,9 @@ const StepLimit = 20_000;
 
 const yesRe = /^(y|yes|j|ja)$/i;
 const assignRe = /^([A-Za-z_][A-Za-z0-9_]*)=/;
+const nohupRe = /^nohup\s+/;
+/** A ~ right after the = of an assignment word or after a : in its value, followed by / or : or the end. */
+const assignTildeRe = /(^[A-Za-z_][A-Za-z0-9_]*=|:)~(?=(\/|:|$))/g;
 const noSplitCommands = new Set(["export", "local", "readonly", "declare", "alias"]);
 const pkgManagers = new Set(["apt", "apt-get", "pacman", "dnf", "dnf5"]);
 const elfImplRe = /^\u007fELF[^(]*\((?:simulated binary|simulerad binärfil): ([^)\s]+)\)/;
@@ -1103,6 +1106,11 @@ export class Shell {
         if (idx === 0 && !quoted && (text === "~" || text.startsWith("~/"))) {
           literal(this.home, true);
           text = text.slice(1);
+        } else if (idx === 0 && !quoted && assignRe.test(text)) {
+          // As in bash: in a word that looks like an assignment (NAME=~/dir, also as an argument to export), ~ is
+          // expanded after the = and after each : (PATH=~/bin:~/.local/bin).
+          const last = w.parts.length === 1;
+          text = text.replace(assignTildeRe, (m, before: string, after: string) => (after !== "" || last ? before + this.home : m));
         }
         if (quoted && text !== "$@") cur.touched = true;
         this.scan(text, sink, {
@@ -1396,7 +1404,8 @@ export class Shell {
         pid,
         ppid: ProcsLib.ShellPid,
         user: this.currentUser().name,
-        cmd,
+        // nohup replaces itself with the command, so ps shows (and pkill finds) "sleep", while jobs shows the line.
+        cmd: cmd.replace(nohupRe, ""),
         cpu: 0,
         mem: 0,
         vsz: 8_300,

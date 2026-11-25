@@ -258,6 +258,17 @@ describe("ScriptTests", () => {
     expect(t.run("bash -c 'echo [$sub]'").out).toBe("[]\n");
   });
 
+  itNeeds(["echo", "export"], "miljövariabler: ~ expanderas efter = och : i en tilldelning, också med export", () => {
+    const t = new TestShell();
+    t.run("export KLUBB=~/klubb");
+    expect(t.run("echo $KLUBB").out).toBe("/home/elev/klubb\n");
+    t.run("p=~:~/bin:/usr/bin");
+    expect(t.run("echo $p").out).toBe("/home/elev:/home/elev/bin:/usr/bin\n");
+    // Inom citattecken och mitt i ett värde blir ~ kvar, precis som i bash.
+    t.run("q='~/a'; r=a~b; s=x\"~\"");
+    expect(t.run("echo $q $r $s").out).toBe("~/a a~b x~\n");
+  });
+
   itNeeds(["env", "printenv", "set", "export", "grep"], "miljövariabler: env och printenv visar bara exporterade, set visar alla", () => {
     const t = new TestShell();
     t.run("vanlig=1");

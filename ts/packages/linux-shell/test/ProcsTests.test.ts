@@ -118,4 +118,15 @@ describe("ProcsTests", () => {
       expect(r.exitCode, cmd).toBe(1);
     }
   });
+  it("a job started with nohup is the command itself in ps, so pkill finds it", () => {
+    const t = new TestShell("ubuntu", "en", "en");
+    t.run("nohup sleep 3600 &");
+    expect(t.run("jobs").out).toContain("nohup sleep 3600");
+    const ps = lines(t.run("ps").out).map((l) => l.trim().split(/\s+/)[3]);
+    expect(ps).toContain("sleep");
+    expect(ps).not.toContain("nohup");
+    const r = t.run("pkill sleep");
+    expect(r.exitCode).toBe(0);
+    expect(t.run("jobs").out).not.toContain("Running");
+  });
 });
