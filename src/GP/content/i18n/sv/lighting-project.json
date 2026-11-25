@@ -1,0 +1,53 @@
+{
+  "title": "Projekt: Premiärkväll",
+  "tasks": {
+    "house-lights": {
+      "text": "Ner med salongsljuset: rensa fönstret till så gott som svart och stäng av det riktade ljuset – salongens arbetsljus.",
+      "hint": {
+        "opengl": "Rensningsfärgen är `glClearColor`, till exempel (0.01, 0.01, 0.01). Ett ljus vars ambient, diffuse och specular alla är noll tillför ingenting: sätt de tre `dirLight`-färgerna till 0.",
+        "vulkan": "Rensningsfärgen är `clearValues[0].color`, till exempel (0.01, 0.01, 0.01). Ett ljus vars ambient, diffuse och specular alla är noll tillför ingenting: sätt de tre `ubo.dirLight`-färgerna till 0.",
+        "d3d12": "Rensningsfärgen är arrayen `clearColor`, till exempel (0.01, 0.01, 0.01). Ett ljus vars ambient, diffuse och specular alla är noll tillför ingenting: sätt de tre `dirLight`-färgerna till 0."
+      }
+    },
+    "gels": {
+      "text": "Gelfilter: ge punktljusen färger – minst två av dem i tydligt olika färger, som blått, grönt, rosa och rött.",
+      "hint": {
+        "opengl": "En array `glm::vec3 pointLightColors[]` bredvid `pointLightPositions`; varje ljus diffuse och specular tar dess färg, ambient en tiondel av den (`pointLightColors[0] * 0.1f`).",
+        "vulkan": "En global `pointLightColors` bredvid `pointLightPositions`; i loopen i `updateUniformBuffer()` tar varje ljus diffuse och specular `pointLightColors[i]`, ambient en tiondel av den.",
+        "d3d12": "En global `XMFLOAT3 pointLightColors[]` bredvid `pointLightPositions`; diffuse och specular tar färgen, ambient en tiondel av den (`XMStoreFloat3(&…ambient, 0.1f * XMLoadFloat3(&pointLightColors[0]))`)."
+      }
+    },
+    "lamp-colours": {
+      "text": "Färgade lampor: låt varje lampa visa färgen på sitt eget ljus i stället för vitt.",
+      "hint": {
+        "opengl": "`uniform vec3 lightColor;` i `light_cube.fs` och `FragColor = vec4(lightColor, 1.0);`; i loopen som ritar lamporna `lightCubeShader.setVec3(\"lightColor\", pointLightColors[i]);`.",
+        "vulkan": "Lägg till `glm::vec3 color` efter model-matrisen i `PushConstants`, samma block i `light_cube.frag`, och `VK_SHADER_STAGE_FRAGMENT_BIT` i push constant-intervallet och i båda `vkCmdPushConstants`. Sätt `constants.color` för varje lampa.",
+        "d3d12": "Lägg till `XMFLOAT3 color` efter de två matriserna i `ModelConstants`, deklarera alla tre i `light_cube.hlsl`, returnera `float4(color, 1.0f)` och gör rotparameter 0 synlig för alla steg (`D3D12_SHADER_VISIBILITY_ALL`)."
+      }
+    },
+    "follow-spot": {
+      "text": "Följestrålkastaren: häng spotlighten ovanför scenen – ett par enheter ovanför kameran – och rikta den ner mot låda 0, stjärnan. Ett varmt vitt passar den.",
+      "hint": {
+        "opengl": "I stället för `cameraPos` och `cameraFront`: en position som (0, 2, 3) och riktningen `glm::normalize(target - position)` med målet (0, 0, 0). Diffuse och specular (1.0, 0.9, 0.7) ger ett varmt vitt.",
+        "vulkan": "I stället för `cameraPos` och `cameraFront`: en position som (0, 2, 3) och riktningen `glm::normalize(target - position)` med målet (0, 0, 0). Diffuse och specular (1.0, 0.9, 0.7) ger ett varmt vitt.",
+        "d3d12": "I stället för `cameraPos` och `cameraFront`: en position som `XMVectorSet(0.0f, 2.0f, 3.0f, 0.0f)` och riktningen `XMVector3Normalize(target - position)` med målet i origo. Diffuse och specular (1.0, 0.9, 0.7) ger ett varmt vitt."
+      }
+    },
+    "sweep": {
+      "text": "Svepet: låt spotlighten svänga över stjärnan från sida till sida allteftersom tiden går.",
+      "hint": {
+        "opengl": "Flytta målet, inte strålkastaren: `glm::vec3(sin(2.0f * currentFrame), 0.0f, 0.0f)` svänger från x = -1 till 1 och tillbaka.",
+        "vulkan": "Flytta målet, inte strålkastaren: med `float time = static_cast<float>(glfwGetTime());` svänger `glm::vec3(std::sin(2.0f * time), 0.0f, 0.0f)` från x = -1 till 1 och tillbaka.",
+        "d3d12": "Flytta målet, inte strålkastaren. Tiden sedan första bildrutan får du från `std::chrono` (en `static auto startTime`, som i kapitlet Kamera); `XMVectorSet(std::sin(2.0f * time), 0.0f, 0.0f, 0.0f)` svänger från x = -1 till 1."
+      }
+    },
+    "polish": {
+      "text": "Polering: ge materialet en mycket högre shininess – 64 eller mer – så att högdagrarna blir små och skarpa.",
+      "hint": {
+        "opengl": "Det är uniformen `material.shininess`, 32 hittills. Prova 128.",
+        "vulkan": "Det är `ubo.material.shininess`, 32 hittills. Prova 128.",
+        "d3d12": "Det är `material.shininess` i konstantbufferten, 32 hittills. Prova 128."
+      }
+    }
+  }
+}

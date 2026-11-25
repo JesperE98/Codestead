@@ -1,0 +1,53 @@
+{
+  "title": "Project: Opening night",
+  "tasks": {
+    "house-lights": {
+      "text": "House lights down: clear the window to practically black and switch the directional light – the hall's work light – off.",
+      "hint": {
+        "opengl": "The clear colour is `glClearColor`, e.g. (0.01, 0.01, 0.01). A light whose ambient, diffuse and specular are all zero adds nothing: set the three `dirLight` colours to 0.",
+        "vulkan": "The clear colour is `clearValues[0].color`, e.g. (0.01, 0.01, 0.01). A light whose ambient, diffuse and specular are all zero adds nothing: set the three `ubo.dirLight` colours to 0.",
+        "d3d12": "The clear colour is the `clearColor` array, e.g. (0.01, 0.01, 0.01). A light whose ambient, diffuse and specular are all zero adds nothing: set the three `dirLight` colours to 0."
+      }
+    },
+    "gels": {
+      "text": "Gels: give the point lights colours – at least two of them clearly different ones, such as blue, green, pink and red.",
+      "hint": {
+        "opengl": "An array `glm::vec3 pointLightColors[]` next to `pointLightPositions`; each light's diffuse and specular take its colour, its ambient a tenth of it (`pointLightColors[0] * 0.1f`).",
+        "vulkan": "A global `pointLightColors` next to `pointLightPositions`; in the loop of `updateUniformBuffer()` each light's diffuse and specular take `pointLightColors[i]`, its ambient a tenth of it.",
+        "d3d12": "A global `XMFLOAT3 pointLightColors[]` next to `pointLightPositions`; diffuse and specular take the colour, the ambient a tenth of it (`XMStoreFloat3(&…ambient, 0.1f * XMLoadFloat3(&pointLightColors[0]))`)."
+      }
+    },
+    "lamp-colours": {
+      "text": "Lamps in colour: make every lamp show the colour of its own light instead of white.",
+      "hint": {
+        "opengl": "`uniform vec3 lightColor;` in `light_cube.fs` and `FragColor = vec4(lightColor, 1.0);`; in the loop that draws the lamps, `lightCubeShader.setVec3(\"lightColor\", pointLightColors[i]);`.",
+        "vulkan": "Add `glm::vec3 color` after the model matrix in `PushConstants`, the same block in `light_cube.frag`, and `VK_SHADER_STAGE_FRAGMENT_BIT` to the push constant range and to both `vkCmdPushConstants`. Set `constants.color` for each lamp.",
+        "d3d12": "Add `XMFLOAT3 color` after the two matrices in `ModelConstants`, declare all three in `light_cube.hlsl`, return `float4(color, 1.0f)`, and make root parameter 0 visible to all stages (`D3D12_SHADER_VISIBILITY_ALL`)."
+      }
+    },
+    "follow-spot": {
+      "text": "The follow spot: hang the spotlight above the stage – a couple of units above the camera – and aim it down at container 0, the star. A warm white suits it.",
+      "hint": {
+        "opengl": "Instead of `cameraPos` and `cameraFront`: a position such as (0, 2, 3) and the direction `glm::normalize(target - position)` with the target (0, 0, 0). Diffuse and specular (1.0, 0.9, 0.7) give a warm white.",
+        "vulkan": "Instead of `cameraPos` and `cameraFront`: a position such as (0, 2, 3) and the direction `glm::normalize(target - position)` with the target (0, 0, 0). Diffuse and specular (1.0, 0.9, 0.7) give a warm white.",
+        "d3d12": "Instead of `cameraPos` and `cameraFront`: a position such as `XMVectorSet(0.0f, 2.0f, 3.0f, 0.0f)` and the direction `XMVector3Normalize(target - position)` with the target at the origin. Diffuse and specular (1.0, 0.9, 0.7) give a warm white."
+      }
+    },
+    "sweep": {
+      "text": "The sweep: let the spot swing over the star from side to side as the time passes.",
+      "hint": {
+        "opengl": "Move the target, not the spot: `glm::vec3(sin(2.0f * currentFrame), 0.0f, 0.0f)` swings from x = -1 to 1 and back.",
+        "vulkan": "Move the target, not the spot: with `float time = static_cast<float>(glfwGetTime());`, `glm::vec3(std::sin(2.0f * time), 0.0f, 0.0f)` swings from x = -1 to 1 and back.",
+        "d3d12": "Move the target, not the spot. The time since the first frame comes from `std::chrono` (a `static auto startTime`, as in the Camera chapter); `XMVectorSet(std::sin(2.0f * time), 0.0f, 0.0f, 0.0f)` swings from x = -1 to 1."
+      }
+    },
+    "polish": {
+      "text": "Polish: give the material a much higher shininess – 64 or more – so the highlights become small and sharp.",
+      "hint": {
+        "opengl": "It is the `material.shininess` uniform, 32 so far. Try 128.",
+        "vulkan": "It is `ubo.material.shininess`, 32 so far. Try 128.",
+        "d3d12": "It is `material.shininess` in the constant buffer, 32 so far. Try 128."
+      }
+    }
+  }
+}
