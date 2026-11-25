@@ -43,7 +43,13 @@
     "caseDir": "case-files",
     "evidence": "evidence",
     "errorsFile": "errors.txt",
-    "caseReport": "report.txt"
+    "caseReport": "report.txt",
+    "robotScript": "daily-report.sh",
+    "robotLog": "reports.txt",
+    "dotfilesDir": "dotfiles",
+    "aliasFile": "aliases.sh",
+    "secretFile": "passwords.txt",
+    "aliasBranch": "more-aliases"
   },
   "words": {
     "userFull": "学生",

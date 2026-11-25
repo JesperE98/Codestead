@@ -43,7 +43,13 @@
     "caseDir": "enquete",
     "evidence": "preuves",
     "errorsFile": "erreurs.txt",
-    "caseReport": "rapport.txt"
+    "caseReport": "rapport.txt",
+    "robotScript": "rapport-du-jour.sh",
+    "robotLog": "rapports.txt",
+    "dotfilesDir": "dotfiles",
+    "aliasFile": "alias.sh",
+    "secretFile": "mots-de-passe.txt",
+    "aliasBranch": "plus-d-alias"
   },
   "words": {
     "userFull": "Élève",

@@ -1,0 +1,33 @@
+{
+  "title": "Projekt: Deine Dotfiles einpacken",
+  "tasks": {
+    "repo": {
+      "text": "Lege das Verzeichnis `~/{{dotfilesDir}}` an und mach es zu einem git-Repository.",
+      "hint": "`mkdir`, `cd` und dann `git init`. Ist git nicht installiert? Installiere es mit dem Paketmanager, wie im Kapitel über git."
+    },
+    "pack": {
+      "text": "Pack die Einstellungen ein, die du schon hast: Kopiere `~/.bashrc` und `~/.gitconfig` nach `~/{{dotfilesDir}}`.",
+      "hint": "`cp` nimmt mehrere Dateien auf einmal: `cp ~/.bashrc ~/.gitconfig ~/{{dotfilesDir}}/`. Fehlt `~/.gitconfig`? Dann hast du git noch nicht gesagt, wer du bist – das machst du mit `git config --global`."
+    },
+    "aliases": {
+      "text": "Schreib die Datei `{{aliasFile}}` im Repository, mit mindestens zwei Aliasen, die dir nützlich sind.",
+      "hint": "Ein Alias pro Zeile, z. B. `alias ll='ls -la'`. Schreib die Zeilen mit `echo \"…\" >> {{aliasFile}}` – außen doppelte, innen einfache Anführungszeichen."
+    },
+    "first-commit": {
+      "text": "Sichere den Stand: Mach einen Commit, der beide Kopien und `{{aliasFile}}` enthält.",
+      "hint": "`git add` und dann `git commit -m \"…\"`. Prüf vorher mit `git status`, damit du weißt, was hineinkommt."
+    },
+    "secret": {
+      "text": "Das WLAN-Passwort soll in `~/{{dotfilesDir}}/{{secretFile}}` liegen, darf aber nie in der Historie landen. Lege die Datei an, sorg dafür, dass git sie ignoriert, und committe, was dafür nötig ist.",
+      "hint": "Schreib den Namen der Datei in `.gitignore` und committe `.gitignore`. `git status` sollte `{{secretFile}}` nicht mehr zeigen. Ist die Datei schon in einem Commit gelandet? Dann nimmt `git rm --cached` sie aus dem Repository, aber nicht von der Platte."
+    },
+    "branch": {
+      "text": "Probier neue Aliase auf einem Branch aus: Lege den Branch `{{aliasBranch}}` an, füge `{{aliasFile}}` mindestens einen weiteren Alias hinzu und committe auf dem Branch.",
+      "hint": "`git switch -c {{aliasBranch}}`, dann `echo \"…\" >> {{aliasFile}}` und `git commit -am \"…\"`."
+    },
+    "merge-and-use": {
+      "text": "Die Aliase funktionieren – führe `{{aliasBranch}}` mit dem Hauptbranch zusammen. Lies dann `{{aliasFile}}` mit `source` in die Shell ein und führe einen deiner Aliase aus.",
+      "hint": "`git switch main` und `git merge {{aliasBranch}}`. Dann `source {{aliasFile}}` – und tipp den Namen eines Alias ein, als wäre er ein Befehl."
+    }
+  }
+}

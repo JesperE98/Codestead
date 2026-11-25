@@ -43,7 +43,13 @@
     "caseDir": "investigacao",
     "evidence": "provas",
     "errorsFile": "erros.txt",
-    "caseReport": "relatorio.txt"
+    "caseReport": "relatorio.txt",
+    "robotScript": "relatorio-diario.sh",
+    "robotLog": "relatorios.txt",
+    "dotfilesDir": "dotfiles",
+    "aliasFile": "aliases.sh",
+    "secretFile": "senhas.txt",
+    "aliasBranch": "mais-aliases"
   },
   "words": {
     "userFull": "Aluno",
