@@ -1,0 +1,32 @@
+{
+  "title": "Projekt: Der Log-Detektiv",
+  "tasks": {
+    "case-folder": {
+      "text": "Lege einen Ordner für die Ermittlung an, `~/{{caseDir}}`, mit dem Unterordner `{{evidence}}` – mit **einem** Befehl.",
+      "hint": "`mkdir -p` legt alle Ordner auf dem Weg auf einmal an."
+    },
+    "copy-log": {
+      "text": "Sichere die Beweise: Kopiere `~/{{documents}}/server.log` nach `~/{{caseDir}}/{{evidence}}/`. Das Original muss bleiben, wo es ist.",
+      "hint": "Kopiere mit `cp`, nicht mit `mv` – ein Detektiv entfernt nie Beweise vom Tatort."
+    },
+    "errors": {
+      "text": "Speichere alle Zeilen mit `ERROR` aus dem Log in der Datei `~/{{caseDir}}/{{errorsFile}}`.",
+      "hint": "`grep` findet die Zeilen, und `>` schickt sie in eine Datei statt auf den Bildschirm."
+    },
+    "count-warnings": {
+      "text": "Wie viele Warnungen gibt es? Zähle die Zeilen mit `WARN` – groß oder klein geschrieben – und schreib die Anzahl als erste Zeile in den Bericht `~/{{caseDir}}/{{caseReport}}`.",
+      "hint": "`grep -i` ignoriert Groß- und Kleinschreibung, und `wc -l` zählt die Zeilen. Verbinde sie mit einer Pipe und schließe mit `>` ab."
+    },
+    "first-error": {
+      "text": "Wann fing der Ärger an? Füge **die erste** Fehlerzeile zum Bericht hinzu – ohne die Anzahl zu überschreiben, die schon darin steht.",
+      "hint": "`head -n 1` nimmt nur die erste Zeile. `>>` hängt ans Ende der Datei an, während `>` sie überschreibt."
+    },
+    "times": {
+      "text": "Füge **nur die Uhrzeiten** aller Fehler zum Bericht hinzu, eine pro Zeile und von der spätesten bis zur frühesten sortiert.",
+      "hint": "Die Felder des Logs sind durch Leerzeichen getrennt, und die Uhrzeit ist Feld 2: `cut -d' ' -f2`. `sort -r` sortiert rückwärts. Bau eine Pipe von `grep` über `cut` und `sort` und schließe mit `>>` ab."
+    },
+    "show-report": {
+      "text": "Fall gelöst! Zeig den ganzen Bericht im Terminal an und prüfe, ob alles drin ist."
+    }
+  }
+}

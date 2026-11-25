@@ -1184,6 +1184,20 @@ body,
   font-size: 13.5px;
 }
 
+.cs-project-note {
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin: 10px 0 4px;
+  background: var(--cs-accent-soft);
+  font-size: 13.5px;
+}
+
+.cs-project-note.complete {
+  background: var(--cs-success-soft);
+  color: var(--cs-success);
+  font-weight: 600;
+}
+
 .cs-references {
   display: flex;
   flex-direction: column;

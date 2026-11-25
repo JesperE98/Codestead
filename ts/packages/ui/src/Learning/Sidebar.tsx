@@ -22,7 +22,7 @@ export function Sidebar({ window: w }: { window: LearningWindow }) {
     );
     for (const ch of chapters) {
       const { done, total } = w.chapterProgress(ch);
-      const no = ch.kind === ChapterKinds.Summary ? "∑" : ch.kind === ChapterKinds.Exam ? "★" : String(++number);
+      const no = ch.kind === ChapterKinds.Summary ? "∑" : ch.kind === ChapterKinds.Exam ? "★" : ch.isProject ? "◆" : String(++number);
       let complete: boolean;
       let mark: string;
       if (ch.kind === ChapterKinds.Exam) {
@@ -32,6 +32,10 @@ export function Sidebar({ window: w }: { window: LearningWindow }) {
       } else if (ch.kind === ChapterKinds.Summary) {
         complete = false;
         mark = "";
+      } else if (ch.isProject) {
+        // Optional: its milestones do not count towards the course, and it opens with the exam passed.
+        complete = w.isProjectComplete(ch);
+        mark = complete ? "✓" : w.isProjectOpen(ch) ? `${done}/${total}` : "";
       } else {
         complete = w.isLessonComplete(ch);
         mark = complete ? "✓" : `${done}/${total}`;

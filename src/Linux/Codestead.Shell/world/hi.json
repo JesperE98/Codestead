@@ -39,7 +39,11 @@
     "nameVar": "name",
     "lineVar": "line",
     "heredocEnd": "END",
-    "privateFile": "private.txt"
+    "privateFile": "private.txt",
+    "caseDir": "case-files",
+    "evidence": "evidence",
+    "errorsFile": "errors.txt",
+    "caseReport": "report.txt"
   },
   "words": {
     "userFull": "छात्र",

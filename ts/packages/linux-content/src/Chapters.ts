@@ -4,7 +4,7 @@
 
 import { ChapterKinds } from "@codestead/learning";
 import { type Distro, DistrosLib, type Family } from "@codestead/linux-shell";
-import { defineChapters } from "./ChapterDefinitions.js";
+import { defineChapters, defineProjects } from "./ChapterDefinitions.js";
 import * as Resources from "./Resources.js";
 import { Chapter } from "./Types/Chapter.js";
 import type { Part } from "./Types/Part.js";
@@ -29,7 +29,7 @@ export const parts: Part[] = [
   { id: "verktyg", title: "Fler verktyg" },
 ];
 
-function withSummariesAndExams(lessons: Chapter[]): Chapter[] {
+function withSummariesAndExams(lessons: Chapter[], projects: Chapter[]): Chapter[] {
   const list = [...lessons];
   for (const part of parts) {
     const last = list.findLastIndex((c) => c.part === part.id);
@@ -40,6 +40,9 @@ function withSummariesAndExams(lessons: Chapter[]): Chapter[] {
       if (Resources.read(`chapters/en/${id}.md`) === null) continue;
       extra.push(new Chapter({ id, part: part.id, kind }));
     }
+    // The optional project comes after the exam, when its brief exists.
+    const project = projects.find((p) => p.part === part.id);
+    if (project !== undefined && Resources.read(`chapters/en/${project.id}.md`) !== null) extra.push(project);
     list.splice(last + 1, 0, ...extra);
   }
   return list;
@@ -48,9 +51,10 @@ function withSummariesAndExams(lessons: Chapter[]): Chapter[] {
 /**
  * All chapters, shown in the same order as the parts in {@link parts}
  * (a stable sort keeps the order within a part). Each main chapter ends with a summary and an exam
- * when their texts exist (src/Linux/content/chapters/&lt;lang&gt;/&lt;part&gt;-summary.md and -exam.md).
+ * when their texts exist (src/Linux/content/chapters/&lt;lang&gt;/&lt;part&gt;-summary.md and -exam.md), and then
+ * an optional project (&lt;part&gt;-project.md, its milestones in Chapters/&lt;part&gt;/&lt;part&gt;-project.ts).
  */
-export const chapters: Chapter[] = withSummariesAndExams(defineChapters())
+export const chapters: Chapter[] = withSummariesAndExams(defineChapters(), defineProjects())
   .map((ch) => ({ ch, order: parts.findIndex((p) => p.id === ch.part) }))
   .sort((a, b) => a.order - b.order)
   .map((x) => x.ch);
@@ -81,7 +85,7 @@ export function distrosFor(chapter: Chapter): Distro[] {
       : DistrosLib.distros.filter((d) => d.family === chapter.family);
 }
 
-/** The lesson chapters of a main chapter (not the summary and exam). */
+/** The lesson chapters of a main chapter (not the summary, exam and project). */
 export function lessonsIn(partId: string): Chapter[] {
   return chapters.filter((c) => c.part === partId && c.kind === ChapterKinds.Lesson);
 }

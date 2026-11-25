@@ -15,11 +15,13 @@ interface PInit {
   checkpoints?: number;
   exams?: Record<string, number>;
   complete?: Iterable<string>;
+  /** Parts whose optional project is complete. */
+  projects?: Iterable<string>;
 }
 
 function P(init: PInit = {}): ProgressView {
   const t = [...(init.tasks ?? [])];
-  return new ProgressView(t, init.checkpoints ?? 0, new Map(Object.entries(init.exams ?? {})), new Set(init.complete ?? []), t.length, 1000);
+  return new ProgressView(t, init.checkpoints ?? 0, new Map(Object.entries(init.exams ?? {})), new Set(init.complete ?? []), t.length, 1000, new Set(init.projects ?? []));
 }
 
 /** n task keys: "ch/t0@opengl" … (prefix "ex-" for exercises). */
@@ -59,7 +61,20 @@ function days(g: GameState, n: number): void {
 const examParts = GpCourse.outline.parts.filter((p) => p.hasExam).map((p) => p.id);
 
 /** For every achievement: something that unlocks it. */
+const projectParts = GpCourse.outline.parts.filter((p) => p.hasProject).map((p) => p.id);
+
 const witnesses = new Map<string, (g: GameState) => void>([
+  ["project-first", (g) => void rules.sync(g, P({ projects: [projectParts[0]!] }), noon)],
+  ["project-all", (g) => void rules.sync(g, P({ projects: projectParts }), noon)],
+  [
+    "project-unaided",
+    (g) => {
+      const key = `${projectParts[0]!}-project/m1@opengl`;
+      g.unaided.push(key);
+      rules.sync(g, P({ tasks: [key], projects: [projectParts[0]!] }), noon);
+    },
+  ],
+  ["project-perfect", (g) => void rules.sync(g, P({ exams: { [projectParts[0]!]: 100 }, projects: [projectParts[0]!] }), noon)],
   ["first-task", (g) => void rules.sync(g, P({ tasks: keys(1) }), noon)],
   ["first-chapter", (g) => void rules.sync(g, P({ complete: [GpCourse.lessonsIn("getting-started")[0]!.id] }), noon)],
   ["tasks-25", (g) => void rules.sync(g, P({ tasks: keys(25) }), noon)],

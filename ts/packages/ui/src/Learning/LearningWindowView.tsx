@@ -58,12 +58,14 @@ export function LearningWindowView({ window: w }: { window: LearningWindow }) {
   const exam = chapter.kind === ChapterKinds.Exam && w.isExamOpen(chapter);
   // A lesson always shows the workbench (Codestead Linux: the terminal), so its "try it" questions can be answered
   // there. Above it are the tasks once the lesson is unlocked, or a "read first" card until then. An open exam shows
-  // only the workbench (it has "try it" questions too); summaries and locked exams use the whole width.
-  const shown = lesson || exam;
-  const unlocked = lesson && w.isUnlocked(chapter);
+  // only the workbench (it has "try it" questions too); summaries and locked exams use the whole width. An open project
+  // is laid out as an unlocked lesson (its milestones are its tasks); a locked one uses the whole width.
+  const project = chapter.isProject && w.isProjectOpen(chapter);
+  const shown = lesson || exam || project;
+  const unlocked = (lesson || project) && w.isUnlocked(chapter);
   const hosts = tool.hostsTasks ?? false;
   // A tool that hosts the tasks gets the whole column: no tasks card and no "read first" card above it.
-  const below = lesson && !hosts;
+  const below = (lesson || project) && !hosts;
   const tasksVisible = unlocked && !hosts;
   const gateVisible = lesson && !unlocked && !hosts;
 

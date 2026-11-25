@@ -87,6 +87,39 @@ export const CommonAchievements = {
     );
   },
 
+  /** The first optional project finished. */
+  get projectFirst(): Achievement {
+    return count("project-first", "🛠️", AchievementCategory.Learning, (c) => c.game.completedProjects.length, 1);
+  },
+
+  /** Every optional project finished. */
+  get projectAll(): Achievement {
+    return new Achievement(
+      "project-all",
+      "🏗️",
+      AchievementCategory.Learning,
+      (c) => c.course.projectCount > 0 && c.game.completedProjects.length >= c.course.projectCount,
+      (c) => ({ current: c.game.completedProjects.length, target: c.course.projectCount }),
+    );
+  },
+
+  /** Hidden: an optional project finished without opening a single hint or solution of its milestones. */
+  get projectUnaided(): Achievement {
+    return new Achievement("project-unaided", "🧗", AchievementCategory.Hidden, (c) =>
+      c.game.completedProjects.some((part) => {
+        const keys = c.progress.tasks.filter((k) => k.startsWith(`${part}-project/`));
+        return keys.length > 0 && keys.every((k) => c.game.unaided.includes(k));
+      }),
+    );
+  },
+
+  /** Hidden: 100 % on a main chapter's exam and its optional project finished. */
+  get projectPerfect(): Achievement {
+    return new Achievement("project-perfect", "🌟", AchievementCategory.Hidden, (c) =>
+      c.game.completedProjects.some((part) => c.game.examsPerfect.includes(part)),
+    );
+  },
+
   unaided(n: number, icon: string): Achievement {
     return count(`unaided-${n}`, icon, AchievementCategory.Habits, (c) => c.game.unaided.length, n);
   },

@@ -39,7 +39,11 @@
     "nameVar": "nombre",
     "lineVar": "linea",
     "heredocEnd": "FIN",
-    "privateFile": "privado.txt"
+    "privateFile": "privado.txt",
+    "caseDir": "investigacion",
+    "evidence": "pruebas",
+    "errorsFile": "errores.txt",
+    "caseReport": "informe.txt"
   },
   "words": {
     "userFull": "Alumno",

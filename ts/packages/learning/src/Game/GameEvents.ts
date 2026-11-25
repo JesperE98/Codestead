@@ -10,6 +10,8 @@ export class GameEvents {
   readonly achievements: string[] = [];
   readonly chaptersCompleted: string[] = [];
   readonly partsCompleted: string[] = [];
+  /** Parts whose optional project was just completed. */
+  readonly projectsCompleted: string[] = [];
   /** The main chapter whose exam was just passed (first time). */
   examPassed: string | null = null;
   /** The exam was just done with 100 % (first time). */
@@ -28,6 +30,6 @@ export class GameEvents {
   }
 
   get celebrate(): boolean {
-    return this.chaptersCompleted.length > 0 || this.partsCompleted.length > 0 || this.examPassed !== null;
+    return this.chaptersCompleted.length > 0 || this.partsCompleted.length > 0 || this.projectsCompleted.length > 0 || this.examPassed !== null;
   }
 }

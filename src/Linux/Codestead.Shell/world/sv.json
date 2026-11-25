@@ -39,7 +39,11 @@
     "nameVar": "namn",
     "lineVar": "rad",
     "heredocEnd": "SLUT",
-    "privateFile": "privat.txt"
+    "privateFile": "privat.txt",
+    "caseDir": "utredning",
+    "evidence": "bevis",
+    "errorsFile": "fel.txt",
+    "caseReport": "rapport.txt"
   },
   "words": {
     "userFull": "Elev",

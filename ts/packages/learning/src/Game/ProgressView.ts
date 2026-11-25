@@ -13,7 +13,9 @@ export class ProgressView {
     readonly completeLessons: ReadonlySet<string>,
     /** Tasks done as the progress meter counts them. */
     readonly tasksDone: number,
-    /** All tasks as the progress meter counts them. */
+    /** All tasks as the progress meter counts them (the optional projects' milestones are not among them). */
     readonly tasksTotal: number,
+    /** The parts whose optional project is complete (every milestone done). */
+    readonly completeProjects: ReadonlySet<string> = new Set(),
   ) {}
 }

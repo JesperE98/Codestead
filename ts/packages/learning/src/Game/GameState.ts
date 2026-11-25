@@ -23,6 +23,8 @@ export class GameState {
   examsPassed: string[] = [];
   examsPerfect: string[] = [];
   examsFailed: string[] = [];
+  /** Parts whose optional project was completed. */
+  completedProjects: string[] = [];
   /** Tasks solved without a hint or the solution. */
   unaided: string[] = [];
   /** Tasks whose solution was shown before they were solved. */
@@ -47,6 +49,7 @@ export class GameState {
     g.examsPassed = readStringList(v.examsPassed);
     g.examsPerfect = readStringList(v.examsPerfect);
     g.examsFailed = readStringList(v.examsFailed);
+    g.completedProjects = readStringList(v.completedProjects);
     g.unaided = readStringList(v.unaided);
     g.solutionSeen = readStringList(v.solutionSeen);
     g.lastActiveDay = readString(v.lastActiveDay);
@@ -67,6 +70,8 @@ export class GameState {
       examsPassed: this.examsPassed,
       examsPerfect: this.examsPerfect,
       examsFailed: this.examsFailed,
+      // Left out while empty, so a state without projects is saved exactly as the C# apps saved it.
+      completedProjects: this.completedProjects.length > 0 ? this.completedProjects : null,
       unaided: this.unaided,
       solutionSeen: this.solutionSeen,
       lastActiveDay: this.lastActiveDay,

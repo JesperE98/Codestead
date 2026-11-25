@@ -33,11 +33,13 @@ interface PInit {
   complete?: Iterable<string>;
   done?: number;
   total?: number;
+  /** Parts whose optional project is complete. */
+  projects?: Iterable<string>;
 }
 
 function P(init: PInit = {}): ProgressView {
   const t = [...(init.tasks ?? [])];
-  return new ProgressView(t, init.checkpoints ?? 0, new Map(Object.entries(init.exams ?? {})), new Set(init.complete ?? []), init.done ?? t.length, init.total ?? 1000);
+  return new ProgressView(t, init.checkpoints ?? 0, new Map(Object.entries(init.exams ?? {})), new Set(init.complete ?? []), init.done ?? t.length, init.total ?? 1000, new Set(init.projects ?? []));
 }
 
 function keys(n: number, suffix = ""): string[] {
@@ -65,7 +67,19 @@ function days(g: GameState, n: number): void {
 }
 
 /** For every achievement: something that unlocks it. */
+const projectParts = ChaptersLib.chapters.filter((c) => c.kind === ChapterKinds.Project).map((c) => c.part);
+
 const witnesses = new Map<string, (g: GameState) => void>([
+  ["project-first", (g) => void LinuxGame.rules.sync(g, P({ projects: [projectParts[0]!] }), noon)],
+  ["project-all", (g) => void LinuxGame.rules.sync(g, P({ projects: projectParts }), noon)],
+  [
+    "project-unaided",
+    (g) => {
+      g.unaided.push("grunder-project/case-folder");
+      LinuxGame.rules.sync(g, P({ tasks: ["grunder-project/case-folder"], projects: ["grunder"] }), noon);
+    },
+  ],
+  ["project-perfect", (g) => void LinuxGame.rules.sync(g, P({ exams: { grunder: 100 }, projects: ["grunder"] }), noon)],
   ["first-task", (g) => void LinuxGame.rules.sync(g, P({ tasks: keys(1) }), noon)],
   ["first-chapter", (g) => void LinuxGame.rules.sync(g, P({ complete: [ChaptersLib.lessonsIn("grunder")[0]!.id] }), noon)],
   ["tasks-25", (g) => void LinuxGame.rules.sync(g, P({ tasks: keys(25) }), noon)],

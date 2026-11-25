@@ -22,6 +22,7 @@ import { lighting } from "./TaskChecks.Lighting.js";
 import { modelLoading } from "./TaskChecks.ModelLoading.js";
 import type { Checks } from "./TaskChecks.PerApi.js";
 import { pbr } from "./TaskChecks.Pbr.js";
+import { projects } from "./TaskChecks.Projects.js";
 import { shaders } from "./TaskChecks.Shaders.js";
 import { textures } from "./TaskChecks.Textures.js";
 import { camera, coordinateSystems, transformations } from "./TaskChecks.Transformations.js";
@@ -64,6 +65,7 @@ function build(): Map<string, TaskCheck> {
     exercisesAdvancedLightingAndPbr(),
     exercisesInPractice(),
     exercisesGuestArticles(),
+    projects(),
   ])
     for (const [chapter, checks] of Object.entries(group)) add(chapter, checks);
   return d;

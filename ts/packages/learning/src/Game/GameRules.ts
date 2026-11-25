@@ -158,6 +158,11 @@ export class GameRules {
       this.course.parts.filter((part) => part.lessons.length > 0 && part.lessons.every((l) => g.completedChapters.includes(l))).map((part) => part.id),
       ev.partsCompleted,
     );
+    GameRules.addNew(
+      g.completedProjects,
+      this.course.parts.filter((part) => part.hasProject && p.completeProjects.has(part.id)).map((part) => part.id),
+      ev.projectsCompleted,
+    );
     GameRules.addNew(g.examsPassed, [...p.exams].filter(([, v]) => v >= GameRules.ExamPassPercent).map(([k]) => k));
     GameRules.addNew(g.examsPerfect, [...p.exams].filter(([, v]) => v >= 100).map(([k]) => k));
 
@@ -179,7 +184,7 @@ export class GameRules {
     g.xp = XpRules.total(g, p);
     ev.xpAfter = g.xp;
     ev.levelAfter = Levels.levelOf(g.xp);
-    ev.changed = ev.xpGained !== 0 || ev.achievements.length > 0 || ev.chaptersCompleted.length > 0 || ev.partsCompleted.length > 0;
+    ev.changed = ev.xpGained !== 0 || ev.achievements.length > 0 || ev.chaptersCompleted.length > 0 || ev.partsCompleted.length > 0 || ev.projectsCompleted.length > 0;
     return ev;
   }
 }
