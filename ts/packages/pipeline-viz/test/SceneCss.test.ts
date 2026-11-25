@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { invertLightness, lightCss, scopeToScene, stripViewportMedia } from "../engine/css.js";
-import { wrapFragment } from "../engine/light.js";
+import { OutputShader } from "three/examples/jsm/shaders/OutputShader.js";
+import { lightOutputFragment, themeOutput, wrapFragment } from "../engine/light.js";
 
 describe("SceneCss", () => {
   it("regler för fönstrets bredd tas bort, annat står kvar", () => {
@@ -50,5 +51,27 @@ describe("SceneCss", () => {
     expect(srgb.match(/void main\(\)/g)?.length).toBe(1);
     expect(wrapFragment(src, "csLightGlow", true)).toContain("csToLinear");
     expect(wrapFragment("no main here", "csLightFlat", false)).toBe("no main here");
+  });
+
+  it("output-passet ger raka färger över sidan i det ljusa temat (filtexten blir inte vit), sitt eget i det mörka", () => {
+    const light = lightOutputFragment(OutputShader.fragmentShader);
+    expect(light).toContain("void csMain()");
+    expect(light.match(/void main\(\)/g)?.length).toBe(1);
+    // The colour is taken out of the premultiplication before the sRGB conversion, and put back after it.
+    expect(light.indexOf("gl_FragColor.rgb / gl_FragColor.a")).toBeGreaterThan(light.indexOf("texture2D( tDiffuse, vUv )"));
+    expect(light.indexOf("gl_FragColor.rgb / gl_FragColor.a")).toBeLessThan(light.indexOf("sRGBTransferOETF"));
+    expect(light).toContain("csMain();\n  gl_FragColor.rgb *= gl_FragColor.a;");
+    expect(lightOutputFragment("no main here")).toBe("no main here");
+
+    const material = { fragmentShader: OutputShader.fragmentShader, needsUpdate: false };
+    themeOutput(material, true);
+    expect(material.fragmentShader).toBe(light);
+    expect(material.needsUpdate).toBe(true);
+    material.needsUpdate = false;
+    themeOutput(material, true);
+    expect(material.needsUpdate).toBe(false);
+    themeOutput(material, false);
+    expect(material.fragmentShader).toBe(OutputShader.fragmentShader);
+    expect(material.needsUpdate).toBe(true);
   });
 });

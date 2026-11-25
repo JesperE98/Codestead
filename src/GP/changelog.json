@@ -1,5 +1,32 @@
 [
   {
+    "version": "0.2.10",
+    "date": "2026-11-25",
+    "changes": {
+      "en": [
+        "**Pipeline scenes in the light theme**: see-through parts of a scene now keep their colour on the light background – the file's text in the overview's first step was white inside coloured edges and hard to read; now it is coloured like the rest of the scene."
+      ],
+      "sv": [
+        "**Pipelinescener i det ljusa temat**: genomskinliga delar av en scen behåller nu sin färg på den ljusa bakgrunden – filens text i översiktens första steg var vit innanför färgade kanter och svår att läsa; nu har den färg som resten av scenen."
+      ],
+      "de": [
+        "**Pipeline-Szenen im hellen Design**: Durchscheinende Teile einer Szene behalten jetzt auf dem hellen Hintergrund ihre Farbe – der Text der Datei im ersten Schritt der Übersicht war innerhalb farbiger Ränder weiß und schwer zu lesen; jetzt ist er farbig wie der Rest der Szene."
+      ],
+      "fr": [
+        "**Les scènes du pipeline dans le thème clair** : les parties transparentes d'une scène gardent maintenant leur couleur sur le fond clair – le texte du fichier, à la première étape de la vue d'ensemble, était blanc entre des bords colorés et difficile à lire ; il est désormais en couleur comme le reste de la scène."
+      ],
+      "es": [
+        "**Escenas del pipeline en el tema claro**: las partes transparentes de una escena conservan ahora su color sobre el fondo claro; el texto del archivo en el primer paso de la vista general era blanco dentro de bordes de color y costaba leerlo; ahora tiene color como el resto de la escena."
+      ],
+      "zh": [
+        "**浅色主题下的管线场景**：场景中半透明的部分现在在浅色背景上也保持自己的颜色——概览第一步中的文件文本原本是彩色边缘里的白字，难以阅读；现在它和场景的其他部分一样带有颜色。"
+      ],
+      "ja": [
+        "**ライトテーマのパイプラインシーン**：シーンの半透明な部分が、明るい背景の上でも本来の色で表示されるようになりました。概要の最初のステップのファイルのテキストは、色付きの縁の内側が白くて読みにくかったのですが、今はシーンのほかの部分と同じく色が付いています。"
+      ]
+    }
+  },
+  {
     "version": "0.2.9",
     "date": "2026-11-20",
     "changes": {

@@ -382,7 +382,9 @@ scenen har fokus), spelar ett steg igen, byter modell (triangel, kub, tekanna �
 visa API:ts kod för steget – i det API eleven valt, på svenska eller engelska (andra språk får engelska; knapparnas texter
 är `viz.*` i UI-texterna) och i fönstrets ljusa eller mörka tema, och de följer med när något av dem ändras.
 
-- **Ljust tema**: stilarna och 3D-materialen vänds till ljusa (`engine/css.ts`, `engine/light.ts`). Två saker förblir
+- **Ljust tema**: stilarna och 3D-materialen vänds till ljusa (`engine/css.ts`, `engine/light.ts`), och output-passet gör
+  om bilden till sRGB som raka färger (`themeOutput`), så att genomskinliga delar (översiktens filtext) får sin färg över
+  den ljusa sidan i stället för att bli vita. Två saker förblir
   mörka med flit (`engine/light-only.css`): 2D-närbilderna (`PixelCanvas`: rasterisering, fragment, djup, blending) är
   bilder av ett render target – pixlarnas riktiga färger på svart, med siffrorna bredvid – och visas som en mörk skärm
   med tydlig kant; och ett steg vars poäng är ljus som läggs till (blending-slidens additiva steg: på vitt syns

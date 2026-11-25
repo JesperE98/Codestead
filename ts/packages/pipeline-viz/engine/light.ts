@@ -10,6 +10,9 @@
 //     draw without glow keep their colours: they are what the GPU would draw;
 // and the star field (tagged xrHideInAR) is hidden. Bloom is turned off by mount.ts. A slide that changes a material's
 // blending later (the blending slide's panes turn additive) gets that material changed again, for its new blending.
+// The composer's output pass, finally, turns the picture into sRGB as straight colours (themeOutput): on the
+// transparent canvas, see-through parts (the overview's file text, faint lines) would otherwise come out lighter than
+// their colour, white on the light page.
 
 import { AdditiveBlending, NormalBlending, SRGBColorSpace, ShaderMaterial, type Material, type Object3D, type Scene, type WebGLProgramParametersWithUniforms } from 'three';
 
@@ -129,4 +132,33 @@ export function themeScene(scene: Scene | Object3D, light: boolean, hideStars = 
       adapt(m, kind);
     }
   });
+}
+
+/**
+ * The output pass's fragment shader for the light theme. The composer's picture holds premultiplied colours (alpha
+ * blended over a transparent clear), and the pass turns them into sRGB as they are: a pixel of colour c and coverage a
+ * then shows as sRGB(c·a) + page·(1 − a), which is more than its colour where a is small – on the light page, the text
+ * of the overview's first step became white inside its coloured edges. Here the colour is taken out of the
+ * premultiplication first and put back after the conversion: sRGB(c)·a + page·(1 − a), the colour over the page.
+ * (Not on a dark stage or in the dark theme: there added light, more than its coverage, is the point.)
+ */
+export function lightOutputFragment(source: string): string {
+  const renamed = source.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/, 'void csMain()');
+  if (renamed === source) return source;
+  const read = /gl_FragColor\s*=\s*texture2D\(\s*tDiffuse\s*,\s*vUv\s*\)\s*;/;
+  if (!read.test(renamed)) return source;
+  const straight = renamed.replace(read, 'gl_FragColor = texture2D( tDiffuse, vUv );\n  if (gl_FragColor.a > 0.0) gl_FragColor.rgb = min(gl_FragColor.rgb / gl_FragColor.a, vec3(1.0));');
+  return `${straight}\nvoid main() {\n  csMain();\n  gl_FragColor.rgb *= gl_FragColor.a;\n}\n`;
+}
+
+const outputShaders = new WeakMap<object, string>();
+
+/** The composer's output pass material: its light-theme shader (lightOutputFragment) when `light`, else its own. */
+export function themeOutput(material: { fragmentShader: string; needsUpdate: boolean }, light: boolean): void {
+  const own = outputShaders.get(material) ?? material.fragmentShader;
+  outputShaders.set(material, own);
+  const wanted = light ? lightOutputFragment(own) : own;
+  if (material.fragmentShader === wanted) return;
+  material.fragmentShader = wanted;
+  material.needsUpdate = true;
 }
