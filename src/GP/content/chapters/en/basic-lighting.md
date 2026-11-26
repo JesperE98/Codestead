@@ -135,7 +135,7 @@ between the light ray and the fragment we use something called a normal vector, 
 fragment's surface; the light direction is the vector from the fragment to the light source. To measure the angle
 between the light ray and the fragment we take the dot product between the normal vector and the light direction.
 
-You may remember from the *Transformations* chapter that, the lower the angle between two unit vectors, the more the
+You may remember from the chapter *The maths of 3D* that, the lower the angle between two unit vectors, the more the
 dot product is inclined towards a value of 1. When the angle between both vectors is 90 degrees, the dot product
 becomes 0. The same applies to θ: the larger θ becomes, the less of an impact the light should have on the fragment's
 color.

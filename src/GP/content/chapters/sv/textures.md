@@ -2349,4 +2349,8 @@ Vid 0,5 är ansiktena mycket ljusare, och allt utanför dem är hälften så lju
 nere uppåtpilen så tar ansiktena över (vid 1,0 ser du bara ansiktena, svarta där de är genomskinliga); håll nere
 nedåtpilen så kommer lådan tillbaka (vid 0,0 finns bara den begränsade lådan kvar).
 
-Grattis – du har texturerat ditt första objekt. I nästa kapitel börjar vi flytta runt det med transformationer.
+Grattis – du har texturerat ditt första objekt, och det var den sista lektionen i *Kom igång*. Hittills har allt du
+ritat varit platt och stilla. I nästa del, *Till 3D*, börjar lådan röra sig: vi skalar, roterar och flyttar den,
+placerar den i en 3D-värld som syns i perspektiv och flyger runt den med en kamera. Delen börjar med *Matematiken
+bakom 3D*, en genomgång av matematiken bakom allt det – axlar, vinklar, sinus och cosinus, vektorer och matriser –
+så att verktygen är redo innan vi behöver dem.

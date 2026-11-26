@@ -28,8 +28,8 @@ bekväm med C++ innan du börjar: variabler, funktioner, pekare och referenser, 
 `std::vector`. Kapitlen förklarar den mindre vanliga C++-koden som dyker upp på vägen, och Vulkan-koden använder
 några C++17-funktioner (som `std::optional`) som förklaras där de används.
 
-Längre fram behöver du också lite matematik (vektorer och matriser). Du behöver inte kunna den i förväg: kapitlet
-*Transformations* går igenom det du behöver, precis som på learnopengl.com.
+Längre fram behöver du också lite matematik (vektorer och matriser). Du behöver inte kunna den i förväg: det första
+kapitlet i delen *Till 3D*, *Matematiken bakom 3D*, går igenom det du behöver.
 
 ## Välja API
 

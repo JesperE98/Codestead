@@ -8,346 +8,20 @@ beräkningskraft. Det finns mycket bättre sätt att *transformera* ett objekt, 
 
 ![Det här har du byggt i slutet av kapitlet](images/results/transformations.webp "Det här har du byggt i slutet av kapitlet (ritat av kursens egen simulator).")
 
-Matriser är mycket kraftfulla matematiska konstruktioner som verkar skrämmande till en början, men när du väl har
-vant dig vid dem visar de sig vara extremt användbara. För att diskutera matriser måste vi göra en liten dykning i
-matematiken. Men för att helt förstå transformationer måste vi först gå lite djupare in på vektorer innan vi
-diskuterar matriser.
-
-Kapitlets första halva är matematik och densamma för alla API:er. Koden börjar i avsnittet *I praktiken*, där du
-använder matematiken för att skala, rotera och flytta den texturerade lådan från förra kapitlet.
-
-## Vektorer
-
-I sin mest grundläggande definition är vektorer *riktningar* och inget mer. En vektor har en **riktning** och en
-**storlek** (även kallad styrka eller längd). Du kan tänka på vektorer som anvisningarna på en skattkarta: "gå 10
-steg åt vänster, gå nu 3 steg norrut och gå 5 steg åt höger"; här är "vänster" riktningen och "10 steg" vektorns
-storlek. Anvisningarna på skattkartan innehåller alltså 3 vektorer. Vektorer kan ha valfritt antal dimensioner, men
-vi arbetar oftast med 2 till 4. Om en vektor har 2 dimensioner representerar den en riktning i ett plan (tänk på
-2D-grafer), och när den har 3 dimensioner kan den representera vilken riktning som helst i en 3D-värld.
-
-Om du ritar vektorer i en 2D-graf är varje vektor en pil; var pilen börjar spelar ingen roll, bara dess riktning och
-längd. Vektorn (2, 3) ritad från origo och (2, 3) ritad från punkten (4, 1) är samma vektor.
-
-Matematiker föredrar i allmänhet att beteckna vektorer med en bokstav med ett litet streck över, som v̄. När vektorer
-visas i formler skrivs de dessutom oftast som en kolumn av tal:
-
-```text
-    | x |
-v = | y |
-    | z |
-```
-
-I löptext skriver vi samma vektor som v = (x, y, z) för att spara plats. Eftersom vektorer anges som riktningar är
-det ibland svårt att se dem som positioner. Om vi vill se vektorer som positioner kan vi tänka oss att
-riktningsvektorns början ligger i (0, 0, 0) och att den pekar i en viss riktning som anger punkten, vilket gör den
-till en *positionsvektor* (vi kan också ange ett annat origo och då säga: "den här vektorn pekar på den punkten i
-rummet från det här origot"). Positionsvektorn (3, 5) skulle då peka på (3, 5) i grafen med origo i (0, 0). Med
-vektorer kan vi alltså beskriva riktningar **och** positioner i 2D och 3D.
-
-Precis som med vanliga tal kan vi definiera flera operationer på vektorer (några av dem har du redan sett).
-
-### Skalära vektoroperationer
-
-En *skalär* är ett enda tal. När vi adderar, subtraherar, multiplicerar eller dividerar en vektor med en skalär
-adderar, subtraherar, multiplicerar eller dividerar vi helt enkelt varje element i vektorn med skalären. För addition
-ser det ut så här:
-
-```text
-| 1 |       | 1 + 3 |   | 4 |
-| 2 | + 3 = | 2 + 3 | = | 5 |
-| 3 |       | 3 + 3 |   | 6 |
-```
-
-där + kan vara +, −, · eller ÷. Observera att den omvända ordningen (skalär − vektor, skalär ÷ vektor) inte är
-definierad för minus och division. Strängt taget är inte heller addition av en skalär och en vektor definierad i
-matematiken; det är en vanlig förkortning för "addera skalären till varje element", och {{shaderLanguage}} stöder
-den också.
-
-### Negation av vektorer
-
-Att negera en vektor ger en vektor i motsatt riktning. En vektor som pekar mot nordost pekar mot sydväst efter
-negationen. För att negera en vektor sätter vi ett minustecken framför varje komponent (du kan också se det som en
-multiplikation med skalären −1):
-
-```text
-       | vx |   | −vx |
-−v = − | vy | = | −vy |
-       | vz |   | −vz |
-```
-
-### Addition och subtraktion
-
-Addition av två vektorer definieras som *komponentvis* addition, det vill säga varje komponent i den ena vektorn
-adderas till samma komponent i den andra:
-
-```text
-    | 1 |       | 4 |           | 1 + 4 |   | 5 |
-v = | 2 |,  k = | 5 |,  v + k = | 2 + 5 | = | 7 |
-    | 3 |       | 6 |           | 3 + 6 |   | 9 |
-```
-
-Visuellt sätter du den andra pilen vid spetsen av den första: summan är pilen från den förstas början till den
-andras spets. Om v = (4, 2) och k = (1, 2) är v + k = (5, 4) – gå 4 åt höger och 2 uppåt, sedan 1 åt höger och 2
-uppåt, så har du hamnat 5 åt höger och 4 uppåt.
-
-Precis som för vanliga tal är vektorsubtraktion detsamma som addition med en negerad andra vektor:
-
-```text
-    | 1 |       | 4 |                      | 1 − 4 |   | −3 |
-v = | 2 |,  k = | 5 |,  v + (−k) = v − k = | 2 − 5 | = | −3 |
-    | 3 |       | 6 |                      | 3 − 6 |   | −3 |
-```
-
-Att subtrahera två vektorer från varandra ger en vektor som är skillnaden mellan de positioner som de två vektorerna
-pekar på. Det är användbart när vi behöver vektorn mellan två punkter: vektorn från punkten p till punkten q är q − p.
-
-### Längd
-
-För att få fram en vektors längd/storlek använder vi Pythagoras sats, som du kanske minns från mattelektionerna. En
-vektor bildar en triangel om du ser dess x- och y-komponent som två sidor i en triangel, och vektorn själv är
-hypotenusan. Eftersom längderna på de två sidorna (x, y) är kända och vi vill veta längden på den sneda sidan v, kan
-vi räkna ut den med Pythagoras sats:
-
-```text
-||v|| = √(x² + y²)
-```
-
-där ||v|| betecknar *längden av vektorn v*. Det utvidgas lätt till 3D genom att lägga till z² i ekvationen. För
-v = (4, 2):
-
-```text
-||v|| = √(4² + 2²) = √(16 + 4) = √20 ≈ 4.47
-```
-
-Det finns också en speciell sorts vektor som vi kallar *enhetsvektor*. En enhetsvektor har en extra egenskap,
-nämligen att dess längd är exakt 1. Vi kan räkna ut en enhetsvektor n från vilken vektor som helst genom att dividera
-var och en av vektorns komponenter med dess längd:
-
-```text
-n = v / ||v||
-```
-
-Det kallas att *normalisera* en vektor. Enhetsvektorer skrivs med ett litet tak över sig och är i allmänhet lättare
-att arbeta med, särskilt när vi bara bryr oss om deras riktning (riktningen ändras inte om vi ändrar en vektors
-längd). Normaliseras v = (4, 2) blir det ungefär (0.894, 0.447): samma riktning, längd 1.
-
-![Addition och subtraktion av vektorer, och en vektors längd](images/vectors.webp "v + k: den andra pilen börjar vid den förstas spets. q − p: vektorn från punkten p till punkten q. Längden av v = (4, 2): hypotenusan till dess komponenter.")
-
-### Multiplikation av vektorer
-
-Att multiplicera två vektorer är lite speciellt. Vanlig multiplikation är egentligen inte definierad för vektorer
-eftersom den saknar visuell betydelse, men det finns två specifika fall att välja mellan: det ena är
-*skalärprodukten* (dot product), skriven v · k, och det andra är *kryssprodukten* (cross product), skriven v × k.
-
-#### Skalärprodukt
-
-Skalärprodukten av två vektorer är lika med produkten av deras längder gånger cosinus för vinkeln mellan dem. Om
-det låter förvirrande, titta på formeln:
-
-```text
-v · k = ||v|| · ||k|| · cos θ
-```
-
-där vinkeln mellan dem betecknas theta (θ). Varför är det intressant? Tänk dig att v och k är enhetsvektorer; då är
-deras längder lika med 1. Formeln förenklas då till:
-
-```text
-v · k = 1 · 1 · cos θ = cos θ
-```
-
-Nu bestämmer skalärprodukten **bara** vinkeln mellan vektorerna. Du kanske minns att cosinus, cos, blir 0 när vinkeln
-är 90 grader och 1 när vinkeln är 0. Det gör att vi enkelt kan testa med skalärprodukten om två vektorer är
-*ortogonala* eller *parallella* (ortogonala betyder att vektorerna står i rät vinkel mot varandra). Om du vill veta
-mer om sin och cos rekommenderar jag en grundläggande repetition av trigonometri.
-
-> Du kan också räkna ut vinkeln mellan två vektorer som inte är enhetsvektorer, men då måste du dividera resultatet
-> med båda vektorernas längder för att få kvar cos θ.
-
-Hur räknar vi då ut skalärprodukten? Skalärprodukten är en komponentvis multiplikation där vi adderar resultaten. Så
-här ser det ut med två enhetsvektorer (du kan kontrollera att båda har längden exakt 1):
-
-```text
-|  0.6 |   | 0 |
-| −0.8 | · | 1 | = (0.6 · 0) + (−0.8 · 1) + (0 · 0) = −0.8
-|  0   |   | 0 |
-```
-
-För att få vinkeln mellan de två enhetsvektorerna använder vi inversen till cosinus, cos⁻¹ (acos), vilket ger 143,1
-grader. Vi har nu räknat ut vinkeln mellan de två vektorerna. Skalärprodukter visar sig vara mycket användbara i
-ljusberäkningar längre fram.
-
-```quiz
-Skalärprodukten av två enhetsvektorer är 0. Vad säger det om dem?
-- [x] De är vinkelräta mot varandra (vinkeln är 90°)
-- [ ] De pekar åt samma håll
-- [ ] De pekar åt motsatta håll
-- [ ] En av dem måste vara nollvektorn
----
-För enhetsvektorer är skalärprodukten cos θ, och cos θ är 0 precis vid 90°. Samma riktning ger 1, motsatta riktningar ger −1. En nollvektor kan inte vara en enhetsvektor: dess längd är 0.
-```
-
-#### Kryssprodukt
-
-Kryssprodukten är bara definierad i 3D och tar två icke-parallella vektorer som indata och ger en tredje vektor som är
-ortogonal mot båda. Om de två indatavektorerna också är ortogonala mot varandra ger kryssprodukten 3 ortogonala
-vektorer; det kommer att visa sig användbart i kommande kapitel. Så här räknar man ut kryssprodukten av vektorerna
-A och B:
-
-```text
-| Ax |   | Bx |   | Ay·Bz − Az·By |
-| Ay | × | By | = | Az·Bx − Ax·Bz |
-| Az |   | Bz |   | Ax·By − Ay·Bx |
-```
-
-Som du ser verkar det inte riktigt vara meningsfullt. Men om du bara följer stegen får du en ny vektor som är
-ortogonal mot dina indatavektorer. Prova med x-axeln och y-axeln:
-
-```text
-| 1 |   | 0 |   | 0·0 − 0·1 |   | 0 |
-| 0 | × | 1 | = | 0·0 − 1·0 | = | 0 |
-| 0 |   | 0 |   | 1·1 − 0·0 |   | 1 |
-```
-
-Resultatet är z-axeln. Ordningen spelar roll: y × x ger (0, 0, −1), z-axeln åt andra hållet.
-
-![Skalärprodukt och kryssprodukt](images/dot-cross.webp "För enhetsvektorer är skalärprodukten cos θ: 1 i samma riktning, 0 i rät vinkel, −1 i motsatta riktningar. Kryssprodukten av x och y är z – och y × x är −z.")
-
-## Matriser
-
-Nu när vi har gått igenom nästan allt som finns att säga om vektorer är det dags att gå in i matrisen! En matris är
-en rektangulär uppställning av tal, symboler och/eller matematiska uttryck. Varje enskild post i en matris kallas ett
-*element* i matrisen. Här är ett exempel på en 2×3-matris:
-
-```text
-| 1  2  3 |
-| 4  5  6 |
-```
-
-Matriser indexeras med (i, j) där i är raden och j kolumnen; därför kallas matrisen ovan en 2×3-matris (2 rader och
-3 kolumner, även kallat matrisens *dimensioner*). Det är tvärtom mot vad du är van vid när du indexerar 2D-grafer
-som (x, y). För att hämta värdet 4 indexerar vi (2, 1) (andra raden, första kolumnen).
-
-Matriser är egentligen inget mer än så, bara rektangulära uppställningar av matematiska uttryck. De har dock en
-mycket trevlig uppsättning matematiska egenskaper, och precis som för vektorer kan vi definiera flera operationer på
-matriser, nämligen addition, subtraktion och multiplikation.
-
-### Addition och subtraktion
-
-Addition och subtraktion av två matriser görs elementvis. Samma regler som vi känner från vanliga tal gäller alltså,
-men tillämpade på elementen med samma index i båda matriserna. Det betyder att addition och subtraktion bara är
-definierade för matriser med samma dimensioner. En 3×2-matris och en 2×3-matris (eller en 3×3-matris och en
-4×4-matris) kan inte adderas eller subtraheras. Så här fungerar matrisaddition för två 2×2-matriser:
-
-```text
-| 1  2 |   | 5  6 |   | 1 + 5  2 + 6 |   |  6   8 |
-| 3  4 | + | 7  8 | = | 3 + 7  4 + 8 | = | 10  12 |
-```
-
-Samma regler gäller för matrissubtraktion:
-
-```text
-| 4  2 |   | 2  4 |   | 4 − 2  2 − 4 |   | 2  −2 |
-| 1  6 | − | 0  1 | = | 1 − 0  6 − 1 | = | 1   5 |
-```
-
-### Produkter av matris och skalär
-
-En produkt av en matris och en skalär multiplicerar varje element i matrisen med skalären. Följande exempel visar
-multiplikationen:
-
-```text
-    | 1  2 |   | 2·1  2·2 |   | 2  4 |
-2 · | 3  4 | = | 2·3  2·4 | = | 6  8 |
-```
-
-Nu blir det också begripligt varför enskilda tal kallas skalärer. En skalär *skalar* i princip alla element i
-matrisen med sitt värde. I exemplet ovan skalades alla element med 2.
-
-Så långt allt väl, inget av fallen var särskilt komplicerat. Det vill säga, tills vi börjar med multiplikation av
-två matriser.
-
-### Matrismultiplikation
-
-Att multiplicera matriser är inte nödvändigtvis komplicerat, men ganska svårt att känna sig bekväm med.
-Matrismultiplikation innebär i princip att man följer en uppsättning fördefinierade regler. Det finns dock några
-begränsningar:
-
-1. Du kan bara multiplicera två matriser om antalet kolumner i den vänstra matrisen är lika med antalet rader i den
-   högra matrisen.
-2. Matrismultiplikation är inte *kommutativ*, det vill säga A · B ≠ B · A.
-
-Vi börjar med ett exempel på en multiplikation av två 2×2-matriser:
-
-```text
-| 1  2 |   | 5  6 |   | 1·5 + 2·7   1·6 + 2·8 |   | 19  22 |
-| 3  4 | · | 7  8 | = | 3·5 + 4·7   3·6 + 4·8 | = | 43  50 |
-```
-
-Just nu försöker du förmodligen lista ut vad i hela friden som hände? Matrismultiplikation är en kombination av vanlig
-multiplikation och addition, där den vänstra matrisens rader kombineras med den högra matrisens kolumner. För att få
-elementet i rad i och kolumn j i resultatet tar du rad i i den vänstra matrisen och kolumn j i den högra,
-multiplicerar elementen parvis och adderar produkterna. För elementet uppe till höger ovan är det rad 1 i den vänstra
-matrisen, (1, 2), och kolumn 2 i den högra, (6, 8): 1·6 + 2·8 = 22. Med andra ord: varje element i resultatet är
-skalärprodukten av en rad i den vänstra matrisen och en kolumn i den högra.
-
-Resultatmatrisen har dimensionerna (n, m), där n är antalet rader i den vänstra matrisen och m antalet kolumner i den
-högra: en 2×3-matris gånger en 3×4-matris är en 2×4-matris.
-
-Byt nu plats på de två matriserna:
-
-```text
-| 5  6 |   | 1  2 |   | 5·1 + 6·3   5·2 + 6·4 |   | 23  34 |
-| 7  8 | · | 3  4 | = | 7·1 + 8·3   7·2 + 8·4 | = | 31  46 |
-```
-
-Ett helt annat resultat – det är vad "inte kommutativ" betyder, och det kommer att spela stor roll när vi kombinerar
-transformationer. Oroa dig inte om du har svårt att föreställa dig multiplikationerna i huvudet. Fortsätt att räkna
-för hand och kom tillbaka hit när det blir svårt. Med tiden blir matrismultiplikation en självklarhet.
-
-```quiz
-A är en 2×3-matris (2 rader, 3 kolumner) och B en 3×4-matris. Vilka påståenden stämmer?
-- [ ] A · B är definierad, och resultatet är en 3×3-matris
-- [ ] A · B och B · A är båda definierade, och de är lika
-- [x] B · A är inte definierad, eftersom B har 4 kolumner men A bara 2 rader
-- [x] A · B är definierad, och resultatet är en 2×4-matris
----
-Den vänstra matrisens kolumner måste stämma med den högras rader: A har 3 kolumner och B har 3 rader, så A · B fungerar och har A:s rader och B:s kolumner (2×4). För B · A stämmer inte B:s 4 kolumner med A:s 2 rader. Och även när båda ordningarna är definierade är matrismultiplikation inte kommutativ.
-```
-
-## Multiplikation av matris och vektor
-
-Hittills har vi sett vår beskärda del av vektorer. Vi har använt dem för att representera positioner, färger och
-till och med texturkoordinater. Låt oss gå lite längre ner i kaninhålet och berätta att en vektor i grunden är en
-N×1-matris, där N är vektorns antal komponenter (även kallad en N-dimensionell vektor). Tänker man efter är det
-mycket logiskt. Vektorer är precis som matriser en uppställning av tal, men med bara 1 kolumn. Hur hjälper den här
-nya informationen oss då? Jo, om vi har en M×N-matris kan vi multiplicera den med vår N×1-vektor, eftersom matrisens
-antal kolumner är lika med vektorns antal rader; matrismultiplikationen är alltså definierad.
-
-Men varför bryr vi oss om att vi kan multiplicera matriser med en vektor? Jo, det råkar finnas massor av intressanta
-2D/3D-transformationer som vi kan lägga i en matris, och att multiplicera den matrisen med en vektor *transformerar*
-då vektorn. Om du fortfarande är lite förvirrad, låt oss börja med några exempel så ser du snart vad vi menar.
-
-### Identitetsmatris
-
-I grafikprogrammering, och i den här kursen, arbetar vi oftast med 4×4-transformationsmatriser av flera skäl, och
-ett av dem är att de flesta vektorerna har 4 komponenter. Den enklaste transformationsmatris vi kan tänka oss är
-*identitetsmatrisen*. Identitetsmatrisen är en N×N-matris med bara nollor utom på diagonalen. Som du ser lämnar den
-här transformationsmatrisen en vektor helt opåverkad:
-
-```text
-| 1  0  0  0 |   | 1 |   | 1·1 |   | 1 |
-| 0  1  0  0 |   | 2 |   | 1·2 |   | 2 |
-| 0  0  1  0 | · | 3 | = | 1·3 | = | 3 |
-| 0  0  0  1 |   | 4 |   | 1·4 |   | 4 |
-```
-
-Vektorn är helt orörd. Det blir uppenbart av multiplikationsreglerna: det första elementet i resultatet är varje
-element i matrisens första rad multiplicerat med motsvarande element i vektorn. Eftersom alla element i raden är 0
-utom det första får vi: 1·1 + 0·2 + 0·3 + 0·4 = 1, och detsamma gäller för vektorns andra 3 element.
-
-> Du kanske undrar vad man ska med en transformationsmatris som inte transformerar? Identitetsmatrisen är oftast
-> utgångspunkten när man skapar andra transformationsmatriser, och om vi gräver ännu djupare i linjär algebra är den
-> en mycket användbar matris för att bevisa satser och lösa linjära ekvationssystem.
+I förra kapitlet, *Matematiken bakom 3D*, mötte du allt som behövs: vektorer, matriser, hur en matris multiplicerad
+med en vektor *transformerar* vektorn, och att en matris kolumner är dit den skickar axlarna. Du såg också
+rotationsmatrisen i 2D, och att en 3×3-matris inte kan flytta något. Det här kapitlet bygger vidare på det: först
+själva transformationsmatriserna – skalning, translation (och varför den behöver den fjärde komponenten w), rotation
+kring de tre axlarna – och sedan hur flera av dem kombineras till en enda matris. Ha matematikkapitlet till hands: om
+en multiplikation nedan inte är begriplig direkt finns alla regler där.
+
+Kapitlets första del är fortfarande matematik och densamma för alla API:er. Koden börjar i avsnittet *I praktiken*,
+där du använder matriserna för att skala, rotera och flytta den texturerade lådan från *Texturer*.
+
+## Transformationsmatriser
+
+Från och med nu arbetar vi med 4×4-matriser och vektorer med fyra komponenter, (x, y, z, w), där w är 1 för
+positioner. Varför den fjärde komponenten finns blir tydligt i *Translation*; tills dess kan du bara ta den med dig.
 
 ### Skalning
 
@@ -363,8 +37,8 @@ opåverkad. Skalningen vi just gjorde är en *icke-likformig* skalning (non-unif
 är densamma för alla axlar. Om skalären vore lika för alla axlar skulle det kallas en *likformig skalning* (uniform
 scale).
 
-Nu bygger vi en transformationsmatris som sköter skalningen åt oss. Vi såg i identitetsmatrisen att varje
-diagonalelement multiplicerades med motsvarande element i vektorn. Vad händer om vi ändrar ettorna i
+Nu bygger vi en transformationsmatris som sköter skalningen åt oss. Vi såg i identitetsmatrisen i förra kapitlet att
+varje diagonalelement multiplicerades med motsvarande element i vektorn. Vad händer om vi ändrar ettorna i
 identitetsmatrisen till treor? Då multiplicerar vi varje element i vektorn med 3 och skalar alltså vektorn likformigt
 med 3. Om vi betecknar skalningsvariablerna (S1, S2, S3) kan vi definiera en skalningsmatris för en godtycklig vektor
 (x, y, z) så här:
@@ -396,7 +70,8 @@ definiera translationsmatrisen så här:
 ```
 
 Det fungerar eftersom alla translationsvärden multipliceras med vektorns w-komponent och adderas till vektorns
-ursprungliga värden (kom ihåg reglerna för matrismultiplikation). Det hade inte gått med en 3×3-matris.
+ursprungliga värden (kom ihåg reglerna för matrismultiplikation). Det hade inte gått med en 3×3-matris: som vi såg
+i förra kapitlet lämnar den alltid origo där det är.
 
 ### Homogena koordinater
 
@@ -437,33 +112,21 @@ Translationen ligger i den 4:e kolumnen, som multipliceras med w. Med w = 1 adde
 ### Rotation
 
 De senaste avsnitten var relativt lätta att förstå och att föreställa sig för 2D- eller 3D-vektorer, men rotationer
-är lite knepigare. Om du vill veta exakt hur de här matriserna konstrueras rekommenderar jag avsnitten om rotation i
-en bra videoserie eller lärobok om linjär algebra.
+är lite knepigare. Som tur är har du redan byggt en: rotationsmatrisen i 2D i slutet av förra kapitlet.
 
-Först definierar vi vad en rotation av en vektor egentligen är. En rotation i 2D eller 3D anges med en *vinkel*. En
-vinkel kan vara i grader eller radianer, där ett helt varv är 360 grader eller 2π radianer. Jag föredrar att förklara
-rotationer i grader eftersom vi i allmänhet är mer vana vid dem, men matematikbiblioteken – både GLM och
-DirectXMath – vill ha radianer, så här räknar du om:
-
-```text
-vinkel i grader   = vinkel i radianer · (180 / π)
-vinkel i radianer = vinkel i grader · (π / 180)
-```
-
-där π är (avrundat) 3,14159265359. Att rotera ett halvt varv är att rotera 360/2 = 180 grader, och att rotera en
-femtedel åt höger betyder att vi roterar 360/5 = 72 grader åt höger. Ett kvarts varv, 90 grader, är π/2 ≈ 1,5708
-radianer.
+En rotation i 2D eller 3D anges med en *vinkel*. Som vi såg i *Matematiken bakom 3D* kan en vinkel anges i grader,
+där ett helt varv är 360 grader, eller i radianer, där det är 2π. Jag föredrar att förklara rotationer i grader
+eftersom vi i allmänhet är mer vana vid dem, men matematikbiblioteken – både GLM och DirectXMath – vill ha radianer:
+vinkel i radianer = vinkel i grader · (π / 180). Ett kvarts varv, 90 grader, är π/2 ≈ 1,5708 radianer.
 
 Rotationer i 3D anges med en vinkel **och** en *rotationsaxel*. Objektet roteras med den angivna vinkeln kring den
 angivna rotationsaxeln. Försök föreställa dig det genom att vrida huvudet ett visst antal grader medan du hela tiden
 tittar längs en och samma rotationsaxel. När vi till exempel roterar 2D-vektorer i en 3D-värld sätter vi
 rotationsaxeln till z-axeln (försök föreställa dig det).
 
-Med trigonometri går det att omvandla vektorer till nya, roterade vektorer givet en vinkel. Det görs oftast med en
-smart kombination av sinus- och cosinusfunktionerna (som brukar förkortas sin och cos). Hur rotationsmatriserna tas
-fram ligger utanför det här kapitlet.
-
-Det finns en rotationsmatris för varje enhetsaxel i 3D, där vinkeln betecknas med theta, θ.
+I förra kapitlet byggde vi rotationen i 2D utifrån vart den skickar axlarna: x hamnar i (cos θ, sin θ) på
+enhetscirkeln och y i (−sin θ, cos θ). I 3D ger samma idé en rotationsmatris för varje enhetsaxel, där vinkeln
+betecknas med theta, θ. Var och en lämnar sin egen axel i fred och vrider de andra två precis som rotationen i 2D.
 
 Rotation kring X-axeln:
 
@@ -492,7 +155,8 @@ Rotation kring Z-axeln:
 | 0      0       0  1 |   | 1 |   | 1                 |
 ```
 
-Med rotationsmatriserna kan vi rotera våra positionsvektorer kring en av de tre enhetsaxlarna. Kontrollera
+Rotationen kring Z-axeln är rotationen i 2D från förra kapitlet i det övre vänstra hörnet, med z och w lämnade som
+de är. Med rotationsmatriserna kan vi rotera våra positionsvektorer kring en av de tre enhetsaxlarna. Kontrollera
 Z-rotationen med ett kvarts varv: cos 90° = 0 och sin 90° = 1, så punkten (1, 0, 0) blir (0, 1, 0). Med x åt höger
 och y uppåt flyttas punkten från höger till toppen: en positiv vinkel vrider **moturs** när du tittar ner på
 xy-planet från +z.

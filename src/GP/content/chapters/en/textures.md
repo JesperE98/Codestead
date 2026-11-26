@@ -2358,5 +2358,8 @@ At 0.5 the faces are much brighter, and everything outside them is half as brigh
 Up and the faces take over (at 1.0 you see only the faces, black where they are transparent); hold Down and the
 crate comes back (at 0.0 only the clamped crate is left).
 
-Congratulations – you have textured your first object. In the next chapter we start moving it around with
-transformations.
+Congratulations – you have textured your first object, and that was the last lesson of *Getting started*. So far
+everything you have drawn has been flat and still. In the next part, *Going 3D*, the container starts to move: we'll
+scale, rotate and move it, place it in a 3D world seen in perspective, and fly around it with a camera. The part
+opens with *The maths of 3D*, a walk through the mathematics behind all of that – axes, angles, sine and cosine,
+vectors and matrices – so the tools are ready before we need them.

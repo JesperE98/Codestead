@@ -288,7 +288,7 @@ Direct3D NDC:  x  -1 (left)   .. +1 (right)
 ```
 
 DirectXMath's projection functions produce this range. They come in two flavours, `…LH` (left-handed) and `…RH`
-(right-handed), which differ in which way the camera looks in view space – we'll come back to that in *Going 3D*. This
+(right-handed), which differ in which way the camera looks in view space – we'll come back to that in the section *Going 3D* below. This
 course uses the **right-handed** ones (`XMMatrixPerspectiveFovRH`, `XMMatrixOrthographicOffCenterRH`), because they
 use the same view space as GLM and OpenGL: with them, every number in this chapter is learnopengl's.
 :::

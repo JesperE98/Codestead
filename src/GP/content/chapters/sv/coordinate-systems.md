@@ -285,7 +285,7 @@ Direct3D NDC:  x  -1 (vänster) .. +1 (höger)
 ```
 
 DirectXMaths projektionsfunktioner ger detta intervall. De finns i två varianter, `…LH` (vänsterhänt) och `…RH`
-(högerhänt), som skiljer sig i vilket håll kameran tittar i vyrummet – vi återkommer till det i *Till 3D*. Kursen
+(högerhänt), som skiljer sig i vilket håll kameran tittar i vyrummet – vi återkommer till det i avsnittet *Till 3D* nedan. Kursen
 använder de **högerhänta** (`XMMatrixPerspectiveFovRH`, `XMMatrixOrthographicOffCenterRH`), eftersom de använder
 samma vyrum som GLM och OpenGL: med dem är varje tal i det här kapitlet detsamma som hos learnopengl.
 :::

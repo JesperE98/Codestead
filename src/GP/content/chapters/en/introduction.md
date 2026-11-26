@@ -30,7 +30,7 @@ structs and classes, arrays and `std::vector`. The chapters explain the less com
 way, and the Vulkan code uses a few C++17 features (such as `std::optional`) that are explained where they appear.
 
 You also need a little mathematics later on (vectors and matrices). You don't have to know it in advance: the
-*Transformations* chapter introduces what you need, just like learnopengl.com does.
+first chapter of the part *Going 3D*, *The maths of 3D*, introduces what you need.
 
 ## Choosing an API
 
