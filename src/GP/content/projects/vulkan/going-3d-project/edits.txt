@@ -1,0 +1,197 @@
+=== task: night-sky
+--- file: main.cpp
+--- find:
+        clearValues[0].color = {{0.2f, 0.3f, 0.3f, 1.0f}};
+--- replace:
+        clearValues[0].color = {{0.02f, 0.02f, 0.08f, 1.0f}}; // the night sky: almost black, a touch of blue
+
+=== task: observatory
+--- file: main.cpp
+--- find:
+glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+--- replace:
+// up in the gallery: 6 units above the planets' plane and 8 back, looking down at the sun in the middle
+// (cameraFront points from there to the origin: (0, -6, -8) is 10 long, so (0, -0.6, -0.8) has length 1)
+glm::vec3 cameraPos   = glm::vec3(0.0f, 6.0f,  8.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, -0.6f, -0.8f);
+--- file: main.cpp
+--- find:
+float pitch =  0.0f;
+--- replace:
+float pitch = -36.87f; // the camera starts looking down: sin(pitch) = cameraFront.y = -0.6
+
+=== task: sun
+--- file: main.cpp
+--- find:
+// world space positions of our cubes
+const std::vector<glm::vec3> cubePositions = {
+    glm::vec3( 0.0f,  0.0f,  0.0f),
+    glm::vec3( 2.0f,  5.0f, -15.0f),
+    glm::vec3(-1.5f, -2.2f, -2.5f),
+    glm::vec3(-3.8f, -2.0f, -12.3f),
+    glm::vec3( 2.4f, -0.4f, -3.5f),
+    glm::vec3(-1.7f,  3.0f, -7.5f),
+    glm::vec3( 1.3f, -2.0f, -2.5f),
+    glm::vec3( 1.5f,  2.0f, -2.5f),
+    glm::vec3( 1.5f,  0.2f, -1.5f),
+    glm::vec3(-1.3f,  1.0f, -1.5f)
+};
+
+// camera
+--- replace:
+// camera
+--- file: main.cpp
+--- find:
+        for (unsigned int i = 0; i < 10; i++) {
+            // calculate the model matrix for each object and push it before drawing
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, cubePositions[i]);
+            float angle = 20.0f * i;
+            if (i % 3 == 0) { // every 3rd iteration (including the first) we set the angle using GLFW's time function
+                angle = (float)glfwGetTime() * 25.0f;
+            }
+            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+
+            PushConstants constants{};
+            constants.model = model;
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+
+            vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+        }
+--- replace:
+        // the solar system: every body is the same crate with its own model matrix
+        float time = static_cast<float>(glfwGetTime());
+        PushConstants constants{};
+
+        // the sun: in the middle, twice as big, turning around its own (y) axis
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::rotate(model, glm::radians(time * 20.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(2.0f));
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+
+=== task: planet
+--- file: main.cpp
+--- find:
+        model = glm::scale(model, glm::vec3(2.0f));
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+--- replace:
+        model = glm::scale(model, glm::vec3(2.0f));
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+
+        // the planet: turned by its orbit angle around the sun, then moved out to its orbit (read from the bottom up:
+        // moved out first, then turned around the sun's axis)
+        glm::mat4 planet = glm::mat4(1.0f);
+        planet = glm::rotate(planet, glm::radians(time * 30.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        planet = glm::translate(planet, glm::vec3(3.0f, 0.0f, 0.0f));
+        model = glm::scale(planet, glm::vec3(0.6f)); // smaller than the sun
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+
+=== task: moon
+--- file: main.cpp
+--- find:
+        model = glm::scale(planet, glm::vec3(0.6f)); // smaller than the sun
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+--- replace:
+        model = glm::scale(planet, glm::vec3(0.6f)); // smaller than the sun
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+
+        // the moon: starts from the planet's matrix (without its scale), so it goes wherever the planet goes, and
+        // circles it on an orbit of its own, faster
+        model = glm::rotate(planet, glm::radians(time * 120.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::translate(model, glm::vec3(1.0f, 0.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.3f));
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+        vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+
+=== task: colours
+--- file: shaders/shader.vert
+--- find:
+layout(push_constant) uniform PushConstants {
+    mat4 model;
+} pc;
+--- replace:
+layout(push_constant) uniform PushConstants {
+    mat4 model;
+    vec3 color; // read by the fragment shader
+} pc;
+--- file: shaders/shader.frag
+--- find:
+layout(location = 0) in vec2 fragTexCoord;
+--- replace:
+// the same push constants as in the vertex shader: this stage reads the colour of the body being drawn
+layout(push_constant) uniform PushConstants {
+    mat4 model;
+    vec3 color;
+} pc;
+
+layout(location = 0) in vec2 fragTexCoord;
+--- file: shaders/shader.frag
+--- find:
+    // 80% container, 20% face
+    outColor = mix(texture(texSampler, fragTexCoord), texture(faceSampler, fragTexCoord), 0.2);
+--- replace:
+    // 80% container, 20% face
+    vec4 texColor = mix(texture(texSampler, fragTexCoord), texture(faceSampler, fragTexCoord), 0.2);
+    // then paint it: 60% the body's colour, 40% the texture (so the wood still shows through)
+    outColor = mix(texColor, vec4(pc.color, 1.0), 0.6);
+--- file: main.cpp
+--- find:
+// The same layout as the push constant block in the vertex shader: the model matrix of one draw.
+struct PushConstants {
+    glm::mat4 model;
+};
+--- replace:
+// The same layout as the push constant block in the shaders: the model matrix and the colour of one draw.
+struct PushConstants {
+    glm::mat4 model;
+    glm::vec3 color;
+};
+--- file: main.cpp
+--- find:
+        pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+--- replace:
+        pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT; // both stages read them
+--- file: main.cpp
+--- find:
+        model = glm::scale(model, glm::vec3(2.0f));
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+--- replace:
+        model = glm::scale(model, glm::vec3(2.0f));
+        constants.model = model;
+        constants.color = glm::vec3(1.0f, 0.8f, 0.2f); // a yellow sun
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
+--- file: main.cpp
+--- find:
+        model = glm::scale(planet, glm::vec3(0.6f)); // smaller than the sun
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+--- replace:
+        model = glm::scale(planet, glm::vec3(0.6f)); // smaller than the sun
+        constants.model = model;
+        constants.color = glm::vec3(0.2f, 0.4f, 1.0f); // a blue planet
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);
+--- file: main.cpp
+--- find:
+        model = glm::scale(model, glm::vec3(0.3f));
+        constants.model = model;
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+--- replace:
+        model = glm::scale(model, glm::vec3(0.3f));
+        constants.model = model;
+        constants.color = glm::vec3(0.7f, 0.7f, 0.7f); // a grey moon
+        vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &constants);

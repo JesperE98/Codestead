@@ -41,6 +41,7 @@ export const GpAchievements = {
       CommonAchievements.tasksAll,
       CommonAchievements.partDone("start", "🚪"),
       CommonAchievements.partDone("getting-started", "🔺"),
+      CommonAchievements.partDone("going-3d", "🧊"),
       CommonAchievements.partDone("lighting", "💡"),
       CommonAchievements.partDone("model-loading", "🪐"),
       CommonAchievements.partDone("advanced-opengl", "🧪"),

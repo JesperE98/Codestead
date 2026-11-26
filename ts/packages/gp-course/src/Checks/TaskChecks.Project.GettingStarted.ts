@@ -1,103 +1,190 @@
-import { matchCount, type CheckContext } from "../CheckContext.js";
-import type { Checks } from "./TaskChecks.PerApi.js";
-import { cameraOf, distance, matrixOf, minus, placedAt, turnDifference, vectorsByName, type Placed } from "./SceneValues.js";
+import type { Frame } from "@codestead/gp-gpu";
+import { given, type CheckContext } from "../CheckContext.js";
+import { perApi, type Checks } from "./TaskChecks.PerApi.js";
 
-// The project after Getting started, "A tiny solar system": a night sky, a camera up in the gallery, a spinning sun,
-// a planet orbiting it, a moon orbiting the planet and a colour for each body (projects/<api>/getting-started-project).
-// The bodies are checked where the draws' model matrices put them (the same in every API, wherever the camera is):
-// the learner chooses sizes, distances and speeds, so the checks ask for the relations – the sun in the middle and
-// turning, the planet always as far from the sun but somewhere else later, the moon always as far from the planet.
+// The project after Getting started, "The planetarium sign": a night-blue backdrop, a wide sign, the wood repeating
+// across it, the corners' colours, a glow that pulses and then runs across the sign (projects/<api>/getting-started-project).
+// The checks look at the picture – where the sign is drawn, how it repeats, its colours and how its brightness changes
+// over time – measured from the sign's own bounding box, so the learner's sizes, coordinates and speeds are fine. Only
+// the wrap mode is read from the code as well: the faces repeat already, and the picture of a stretched crate edge mixed
+// with them is too close to that of a repeating crate to tell apart under the later tint and glow.
 
-/** The times the orbits are compared at (seconds). */
-const times = [1.0, 2.3, 3.7];
-
-/** The objects of the frame at each of the times (the same draws in the same order). */
-function placed(c: CheckContext): Placed[][] {
-  return times.map((t) => placedAt(c, t));
+/** The sign: the box of pixels (in the check frame) that are not the clear colour; null when nothing is drawn. */
+interface Box {
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
 }
 
-/** The spread (max − min) of some numbers. */
-const spread = (values: number[]): number => Math.max(...values) - Math.min(...values);
+function differs(p: number[], clear: readonly number[]): boolean {
+  return Math.abs(p[0]! - clear[0]!) > 0.02 || Math.abs(p[1]! - clear[1]!) > 0.02 || Math.abs(p[2]! - clear[2]!) > 0.02;
+}
 
-/** The sun: a body bigger than the course's crate in the middle of the world, the same place at every time, turning. */
-function sun(at: Placed[][]): number | null {
-  const first = at[0] ?? [];
-  for (const body of first) {
-    const all = at.map((list) => list.find((b) => b.index === body.index));
-    if (all.some((b) => b === undefined)) continue;
-    const bodies = all as Placed[];
-    if (bodies.every((b) => distance(b.position, [0, 0, 0]) < 0.3 && b.scale >= 1.3) && turnDifference(bodies[0]!.model, bodies[1]!.model) > 0.05)
-      return body.index;
+function signBox(c: CheckContext): Box | null {
+  const f = c.frame;
+  if (f === null || !c.drew) return null;
+  const clear = c.scene!.clearColor ?? [0, 0, 0, 1];
+  let x0 = f.width, y0 = f.height, x1 = -1, y1 = -1;
+  for (let y = 0; y < f.height; y++)
+    for (let x = 0; x < f.width; x++)
+      if (differs(f.at(x, y), clear)) {
+        x0 = Math.min(x0, x);
+        x1 = Math.max(x1, x);
+        y0 = Math.min(y0, y);
+        y1 = Math.max(y1, y);
+      }
+  return x1 < 0 ? null : { x0, y0, x1, y1 };
+}
+
+/** The mean colour of a box of frame pixels (inclusive). */
+function meanColour(f: Frame, x0: number, y0: number, x1: number, y1: number): number[] {
+  const sum = [0, 0, 0];
+  let n = 0;
+  for (let y = Math.max(0, y0); y <= Math.min(f.height - 1, y1); y++)
+    for (let x = Math.max(0, x0); x <= Math.min(f.width - 1, x1); x++) {
+      const p = f.at(x, y);
+      for (let k = 0; k < 3; k++) sum[k]! += p[k]!;
+      n++;
+    }
+  return sum.map((s) => (n > 0 ? s / n : 0));
+}
+
+/**
+ * The picture repeats across the sign: for some number of copies from 3 to 8, every pixel looks like the one a copy's
+ * width to its right. Each pixel is compared relative to the mean of its neighbourhood, so a colour or brightness that
+ * changes smoothly across the sign (the tint, the glow) does not hide the repetition.
+ */
+function repeatsAcross(c: CheckContext, box: Box): boolean {
+  const f = c.frame!;
+  const w = box.x1 - box.x0 + 1;
+  const h = box.y1 - box.y0 + 1;
+  const lum = (x: number, y: number): number => {
+    const p = f.at(x, y);
+    return p[0]! + p[1]! + p[2]! + 0.06;
+  };
+  const r = 3;
+  const relative: number[] = new Array<number>(w * h);
+  for (let y = box.y0; y <= box.y1; y++)
+    for (let x = box.x0; x <= box.x1; x++) {
+      let s = 0;
+      let n = 0;
+      for (let j = Math.max(box.y0, y - r); j <= Math.min(box.y1, y + r); j++)
+        for (let i = Math.max(box.x0, x - r); i <= Math.min(box.x1, x + r); i++) {
+          s += lum(i, j);
+          n++;
+        }
+      relative[(y - box.y0) * w + (x - box.x0)] = lum(x, y) / (s / n);
+    }
+  for (let copies = 3; copies <= 8; copies++) {
+    const shift = w / copies;
+    let total = 0;
+    let n = 0;
+    for (let x = 2; x < w - 2; x++) {
+      const xs = Math.round(x + shift);
+      if (xs > w - 3) continue;
+      for (let y = 2; y < h - 2; y++) {
+        total += Math.abs(relative[y * w + x]! - relative[y * w + xs]!);
+        n++;
+      }
+    }
+    if (n > 0 && total / n < 0.05) return true;
   }
-  return null;
+  return false;
 }
 
-/** A body circling a centre body: always about as far from it (0.1), but somewhere else after a while; smaller than it. */
-function circles(at: Placed[][], body: number, centre: number, min: number, max: number): boolean {
-  const pairs = at.map((list) => [list.find((b) => b.index === body), list.find((b) => b.index === centre)] as const);
-  if (pairs.some(([b, c]) => b === undefined || c === undefined)) return false;
-  const offsets = pairs.map(([b, c]) => minus(b!.position, c!.position));
-  const distances = offsets.map((o) => Math.hypot(...o));
-  return (
-    distances.every((d) => d >= min && d <= max) &&
-    spread(distances) < 0.1 &&
-    distance(offsets[0]!, offsets[1]!) > 0.3 &&
-    pairs.every(([b, c]) => b!.scale < c!.scale)
-  );
+/** The times the glow is looked at (seconds). */
+const times = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0];
+
+/** The brightness (r + g + b) of five upright strips of the sign, left to right, at each of the times. */
+function stripBrightness(c: CheckContext, box: Box): number[][] {
+  const w = box.x1 - box.x0 + 1;
+  const h = box.y1 - box.y0 + 1;
+  const half = Math.max(1, Math.round(w / 20));
+  const top = box.y0 + Math.round(h * 0.1);
+  const bottom = box.y1 - Math.round(h * 0.1);
+  return times.map((t) => {
+    const f = c.frameAt(t);
+    if (f === null) return [0, 0, 0, 0, 0];
+    return [0.1, 0.3, 0.5, 0.7, 0.9].map((at) => {
+      const x = box.x0 + Math.round(w * at);
+      const m = meanColour(f, x - half, top, x + half, bottom);
+      return m[0]! + m[1]! + m[2]!;
+    });
+  });
 }
 
-/** The planet: a body circling the sun, 1.2 to 10 units from it. */
-function planets(at: Placed[][], sunIndex: number): number[] {
-  return (at[0] ?? []).filter((b) => b.index !== sunIndex && circles(at, b.index, sunIndex, 1.2, 10)).map((b) => b.index);
+/** Some strip of the sign gets clearly brighter and darker over time (by a fifth of its brightest). */
+function pulses(strips: number[][]): boolean {
+  for (let i = 0; i < 5; i++) {
+    const values = strips.map((s) => s[i]!);
+    const max = Math.max(...values);
+    if (max > 0.05 && max - Math.min(...values) >= 0.2 * max) return true;
+  }
+  return false;
+}
+
+/** The strips are not bright at the same time: relative to their own mean, two of them differ at some time. */
+function travels(strips: number[][]): boolean {
+  const means = [0, 1, 2, 3, 4].map((i) => strips.reduce((s, row) => s + row[i]!, 0) / strips.length);
+  if (means.some((m) => m < 0.05)) return false;
+  return strips.some((row) => {
+    const relative = row.map((v, i) => v / means[i]!);
+    return Math.max(...relative) - Math.min(...relative) > 0.2;
+  });
 }
 
 export function gettingStartedProject(): Record<string, Checks> {
   return {
     "getting-started-project": {
-      // A dark sky: every channel of the clear colour low (the start's teal is 0.2, 0.3, 0.3).
-      "night-sky": (c) => c.shows && c.scene!.clearColor !== null && c.scene!.clearColor.slice(0, 3).every((v, i) => v <= (i === 2 ? 0.2 : 0.12)),
-      // The camera, from the view matrix: above the planets' plane, a good way back, and the sun (the origin) in front of
-      // it and well inside the picture (the 45° view reaches 0.41 × the distance up and 0.55 × to the side).
-      "observatory": (c) => {
-        const draw = c.scene?.draws[0];
-        const view = c.shows && draw !== undefined ? matrixOf(draw, 1.0, "view") : null;
-        if (view === null) return false;
-        const { position, origin } = cameraOf(view);
-        const ahead = -origin[2];
-        return position[1] >= 1 && Math.hypot(...position) >= 5 && ahead > 0 && Math.abs(origin[0]) < 0.45 * ahead && Math.abs(origin[1]) < 0.35 * ahead;
+      // A deep night blue: dark, with blue clearly the strongest channel (the start's teal is 0.2, 0.3, 0.3).
+      "night-blue": (c) => {
+        const clear = c.shows ? c.scene!.clearColor : null;
+        if (clear === null) return false;
+        const [r, g, b] = [clear[0]!, clear[1]!, clear[2]!];
+        return r <= 0.15 && g <= 0.15 && b <= 0.45 && b >= r + 0.04 && b >= g + 0.04;
       },
-      "sun": (c) => c.drew && sun(placed(c)) !== null,
-      "planet": (c) => {
-        const at = placed(c);
-        const s = sun(at);
-        return c.drew && s !== null && planets(at, s).length > 0;
+      // A wide sign: at least 1.8 times as wide as it is tall (in pixels) and over 60 % of the window's width (the start's
+      // rectangle is 400 × 300 pixels).
+      "wide-sign": (c) => {
+        const box = signBox(c);
+        if (box === null) return false;
+        const w = box.x1 - box.x0 + 1;
+        const h = box.y1 - box.y0 + 1;
+        return w >= 0.6 * c.frame!.width && w >= 1.8 * h;
       },
-      // The moon circles a planet, 0.25 to 2.5 units from it; seen from the sun it comes nearer and goes further away.
-      "moon": (c) => {
-        const at = placed(c);
-        const s = sun(at);
-        if (!c.drew || s === null) return false;
-        return planets(at, s).some((p) =>
-          (at[0] ?? []).some((m) => {
-            if (m.index === p || m.index === s || !circles(at, m.index, p, 0.25, 2.5)) return false;
-            const fromSun = at.map((list) => distance(list.find((b) => b.index === m.index)!.position, list.find((b) => b.index === s)!.position));
-            return spread(fromSun) > 0.1;
-          }),
-        );
+      // The wood repeats: the picture repeats at least three times across the sign, and the crate is no longer read
+      // with a clamping wrap mode (the course's start has one for it; the faces repeat already).
+      "repeat-wood": perApi({
+        opengl: (c) => !c.has("GL_CLAMP_TO_(?:EDGE|BORDER)") && given(signBox(c), (box) => repeatsAcross(c, box)),
+        vulkan: (c) => (!c.has("VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_(?:EDGE|BORDER)") || !c.has("\\. sampler = clampSampler")) && given(signBox(c), (box) => repeatsAcross(c, box)),
+        d3d12: (c) => (!c.has("D3D12_TEXTURE_ADDRESS_MODE_(?:CLAMP|BORDER)") || !c.hasInShaders("\\. Sample \\( clampSampler")) && given(signBox(c), (box) => repeatsAcross(c, box)),
+      }),
+      // The corners' colours: red towards the top right corner, green towards the bottom right (the colours of the
+      // vertex data), each at least twice the other two channels.
+      "tint": (c) => {
+        const box = signBox(c);
+        if (box === null) return false;
+        const f = c.frame!;
+        const w = box.x1 - box.x0 + 1;
+        const h = box.y1 - box.y0 + 1;
+        const dx = Math.max(1, Math.round(w * 0.04));
+        const dy = Math.max(1, Math.round(h * 0.06));
+        const right = box.x1 - Math.round(w * 0.08);
+        const red = meanColour(f, right - dx, box.y0 + Math.round(h * 0.12) - dy, right + dx, box.y0 + Math.round(h * 0.12) + dy);
+        const green = meanColour(f, right - dx, box.y1 - Math.round(h * 0.12) - dy, right + dx, box.y1 - Math.round(h * 0.12) + dy);
+        return red[0]! > 0.06 && red[0]! > 2 * red[1]! && red[0]! > 2 * red[2]! && green[1]! > 0.06 && green[1]! > 2 * green[0]! && green[1]! > 2 * green[2]!;
       },
-      // A colour per body: under one name, the sun and at least one other body hand their shaders colours that differ
-      // by more than 0.25 in a channel, and the shaders use it (the name is there besides its declaration). Any colours:
-      // a red planet is as good as a blue one.
-      "colours": (c) => {
-        const s = sun(placed(c));
-        if (!c.drew || s === null) return false;
-        for (const [name, colours] of vectorsByName(c.scene!.draws)) {
-          const sunColour = colours[s];
-          if (sunColour === null || sunColour === undefined || matchCount(c.shaders, `\\b${name}\\b`) < 2) continue;
-          if (colours.some((o, i) => i !== s && o !== null && o.some((v, k) => Math.abs(v - sunColour[k]!) > 0.25))) return true;
-        }
-        return false;
-      },
+      // A glow: the sign's brightness goes up and down over time (somewhere on it, so a glow that runs across it counts).
+      "glow": (c) => given(signBox(c), (box) => c.scene!.animated && pulses(stripBrightness(c, box))),
+      // The glow runs across the sign: it still pulses, but the strips from left to right are not bright at the same time.
+      "wave": (c) =>
+        given(signBox(c), (box) => {
+          if (!c.scene!.animated) return false;
+          const strips = stripBrightness(c, box);
+          return pulses(strips) && travels(strips);
+        }),
     },
   };
 }
+

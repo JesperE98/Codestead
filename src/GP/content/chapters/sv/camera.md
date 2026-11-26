@@ -1409,5 +1409,6 @@ Den förutsätter att w-komponenterna i de tre axlarna är 0, vilket gäller fö
 `XMVectorSet(…, 0.0f)` som i ditt program.
 :::
 
-Grattis – nu kan du flyga genom din scen. Det här är sista kapitlet i *Getting started*: du har ett fönster, shaders,
-texturer, transformationer, en 3D-scen och en kamera att titta på den med – allt som de kommande kapitlen bygger på.
+Grattis – nu kan du flyga genom din scen. Det här är sista kapitlet i *Till 3D*: du har matematiken,
+transformationer, en 3D-scen och en kamera att titta på den med – tillsammans med fönstret, shaders och texturerna
+från *Kom igång* allt som de kommande kapitlen bygger på.

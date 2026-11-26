@@ -5,7 +5,7 @@ import type { CourseTask } from "./CourseTask.js";
 import { Edits } from "./Edits.js";
 import * as Resources from "./Resources.js";
 
-const parts: readonly string[] = ["start", "getting-started", "lighting", "model-loading", "advanced-opengl", "advanced-lighting", "pbr", "in-practice", "guest-articles"];
+const parts: readonly string[] = ["start", "getting-started", "going-3d", "lighting", "model-loading", "advanced-opengl", "advanced-lighting", "pbr", "in-practice", "guest-articles"];
 
 /** The lessons in course order: (chapter id, part). */
 const lessonList: readonly (readonly [id: string, part: string])[] = [
@@ -17,9 +17,10 @@ const lessonList: readonly (readonly [id: string, part: string])[] = [
   ["hello-triangle", "getting-started"],
   ["shaders", "getting-started"],
   ["textures", "getting-started"],
-  ["transformations", "getting-started"],
-  ["coordinate-systems", "getting-started"],
-  ["camera", "getting-started"],
+  ["maths", "going-3d"],
+  ["transformations", "going-3d"],
+  ["coordinate-systems", "going-3d"],
+  ["camera", "going-3d"],
   ["colors", "lighting"],
   ["basic-lighting", "lighting"],
   ["materials", "lighting"],

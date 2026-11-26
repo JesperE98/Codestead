@@ -1,0 +1,12 @@
+[
+  { "title": "Transformations (vectors and matrices)", "url": "https://learnopengl.com/Getting-started/Transformations", "publisher": "LearnOpenGL" },
+  { "title": "Coordinate Systems (right-handed system)", "url": "https://learnopengl.com/Getting-started/Coordinate-Systems", "publisher": "LearnOpenGL" },
+  { "title": "Camera (Euler angles: yaw and pitch with sin and cos)", "url": "https://learnopengl.com/Getting-started/Camera", "publisher": "LearnOpenGL" },
+  { "title": "std::sin", "url": "https://en.cppreference.com/w/cpp/numeric/math/sin", "publisher": "cppreference.com" },
+  { "title": "std::cos", "url": "https://en.cppreference.com/w/cpp/numeric/math/cos", "publisher": "cppreference.com" },
+  { "title": "sin (GLSL)", "url": "https://registry.khronos.org/OpenGL-Refpages/gl4/html/sin.xhtml", "publisher": "Khronos", "api": "opengl" },
+  { "title": "sin (GLSL)", "url": "https://registry.khronos.org/OpenGL-Refpages/gl4/html/sin.xhtml", "publisher": "Khronos", "api": "vulkan" },
+  { "title": "sin (HLSL)", "url": "https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-sin", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "XMConvertToRadians", "url": "https://learn.microsoft.com/en-us/windows/win32/api/directxmath/nf-directxmath-xmconverttoradians", "publisher": "Microsoft Learn", "api": "d3d12" },
+  { "title": "DirectXMath programming guide", "url": "https://learn.microsoft.com/en-us/windows/win32/dxmath/directxmath-portal", "publisher": "Microsoft Learn", "api": "d3d12" }
+]

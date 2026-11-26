@@ -1,56 +1,60 @@
 {
-  "title": "Project: A tiny solar system",
+  "title": "Project: The planetarium sign",
   "tasks": {
-    "night-sky": {
-      "text": "Night falls: clear the window to a night sky – almost black, perhaps with a hint of blue.",
+    "night-blue": {
+      "text": "Lights down: clear the window to a deep night blue – dark, but clearly blue.",
       "hint": {
-        "opengl": "It is the clear colour of the render loop: `glClearColor`. Something like (0.02, 0.02, 0.08) – every channel well below the old teal.",
-        "vulkan": "It is the clear value of the colour attachment in `recordCommandBuffer()`: `clearValues[0].color`. Something like (0.02, 0.02, 0.08).",
-        "d3d12": "It is the `clearColor` array that `PopulateCommandList` hands `ClearRenderTargetView`. Something like (0.02, 0.02, 0.08)."
+        "opengl": "It is the clear colour of the render loop: `glClearColor`. Something like (0.03, 0.04, 0.15) – blue clearly above red and green, all of them low.",
+        "vulkan": "It is the clear value of the render pass in `recordCommandBuffer()`: `VkClearValue clearColor`. Something like (0.03, 0.04, 0.15).",
+        "d3d12": "It is the `clearColor` array that `PopulateCommandList` hands `ClearRenderTargetView`. Something like (0.03, 0.04, 0.15)."
       }
     },
-    "observatory": {
-      "text": "A seat in the gallery: start the camera above and behind the middle of the world, looking down at it from an angle – for example 6 units up and 8 back – and keep the free camera working.",
+    "wide-sign": {
+      "text": "A wide sign: move the rectangle's corners so it is clearly wider than it is tall and spans most of the window – for example x from -0.9 to 0.9 and y from -0.6 to 0.6.",
       "hint": {
-        "opengl": "Change the globals: `cameraPos` (0, 6, 8) and `cameraFront` pointing back at the origin, (0, -0.6, -0.8). Start `pitch` at about -36.87° (its sine is -0.6), so the first mouse movement doesn't make the view jump.",
-        "vulkan": "Change the globals: `cameraPos` (0, 6, 8) and `cameraFront` pointing back at the origin, (0, -0.6, -0.8). Start `pitch` at about -36.87° (its sine is -0.6), so the first mouse movement doesn't make the view jump.",
-        "d3d12": "Change the global `XMVECTOR`s: `cameraPos` (0, 6, 8) and `cameraFront` pointing back at the origin, (0, -0.6, -0.8). Start `pitch` at about -36.87° (its sine is -0.6), so the first mouse movement doesn't make the view jump."
+        "opengl": "The positions are the first three numbers of each vertex in `vertices`: change the 0.5s to 0.9 (x) and 0.6 (y), keeping their signs.",
+        "vulkan": "The positions are the first part of each `Vertex` in `vertices`: change the 0.5s to 0.9 (x) and 0.6 (y), keeping their signs.",
+        "d3d12": "The positions are the first part of each `Vertex` in `LoadAssets`: change the 0.5s to 0.9 (x) and 0.6 (y), keeping their signs."
       }
     },
-    "sun": {
-      "text": "Let there be a sun: instead of the ten crates, draw one crate in the middle of the world, about twice as big, slowly turning around its own vertical (y) axis.",
-      "hint": {
-        "opengl": "Replace the `for` loop with one draw. Its model matrix: `glm::rotate` by the time around (0, 1, 0), then `glm::scale` by 2 – no translation, the sun stays at the origin. The cube positions are not needed any more.",
-        "vulkan": "Replace the `for` loop in `recordCommandBuffer()` with one push and one draw. The model matrix: `glm::rotate` by `glfwGetTime()` around (0, 1, 0), then `glm::scale` by 2 – no translation, the sun stays at the origin.",
-        "d3d12": "Replace the `for` loop in `PopulateCommandList` with one draw. The model matrix: `XMMatrixScaling(2.0f, 2.0f, 2.0f) * XMMatrixRotationY(…)` with the time – no translation, the sun stays at the origin."
-      }
-    },
-    "planet": {
-      "text": "A planet: a second, smaller crate that circles the sun at a fixed distance, a few units out.",
-      "hint": {
-        "opengl": "Keep the orbit in a matrix of its own: `rotate` by the time around (0, 1, 0), then `translate` out along x. Read from the bottom up: first moved out, then turned around the sun. Scale a copy of it for the draw.",
-        "vulkan": "Keep the orbit in a matrix of its own: `rotate` by the time around (0, 1, 0), then `translate` out along x. Read from the bottom up: first moved out, then turned around the sun. Scale a copy of it, push it and draw.",
-        "d3d12": "Keep the orbit in a matrix of its own: `XMMatrixTranslation(3.0f, 0.0f, 0.0f) * XMMatrixRotationY(…)` – first moved out, then turned around the sun. The planet's model matrix is a scaling times that."
-      }
-    },
-    "moon": {
-      "text": "A moon: a third, even smaller crate that circles the planet while the planet circles the sun.",
-      "hint": {
-        "opengl": "Start the moon's matrix from the planet's orbit matrix (before its scale): `glm::rotate(planet, …)` faster, then `translate` a little way out, then a small `scale`.",
-        "vulkan": "Start the moon's matrix from the planet's orbit matrix (before its scale): `glm::rotate(planet, …)` faster, then `translate` a little way out, then a small `scale`.",
-        "d3d12": "End the moon's chain with the planet's orbit matrix (before its scale): scaling, then a short translation, then a faster rotation around y, then `* planet`."
-      }
-    },
-    "colours": {
+    "repeat-wood": {
       "text": {
-        "opengl": "Colour: give every body its own colour – a uniform in `shader.fs`, set before each draw – and mix it with the crate's texture so the wood still shows.",
-        "vulkan": "Colour: give every body its own colour – after the model matrix in the push constants, read by the fragment shader – and mix it with the crate's texture so the wood still shows.",
-        "d3d12": "Colour: give every body its own colour – after the model matrix in the root constants, read by the pixel shader – and blend it with the crate's texture so the wood still shows."
+        "opengl": "Wood all the way: make the crate repeat across the sign instead of stretching its edge – texture coordinates up to 4 across (and 2 up), and a wrap mode that repeats for the crate.",
+        "vulkan": "Wood all the way: make the crate repeat across the sign instead of stretching its edge – texture coordinates up to 4 across (and 2 up), and a sampler that repeats for the crate.",
+        "d3d12": "Wood all the way: make the crate repeat across the sign instead of stretching its edge – texture coordinates up to 4 across (and 2 up), and a sampler that repeats for the crate."
       },
       "hint": {
-        "opengl": "`uniform vec3 bodyColor;` in `shader.fs`, `FragColor = mix(texColor, vec4(bodyColor, 1.0), 0.6);`, and `ourShader.setVec3(\"bodyColor\", …)` before each `glDrawArrays`.",
-        "vulkan": "Add `vec3 color` to the push constant block in both shaders and `glm::vec3 color` to the C++ struct; the range and every `vkCmdPushConstants` need `VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT`.",
-        "d3d12": "Add `float3 color` to `cbuffer ModelConstants` and `XMFLOAT3 color` to the C++ struct; make the root constants visible to every stage (`D3D12_SHADER_VISIBILITY_ALL`) and `lerp` in `PSMain`."
+        "opengl": "Change the 2.0s of the right-hand vertices' s coordinate to 4.0, and the crate's `GL_TEXTURE_WRAP_S` and `GL_TEXTURE_WRAP_T` from `GL_CLAMP_TO_EDGE` to `GL_REPEAT`.",
+        "vulkan": "Change the right-hand vertices' first texture coordinate to 4.0, and let the crate's `imageInfo.sampler` be `textureSampler`. `clampSampler` is then not needed: remove it, its `vkCreateSampler` and its `vkDestroySampler`.",
+        "d3d12": "Change the right-hand vertices' first texture coordinate to 4.0, and sample `texture1` with `wrapSampler` in `PSMain`. The clamping sampler `s1` is then not needed: remove it from the root signature and the shader."
+      }
+    },
+    "tint": {
+      "text": "Colour: tint the sign with the corners' colours, so it runs from yellow to red along the top and from blue to green along the bottom.",
+      "hint": {
+        "opengl": "`ourColor` already arrives in `shader.fs`: multiply the result of `mix(...)` by `vec4(ourColor, 1.0)`.",
+        "vulkan": "`fragColor` already arrives in `shader.frag`: multiply the result of `mix(...)` by `vec4(fragColor, 1.0)`. Compile the shader again with `glslc`.",
+        "d3d12": "`input.color` already arrives in `PSMain`: multiply the result of `lerp(...)` by it."
+      }
+    },
+    "glow": {
+      "text": {
+        "opengl": "The glow: let the sign slowly get brighter and darker, over and over – the time as a new uniform, and `sin` of it in `shader.fs`.",
+        "vulkan": "The glow: let the sign slowly get brighter and darker, over and over – the time after `mixValue` in the push constants, and `sin` of it in `shader.frag`.",
+        "d3d12": "The glow: let the sign slowly get brighter and darker, over and over – the time after `mixValue` in the root constants, and `sin` of it in `PSMain`."
+      },
+      "hint": {
+        "opengl": "`ourShader.setFloat(\"time\", static_cast<float>(glfwGetTime()));` next to `mixValue`, `uniform float time;` in `shader.fs`, and `float glow = 0.7 + 0.3 * sin(time * 2.0);` – multiply the colour's `rgb` by `glow`.",
+        "vulkan": "Add `float time` to `PushConstants` and to the shader's block, fill it with the `std::chrono` time from *Shaders* in `recordCommandBuffer()`, and in the shader `float glow = 0.7 + 0.3 * sin(pc.time * 2.0);` – multiply the colour's `rgb` by `glow`.",
+        "d3d12": "Add `float time` to `MixConstants` in both files, fill it with the `std::chrono` time from *Shaders* in `PopulateCommandList`, and in `PSMain` `float glow = 0.7f + 0.3f * sin(time * 2.0f);` – multiply the colour's `rgb` by `glow`."
+      }
+    },
+    "wave": {
+      "text": "The light runs: make the glow travel across the sign from left to right, so different parts of it are bright at different times.",
+      "hint": {
+        "opengl": "Let each fragment glow a little later the further right it is: `sin(time * 2.0 - TexCoord.x)`.",
+        "vulkan": "Let each fragment glow a little later the further right it is: `sin(pc.time * 2.0 - fragTexCoord.x)`.",
+        "d3d12": "Let each fragment glow a little later the further right it is: `sin(time * 2.0f - input.texCoord.x)`."
       }
     }
   }

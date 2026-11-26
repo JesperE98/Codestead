@@ -1,8 +1,8 @@
 # Exam: Getting started
 
-Show what you've learned in *Getting started*: the window and the frame, the triangle and its shaders, textures,
-transformations, coordinate systems and the camera. The questions cover the whole part, some of them for {{api}} in
-particular. Answer all of them and press **Submit answers**; you need 80 % right to pass, and you can take the exam again.
+Show what you've learned in *Getting started*: the window and the frame, the triangle and its shaders, values from the
+CPU and textures. The questions cover the whole part, some of them for {{api}} in particular. Answer all of them and
+press **Submit answers**; you need 80 % right to pass, and you can take the exam again.
 
 :::opengl
 ```quiz
@@ -148,35 +148,35 @@ The two triangles share two corners. With an index buffer each corner is stored 
 
 :::opengl
 ```quiz
-Ten cubes are drawn by setting the `model` uniform and calling `glDrawArrays`, ten times per frame. Why does every cube get its own matrix?
-- [ ] It doesn't: all ten cubes get the last matrix that was set
-- [ ] Every `setMat4` call creates a new uniform with the same name
-- [x] Each draw call uses the uniform values the program has at the moment of the call
-- [ ] OpenGL keeps a separate copy of every uniform for each draw call until `glfwSwapBuffers`
+In the first frame, the program calls `glUniform4f(vertexColorLocation, 0.0f, 1.0f, 0.0f, 1.0f);` and only then `glUseProgram(shaderProgram);`. What happens to the green colour in that frame?
+- [ ] It is stored in the shader program and used by the next draw call
+- [ ] It is set on every shader program that has a uniform with that name
+- [x] It doesn't reach the program: `glUniform…` sets the uniform on the program that is active at the moment of the call, and none is yet
+- [ ] OpenGL waits with the call until `glUseProgram` has been called
 ---
-A uniform keeps its value until you change it, and OpenGL makes sure every draw call uses the values current when it is issued. So setting the model matrix before each draw is enough.
+`glUniform…` has no program argument: it acts on the program that `glUseProgram` made active. Activate the program first, then set its uniforms.
 ```
 :::
 :::vulkan
 ```quiz
-Ten cubes are drawn per frame. Why is each cube's model matrix a push constant, while view and projection are in the uniform buffer?
-- [ ] Uniform buffers can only hold two matrices
-- [ ] Push constants are read by the vertex shader only, uniform buffers by the fragment shader only
-- [ ] Push constants are kept until the next frame, uniform buffers only until the next draw
-- [x] Push constants are recorded into the command buffer per draw; the uniform buffer's contents are only read when the GPU executes the commands, so ten matrices written into it would all end up as the last one
+The fragment shader now reads a value from the push constant block, but the `VkPushConstantRange` and `vkCmdPushConstants` still say `VK_SHADER_STAGE_VERTEX_BIT` only. What happens?
+- [ ] Nothing: push constants are visible to every stage of the pipeline
+- [x] The fragment shader is not given the range: the validation layer reports the mismatch, and the fragment stage has to be added to the range and to `vkCmdPushConstants`
+- [ ] The vertex shader passes the value on to the fragment shader by itself
+- [ ] The value arrives one frame late in the fragment shader
 ---
-`vkCmdPushConstants` copies the bytes into the command buffer, so every draw sees the values pushed before it. A descriptor only points at the buffer; whatever it contains when the GPU runs the commands is what every draw of the frame sees – right for view and projection, wrong for the model matrix.
+A push constant range belongs to the stages named in its `stageFlags`. A shader stage that reads the block must be in the range, and `vkCmdPushConstants` must name the same stages.
 ```
 :::
 :::d3d12
 ```quiz
-Ten cubes are drawn per frame. Why is each cube's model matrix in root constants, while view and projection are in the constant buffer?
-- [ ] A constant buffer can only hold two matrices
-- [ ] Root constants are kept until the next frame, constant buffers only until the next draw
-- [ ] Root constants are read by the vertex shader only, constant buffers by the pixel shader only
-- [x] Root constants are recorded into the command list per draw; the constant buffer's contents are only read when the GPU executes the commands, so ten matrices written into it would all end up as the last one
+The pixel shader now reads a value from the root constants' `cbuffer`, but the root parameter was created with `D3D12_SHADER_VISIBILITY_VERTEX`. What happens?
+- [ ] Nothing: root constants are visible to every shader stage
+- [ ] The vertex shader passes the value on to the pixel shader by itself
+- [ ] The value arrives one frame late in the pixel shader
+- [x] The pixel shader doesn't see the root parameter: its visibility must include the pixel stage (`D3D12_SHADER_VISIBILITY_ALL` or `_PIXEL`)
 ---
-`SetGraphicsRoot32BitConstants` records the values into the command list, so every draw sees the values set before it. The CBV only points at the buffer; whatever it contains when the GPU runs the commands is what every draw of the frame sees – right for view and projection, wrong for the model matrix.
+A root parameter's visibility says which shader stages can read it. With `VERTEX`, only the vertex shader sees the constants; the debug layer reports a pixel shader that reads a register no visible parameter provides.
 ```
 :::
 
@@ -188,6 +188,16 @@ A large floor with a detailed texture stretches far into the distance, and far a
 - [ ] Nearest filtering as the magnification filter
 ---
 Far away, many texels fall on one pixel (the texture is minified), and picking one of them gives a different, random-looking colour from frame to frame. A smaller, pre-filtered mip level gives the right average colour. A larger texture would make it worse.
+```
+
+```quiz
+A rectangle's texture coordinates run from (0, 0) to (3, 2) instead of (0, 0) to (1, 1), and the wrapping mode is *repeat*. What do you see?
+- [x] The texture three times across and twice up the rectangle
+- [ ] The texture once, three times wider and twice as tall as the rectangle, cut off at its edges
+- [ ] The texture once, in the corner from 0 to 1, and the edge texels stretched over the rest
+- [ ] Nothing: texture coordinates above 1 are invalid
+---
+With repeat, only the fractional part of the coordinate counts: from 0 to 3 the texture starts over at 1 and at 2, so it fits three times across. Clamp to edge would stretch the edge texels instead.
 ```
 
 :::opengl
@@ -225,13 +235,13 @@ Registers play the role of OpenGL's texture units: the descriptor table covers c
 :::
 
 ```quiz
-With column vectors (as in the textbook and GLM), you want every vertex to be scaled first, then rotated, then translated. Which matrix do you use?
-- [ ] `S · R · T`
-- [x] `T · R · S`
-- [ ] Any of them: the order of matrix multiplication doesn't matter
-- [ ] `R · T · S`
+A 16 × 16 pixel-art texture is drawn over most of an 800 × 600 window. Which magnification filter keeps its pixels as sharp squares?
+- [ ] Linear filtering, because it reads more texels
+- [ ] A mipmap filter, because the texture is drawn larger than it is
+- [x] Nearest filtering
+- [ ] Clamp to edge
 ---
-With column vectors the matrix closest to the vector – the rightmost – is applied first: `T · R · S · v` scales, then rotates, then translates. Matrix multiplication is not commutative, so the order matters.
+Magnified, each texel covers many pixels. Nearest gives every pixel the colour of the closest texel – sharp squares; linear blends the neighbours into a smooth blur. Mipmaps are for minification, and clamping is a wrapping mode.
 ```
 
 :::opengl
@@ -247,107 +257,33 @@ If the program didn't call `stbi_set_flip_vertically_on_load(true)`, the contain
 :::
 :::vulkan
 ```quiz
-Why does the project multiply `proj[1][1]` by -1 after `glm::perspective`?
-- [ ] Because Vulkan's texture coordinates start at the top of the image
-- [ ] To map depth from -1..1 to 0..1
-- [x] GLM was written for OpenGL, where y points up in clip space; in Vulkan it points down, so the y scale is flipped to keep +y at the top of the window
-- [ ] Because the swap chain stores its images bottom row first
+In the Vulkan project the images are loaded with stb_image without flipping them, and the container is the right way up. Why?
+- [ ] stb_image flips images by itself when they are copied into a `VkImage`
+- [ ] The vertex shader flips y, so the texture is turned the right way
+- [x] In Vulkan, texture coordinate v = 0 is the first row of the image data – the top row an image file stores first – and the vertices' coordinates are written with v = 0 at the top
+- [ ] The sampler's address mode turns the image around
 ---
-Without the flip the whole scene would be upside down. The depth range is a separate difference, handled by `GLM_FORCE_DEPTH_ZERO_TO_ONE`.
+Image files and Vulkan agree: the first row is v = 0, at the top. OpenGL puts t = 0 at the bottom, which is why learnopengl flips its images while loading them.
 ```
 :::
 :::d3d12
 ```quiz
-The projection is made with `XMMatrixPerspectiveFovRH`. What happens if you build the view matrix with `XMMatrixLookAtLH` instead of `XMMatrixLookAtRH`?
-- [x] The LH view matrix makes the camera look down +z, but the RH projection expects it to look down -z, so the scene ends up behind the camera
-- [ ] Nothing: LH and RH only differ in how they store the matrix
-- [ ] The picture is mirrored left to right but otherwise correct
-- [ ] The depth range changes from 0..1 to -1..1
+In the Direct3D 12 project the images are loaded with stb_image without flipping them, and the container is the right way up. Why?
+- [ ] stb_image flips images by itself when they are copied into the upload heap
+- [x] In Direct3D, texture coordinate v = 0 is the first row of the image data – the top row an image file stores first – and the vertices' coordinates are written with v = 0 at the top
+- [ ] The vertex shader flips y, so the texture is turned the right way
+- [ ] The static sampler's address mode turns the image around
 ---
-The view matrix and the projection must agree on the view space. The course uses the right-handed functions everywhere, which have the same view space as GLM and OpenGL.
-```
-:::
-
-:::opengl
-```quiz
-The transformation is sent with `glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));`. Why is the third argument `GL_FALSE`?
-- [ ] It means the uniform is set only once, not every frame
-- [ ] It means the matrix isn't normalized, which is right for transformations
-- [ ] GLM matrices are row-major, and OpenGL transposes them by itself
-- [x] It means "don't transpose": GLM stores its matrices column by column, which is the order OpenGL expects
----
-The argument asks OpenGL to transpose the matrix while reading it. GLM's memory layout already matches OpenGL's column-major convention, so no transpose is needed.
-```
-:::
-:::vulkan
-```quiz
-`struct PushConstants { glm::mat4 model; };` is copied byte for byte into the shader's `mat4 model`, with no transpose. Why is that correct?
-- [ ] It isn't correct, but transformations look the same either way
-- [ ] Push constants can only hold matrices that are symmetric
-- [ ] `vkCmdPushConstants` transposes every matrix it copies
-- [x] GLM stores a `mat4` column by column, and that is how GLSL lays out a `mat4` too
----
-Both sides use column-major storage, so the bytes mean the same matrix on the CPU and on the GPU. (A transposed rotation would turn the other way, so it does matter.)
-```
-:::
-:::d3d12
-```quiz
-Before a matrix is stored into the constants, the project calls `XMMatrixTranspose`, and the shader computes `mul(position, transform)`. Why the transpose?
-- [x] `XMFLOAT4X4` stores row by row, while HLSL reads a matrix in a constant buffer column by column by default; transposing makes the shader see the same matrix
-- [ ] `mul` in HLSL only works with transposed matrices
-- [ ] DirectXMath matrices are wrong and must always be corrected
-- [ ] Root constants are stored in reverse order
----
-Row-major storage plus column-major packing would hand the shader the transpose. Storing the transpose cancels that out, and `mul` with the vector first computes v · M, exactly as DirectXMath does on the CPU.
+Image files and Direct3D agree: the first row is v = 0, at the top. OpenGL puts t = 0 at the bottom, which is why learnopengl flips its images while loading them.
 ```
 :::
 
 ```quiz
-What makes objects further away look smaller with a perspective projection?
-- [ ] The rasterizer draws distant triangles with fewer fragments
-- [ ] The view matrix scales every object by its distance from the camera
-- [x] The projection matrix puts the distance into w, and the perspective division divides x and y by it
-- [ ] The depth test shrinks fragments that are further away
+The fragment shader returns `mix(container, face, 0.2)` (in HLSL: `lerp`). What does a fragment get?
+- [ ] 20 % of the container and 80 % of the face
+- [ ] The container where it is brighter than 0.2, otherwise the face
+- [ ] The sum of both colours times 0.2
+- [x] 80 % of the container's colour and 20 % of the face's
 ---
-After the projection, w grows with the distance from the camera. Dividing by w at the end of the vertex stage brings far-away points closer to the centre: perspective.
-```
-
-```quiz
-Depth testing is on, but the program forgets to clear the depth buffer at the start of each frame. What happens?
-- [x] Fragments are tested against depth values left over from earlier frames, so many fail the test and parts of the scene go missing
-- [ ] Only the first object of each frame is drawn
-- [ ] The scene is drawn without depth testing
-- [ ] Nothing changes: every fragment overwrites the depth buffer anyway
----
-Clearing sets every depth to 1.0, the far plane, so the first fragment on a pixel always passes. Without it, the old values hide this frame's fragments wherever they aren't nearer than before.
-```
-
-```quiz
-The camera code keeps the pitch between -89° and 89°. Why not allow 90°?
-- [ ] Because the projection matrix only supports angles below 90°
-- [ ] So the mouse can't move the camera faster than 89° per frame
-- [x] At 90° the view direction is parallel to the world's up vector, so the cross product for the right vector becomes zero and the view flips
-- [ ] Because `sin` and `cos` aren't defined at 90°
----
-The LookAt matrix computes the camera's right axis as the cross product of the direction and the world up vector. When the two are parallel, that product is zero and the camera's orientation is no longer defined.
-```
-
-```quiz
-Why is the camera's speed multiplied by `deltaTime`, the time the last frame took?
-- [x] So the camera moves equally fast on fast and slow computers, however many frames per second they draw
-- [ ] So the camera stops when the window loses focus
-- [ ] So the movement speeds up the longer a key is held
-- [ ] Because the view matrix expects distances in seconds
----
-Without it, the camera moves a fixed distance per frame, so a computer that draws twice as many frames moves twice as fast. Speed times frame time gives a distance per second.
-```
-
-```quiz
-The mouse wheel changes `fov`, the field of view of the projection matrix. What do you see when `fov` goes from 45° to 20°?
-- [x] The scene looks bigger: you're zooming in
-- [ ] The scene looks smaller: you're zooming out
-- [ ] Objects near the camera are clipped
-- [ ] The camera moves forward along its direction
----
-A smaller field of view fits a smaller part of the scene into the same window, so everything in it looks larger. The camera itself doesn't move.
+`mix(a, b, t)` is a · (1 − t) + b · t: at t = 0 only `a`, at t = 1 only `b`. With 0.2 the container dominates and the face shows through faintly.
 ```

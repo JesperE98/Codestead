@@ -1,9 +1,7 @@
 // A Direct3D 12 program in one file, modelled on Microsoft's D3D12HelloWorld samples
-// (D3D12HelloWindow, D3D12HelloTriangle, D3D12HelloTexture, D3D12HelloConstBuffers)
-// and the depth buffer of the D3D12Bundles sample.
+// (D3D12HelloWindow, D3D12HelloTriangle, D3D12HelloTexture).
 
 #include <windows.h>
-#include <windowsx.h>
 #include <d3d12.h>
 #include <dxgi1_6.h>
 #include <d3dcompiler.h>
@@ -18,7 +16,6 @@
 
 #include <chrono>
 #include <climits>
-#include <cmath>
 #include <cstdio>
 #include <cstring>
 #include <stdexcept>
@@ -48,28 +45,6 @@ inline void ThrowIfFailed(HRESULT hr)
     }
 }
 
-// The camera: where it is, the direction it looks in, and which way is up. Globals,
-// so that OnUpdate and the window's message handler can both use them.
-// Up in the gallery: 6 units above the planets' plane and 8 back, looking down at the sun in the
-// middle (cameraFront points from there to the origin: (0, -6, -8) is 10 long, so (0, -0.6, -0.8)
-// has length 1).
-XMVECTOR cameraPos   = XMVectorSet(0.0f, 6.0f,  8.0f, 0.0f);
-XMVECTOR cameraFront = XMVectorSet(0.0f, -0.6f, -0.8f, 0.0f);
-XMVECTOR cameraUp    = XMVectorSet(0.0f, 1.0f,  0.0f, 0.0f);
-
-// Which keys are held down, by virtual-key code ('W', VK_UP ...). WindowProc keeps it up to date.
-bool keys[256] = {};
-
-// Mouse look: the camera's direction as two angles, in degrees.
-bool firstMouse = true;
-float yaw   = -90.0f;    // yaw is initialized to -90.0 degrees since a yaw of 0.0 results in a direction vector pointing to the right so we initially rotate a bit to the left.
-float pitch = -36.87f;   // the camera starts looking down: sin(pitch) = cameraFront.y = -0.6
-float lastX =  800.0f / 2.0f;
-float lastY =  600.0f / 2.0f;
-
-// Zoom: the field of view, in degrees.
-float fov   =  45.0f;
-
 class D3D12App
 {
 public:
@@ -79,6 +54,7 @@ public:
     void OnUpdate();
     void OnRender();
     void OnDestroy();
+    void OnKeyDown(UINT8 key);
 
 private:
     static const UINT FrameCount = 2;
@@ -86,26 +62,16 @@ private:
     struct Vertex
     {
         XMFLOAT3 position;
+        XMFLOAT3 color;
         XMFLOAT2 texCoord;
     };
 
-    // The root constants: what the shaders see as cbuffer ModelConstants.
-    // A 4x4 matrix is 16 floats and the colour 3 more: 19 32-bit root constants.
-    struct ModelConstants
+    // The root constants: what the pixel shader sees as cbuffer MixConstants.
+    struct MixConstants
     {
-        XMFLOAT4X4 model;
-        XMFLOAT3 color;
+        float mixValue;
+        float time;
     };
-
-    // The constant buffer: what the vertex shader sees as cbuffer SceneConstantBuffer.
-    // Its size must be a multiple of 256 bytes.
-    struct SceneConstantBuffer
-    {
-        XMFLOAT4X4 view;
-        XMFLOAT4X4 projection;
-        float padding[32]; // Padding so the constant buffer is 256-byte aligned.
-    };
-    static_assert((sizeof(SceneConstantBuffer) % 256) == 0, "Constant Buffer size must be 256-byte aligned");
 
     UINT m_width;
     UINT m_height;
@@ -121,21 +87,20 @@ private:
     ComPtr<ID3D12CommandQueue> m_commandQueue;
     ComPtr<ID3D12RootSignature> m_rootSignature;
     ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
-    ComPtr<ID3D12DescriptorHeap> m_dsvHeap;
-    ComPtr<ID3D12DescriptorHeap> m_cbvSrvHeap;
+    ComPtr<ID3D12DescriptorHeap> m_srvHeap;
     ComPtr<ID3D12PipelineState> m_pipelineState;
     ComPtr<ID3D12GraphicsCommandList> m_commandList;
     UINT m_rtvDescriptorSize = 0;
-    UINT m_cbvSrvDescriptorSize = 0;
+    UINT m_srvDescriptorSize = 0;
 
     // App resources.
     ComPtr<ID3D12Resource> m_vertexBuffer;
     D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView = {};
+    ComPtr<ID3D12Resource> m_indexBuffer;
+    D3D12_INDEX_BUFFER_VIEW m_indexBufferView = {};
     ComPtr<ID3D12Resource> m_texture1;
     ComPtr<ID3D12Resource> m_texture2;
-    ComPtr<ID3D12Resource> m_constantBuffer;
-    ComPtr<ID3D12Resource> m_depthStencil;
-    UINT8* m_pCbvDataBegin = nullptr;    // where the constant buffer is mapped (CPU address)
+    float m_mixValue = 0.5f;    // how much of the face shows: 0 = none, 1 = only the face
 
     // Synchronization objects.
     UINT m_frameIndex = 0;
@@ -239,23 +204,16 @@ void D3D12App::LoadPipeline()
         rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
         ThrowIfFailed(m_device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_rtvHeap)));
 
-        // Describe and create a depth stencil view (DSV) descriptor heap.
-        D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
-        dsvHeapDesc.NumDescriptors = 1;
-        dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-        dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-        ThrowIfFailed(m_device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&m_dsvHeap)));
-
-        // Describe and create a shader resource view (SRV) and constant buffer view
-        // (CBV) heap. Shader visible: the shaders can read the descriptors in it.
-        D3D12_DESCRIPTOR_HEAP_DESC cbvSrvHeapDesc = {};
-        cbvSrvHeapDesc.NumDescriptors = 3;    // one SRV per texture + one CBV
-        cbvSrvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-        cbvSrvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-        ThrowIfFailed(m_device->CreateDescriptorHeap(&cbvSrvHeapDesc, IID_PPV_ARGS(&m_cbvSrvHeap)));
+        // Describe and create a shader resource view (SRV) heap for the texture.
+        // Shader visible: the shaders can read the descriptors in it.
+        D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
+        srvHeapDesc.NumDescriptors = 2;    // one SRV per texture
+        srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+        srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+        ThrowIfFailed(m_device->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_srvHeap)));
 
         m_rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-        m_cbvSrvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+        m_srvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     }
 
     // Create frame resources.
@@ -281,20 +239,14 @@ void D3D12App::LoadAssets()
     {
         // Root parameter 0: a descriptor table with one range of SRVs - 2 SRVs,
         // starting at register t0 (t0 and t1). Only the pixel shader reads it.
-        CD3DX12_DESCRIPTOR_RANGE ranges[2];
+        CD3DX12_DESCRIPTOR_RANGE ranges[1];
         ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0);
 
-        // A second range: 1 CBV at register b1, for the table of root parameter 2.
-        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
-
-        // Root parameter 1: root constants for register b0 (the model matrix and the
-        // colour). The vertex shader reads the matrix, the pixel shader the colour.
-        // Root parameter 2: a descriptor table with the constant buffer view (b1:
-        // view and projection), for the vertex shader.
-        CD3DX12_ROOT_PARAMETER rootParameters[3];
+        // Root parameter 1: root constants for register b0 (the mix value), also
+        // only for the pixel shader.
+        CD3DX12_ROOT_PARAMETER rootParameters[2];
         rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
-        rootParameters[1].InitAsConstants(sizeof(ModelConstants) / 4, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
-        rootParameters[2].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_VERTEX);
+        rootParameters[1].InitAsConstants(sizeof(MixConstants) / 4, 0, 0, D3D12_SHADER_VISIBILITY_PIXEL);
 
         // A static sampler is part of the root signature itself (no descriptor needed).
         // Sampler s0: linear filtering; texture coordinates outside 0..1 wrap around.
@@ -342,7 +294,8 @@ void D3D12App::LoadAssets()
         D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
         {
             { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-            { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+            { "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+            { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
         };
 
         // Describe and create the graphics pipeline state object (PSO).
@@ -352,16 +305,13 @@ void D3D12App::LoadAssets()
         psoDesc.VS = CD3DX12_SHADER_BYTECODE(vertexShader.Get());
         psoDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShader.Get());
         psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-        psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;    // the cube's triangles are not all clockwise: draw both sides
         psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-        // The default depth stencil state: depth test on (a pixel is kept only if it is
-        // nearer than the one already there, D3D12_COMPARISON_FUNC_LESS), depth writes on.
-        psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+        psoDesc.DepthStencilState.DepthEnable = FALSE;
+        psoDesc.DepthStencilState.StencilEnable = FALSE;
         psoDesc.SampleMask = UINT_MAX;
         psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
         psoDesc.NumRenderTargets = 1;
         psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-        psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
         psoDesc.SampleDesc.Count = 1;
         ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState)));
     }
@@ -374,52 +324,16 @@ void D3D12App::LoadAssets()
 
     // Create the vertex buffer.
     {
-        // A cube: 6 faces of 2 triangles, 36 vertices. The texture coordinates are
-        // learnopengl.com's with v flipped (1 - v): Direct3D's v = 0 is the image's top.
+        // Define the four corners of a rectangle, each with its own colour and texture
+        // coordinates. Direct3D's texture coordinates start at the image's top left
+        // corner (0, 0); (1, 1) is its bottom right corner.
         Vertex vertices[] =
         {
-            // position                texture coords
-            { { -0.5f, -0.5f, -0.5f }, { 0.0f, 1.0f } },
-            { {  0.5f, -0.5f, -0.5f }, { 1.0f, 1.0f } },
-            { {  0.5f,  0.5f, -0.5f }, { 1.0f, 0.0f } },
-            { {  0.5f,  0.5f, -0.5f }, { 1.0f, 0.0f } },
-            { { -0.5f,  0.5f, -0.5f }, { 0.0f, 0.0f } },
-            { { -0.5f, -0.5f, -0.5f }, { 0.0f, 1.0f } },
-
-            { { -0.5f, -0.5f,  0.5f }, { 0.0f, 1.0f } },
-            { {  0.5f, -0.5f,  0.5f }, { 1.0f, 1.0f } },
-            { {  0.5f,  0.5f,  0.5f }, { 1.0f, 0.0f } },
-            { {  0.5f,  0.5f,  0.5f }, { 1.0f, 0.0f } },
-            { { -0.5f,  0.5f,  0.5f }, { 0.0f, 0.0f } },
-            { { -0.5f, -0.5f,  0.5f }, { 0.0f, 1.0f } },
-
-            { { -0.5f,  0.5f,  0.5f }, { 1.0f, 1.0f } },
-            { { -0.5f,  0.5f, -0.5f }, { 1.0f, 0.0f } },
-            { { -0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f } },
-            { { -0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f } },
-            { { -0.5f, -0.5f,  0.5f }, { 0.0f, 1.0f } },
-            { { -0.5f,  0.5f,  0.5f }, { 1.0f, 1.0f } },
-
-            { {  0.5f,  0.5f,  0.5f }, { 1.0f, 1.0f } },
-            { {  0.5f,  0.5f, -0.5f }, { 1.0f, 0.0f } },
-            { {  0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f } },
-            { {  0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f } },
-            { {  0.5f, -0.5f,  0.5f }, { 0.0f, 1.0f } },
-            { {  0.5f,  0.5f,  0.5f }, { 1.0f, 1.0f } },
-
-            { { -0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f } },
-            { {  0.5f, -0.5f, -0.5f }, { 1.0f, 0.0f } },
-            { {  0.5f, -0.5f,  0.5f }, { 1.0f, 1.0f } },
-            { {  0.5f, -0.5f,  0.5f }, { 1.0f, 1.0f } },
-            { { -0.5f, -0.5f,  0.5f }, { 0.0f, 1.0f } },
-            { { -0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f } },
-
-            { { -0.5f,  0.5f, -0.5f }, { 0.0f, 0.0f } },
-            { {  0.5f,  0.5f, -0.5f }, { 1.0f, 0.0f } },
-            { {  0.5f,  0.5f,  0.5f }, { 1.0f, 1.0f } },
-            { {  0.5f,  0.5f,  0.5f }, { 1.0f, 1.0f } },
-            { { -0.5f,  0.5f,  0.5f }, { 0.0f, 1.0f } },
-            { { -0.5f,  0.5f, -0.5f }, { 0.0f, 0.0f } }
+            // position               color                  texture coords
+            { { 0.9f, 0.6f, 0.0f },   { 1.0f, 0.0f, 0.0f },  { 4.0f, 0.0f } },    // top right: red
+            { { 0.9f, -0.6f, 0.0f },  { 0.0f, 1.0f, 0.0f },  { 4.0f, 2.0f } },    // bottom right: green
+            { { -0.9f, -0.6f, 0.0f }, { 0.0f, 0.0f, 1.0f },  { 0.0f, 2.0f } },    // bottom left: blue
+            { { -0.9f, 0.6f, 0.0f },  { 1.0f, 1.0f, 0.0f },  { 0.0f, 0.0f } }     // top left: yellow
         };
 
         const UINT vertexBufferSize = sizeof(vertices);
@@ -449,6 +363,43 @@ void D3D12App::LoadAssets()
         m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
         m_vertexBufferView.StrideInBytes = sizeof(Vertex);
         m_vertexBufferView.SizeInBytes = vertexBufferSize;
+    }
+
+    // Create the index buffer.
+    {
+        // The rectangle's two triangles, as indices into the vertex buffer. Both are
+        // clockwise on screen (front faces): top right, bottom right, top left and
+        // bottom right, bottom left, top left.
+        UINT indices[] =
+        {
+            0, 1, 3,   // first triangle
+            1, 2, 3    // second triangle
+        };
+
+        const UINT indexBufferSize = sizeof(indices);
+
+        // An upload heap again, like the vertex buffer.
+        CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_UPLOAD);
+        CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(indexBufferSize);
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_NONE,
+            &bufferDesc,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&m_indexBuffer)));
+
+        // Copy the indices to the index buffer.
+        UINT8* pIndexDataBegin = nullptr;
+        CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
+        ThrowIfFailed(m_indexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pIndexDataBegin)));
+        memcpy(pIndexDataBegin, indices, sizeof(indices));
+        m_indexBuffer->Unmap(0, nullptr);
+
+        // Initialize the index buffer view: 32-bit indices (UINT).
+        m_indexBufferView.BufferLocation = m_indexBuffer->GetGPUVirtualAddress();
+        m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+        m_indexBufferView.SizeInBytes = indexBufferSize;
     }
 
     // Note: ComPtr's are CPU objects, but an upload heap needs to stay in scope until
@@ -522,13 +473,13 @@ void D3D12App::LoadAssets()
         CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_texture1.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
         m_commandList->ResourceBarrier(1, &barrier);
 
-        // Describe and create a SRV for the texture, in the first slot of the CBV/SRV heap.
+        // Describe and create a SRV for the texture, in the first slot of the SRV heap.
         D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
         srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
         srvDesc.Format = textureDesc.Format;
         srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
         srvDesc.Texture2D.MipLevels = 1;
-        m_device->CreateShaderResourceView(m_texture1.Get(), &srvDesc, m_cbvSrvHeap->GetCPUDescriptorHandleForHeapStart());
+        m_device->CreateShaderResourceView(m_texture1.Get(), &srvDesc, m_srvHeap->GetCPUDescriptorHandleForHeapStart());
 
         // Free the image memory.
         stbi_image_free(data);
@@ -585,74 +536,17 @@ void D3D12App::LoadAssets()
         CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_texture2.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
         m_commandList->ResourceBarrier(1, &barrier);
 
-        // The SRV goes into the second slot of the heap (descriptor 1), right after
+        // The SRV goes into the second slot of the SRV heap (descriptor 1), right after
         // the container's: the descriptor table's t0 and t1.
         D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
         srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
         srvDesc.Format = textureDesc.Format;
         srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
         srvDesc.Texture2D.MipLevels = 1;
-        CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_cbvSrvHeap->GetCPUDescriptorHandleForHeapStart(), 1, m_cbvSrvDescriptorSize);
+        CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_srvHeap->GetCPUDescriptorHandleForHeapStart(), 1, m_srvDescriptorSize);
         m_device->CreateShaderResourceView(m_texture2.Get(), &srvDesc, srvHandle);
 
         stbi_image_free(data);
-    }
-
-    // Create the constant buffer.
-    {
-        const UINT constantBufferSize = sizeof(SceneConstantBuffer);    // CB size is required to be 256-byte aligned.
-
-        // An upload heap: the CPU writes the buffer every frame, the GPU reads it.
-        CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_UPLOAD);
-        CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(constantBufferSize);
-        ThrowIfFailed(m_device->CreateCommittedResource(
-            &heapProperties,
-            D3D12_HEAP_FLAG_NONE,
-            &bufferDesc,
-            D3D12_RESOURCE_STATE_GENERIC_READ,
-            nullptr,
-            IID_PPV_ARGS(&m_constantBuffer)));
-
-        // Describe and create a constant buffer view (CBV) in the third slot of the
-        // CBV/SRV heap (descriptor 2), after the two textures' SRVs.
-        D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
-        cbvDesc.BufferLocation = m_constantBuffer->GetGPUVirtualAddress();
-        cbvDesc.SizeInBytes = constantBufferSize;
-        CD3DX12_CPU_DESCRIPTOR_HANDLE cbvHandle(m_cbvSrvHeap->GetCPUDescriptorHandleForHeapStart(), 2, m_cbvSrvDescriptorSize);
-        m_device->CreateConstantBufferView(&cbvDesc, cbvHandle);
-
-        // Map the constant buffer. We don't unmap this until the app closes.
-        // Keeping things mapped for the lifetime of the resource is okay.
-        CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
-        ThrowIfFailed(m_constantBuffer->Map(0, &readRange, reinterpret_cast<void**>(&m_pCbvDataBegin)));
-    }
-
-    // Create the depth buffer and its depth stencil view.
-    {
-        D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
-        depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
-        depthStencilDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-        depthStencilDesc.Flags = D3D12_DSV_FLAG_NONE;
-
-        // The value the depth buffer is usually cleared to: 1.0, the far plane.
-        D3D12_CLEAR_VALUE depthOptimizedClearValue = {};
-        depthOptimizedClearValue.Format = DXGI_FORMAT_D32_FLOAT;
-        depthOptimizedClearValue.DepthStencil.Depth = 1.0f;
-        depthOptimizedClearValue.DepthStencil.Stencil = 0;
-
-        // A texture as big as the window, one 32-bit float depth per pixel (1 array
-        // slice, 1 mip level), in a default heap and in the DEPTH_WRITE state.
-        CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
-        CD3DX12_RESOURCE_DESC depthDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, m_width, m_height, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
-        ThrowIfFailed(m_device->CreateCommittedResource(
-            &heapProperties,
-            D3D12_HEAP_FLAG_NONE,
-            &depthDesc,
-            D3D12_RESOURCE_STATE_DEPTH_WRITE,
-            &depthOptimizedClearValue,
-            IID_PPV_ARGS(&m_depthStencil)));
-
-        m_device->CreateDepthStencilView(m_depthStencil.Get(), &depthStencilDesc, m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
     }
 
     // Close the command list and execute it to begin the initial GPU setup.
@@ -682,36 +576,23 @@ void D3D12App::LoadAssets()
 // Update frame-based values.
 void D3D12App::OnUpdate()
 {
-    // Per-frame time logic: deltaTime is the time since the last frame, in seconds.
-    static auto lastFrame = std::chrono::high_resolution_clock::now();
-    auto currentFrame = std::chrono::high_resolution_clock::now();
-    float deltaTime = std::chrono::duration<float, std::chrono::seconds::period>(currentFrame - lastFrame).count();
-    lastFrame = currentFrame;
+}
 
-    // Move the camera with W, A, S and D: 2.5 units per second, however fast the frames are.
-    float cameraSpeed = 2.5f * deltaTime;
-    if (keys['W'])
-        cameraPos += cameraSpeed * cameraFront;
-    if (keys['S'])
-        cameraPos -= cameraSpeed * cameraFront;
-    if (keys['A'])
-        cameraPos -= XMVector3Normalize(XMVector3Cross(cameraFront, cameraUp)) * cameraSpeed;
-    if (keys['D'])
-        cameraPos += XMVector3Normalize(XMVector3Cross(cameraFront, cameraUp)) * cameraSpeed;
-
-    // The view matrix: look from cameraPos in the direction of cameraFront.
-    XMMATRIX view = XMMatrixLookAtRH(cameraPos, cameraPos + cameraFront, cameraUp);
-
-    // The projection matrix adds perspective: a field of view of fov degrees (the
-    // zoom), the window's aspect ratio, and the near and far planes at 0.1 and 100 units.
-    XMMATRIX projection = XMMatrixPerspectiveFovRH(XMConvertToRadians(fov), static_cast<float>(m_width) / static_cast<float>(m_height), 0.1f, 100.0f);
-
-    // Copy both into the constant buffer, transposed like the model matrix. The GPU
-    // has finished the previous frame (OnRender waits for it), so it is not reading it.
-    SceneConstantBuffer constantBufferData = {};
-    XMStoreFloat4x4(&constantBufferData.view, XMMatrixTranspose(view));
-    XMStoreFloat4x4(&constantBufferData.projection, XMMatrixTranspose(projection));
-    memcpy(m_pCbvDataBegin, &constantBufferData, sizeof(constantBufferData));
+// Up and Down change the mix value, in steps of 0.1 (holding a key repeats it).
+void D3D12App::OnKeyDown(UINT8 key)
+{
+    if (key == VK_UP)
+    {
+        m_mixValue += 0.1f;
+        if (m_mixValue >= 1.0f)
+            m_mixValue = 1.0f;
+    }
+    if (key == VK_DOWN)
+    {
+        m_mixValue -= 0.1f;
+        if (m_mixValue <= 0.0f)
+            m_mixValue = 0.0f;
+    }
 }
 
 // Render the scene.
@@ -754,70 +635,40 @@ void D3D12App::PopulateCommandList()
     // Set necessary state.
     m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
 
-    // The CBV/SRV heap the descriptor tables point into, and root parameter 0: the
-    // textures' table, starting at the heap's first descriptor.
-    ID3D12DescriptorHeap* ppHeaps[] = { m_cbvSrvHeap.Get() };
+    // The SRV heap the descriptor table points into, and root parameter 0: the
+    // table, starting at the heap's first descriptor.
+    ID3D12DescriptorHeap* ppHeaps[] = { m_srvHeap.Get() };
     m_commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
-    m_commandList->SetGraphicsRootDescriptorTable(0, m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart());
-
-    // Root parameter 2: the table with the constant buffer view, the heap's third
-    // descriptor.
-    CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(m_cbvSrvHeap->GetGPUDescriptorHandleForHeapStart(), 2, m_cbvSrvDescriptorSize);
-    m_commandList->SetGraphicsRootDescriptorTable(2, cbvHandle);
+    m_commandList->SetGraphicsRootDescriptorTable(0, m_srvHeap->GetGPUDescriptorHandleForHeapStart());
 
     m_commandList->RSSetViewports(1, &m_viewport);
     m_commandList->RSSetScissorRects(1, &m_scissorRect);
+
+    // The time in seconds since the first frame, for the glow.
+    static auto startTime = std::chrono::high_resolution_clock::now();
+    auto currentTime = std::chrono::high_resolution_clock::now();
+    float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+
+    // Root parameter 1: the mix value and the time for the pixel shader.
+    MixConstants mixConstants = {};
+    mixConstants.mixValue = m_mixValue;
+    mixConstants.time = time;
+    m_commandList->SetGraphicsRoot32BitConstants(1, sizeof(MixConstants) / 4, &mixConstants, 0);
 
     // Indicate that the back buffer will be used as a render target.
     CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
     m_commandList->ResourceBarrier(1, &barrier);
 
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize);
-    CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
-    m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
+    m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 
     // Record commands.
-    const float clearColor[] = { 0.02f, 0.02f, 0.08f, 1.0f }; // the night sky: almost black, a touch of blue
+    const float clearColor[] = { 0.03f, 0.04f, 0.15f, 1.0f };    // a deep night blue behind the sign
     m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
-    m_commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
     m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
-
-    // The time in seconds since the first frame.
-    static auto startTime = std::chrono::high_resolution_clock::now();
-    auto currentTime = std::chrono::high_resolution_clock::now();
-    float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-
-    // The solar system: every body is the same cube with its own model matrix. Root
-    // parameter 1 holds the model matrix; root constants are recorded with each draw,
-    // so every body keeps its own.
-    ModelConstants modelConstants = {};
-
-    // The sun: in the middle, twice as big, turning around its own (y) axis. DirectXMath
-    // multiplies from left to right: first scaled, then turned.
-    XMMATRIX model = XMMatrixScaling(2.0f, 2.0f, 2.0f) * XMMatrixRotationY(XMConvertToRadians(time * 20.0f));
-    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
-    modelConstants.color = XMFLOAT3(1.0f, 0.8f, 0.2f);    // a yellow sun
-    m_commandList->SetGraphicsRoot32BitConstants(1, sizeof(ModelConstants) / 4, &modelConstants, 0);
-    m_commandList->DrawInstanced(36, 1, 0, 0);
-
-    // The planet: moved out to its orbit, then turned around the sun's axis by its orbit
-    // angle; made smaller than the sun before all that.
-    XMMATRIX planet = XMMatrixTranslation(3.0f, 0.0f, 0.0f) * XMMatrixRotationY(XMConvertToRadians(time * 30.0f));
-    model = XMMatrixScaling(0.6f, 0.6f, 0.6f) * planet;
-    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
-    modelConstants.color = XMFLOAT3(0.2f, 0.4f, 1.0f);    // a blue planet
-    m_commandList->SetGraphicsRoot32BitConstants(1, sizeof(ModelConstants) / 4, &modelConstants, 0);
-    m_commandList->DrawInstanced(36, 1, 0, 0);
-
-    // The moon: its own orbit around the planet (moved out, turned, faster), and then the
-    // planet's matrix (without its scale), so it goes wherever the planet goes.
-    model = XMMatrixScaling(0.3f, 0.3f, 0.3f) * XMMatrixTranslation(1.0f, 0.0f, 0.0f)
-        * XMMatrixRotationY(XMConvertToRadians(time * 120.0f)) * planet;
-    XMStoreFloat4x4(&modelConstants.model, XMMatrixTranspose(model));
-    modelConstants.color = XMFLOAT3(0.7f, 0.7f, 0.7f);    // a grey moon
-    m_commandList->SetGraphicsRoot32BitConstants(1, sizeof(ModelConstants) / 4, &modelConstants, 0);
-    m_commandList->DrawInstanced(36, 1, 0, 0);
+    m_commandList->IASetIndexBuffer(&m_indexBufferView);
+    m_commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
     // Indicate that the back buffer will now be used to present.
     barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
@@ -878,101 +729,24 @@ void D3D12App::GetHardwareAdapter(IDXGIFactory1* pFactory, IDXGIAdapter1** ppAda
     *ppAdapter = adapter.Detach();
 }
 
-// Mouse look: WindowProc calls this whenever the mouse moves, with the cursor's
-// position in the window's client area (in pixels from its top left corner).
-void OnMouseMove(float xpos, float ypos)
-{
-    // The first time, the cursor can be anywhere: start from there instead of
-    // jumping from (lastX, lastY).
-    if (firstMouse)
-    {
-        lastX = xpos;
-        lastY = ypos;
-        firstMouse = false;
-    }
-
-    float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos;    // reversed since y-coordinates go from top to bottom
-    lastX = xpos;
-    lastY = ypos;
-
-    float sensitivity = 0.1f;    // change this value to your liking
-    xoffset *= sensitivity;
-    yoffset *= sensitivity;
-
-    yaw += xoffset;
-    pitch += yoffset;
-
-    // Make sure that when pitch is out of bounds, the screen doesn't get flipped.
-    if (pitch > 89.0f)
-        pitch = 89.0f;
-    if (pitch < -89.0f)
-        pitch = -89.0f;
-
-    XMVECTOR front = XMVectorSet(
-        std::cos(XMConvertToRadians(yaw)) * std::cos(XMConvertToRadians(pitch)),
-        std::sin(XMConvertToRadians(pitch)),
-        std::sin(XMConvertToRadians(yaw)) * std::cos(XMConvertToRadians(pitch)),
-        0.0f);
-    cameraFront = XMVector3Normalize(front);
-}
-
-// Zoom: WindowProc calls this when the mouse wheel turns, with the number of notches
-// (positive: turned away from you, which zooms in).
-void OnMouseWheel(float yoffset)
-{
-    fov -= yoffset;
-    if (fov < 1.0f)
-        fov = 1.0f;
-    if (fov > 45.0f)
-        fov = 45.0f;
-}
-
 // Main message handler for the window.
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    // The app that wWinMain stored in the window (nullptr until then).
+    D3D12App* pApp = reinterpret_cast<D3D12App*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+
     switch (message)
     {
     case WM_KEYDOWN:
-        // Escape closes the window; any key pressed is held down until its WM_KEYUP.
+        // Escape closes the window; the app gets the other keys.
         if (wParam == VK_ESCAPE)
         {
             DestroyWindow(hWnd);
         }
-        keys[static_cast<UINT8>(wParam)] = true;
-        return 0;
-
-    case WM_KEYUP:
-        keys[static_cast<UINT8>(wParam)] = false;
-        return 0;
-
-    case WM_MOUSEMOVE:
-        // Only while the window is the active one, so the mouse is free otherwise.
-        if (GetForegroundWindow() == hWnd)
+        else if (pApp != nullptr)
         {
-            int xpos = GET_X_LPARAM(lParam);
-            int ypos = GET_Y_LPARAM(lParam);
-            OnMouseMove(static_cast<float>(xpos), static_cast<float>(ypos));
-
-            // Capture the cursor: put it back in the middle of the window, so it never
-            // reaches an edge. lastX and lastY move with it, so the jump does not turn
-            // the camera (the WM_MOUSEMOVE it causes has an offset of 0).
-            RECT clientRect = {};
-            GetClientRect(hWnd, &clientRect);
-            POINT centre = { clientRect.right / 2, clientRect.bottom / 2 };
-            if (xpos != centre.x || ypos != centre.y)
-            {
-                lastX = static_cast<float>(centre.x);
-                lastY = static_cast<float>(centre.y);
-                ClientToScreen(hWnd, &centre);
-                SetCursorPos(centre.x, centre.y);
-            }
+            pApp->OnKeyDown(static_cast<UINT8>(wParam));
         }
-        return 0;
-
-    case WM_MOUSEWHEEL:
-        // One notch of the wheel is WHEEL_DELTA (120); a fine wheel sends less.
-        OnMouseWheel(static_cast<float>(GET_WHEEL_DELTA_WPARAM(wParam)) / WHEEL_DELTA);
         return 0;
 
     case WM_DESTROY:
@@ -1024,14 +798,14 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int nCmdShow)
     }
 
     D3D12App app(width, height);
+
+    // Store a pointer to the app in the window, so WindowProc can pass it the keys.
+    SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(&app));
     try
     {
         app.OnInit(hwnd);
 
         ShowWindow(hwnd, nCmdShow);
-
-        // Hide the cursor over the window: the mouse turns the camera now.
-        ShowCursor(FALSE);
 
         // Main loop: process the window's messages until the window is closed (WM_QUIT).
         MSG msg = {};

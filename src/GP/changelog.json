@@ -1,5 +1,32 @@
 [
   {
+    "version": "0.2.12",
+    "date": "2026-11-26",
+    "changes": {
+      "en": [
+        "**A new part, Going 3D**: *Getting started* now ends with *Textures*, and *Transformations*, *Coordinate Systems* and *Camera* have a part of their own that opens with a new chapter, *The maths of 3D* – vectors, matrices, angles, sine and cosine, explained step by step. Both parts have their own review and exam, the solar system made of crates is now Going 3D's project, and Getting started has a new project of its own. Your progress in the chapters is kept."
+      ],
+      "sv": [
+        "**En ny del, Till 3D**: *Kom igång* slutar nu med *Textures*, och *Transformations*, *Coordinate Systems* och *Camera* har fått en egen del som börjar med ett nytt kapitel, *Matematiken bakom 3D* – vektorer, matriser, vinklar, sinus och cosinus, förklarade steg för steg. Båda delarna har sin egen sammanfattning och sitt eget prov, solsystemet av lådor är nu projektet i Till 3D, och Kom igång har fått ett eget nytt projekt. Det du har gjort i kapitlen finns kvar."
+      ],
+      "de": [
+        "**Ein neuer Teil, Auf in die 3D-Welt**: *Erste Schritte* endet jetzt mit *Textures*, und *Transformations*, *Coordinate Systems* und *Camera* haben einen eigenen Teil, der mit einem neuen Kapitel beginnt, *Die Mathematik hinter 3D* – Vektoren, Matrizen, Winkel, Sinus und Kosinus, Schritt für Schritt erklärt. Beide Teile haben ihre eigene Zusammenfassung und Prüfung, das Sonnensystem aus Kisten ist jetzt das Projekt von Auf in die 3D-Welt, und Erste Schritte hat ein eigenes neues Projekt. Dein Fortschritt in den Kapiteln bleibt erhalten."
+      ],
+      "fr": [
+        "**Une nouvelle partie, Passer à la 3D** : *Pour commencer* se termine désormais par *Textures*, et *Transformations*, *Coordinate Systems* et *Camera* ont leur propre partie, qui s'ouvre sur un nouveau chapitre, *Les maths de la 3D* – vecteurs, matrices, angles, sinus et cosinus, expliqués pas à pas. Les deux parties ont leur propre récapitulatif et leur propre examen, le système solaire en caisses est maintenant le projet de Passer à la 3D, et Pour commencer a un nouveau projet bien à lui. Votre progression dans les chapitres est conservée."
+      ],
+      "es": [
+        "**Una parte nueva, Hacia el 3D**: *Primeros pasos* termina ahora con *Textures*, y *Transformations*, *Coordinate Systems* y *Camera* tienen su propia parte, que empieza con un capítulo nuevo, *Las matemáticas del 3D*: vectores, matrices, ángulos, seno y coseno, explicados paso a paso. Las dos partes tienen su propio repaso y su propio examen, el sistema solar de cajas es ahora el proyecto de Hacia el 3D, y Primeros pasos tiene un proyecto nuevo propio. Tu progreso en los capítulos se conserva."
+      ],
+      "zh": [
+        "**新的部分：走进 3D**：“入门”现在以 *Textures* 结束，*Transformations*、*Coordinate Systems* 和 *Camera* 组成了单独的一部分，并以新章节 *3D 背后的数学* 开篇——一步步讲解向量、矩阵、角度、正弦和余弦。两个部分各有自己的复习和考试，用箱子做的太阳系现在是“走进 3D”的项目，“入门”也有了自己的新项目。你在各章中的进度会保留。"
+      ],
+      "ja": [
+        "**新しいパート「3Dへ」**：「はじめに」は *Textures* で終わるようになり、*Transformations*、*Coordinate Systems*、*Camera* は独自のパートになりました。その最初には新しい章 *3Dの数学* があり、ベクトル、行列、角度、サインとコサインを一歩ずつ説明します。どちらのパートにも専用のまとめと試験があり、木箱で作る太陽系は「3Dへ」のプロジェクトになり、「はじめに」には新しいプロジェクトが加わりました。各章の進捗はそのまま残ります。"
+      ]
+    }
+  },
+  {
     "version": "0.2.11",
     "date": "2026-11-25",
     "changes": {

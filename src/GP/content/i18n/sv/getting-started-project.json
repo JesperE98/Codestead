@@ -1,56 +1,60 @@
 {
-  "title": "Projekt: Ett litet solsystem",
+  "title": "Projekt: Planetariets skylt",
   "tasks": {
-    "night-sky": {
-      "text": "Natten faller: rensa fönstret till en natthimmel – nästan svart, kanske med en aning blått.",
+    "night-blue": {
+      "text": "Släck ner: rensa fönstret till en djup nattblå färg – mörk, men tydligt blå.",
       "hint": {
-        "opengl": "Det är renderingsloopens rensningsfärg: `glClearColor`. Ungefär (0.02, 0.02, 0.08) – varje kanal en bra bit under den gamla blågröna.",
-        "vulkan": "Det är färgbilagans rensningsvärde i `recordCommandBuffer()`: `clearValues[0].color`. Ungefär (0.02, 0.02, 0.08).",
-        "d3d12": "Det är arrayen `clearColor` som `PopulateCommandList` ger `ClearRenderTargetView`. Ungefär (0.02, 0.02, 0.08)."
+        "opengl": "Det är renderingsloopens rensningsfärg: `glClearColor`. Ungefär (0.03, 0.04, 0.15) – blått tydligt över rött och grönt, alla låga.",
+        "vulkan": "Det är render passets rensningsvärde i `recordCommandBuffer()`: `VkClearValue clearColor`. Ungefär (0.03, 0.04, 0.15).",
+        "d3d12": "Det är arrayen `clearColor` som `PopulateCommandList` ger `ClearRenderTargetView`. Ungefär (0.03, 0.04, 0.15)."
       }
     },
-    "observatory": {
-      "text": "En plats på läktaren: låt kameran börja ovanför och bakom världens mitt och titta snett ner mot den – till exempel 6 enheter upp och 8 bakåt – och behåll den fria kameran.",
+    "wide-sign": {
+      "text": "En bred skylt: flytta rektangelns hörn så att den blir tydligt bredare än den är hög och täcker större delen av fönstret – till exempel x från -0.9 till 0.9 och y från -0.6 till 0.6.",
       "hint": {
-        "opengl": "Ändra de globala variablerna: `cameraPos` (0, 6, 8) och `cameraFront` som pekar tillbaka mot origo, (0, -0.6, -0.8). Låt `pitch` börja på ungefär -36.87° (dess sinus är -0.6), så hoppar inte vyn första gången du rör musen.",
-        "vulkan": "Ändra de globala variablerna: `cameraPos` (0, 6, 8) och `cameraFront` som pekar tillbaka mot origo, (0, -0.6, -0.8). Låt `pitch` börja på ungefär -36.87° (dess sinus är -0.6), så hoppar inte vyn första gången du rör musen.",
-        "d3d12": "Ändra de globala `XMVECTOR`-variablerna: `cameraPos` (0, 6, 8) och `cameraFront` som pekar tillbaka mot origo, (0, -0.6, -0.8). Låt `pitch` börja på ungefär -36.87° (dess sinus är -0.6), så hoppar inte vyn första gången du rör musen."
+        "opengl": "Positionerna är de tre första talen i varje vertex i `vertices`: byt 0.5 mot 0.9 (x) och 0.6 (y), med samma tecken.",
+        "vulkan": "Positionerna är första delen av varje `Vertex` i `vertices`: byt 0.5 mot 0.9 (x) och 0.6 (y), med samma tecken.",
+        "d3d12": "Positionerna är första delen av varje `Vertex` i `LoadAssets`: byt 0.5 mot 0.9 (x) och 0.6 (y), med samma tecken."
       }
     },
-    "sun": {
-      "text": "Varde sol: rita i stället för de tio lådorna en enda låda mitt i världen, ungefär dubbelt så stor, som långsamt snurrar runt sin egen lodräta axel (y).",
-      "hint": {
-        "opengl": "Byt ut `for`-loopen mot ett enda ritanrop. Dess model-matris: `glm::rotate` med tiden runt (0, 1, 0), sedan `glm::scale` med 2 – ingen förflyttning, solen stannar i origo. Kubernas positioner behövs inte längre.",
-        "vulkan": "Byt ut `for`-loopen i `recordCommandBuffer()` mot en push och ett ritanrop. Model-matrisen: `glm::rotate` med `glfwGetTime()` runt (0, 1, 0), sedan `glm::scale` med 2 – ingen förflyttning, solen stannar i origo.",
-        "d3d12": "Byt ut `for`-loopen i `PopulateCommandList` mot ett enda ritanrop. Model-matrisen: `XMMatrixScaling(2.0f, 2.0f, 2.0f) * XMMatrixRotationY(…)` med tiden – ingen förflyttning, solen stannar i origo."
-      }
-    },
-    "planet": {
-      "text": "En planet: en andra, mindre låda som kretsar runt solen på ett fast avstånd, några enheter ut.",
-      "hint": {
-        "opengl": "Håll banan i en egen matris: `rotate` med tiden runt (0, 1, 0), sedan `translate` ut längs x. Läs nerifrån och upp: först flyttad ut, sedan vriden runt solen. Skala en kopia av den för ritanropet.",
-        "vulkan": "Håll banan i en egen matris: `rotate` med tiden runt (0, 1, 0), sedan `translate` ut längs x. Läs nerifrån och upp: först flyttad ut, sedan vriden runt solen. Skala en kopia av den, skicka den och rita.",
-        "d3d12": "Håll banan i en egen matris: `XMMatrixTranslation(3.0f, 0.0f, 0.0f) * XMMatrixRotationY(…)` – först flyttad ut, sedan vriden runt solen. Planetens model-matris är en skalning gånger den."
-      }
-    },
-    "moon": {
-      "text": "En måne: en tredje, ännu mindre låda som kretsar runt planeten medan planeten kretsar runt solen.",
-      "hint": {
-        "opengl": "Låt månens matris utgå från planetens banmatris (före skalningen): `glm::rotate(planet, …)` snabbare, sedan `translate` en bit ut, sist en liten `scale`.",
-        "vulkan": "Låt månens matris utgå från planetens banmatris (före skalningen): `glm::rotate(planet, …)` snabbare, sedan `translate` en bit ut, sist en liten `scale`.",
-        "d3d12": "Avsluta månens kedja med planetens banmatris (före skalningen): skalning, sedan en kort förflyttning, sedan en snabbare rotation runt y, sist `* planet`."
-      }
-    },
-    "colours": {
+    "repeat-wood": {
       "text": {
-        "opengl": "Färg: ge varje himlakropp sin egen färg – en uniform i `shader.fs`, satt före varje ritanrop – och blanda den med lådans textur så att träet syns igenom.",
-        "vulkan": "Färg: ge varje himlakropp sin egen färg – efter model-matrisen i push constants, läst av fragmentshadern – och blanda den med lådans textur så att träet syns igenom.",
-        "d3d12": "Färg: ge varje himlakropp sin egen färg – efter model-matrisen i root constants, läst av pixelshadern – och blanda den med lådans textur så att träet syns igenom."
+        "opengl": "Trä hela vägen: låt lådan upprepas över skylten i stället för att dess kant dras ut – texturkoordinater upp till 4 på bredden (och 2 på höjden), och en wrapping som upprepar för lådan.",
+        "vulkan": "Trä hela vägen: låt lådan upprepas över skylten i stället för att dess kant dras ut – texturkoordinater upp till 4 på bredden (och 2 på höjden), och en sampler som upprepar för lådan.",
+        "d3d12": "Trä hela vägen: låt lådan upprepas över skylten i stället för att dess kant dras ut – texturkoordinater upp till 4 på bredden (och 2 på höjden), och en sampler som upprepar för lådan."
       },
       "hint": {
-        "opengl": "`uniform vec3 bodyColor;` i `shader.fs`, `FragColor = mix(texColor, vec4(bodyColor, 1.0), 0.6);` och `ourShader.setVec3(\"bodyColor\", …)` före varje `glDrawArrays`.",
-        "vulkan": "Lägg till `vec3 color` i push constant-blocket i båda shadrarna och `glm::vec3 color` i C++-structen; intervallet och varje `vkCmdPushConstants` behöver `VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT`.",
-        "d3d12": "Lägg till `float3 color` i `cbuffer ModelConstants` och `XMFLOAT3 color` i C++-structen; låt root constants synas för alla steg (`D3D12_SHADER_VISIBILITY_ALL`) och använd `lerp` i `PSMain`."
+        "opengl": "Byt de högra hörnens s-koordinat från 2.0 till 4.0, och lådans `GL_TEXTURE_WRAP_S` och `GL_TEXTURE_WRAP_T` från `GL_CLAMP_TO_EDGE` till `GL_REPEAT`.",
+        "vulkan": "Byt de högra hörnens första texturkoordinat till 4.0, och låt lådans `imageInfo.sampler` vara `textureSampler`. Då behövs inte `clampSampler`: ta bort den, dess `vkCreateSampler` och dess `vkDestroySampler`.",
+        "d3d12": "Byt de högra hörnens första texturkoordinat till 4.0, och sampla `texture1` med `wrapSampler` i `PSMain`. Då behövs inte den klampande samplern `s1`: ta bort den ur root signaturen och shadern."
+      }
+    },
+    "tint": {
+      "text": "Färg: tona skylten med hörnens färger, så att den går från gult till rött längs överkanten och från blått till grönt längs underkanten.",
+      "hint": {
+        "opengl": "`ourColor` kommer redan in i `shader.fs`: multiplicera resultatet av `mix(...)` med `vec4(ourColor, 1.0)`.",
+        "vulkan": "`fragColor` kommer redan in i `shader.frag`: multiplicera resultatet av `mix(...)` med `vec4(fragColor, 1.0)`. Kompilera om shadern med `glslc`.",
+        "d3d12": "`input.color` kommer redan in i `PSMain`: multiplicera resultatet av `lerp(...)` med den."
+      }
+    },
+    "glow": {
+      "text": {
+        "opengl": "Skenet: låt skylten långsamt lysa starkare och svagare, om och om igen – tiden som en ny uniform, och `sin` av den i `shader.fs`.",
+        "vulkan": "Skenet: låt skylten långsamt lysa starkare och svagare, om och om igen – tiden efter `mixValue` i push constants, och `sin` av den i `shader.frag`.",
+        "d3d12": "Skenet: låt skylten långsamt lysa starkare och svagare, om och om igen – tiden efter `mixValue` i root constants, och `sin` av den i `PSMain`."
+      },
+      "hint": {
+        "opengl": "`ourShader.setFloat(\"time\", static_cast<float>(glfwGetTime()));` bredvid `mixValue`, `uniform float time;` i `shader.fs`, och `float glow = 0.7 + 0.3 * sin(time * 2.0);` – multiplicera färgens `rgb` med `glow`.",
+        "vulkan": "Lägg till `float time` i `PushConstants` och i shaderns block, fyll den med `std::chrono`-tiden från *Shaders* i `recordCommandBuffer()`, och i shadern `float glow = 0.7 + 0.3 * sin(pc.time * 2.0);` – multiplicera färgens `rgb` med `glow`.",
+        "d3d12": "Lägg till `float time` i `MixConstants` i båda filerna, fyll den med `std::chrono`-tiden från *Shaders* i `PopulateCommandList`, och i `PSMain` `float glow = 0.7f + 0.3f * sin(time * 2.0f);` – multiplicera färgens `rgb` med `glow`."
+      }
+    },
+    "wave": {
+      "text": "Ljuset springer: låt skenet vandra över skylten från vänster till höger, så att olika delar av den lyser starkast vid olika tider.",
+      "hint": {
+        "opengl": "Låt varje fragment lysa lite senare ju längre till höger det är: `sin(time * 2.0 - TexCoord.x)`.",
+        "vulkan": "Låt varje fragment lysa lite senare ju längre till höger det är: `sin(pc.time * 2.0 - fragTexCoord.x)`.",
+        "d3d12": "Låt varje fragment lysa lite senare ju längre till höger det är: `sin(time * 2.0f - input.texCoord.x)`."
       }
     }
   }

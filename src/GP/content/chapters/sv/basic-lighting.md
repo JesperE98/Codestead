@@ -134,8 +134,8 @@ fragmentet använder vi en så kallad normalvektor, alltså en vektor som är vi
 ljusriktningen är vektorn från fragmentet till ljuskällan. För att mäta vinkeln mellan ljusstrålen och fragmentet tar
 vi skalärprodukten (dot product) av normalvektorn och ljusriktningen.
 
-Du kanske minns från kapitlet *Transformations* att ju mindre vinkeln mellan två enhetsvektorer är, desto närmare 1
-ligger skalärprodukten. När vinkeln mellan vektorerna är 90 grader blir skalärprodukten 0. Samma sak gäller θ: ju
+Du kanske minns från kapitlet *Matematiken bakom 3D* att ju mindre vinkeln mellan två enhetsvektorer är, desto närmare
+1 ligger skalärprodukten. När vinkeln mellan vektorerna är 90 grader blir skalärprodukten 0. Samma sak gäller θ: ju
 större θ blir, desto mindre påverkan ska ljuset ha på fragmentets färg.
 
 > Observera att vi arbetar med *enhetsvektorer* (vektorer med längden 1) för att få (bara) cosinus för vinkeln mellan

@@ -1415,5 +1415,6 @@ It relies on the w components of the three axes being 0, which holds for vectors
 in your program.
 :::
 
-Congratulations – you can now fly through your scene. This is the last chapter of *Getting started*: you have a window, shaders,
-textures, transformations, a 3D scene and a camera to look at it with – everything the coming chapters build on.
+Congratulations – you can now fly through your scene. This is the last chapter of *Going 3D*: you have the maths,
+transformations, a 3D scene and a camera to look at it with – together with the window, shaders and textures of
+*Getting started*, everything the coming chapters build on.

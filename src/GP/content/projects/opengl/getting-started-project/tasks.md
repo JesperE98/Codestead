@@ -1,59 +1,62 @@
-# Project: A tiny solar system – milestones (OpenGL)
+# Project: The planetarium sign – milestones (OpenGL)
 
 The optional project after *Getting started* (brief: `chapters/<lang>/getting-started-project.md`; checks:
-`ts/packages/gp-course/src/Checks/TaskChecks.Project.GettingStarted.ts`). Nothing new is taught: the learner combines
-the clear colour, the camera globals, model matrices (rotate, translate, scale and a matrix kept for the next body)
-and a colour uniform mixed with the texture.
+`ts/packages/gp-course/src/Checks/TaskChecks.Project.GettingStarted.ts`). Nothing new is taught and no matrices are
+used: the learner combines the clear colour, the vertex positions, texture coordinates and wrap modes, the vertex
+colour passed from the vertex shader, and a time uniform with `sin` in the fragment shader.
 
-Start = `camera/solution` unchanged (files `main.cpp`, `shader_m.h`, `shader.vs`, `shader.fs`, `container.png`,
-`awesomeface.png`): ten crates, cubes 0, 3, 6 and 9 turning, the free camera at (0, 0, 3) looking down -z.
+Start = `textures/solution` unchanged (files `main.cpp`, `shader_s.h`, `shader.vs`, `shader.fs`, `container.png`,
+`awesomeface.png`): the rectangle x, y ±0.5 with texture coordinates 0..2, the crate (`GL_CLAMP_TO_EDGE`) in the
+bottom-left quarter and its edge stretched over the rest, mixed 50/50 with the face (`GL_REPEAT`, mirrored, 2 × 2) by
+`mixValue`; `ourColor` (top right red, bottom right green, bottom left blue, top left yellow) arrives in `shader.fs`
+unused. Teal background.
 
-The checks read the scene, not the code where they can: the clear colour, the `view` matrix (the camera's position
-and where the origin lands in its view), and every draw's `model` matrix at 1, 2.3 and 3.7 s – where the body is, how
-big (cube root of the determinant) and whether it turns. Sizes, distances and speeds are the learner's: the sun must be
-at the origin, bigger than 1.3 and turning; the planet 1.2–10 units from the sun at a constant distance and somewhere
-else later; the moon 0.25–2.5 units from the planet at a constant distance, its direction from the planet changing and
-its distance to the sun not constant. Without input the camera stays at its starting place, so the pictures below are
-the starting view at 1 s (measured with the course's simulator; the runs under Mesa with `verify.sh` agree).
+The checks read the picture (the course's 160-pixel check frame), measured from the sign's bounding box (the pixels
+that are not the clear colour), so sizes, coordinates, speeds and brightnesses are the learner's. Only `repeat-wood`
+also reads the code (no clamping wrap mode left), because with the faces repeating already a stretched crate edge and
+a repeating crate are too close to tell apart once the tint and glow are on. Every check also passes on the final
+program (the later milestones do not undo the earlier ones in the picture).
 
-## `night-sky`
-- **Task:** Clear the window to a night sky: almost black, perhaps with a hint of blue.
-- **Hint:** `glClearColor` in the render loop, e.g. (0.02, 0.02, 0.08).
-- **When done:** `glClearColor(0.02f, 0.02f, 0.08f, 1.0f);`. The ten crates on a dark blue-black background. Check:
-  every channel of the clear colour ≤ 0.12 (blue ≤ 0.2).
+## `night-blue`
+- **Task:** Clear the window to a deep night blue.
+- **Hint:** `glClearColor`, e.g. (0.03, 0.04, 0.15).
+- **When done:** `glClearColor(0.03f, 0.04f, 0.15f, 1.0f);`. The same rectangle on a dark blue background. Check: red
+  and green of the clear colour ≤ 0.15, blue ≤ 0.45 and at least 0.04 above both.
 
-## `observatory`
-- **Task:** Start the camera above and behind the middle of the world, looking down at it, keeping the free camera.
-- **Hint:** `cameraPos` (0, 6, 8), `cameraFront` (0, -0.6, -0.8), `pitch` -36.87° so the mouse continues from there.
-- **When done:** the globals `cameraPos = glm::vec3(0.0f, 6.0f, 8.0f)`, `cameraFront = glm::vec3(0.0f, -0.6f, -0.8f)`
-  (with a comment: (0, -6, -8) is 10 long) and `pitch = -36.87f`. The crates seen from above, in the upper part of the
-  window. Check: the camera (from the view matrix) at least 1 above y = 0 and 5 from the origin, the origin in front of
-  it and within the middle of the view.
+## `wide-sign`
+- **Task:** Move the corners so the sign is clearly wider than tall – e.g. x ±0.9, y ±0.6.
+- **Hint:** The first three numbers of each vertex.
+- **When done:** positions (±0.9, ±0.6): a sign of 720 × 360 pixels, the faces stretched to ellipses (still 2 × 2,
+  the crate in the bottom-left quarter). Check: the drawn box at least 60 % of the window's width and 1.8 times as
+  wide as tall (the start's is 400 × 300).
 
-## `sun`
-- **Task:** Replace the ten crates with one crate at the origin, about twice as big, turning around the y axis.
-- **Hint:** One draw with `rotate(time · 20°, y)` and `scale(2)`; `cubePositions` goes.
-- **When done:** `cubePositions` removed; the loop replaced by `float time = static_cast<float>(glfwGetTime());` and
-  the sun's `model` (`glm::rotate(model, glm::radians(time * 20.0f), glm::vec3(0.0f, 1.0f, 0.0f))`,
-  `glm::scale(model, glm::vec3(2.0f))`) with one `glDrawArrays`. One big crate in the middle of the window, its top
-  visible, turning slowly.
+## `repeat-wood`
+- **Task:** Make the crate repeat across the sign – texture coordinates up to 4 × 2 and a repeating wrap mode.
+- **Hint:** s 2.0 → 4.0 on the right-hand vertices; the crate's `GL_TEXTURE_WRAP_S/T` → `GL_REPEAT`.
+- **When done:** s 0..4, t 0..2; the crate's wrap mode `GL_REPEAT`. Eight square tiles of 180 × 180 pixels, each a
+  crate with a face. Check: no `GL_CLAMP_TO_EDGE`/`GL_CLAMP_TO_BORDER` in the code, and the picture repeats 3–8 times
+  across the sign (each pixel compared, relative to the mean of its 7 × 7 neighbourhood, with the pixel a copy's
+  width to its right: mean difference < 0.05; the stretched-edge start gives about 0.2).
 
-## `planet`
-- **Task:** A second, smaller crate circling the sun at a fixed distance.
-- **Hint:** An orbit matrix `planet`: `rotate(time · 30°, y)` then `translate(3, 0, 0)`; the draw scales it by 0.6.
-- **When done:** `glm::mat4 planet` (rotate, translate) and `model = glm::scale(planet, glm::vec3(0.6f))`, drawn. At
-  1 s the planet is to the right of the sun and a little behind it (30° along its orbit); one turn takes 12 s.
+## `tint`
+- **Task:** Tint the sign with the corners' colours.
+- **Hint:** `* vec4(ourColor, 1.0)` after `mix(...)`.
+- **When done:** yellow → red along the top, blue → green along the bottom (the blue corner almost black: the wood and
+  the face have little blue). Check: near the top-right corner red is over 0.06 and more than twice green and blue;
+  near the bottom-right corner green likewise.
 
-## `moon`
-- **Task:** A third, smaller crate circling the planet while the planet circles the sun.
-- **Hint:** Start from `planet`: `rotate(planet, time · 120°, y)`, `translate(1, 0, 0)`, `scale(0.3)`.
-- **When done:** the moon drawn with that matrix. A small crate next to the planet that goes wherever the planet
-  goes; its direction from the planet turns 150° per second (120° on top of the planet's own 30°).
+## `glow`
+- **Task:** Let the sign get brighter and darker over and over, with the time from the CPU.
+- **Hint:** `uniform float time;`, `setFloat("time", glfwGetTime())`, `glow = 0.7 + 0.3 * sin(time * 2.0)`.
+- **When done:** `shader.fs` computes the tinted colour, then `FragColor = vec4(color.rgb * glow, 1.0)`; `main.cpp`
+  sets `time` next to `mixValue`. The whole sign between 0.4 and 1.0 of its brightness, once every π s. Check: the
+  scene is animated and, of five upright strips of the sign (at 10, 30, 50, 70 and 90 % of its width), one changes
+  its mean brightness by at least a fifth of its brightest over 0.5, 1.0 … 4.0 s.
 
-## `colours`
-- **Task:** Give every body its own colour, mixed with the texture so the wood still shows.
-- **Hint:** `uniform vec3 bodyColor;` in `shader.fs`, `mix(texColor, vec4(bodyColor, 1.0), 0.6)`, `setVec3` per draw.
-- **When done:** `shader.fs` mixes the old texture colour 40/60 with `bodyColor`; `main.cpp` sets (1.0, 0.8, 0.2) for
-  the sun, (0.2, 0.4, 1.0) for the planet, (0.7, 0.7, 0.7) for the moon. A golden sun with the face still smiling
-  through, a blue planet and a grey moon. Check: the sun's and another body's colour uniforms differ by more than 0.25
-  in a channel, and the uniform's name is used in the shaders besides its declaration.
+## `wave`
+- **Task:** Make the glow travel across the sign from left to right.
+- **Hint:** `sin(time * 2.0 - TexCoord.x)`.
+- **When done:** the glow's phase falls by 4 rad from the left edge to the right, so the bright band runs to the right
+  (at 1 s the left end is bright, the right end at 0.43). Check: the `glow` check, and at one of the times two strips
+  differ by more than 0.2 in their brightness relative to their own mean over the times (a pulse of the whole sign
+  keeps them equal).

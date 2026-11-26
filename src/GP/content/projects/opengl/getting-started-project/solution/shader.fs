@@ -1,18 +1,22 @@
 #version 330 core
 out vec4 FragColor;
 
+in vec3 ourColor;
 in vec2 TexCoord;
 
 // texture samplers
 uniform sampler2D texture1;
 uniform sampler2D texture2;
-// the colour of the body being drawn
-uniform vec3 bodyColor;
+uniform float mixValue;
+uniform float time; // seconds since the program started
 
 void main()
 {
-    // linearly interpolate between both textures (80% container, 20% awesomeface)
-    vec4 texColor = mix(texture(texture1, TexCoord), texture(texture2, TexCoord), 0.2);
-    // then paint it: 60% the body's colour, 40% the texture (so the wood still shows through)
-    FragColor = mix(texColor, vec4(bodyColor, 1.0), 0.6);
+    // linearly interpolate between both textures (the face mirrored horizontally)
+    // then tint by the colour of the corners, interpolated across the sign
+    vec4 color = mix(texture(texture1, TexCoord), texture(texture2, vec2(1.0 - TexCoord.x, TexCoord.y)), mixValue) * vec4(ourColor, 1.0);
+    // the glow: the brightness goes between 0.4 and 1.0 and back, once every pi seconds - a little later
+    // the further right we are (TexCoord.x goes from 0 to 4), so the light runs across the sign from left to right
+    float glow = 0.7 + 0.3 * sin(time * 2.0 - TexCoord.x);
+    FragColor = vec4(color.rgb * glow, 1.0);
 }

@@ -8,352 +8,20 @@ to talk about Kung Fu and a large digital artificial world.
 
 ![What you will have built by the end of this chapter](images/results/transformations.webp "What you will have built by the end of this chapter (drawn by the course's own simulator).")
 
-Matrices are very powerful mathematical constructs that seem scary at first, but once you grow accustomed to them
-they'll prove extremely useful. When discussing matrices, we'll have to make a small dive into some mathematics.
-However, to fully understand transformations we first have to delve a bit deeper into vectors before discussing
-matrices.
-
-The first half of this chapter is mathematics and the same for every API. The code starts in the section
-*In practice*, where you'll use the math to scale, rotate and move the textured container from the previous chapter.
-
-## Vectors
-
-In its most basic definition, vectors are *directions* and nothing more. A vector has a **direction** and a
-**magnitude** (also known as its strength or length). You can think of vectors like directions on a treasure map:
-"go left 10 steps, now go north 3 steps and go right 5 steps"; here "left" is the direction and "10 steps" is the
-magnitude of the vector. The directions for the treasure map thus contain 3 vectors. Vectors can have any dimension,
-but we usually work with dimensions of 2 to 4. If a vector has 2 dimensions it represents a direction on a plane
-(think of 2D graphs) and when it has 3 dimensions it can represent any direction in a 3D world.
-
-If you picture vectors in a 2D graph, each vector is an arrow; where the arrow starts doesn't matter, only its
-direction and length. The vectors (2, 3) drawn from the origin and (2, 3) drawn from the point (4, 1) are the same
-vector.
-
-Mathematicians generally prefer to describe vectors as character symbols with a little bar over their head, like v̄.
-Also, when displaying vectors in formulas they are generally displayed as a column of numbers:
-
-```text
-    | x |
-v = | y |
-    | z |
-```
-
-In running text we'll write the same vector as v = (x, y, z) to save space. Because vectors are specified as
-directions it is sometimes hard to visualize them as positions. If we want to visualize vectors as positions we can
-imagine the origin of the direction vector to be (0, 0, 0) and then point towards a certain direction that specifies
-the point, making it a *position vector* (we could also specify a different origin and then say: "this vector
-points to that point in space from this origin"). The position vector (3, 5) would then point to (3, 5) on the graph
-with an origin of (0, 0). Using vectors we can thus describe directions **and** positions in 2D and 3D space.
-
-Just like with normal numbers we can also define several operations on vectors (some of which you've already seen).
-
-### Scalar vector operations
-
-A *scalar* is a single number. When adding/subtracting/multiplying or dividing a vector with a scalar we simply add,
-subtract, multiply or divide each element of the vector by the scalar. For addition it would look like this:
-
-```text
-| 1 |       | 1 + 3 |   | 4 |
-| 2 | + 3 = | 2 + 3 | = | 5 |
-| 3 |       | 3 + 3 |   | 6 |
-```
-
-where + can be +, −, · or ÷. Note that for the minus and division operators the reverse order (scalar − vector,
-scalar ÷ vector) is not defined. Strictly speaking, adding a scalar to a vector isn't defined in mathematics either;
-it is a common shorthand meaning "add the scalar to every element", and {{shaderLanguage}} supports it too.
-
-### Vector negation
-
-Negating a vector results in a vector in the reversed direction. A vector pointing north-east would point south-west
-after negation. To negate a vector we add a minus sign to each component (you can also represent it as a
-scalar-vector multiplication with a scalar value of −1):
-
-```text
-       | vx |   | −vx |
-−v = − | vy | = | −vy |
-       | vz |   | −vz |
-```
-
-### Addition and subtraction
-
-Addition of two vectors is defined as *component-wise* addition, that is each component of one vector is added to
-the same component of the other vector:
-
-```text
-    | 1 |       | 4 |           | 1 + 4 |   | 5 |
-v = | 2 |,  k = | 5 |,  v + k = | 2 + 5 | = | 7 |
-    | 3 |       | 6 |           | 3 + 6 |   | 9 |
-```
-
-Visually, you put the second arrow at the tip of the first one: the sum is the arrow from the start of the first to
-the tip of the second. If v = (4, 2) and k = (1, 2), then v + k = (5, 4) – walk 4 right and 2 up, then 1 right and
-2 up, and you end up 5 right and 4 up.
-
-Just like normal addition and subtraction, vector subtraction is the same as addition with a negated second vector:
-
-```text
-    | 1 |       | 4 |                      | 1 − 4 |   | −3 |
-v = | 2 |,  k = | 5 |,  v + (−k) = v − k = | 2 − 5 | = | −3 |
-    | 3 |       | 6 |                      | 3 − 6 |   | −3 |
-```
-
-Subtracting two vectors from each other results in a vector that's the difference of the positions both vectors are
-pointing at. This proves useful in certain cases where we need to retrieve a vector that's the difference between
-two points: the vector from point p to point q is q − p.
-
-### Length
-
-To retrieve the length/magnitude of a vector we use the Pythagoras theorem that you may remember from your math
-classes. A vector forms a triangle when you visualize its individual x and y component as two sides of a triangle,
-and the vector itself is the hypotenuse. Since the length of the two sides (x, y) are known and we want to know the
-length of the tilted side v, we can calculate it using the Pythagoras theorem as:
-
-```text
-||v|| = √(x² + y²)
-```
-
-where ||v|| is denoted as *the length of vector v*. This is easily extended to 3D by adding z² to the equation. For
-v = (4, 2):
-
-```text
-||v|| = √(4² + 2²) = √(16 + 4) = √20 ≈ 4.47
-```
-
-There is also a special type of vector that we call a *unit vector*. A unit vector has one extra property and that is
-that its length is exactly 1. We can calculate a unit vector n from any vector by dividing each of the vector's
-components by its length:
-
-```text
-n = v / ||v||
-```
-
-We call this *normalizing* a vector. Unit vectors are displayed with a little roof over their head and are generally
-easier to work with, especially when we only care about their directions (the direction does not change if we change
-a vector's length). Normalizing v = (4, 2) gives about (0.894, 0.447): the same direction, length 1.
-
-![Adding and subtracting vectors, and the length of a vector](images/vectors.webp "v + k: the second arrow starts at the tip of the first. q − p: the vector from the point p to the point q. The length of v = (4, 2): the hypotenuse of its components.")
-
-### Vector-vector multiplication
-
-Multiplying two vectors is a bit of a weird case. Normal multiplication isn't really defined on vectors since it has
-no visual meaning, but we have two specific cases that we could choose from when multiplying: one is the *dot
-product* denoted as v · k and the other is the *cross product* denoted as v × k.
-
-#### Dot product
-
-The dot product of two vectors is equal to the scalar product of their lengths times the cosine of the angle between
-them. If this sounds confusing take a look at its formula:
-
-```text
-v · k = ||v|| · ||k|| · cos θ
-```
-
-where the angle between them is represented as theta (θ). Why is this interesting? Well, imagine if v and k are unit
-vectors then their length would be equal to 1. This would effectively reduce the formula to:
-
-```text
-v · k = 1 · 1 · cos θ = cos θ
-```
-
-Now the dot product **only** defines the angle between both vectors. You may remember that the cosine or cos
-function becomes 0 when the angle is 90 degrees, or 1 when the angle is 0. This allows us to easily test if the two
-vectors are *orthogonal* or *parallel* to each other using the dot product (orthogonal means the vectors are at a
-right angle to each other). In case you want to know more about the sin or cos functions I'd suggest a basic
-trigonometry refresher.
-
-> You can also calculate the angle between two non-unit vectors, but then you'd have to divide the lengths of both
-> vectors from the result to be left with cos θ.
-
-So how do we calculate the dot product? The dot product is a component-wise multiplication where we add the results
-together. It looks like this with two unit vectors (you can verify that both their lengths are exactly 1):
-
-```text
-|  0.6 |   | 0 |
-| −0.8 | · | 1 | = (0.6 · 0) + (−0.8 · 1) + (0 · 0) = −0.8
-|  0   |   | 0 |
-```
-
-To calculate the degree between both these unit vectors we use the inverse of the cosine function, cos⁻¹ (acos),
-and this results in 143.1 degrees. We now effectively calculated the angle between these two vectors. Dot products
-prove very useful when doing lighting calculations later on.
-
-```quiz
-The dot product of two unit vectors is 0. What does that tell you about them?
-- [x] They are perpendicular to each other (at a 90° angle)
-- [ ] They point in the same direction
-- [ ] They point in opposite directions
-- [ ] One of them must be the zero vector
----
-For unit vectors the dot product is cos θ, and cos θ is 0 exactly at 90°. The same direction gives 1, opposite directions give −1. A zero vector can't be a unit vector: its length is 0.
-```
-
-#### Cross product
-
-The cross product is only defined in 3D space and takes two non-parallel vectors as input and produces a third
-vector that is orthogonal to both the input vectors. If both the input vectors are orthogonal to each other as well,
-a cross product would result in 3 orthogonal vectors; this will prove useful in the upcoming chapters. The
-following shows how to calculate the cross product of the vectors A and B:
-
-```text
-| Ax |   | Bx |   | Ay·Bz − Az·By |
-| Ay | × | By | = | Az·Bx − Ax·Bz |
-| Az |   | Bz |   | Ax·By − Ay·Bx |
-```
-
-As you can see, it doesn't really seem to make sense. However, if you just follow these steps you'll get another
-vector that is orthogonal to your input vectors. Try it with the x axis and the y axis:
-
-```text
-| 1 |   | 0 |   | 0·0 − 0·1 |   | 0 |
-| 0 | × | 1 | = | 0·0 − 1·0 | = | 0 |
-| 0 |   | 0 |   | 1·1 − 0·0 |   | 1 |
-```
-
-The result is the z axis. The order matters: y × x gives (0, 0, −1), the z axis pointing the other way.
-
-![Dot product and cross product](images/dot-cross.webp "For unit vectors the dot product is cos θ: 1 in the same direction, 0 at a right angle, −1 in opposite directions. The cross product of x and y is z – and y × x is −z.")
-
-## Matrices
-
-Now that we've discussed almost all there is to vectors it is time to enter the matrix! A matrix is a rectangular
-array of numbers, symbols and/or mathematical expressions. Each individual item in a matrix is called an *element*
-of the matrix. An example of a 2×3 matrix is shown below:
-
-```text
-| 1  2  3 |
-| 4  5  6 |
-```
-
-Matrices are indexed by (i, j) where i is the row and j is the column, that is why the above matrix is called a 2×3
-matrix (3 columns and 2 rows, also known as the *dimensions* of the matrix). This is the opposite of what you're
-used to when indexing 2D graphs as (x, y). To retrieve the value 4 we would index it as (2, 1) (second row, first
-column).
-
-Matrices are basically nothing more than that, just rectangular arrays of mathematical expressions. They do have a
-very nice set of mathematical properties and just like vectors we can define several operations on matrices,
-namely: addition, subtraction and multiplication.
-
-### Addition and subtraction
-
-Matrix addition and subtraction between two matrices is done on a per-element basis. So the same general rules apply
-that we're familiar with for normal numbers, but done on the elements of both matrices with the same index. This
-does mean that addition and subtraction is only defined for matrices of the same dimensions. A 3×2 matrix and a
-2×3 matrix (or a 3×3 matrix and a 4×4 matrix) cannot be added or subtracted together. Let's see how matrix
-addition works on two 2×2 matrices:
-
-```text
-| 1  2 |   | 5  6 |   | 1 + 5  2 + 6 |   |  6   8 |
-| 3  4 | + | 7  8 | = | 3 + 7  4 + 8 | = | 10  12 |
-```
-
-The same rules apply for matrix subtraction:
-
-```text
-| 4  2 |   | 2  4 |   | 4 − 2  2 − 4 |   | 2  −2 |
-| 1  6 | − | 0  1 | = | 1 − 0  6 − 1 | = | 1   5 |
-```
-
-### Matrix-scalar products
-
-A matrix-scalar product multiplies each element of the matrix by a scalar. The following example illustrates the
-multiplication:
-
-```text
-    | 1  2 |   | 2·1  2·2 |   | 2  4 |
-2 · | 3  4 | = | 2·3  2·4 | = | 6  8 |
-```
-
-Now it also makes sense as to why those single numbers are called scalars. A scalar basically *scales* all the
-elements of the matrix by its value. In the previous example, all elements were scaled by 2.
-
-So far so good, all of our cases weren't really too complicated. That is, until we start on matrix-matrix
-multiplication.
-
-### Matrix-matrix multiplication
-
-Multiplying matrices is not necessarily complex, but rather difficult to get comfortable with. Matrix multiplication
-basically means to follow a set of pre-defined rules when multiplying. There are a few restrictions though:
-
-1. You can only multiply two matrices if the number of columns on the left-hand side matrix is equal to the number
-   of rows on the right-hand side matrix.
-2. Matrix multiplication is not *commutative*, that is A · B ≠ B · A.
-
-Let's get started with an example of a matrix multiplication of two 2×2 matrices:
-
-```text
-| 1  2 |   | 5  6 |   | 1·5 + 2·7   1·6 + 2·8 |   | 19  22 |
-| 3  4 | · | 7  8 | = | 3·5 + 4·7   3·6 + 4·8 | = | 43  50 |
-```
-
-Right now you're probably trying to figure out what the hell just happened? Matrix multiplication is a combination of
-normal multiplication and addition using the left-matrix's rows with the right-matrix's columns. To get the element
-in row i and column j of the result, take row i of the left matrix and column j of the right matrix, multiply their
-elements pair by pair and add the products up. For the top-right element above that is row 1 of the left matrix,
-(1, 2), and column 2 of the right matrix, (6, 8): 1·6 + 2·8 = 22. In other words: every element of the result is the
-dot product of a row of the left matrix and a column of the right matrix.
-
-The resulting matrix has the dimensions of (n, m) where n is equal to the number of rows of the left-hand side
-matrix and m is equal to the columns of the right-hand side matrix: a 2×3 matrix times a 3×4 matrix is a 2×4 matrix.
-
-Now swap the two matrices:
-
-```text
-| 5  6 |   | 1  2 |   | 5·1 + 6·3   5·2 + 6·4 |   | 23  34 |
-| 7  8 | · | 3  4 | = | 7·1 + 8·3   7·2 + 8·4 | = | 31  46 |
-```
-
-A completely different result – that is what "not commutative" means, and it will matter a lot when we combine
-transformations. Don't worry if you have difficulties imagining the multiplications inside your head. Just keep
-trying to do the calculations by hand and return to this page whenever you have difficulties. Over time, matrix
-multiplication becomes second nature to you.
-
-```quiz
-A is a 2×3 matrix (2 rows, 3 columns) and B is a 3×4 matrix. Which statements are true?
-- [ ] A · B is defined, and the result is a 3×3 matrix
-- [ ] A · B and B · A are both defined, and they are equal
-- [x] B · A is not defined, because B has 4 columns but A has only 2 rows
-- [x] A · B is defined, and the result is a 2×4 matrix
----
-The columns of the left matrix must match the rows of the right one: A has 3 columns and B has 3 rows, so A · B works and has A's rows and B's columns (2×4). For B · A, B's 4 columns don't match A's 2 rows. And even when both orders are defined, matrix multiplication is not commutative.
-```
-
-## Matrix-Vector multiplication
-
-Up until now we've had our fair share of vectors. We used them to represent positions, colors and even texture
-coordinates. Let's move a bit further down the rabbit hole and tell you that a vector is basically an N×1 matrix
-where N is the vector's number of components (also known as an N-dimensional vector). If you think about it, it
-makes a lot of sense. Vectors are just like matrices an array of numbers, but with only 1 column. So, how does this
-new piece of information help us? Well, if we have an M×N matrix we can multiply this matrix with our N×1 vector,
-since the columns of the matrix are equal to the number of rows of the vector, thus matrix multiplication is
-defined.
-
-But why do we care if we can multiply matrices with a vector? Well, it just so happens that there are lots of
-interesting 2D/3D transformations we can place inside a matrix, and multiplying that matrix with a vector then
-*transforms* that vector. In case you're still a bit confused, let's start with a few examples and you'll soon see
-what we mean.
-
-### Identity matrix
-
-In graphics programming, and in this course, we usually work with 4×4 transformation matrices for several reasons,
-and one of them is that most of the vectors are of size 4. The most simple transformation matrix that we can think
-of is the *identity matrix*. The identity matrix is an N×N matrix with only 0s except on its diagonal. As you'll
-see, this transformation matrix leaves a vector completely unharmed:
-
-```text
-| 1  0  0  0 |   | 1 |   | 1·1 |   | 1 |
-| 0  1  0  0 |   | 2 |   | 1·2 |   | 2 |
-| 0  0  1  0 | · | 3 | = | 1·3 | = | 3 |
-| 0  0  0  1 |   | 4 |   | 1·4 |   | 4 |
-```
-
-The vector is completely untouched. This becomes obvious from the rules of multiplication: the first result element
-is each individual element of the first row of the matrix multiplied with each element of the vector. Since each of
-the row's elements are 0 except the first one, we get: 1·1 + 0·2 + 0·3 + 0·4 = 1, and the same applies for the other
-3 elements of the vector.
-
-> You may be wondering what the use is of a transformation matrix that does not transform? The identity matrix is
-> usually a starting point for generating other transformation matrices, and if we dig even deeper into linear
-> algebra, a very useful matrix for proving theorems and solving linear equations.
+In the previous chapter, *The maths of 3D*, you met everything this needs: vectors, matrices, how a matrix
+multiplied with a vector *transforms* that vector, and that a matrix's columns are where it sends the axes. You also
+saw the 2D rotation matrix, and that a 3×3 matrix can't move anything. This chapter builds on that: first the
+transformation matrices themselves – scaling, translation (and why it needs the fourth component w), rotation around
+the three axes – and then how several of them combine into a single matrix. Keep the maths chapter at hand: if a
+multiplication below doesn't make sense right away, its rules are all there.
+
+The first part of this chapter is still mathematics and the same for every API. The code starts in the section
+*In practice*, where you'll use the matrices to scale, rotate and move the textured container from *Textures*.
+
+## Transformation matrices
+
+From now on we work with 4×4 matrices and vectors with four components, (x, y, z, w), where w is 1 for positions.
+Why the fourth component is there will become clear in *Translation*; until then you can simply carry it along.
 
 ### Scaling
 
@@ -368,10 +36,10 @@ Keep in mind that graphics APIs usually operate in 3D space so for 2D cases we c
 leaving it unharmed. The scaling operation we just performed is a *non-uniform* scale, because the scaling factor is
 not the same for each axis. If the scalar would be equal on all axes it would be called a *uniform scale*.
 
-Let's start building a transformation matrix that does the scaling for us. We saw from the identity matrix that each
-of the diagonal elements were multiplied with its corresponding vector element. What if we were to change the 1s in
-the identity matrix to 3s? In that case, we would be multiplying each of the vector elements by a value of 3 and
-thus effectively uniformly scale the vector by 3. If we represent the scaling variables as (S1, S2, S3) we can define
+Let's start building a transformation matrix that does the scaling for us. We saw from the identity matrix in the
+previous chapter that each of the diagonal elements were multiplied with its corresponding vector element. What if
+we were to change the 1s in the identity matrix to 3s? In that case, we would be multiplying each of the vector
+elements by a value of 3 and thus effectively uniformly scale the vector by 3. If we represent the scaling variables as (S1, S2, S3) we can define
 a scaling matrix on any vector (x, y, z) as:
 
 ```text
@@ -401,7 +69,8 @@ as (Tx, Ty, Tz) we can define the translation matrix by:
 ```
 
 This works because all of the translation values are multiplied by the vector's w column and added to the vector's
-original values (remember the matrix-multiplication rules). This wouldn't have been possible with a 3-by-3 matrix.
+original values (remember the matrix-multiplication rules). This wouldn't have been possible with a 3-by-3 matrix:
+as we saw in the previous chapter, it always leaves the origin where it is.
 
 ### Homogeneous coordinates
 
@@ -441,32 +110,23 @@ The translation sits in the 4th column, which is multiplied by w. With w = 1 it 
 ### Rotation
 
 The last few sections were relatively easy to understand and to represent 2D or 3D vectors in 2D or 3D space, but
-rotations are a bit trickier. If you want to know exactly how these matrices are constructed I'd recommend that you
-watch the rotation items of a good linear algebra video series or textbook.
+rotations are a bit trickier. Luckily you have already built one: the 2D rotation matrix at the end of the previous
+chapter.
 
-First let's define what a rotation of a vector actually is. A rotation in 2D or 3D is represented with an *angle*.
-An angle could be in degrees or radians where a whole circle has 360 degrees or 2π radians. I prefer explaining
-rotations using degrees as we're generally more accustomed to them, but the math libraries – GLM as well as
-DirectXMath – expect radians, so here's how you convert:
-
-```text
-angle in degrees = angle in radians · (180 / π)
-angle in radians = angle in degrees · (π / 180)
-```
-
-where π equals (rounded) 3.14159265359. Rotating half a circle rotates us 360/2 = 180 degrees and rotating 1/5th to
-the right means we rotate 360/5 = 72 degrees to the right. A quarter turn, 90 degrees, is π/2 ≈ 1.5708 radians.
+A rotation in 2D or 3D is represented with an *angle*. As we saw in *The maths of 3D*, an angle can be given in
+degrees, where a whole circle has 360 degrees, or in radians, where it has 2π. I prefer explaining rotations using
+degrees as we're generally more accustomed to them, but the math libraries – GLM as well as DirectXMath – expect
+radians: angle in radians = angle in degrees · (π / 180). A quarter turn, 90 degrees, is π/2 ≈ 1.5708 radians.
 
 Rotations in 3D are specified with an angle **and** a *rotation axis*. The angle specified will rotate the object
 along the rotation axis given. Try to visualize this by spinning your head a certain degree while continually looking
 down a single rotation axis. When rotating 2D vectors in a 3D world for example, we set the rotation axis to the
 z-axis (try to visualize this).
 
-Using trigonometry it is possible to transform vectors to newly rotated vectors given an angle. This is usually done
-via a smart combination of the sine and cosine functions (commonly abbreviated to sin and cos). A discussion of how
-the rotation matrices are generated is out of scope for this chapter.
-
-A rotation matrix is defined for each unit axis in 3D space where the angle is represented as the theta symbol θ.
+In the previous chapter we built the 2D rotation from where it sends the axes: x goes to (cos θ, sin θ) on the unit
+circle and y to (−sin θ, cos θ). In 3D the same idea gives a rotation matrix for each unit axis, where the angle is
+represented as the theta symbol θ. Each one leaves its own axis alone and turns the other two exactly like the 2D
+rotation does.
 
 Rotation around the X-axis:
 
@@ -495,10 +155,11 @@ Rotation around the Z-axis:
 | 0      0       0  1 |   | 1 |   | 1                 |
 ```
 
-Using the rotation matrices we can transform our position vectors around one of the three unit axes. Check the
-Z rotation with a quarter turn: cos 90° = 0 and sin 90° = 1, so the point (1, 0, 0) becomes (0, 1, 0). With x to
-the right and y up, the point moves from the right to the top: a positive angle turns **counter-clockwise** when you
-look down at the xy plane from +z.
+The rotation around the Z-axis is the 2D rotation from the previous chapter in its top-left corner, with z and w
+left as they are. Using the rotation matrices we can transform our position vectors around one of the three unit
+axes. Check the Z rotation with a quarter turn: cos 90° = 0 and sin 90° = 1, so the point (1, 0, 0) becomes
+(0, 1, 0). With x to the right and y up, the point moves from the right to the top: a positive angle turns
+**counter-clockwise** when you look down at the xy plane from +z.
 
 To rotate around an arbitrary 3D axis we can combine all 3 of them by first rotating around the X-axis, then Y and
 then Z for example. However, this quickly introduces a problem called *gimbal lock*. When one rotation lines up two of

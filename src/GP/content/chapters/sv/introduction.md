@@ -28,8 +28,8 @@ bekväm med C++ innan du börjar: variabler, funktioner, pekare och referenser, 
 `std::vector`. Kapitlen förklarar den mindre vanliga C++-koden som dyker upp på vägen, och Vulkan-koden använder
 några C++17-funktioner (som `std::optional`) som förklaras där de används.
 
-Längre fram behöver du också lite matematik (vektorer och matriser). Du behöver inte kunna den i förväg: kapitlet
-*Transformations* går igenom det du behöver, precis som på learnopengl.com.
+Längre fram behöver du också lite matematik (vektorer och matriser). Du behöver inte kunna den i förväg: det första
+kapitlet i delen *Till 3D*, *Matematiken bakom 3D*, går igenom det du behöver.
 
 ## Välja API
 
@@ -89,9 +89,10 @@ Varje API räknas för sig. Ett byte ändrar bara vilken text, vilket projekt oc
 
 ## Hur kursen är uppbyggd
 
-Kursen är indelad i samma delar som learnopengl.com: *Getting started*, *Lighting*, *Model Loading*,
-*Advanced OpenGL*, *Advanced Lighting*, *PBR* och *In Practice*. Varje kapitel bygger på de tidigare, så det är
-bäst att följa dem i ordning.
+Kursen följer delarna på learnopengl.com: *Getting started*, *Lighting*, *Model Loading*, *Advanced OpenGL*,
+*Advanced Lighting*, *PBR*, *In Practice* och *Guest Articles*. En del är vår egen: learnopengls *Getting started* är
+delad i två, och dess andra halva – transformationer, koordinatsystem och kameran – är delen *Till 3D*, som börjar med
+ett kapitel om matematiken bakom. Varje kapitel bygger på de tidigare, så det är bäst att följa dem i ordning.
 
 Varje kapitel är en lektion i tre delar:
 
@@ -284,38 +285,29 @@ uppgift; kursens uppgifter börjar i *Skapa ett fönster*.
 
 ## Kurskarta
 
-Här är hela kursen: alla kapitel på learnopengl.com. Kapitlen i *Kom igång* fram till och med *Shaders* finns
-i appen nu; resten kommer, i den här ordningen.
+Här är hela kursen, del för del. Varje del slutar med en sammanfattning och ett prov, och sedan ett frivilligt projekt.
 
-**Kom igång** (Getting started) – finns i appen nu fram till och med *Shaders*
+**Kom igång** (Getting started) – {{api}}, Setting up your IDE, Creating a window, Hello Window, Hello Triangle,
+Shaders, Textures.
 
-| Kapitel | |
-|---|---|
-| {{api}} | finns |
-| Setting up your IDE | finns |
-| Creating a window | finns |
-| Hello Window | finns |
-| Hello Triangle | finns |
-| Shaders | finns |
-| Textures | kommer |
-| Transformations | kommer |
-| Coordinate Systems | kommer |
-| Camera | kommer |
-| Review | kommer |
+**Till 3D** – Matematiken bakom 3D, Transformations, Coordinate Systems, Camera.
 
-**Lighting** – kommer: Colors, Basic Lighting, Materials, Lighting maps, Light casters, Multiple lights, Review.
+**Lighting** – Colors, Basic Lighting, Materials, Lighting maps, Light casters, Multiple lights.
 
-**Model Loading** – kommer: Assimp, Mesh, Model.
+**Model Loading** – Assimp, Mesh, Model.
 
-**Advanced {{api}}** – kommer: Depth testing, Stencil testing, Blending, Face culling, Framebuffers, Cubemaps,
+**Advanced {{api}}** – Depth testing, Stencil testing, Blending, Face culling, Framebuffers, Cubemaps,
 Advanced Data, Advanced {{shaderLanguage}}, Geometry Shader, Instancing, Anti Aliasing.
 
-**Advanced Lighting** – kommer: Advanced Lighting, Gamma Correction, Shadows, Normal Mapping, Parallax Mapping,
+**Advanced Lighting** – Advanced Lighting, Gamma Correction, Shadows, Normal Mapping, Parallax Mapping,
 HDR, Bloom, Deferred Shading, SSAO.
 
-**PBR** – kommer: Theory, Lighting, IBL.
+**PBR** – Theory, Lighting, IBL.
 
-**In Practice** – kommer: Debugging, Text Rendering, 2D Game.
+**In Practice** – Debugging, Text Rendering, 2D Game.
+
+**Guest Articles** – Order-independent transparency, Skeletal Animation, Scene Graph, Frustum Culling, Cascaded
+Shadow Mapping, Tessellation, DSA, Physically Based Bloom, Compute Shaders, Area Lights.
 
 Nästa kapitel, *{{api}}*, förklarar vad API:et du har valt egentligen är och hur det är organiserat. Sedan sätter du
 upp din IDE och börjar skriva kod: först ett fönster, sedan ett fönster som fylls med en färg, sedan triangeln du nyss

@@ -1,86 +1,92 @@
-# Projekt: Ett litet solsystem
+# Projekt: Planetariets skylt
 
-Codesteads planetarium har ett problem. Skolklasserna kommer i morgon bitti, stjärnprojektorn har just gett upp med
-en ledsen liten smäll, och den enda 3D-modellen i förrådet är… en trälåda. En hel kartong med dem, faktiskt.
+Codesteads planetarium öppnar i morgon. Stolarna är fastskruvade, stjärnprojektorn surrar och kaffeautomaten
+fungerar (för det mesta). Bara en sak saknas: skärmen ovanför entrén, där skylten ska sitta, visar en liten fyrkantig
+trälåda på blågrön bakgrund.
 
-– Kan du inte göra ett solsystem av de där? frågar föreståndaren och tittar på dig över glasögonen. En sol, en
-planet, en måne. Som rör sig. Barnen kommer aldrig att märka något.
+– Det är det första folk kommer att se, säger föreståndaren och tittar upp på den. En låda. Med en smiley på. Hon
+suckar. – Nåja, ansiktet får vara kvar – jag har vant mig vid det. Men få det att se ut som ett *planetarium*. Något
+som lyser i mörkret. Du har tills dörrarna öppnas.
 
-Det kommer de. Men med det du lärt dig i *Kom igång* kan det ändå bli ett riktigt fint solsystem. Ingenting här är
-nytt: utmaningen är att själv kombinera fönster, shaders, texturer, transformationer och kamera.
+Allt du behöver finns i *Kom igång*: rensningsfärgen, vertexdatan, shaders med sina in, out och uniforms, och
+texturerna med sina koordinater och wrapping. Inga matriser behövs – skylten ligger platt på skärmen, precis som din
+rektangel har gjort hela tiden.
 
 :::opengl
-Börja från en kopia av ditt färdiga program från *Kamera* – samma filer: `main.cpp`, `shader_m.h`, `shader.vs`,
-`shader.fs` och de två bilderna. Tio lådor, en fri kamera i (0, 0, 3) och en renderingsloop som ritar varje låda med
-sin egen `model`-matris.
+Börja från en kopia av ditt färdiga program från *Texturer* – samma filer: `main.cpp`, `shader_s.h`, `shader.vs`,
+`shader.fs` och de två bilderna. En rektangel med texturkoordinater från 0 till 2, lådan (med `GL_CLAMP_TO_EDGE`)
+blandad med ansiktet (med `GL_REPEAT`) genom uniformen `mixValue`, och en färg per hörn som vertex shadern skickar
+vidare som `ourColor` – som ingen använder än.
 :::
 :::vulkan
-Börja från en kopia av ditt färdiga program från *Kamera* – samma filer: `main.cpp`, `shaders/shader.vert`,
-`shaders/shader.frag` och de två texturerna. Tio lådor, en fri kamera i (0, 0, 3), `updateUniformBuffer()` för vy och
-projektion, och `recordCommandBuffer()`, som skickar varje lådas `model`-matris som push constant före dess ritanrop.
+Börja från en kopia av ditt färdiga program från *Texturer* – samma filer: `main.cpp`, `shaders/shader.vert`,
+`shaders/shader.frag` och de två texturerna. En rektangel med texturkoordinater från 0 till 2, lådan (läst genom
+`clampSampler`) blandad med ansiktet (läst genom `textureSampler`) genom push constanten `mixValue`, och en färg per
+hörn som vertex shadern skickar vidare som `fragColor` – som ingen använder än.
 :::
 :::d3d12
-Börja från en kopia av ditt färdiga program från *Kamera* – samma filer: `main.cpp`, `shaders.hlsl` och de två
-texturerna. Tio lådor, en fri kamera i (0, 0, 3), `OnUpdate` för vy och projektion, och `PopulateCommandList`, som
-sätter varje lådas `model`-matris som root constants före dess ritanrop.
+Börja från en kopia av ditt färdiga program från *Texturer* – samma filer: `main.cpp`, `shaders.hlsl` och de två
+texturerna. En rektangel med texturkoordinater från 0 till 2, lådan (samplad med `clampSampler`) blandad med ansiktet
+(samplat med `wrapSampler`) genom root constanten `mixValue`, och en färg per hörn som vertex shadern skickar vidare
+som `input.color` – som ingen använder än.
 :::
 
 ## Uppdraget
 
-1. **Natten faller.** Rensa fönstret till en natthimmel: nästan svart, kanske med en aning blått.
-2. **En plats på läktaren.** Flytta kameran uppåt och bakåt så att den tittar *ner* på världens mitt snett uppifrån –
-   ungefär 6 enheter upp och 8 bakåt passar bra. Det ska fortfarande vara en kamera du kan flyga med tangenterna och
-   musen.
-3. **Varde sol.** De tio lådorna får gå hem. I stället en enda låda mitt i världen, tydligt större än de andra var
-   (dubbelt så stor är bra), som långsamt snurrar runt sin egen lodräta axel.
-4. **En planet.** En andra, mindre låda som kretsar runt solen – alltid på samma avstånd, några enheter ut.
-5. **En måne.** En tredje, ännu mindre låda som kretsar runt *planeten* medan planeten kretsar runt solen. Det här är
-   projektets kärna: månens matris måste utgå från planetens.
-6. **Färg.** Ge varje himlakropp sin egen färg – en gul sol, en blå planet, en grå måne, eller vad ditt solsystem nu
-   föredrar – blandad med lådans textur så att träet syns igenom.
+1. **Släck ner.** Rensa fönstret till en djup nattblå färg: mörk, men tydligt blå.
+2. **En bred skylt.** Ändra rektangelns hörn så att den blir en skylt ovanför en dörr: tydligt bredare än den är hög –
+   till exempel från -0.9 till 0.9 på bredden och från -0.6 till 0.6 på höjden.
+3. **Trä hela vägen.** Lådan finns bara på en del av skylten; resten är dess kant, utdragen. Låt i stället träet
+   upprepas över hela skylten – fyra lådor på bredden och två på höjden (texturkoordinater upp till 4 och 2) blir
+   prydliga kvadrater.
+4. **Färg.** Använd hörnens färger: tona skylten med dem, så att den går från gult till rött längs överkanten och från
+   blått till grönt längs underkanten.
+5. **Skenet.** Låt hela skylten långsamt lysa starkare och svagare, om och om igen, med tiden från CPU:n.
+6. **Ljuset springer.** Låt skenet vandra över skylten från vänster till höger, så att den ljusa delen rör sig längs
+   den i stället för att hela skylten pulserar på en gång.
 
 Delmålen i listan bredvid texten kontrolleras automatiskt när du klickar på **Kontrollera min kod**. Kontrollerna
-tittar på var dina matriser placerar himlakropparna, inte på dina siffror: andra storlekar, avstånd och hastigheter
-går bra, så länge solen stannar i mitten, planeten håller sitt avstånd till solen och månen sitt avstånd till
-planeten.
+tittar på bilden: hur bred skylten är, att den upprepas, färgerna i hörnen och hur ljusstyrkan ändras över tid – så
+dina egna storlekar, koordinater, hastigheter och ljusstyrkor går bra. Bara för träet tittar de också på koden, för att
+se att lådan inte längre klampas.
 
 ## Tips på vägen
 
-- Natthimlen är rensningsfärgen: en rad, och du vet var den står.
-- Kameran utgår från `cameraPos` och `cameraFront`. Positionen (0, 6, 8) och en riktning som pekar tillbaka mot
-  origo, (0, -6, -8) gjord en enhet lång, fungerar fint. Muskoden gör om `yaw` och `pitch` till en riktning första
-  gången du rör musen: låt `pitch` börja på den vinkel du redan tittar nedåt med (dess sinus är riktningens y), så
-  hoppar inte vyn.
-:::opengl vulkan
-- Matriserna verkar från höger till vänster – eller, i koden, nerifrån och upp: raden närmast ritanropet händer
-  lådan först. "Flytta ut den och vrid den sedan runt solen" är `rotate` *före* `translate` i koden.
-:::
-:::d3d12
-- DirectXMath multiplicerar från vänster till höger: `XMMatrixScaling(…) * XMMatrixTranslation(…) * XMMatrixRotationY(…)`
-  skalar först lådan, flyttar den sedan ut och vrider den sist runt solen. Glöm inte `XMMatrixTranspose` när du
-  sparar matrisen.
-:::
-- Spara planetens matris *innan* du skalar den, i en egen variabel. Månen kan sedan utgå från den: dess bana är
-  "planetens plats, sedan vriden igen och flyttad en bit ut".
-- Tiden du behöver för snurrandet är samma tid som de gamla lådorna använde.
+- Den nattblå färgen är rensningsfärgen: en rad, och du vet var den står. Ungefär (0.03, 0.04, 0.15).
+- Skylten är de fyra hörnens positioner. De är i normaliserade enhetskoordinater, så x och y går båda från -1 till 1
+  över fönstret – och eftersom fönstret är 800 × 600 blir en skylt från -0.9 till 0.9 och -0.6 till 0.6 720 × 360
+  pixlar.
 :::opengl
-- En färg per himlakropp är en uniform i `shader.fs`, satt med `ourShader.setVec3` före varje ritanrop. `mix`
-  blandar texturen med den – samma funktion som redan blandar lådan med ansiktet.
+- Två saker får träet att upprepas: texturkoordinater över 1 *och* en wrapping som upprepar. Lådans
+  `GL_TEXTURE_WRAP_S` och `GL_TEXTURE_WRAP_T` är fortfarande `GL_CLAMP_TO_EDGE` från texturövningen.
+- `ourColor` kommer redan in i `shader.fs`. Färger multipliceras kanal för kanal, så `* vec4(ourColor, 1.0)` tonar.
+- Tiden är en ny uniform: `glfwGetTime()` i renderingsloopen, `ourShader.setFloat` som för `mixValue`, och
+  `uniform float time;` i `shader.fs`. Något i stil med `0.7 + 0.3 * sin(time * 2.0)` går mellan 0.4 och 1.0;
+  multiplicera färgens `rgb` med det.
 :::
 :::vulkan
-- En färg per himlakropp får plats i push constants, efter matrisen. Fragmentshadern måste också se dem: deklarera
-  samma block där och lägg till `VK_SHADER_STAGE_FRAGMENT_BIT` i push constant-intervallet *och* i varje
-  `vkCmdPushConstants`. `mix` blandar texturen med färgen.
+- Två saker får träet att upprepas: texturkoordinater över 1 *och* en sampler som upprepar. Lådans descriptor
+  (`imageInfo.sampler`) pekar fortfarande på `clampSampler` från texturövningen; `textureSampler` upprepar redan.
+- `fragColor` kommer redan in i `shader.frag`. Färger multipliceras kanal för kanal, så `* vec4(fragColor, 1.0)`
+  tonar. Kom ihåg att kompilera om shaders med `glslc` efter varje ändring.
+- Tiden får plats i push constants, efter `mixValue`: en `float time` i C++-structen och i shaderns block, fylld i
+  `recordCommandBuffer()` med samma `std::chrono`-rader som i *Shaders*. Något i stil med
+  `0.7 + 0.3 * sin(pc.time * 2.0)` går mellan 0.4 och 1.0; multiplicera färgens `rgb` med det.
 :::
 :::d3d12
-- En färg per himlakropp får plats i root constants, efter matrisen: lägg till den i structen `ModelConstants` i
-  båda filerna, och låt alla shadersteg se rotparametern (`D3D12_SHADER_VISIBILITY_ALL`). `lerp` blandar texturen med
-  färgen.
+- Två saker får träet att upprepas: texturkoordinater över 1 *och* en sampler som upprepar. Pixel shadern samplar
+  fortfarande lådan med `clampSampler` från texturövningen; `wrapSampler` upprepar redan.
+- `input.color` kommer redan in i pixel shadern. Färger multipliceras kanal för kanal, så `* input.color` tonar.
+- Tiden får plats i root constants, efter `mixValue`: en `float time` i structen `MixConstants` i båda filerna, fylld
+  i `PopulateCommandList` med samma `std::chrono`-rader som i *Shaders*. Något i stil med
+  `0.7f + 0.3f * sin(time * 2.0f)` går mellan 0.4 och 1.0; multiplicera färgens `rgb` med det.
 :::
+- För det springande ljuset behöver varje fragment lysa lite senare än sin granne till vänster. Fragment shadern har
+  redan ett värde som växer från vänster till höger: texturkoordinaternas x. Dra av det inne i `sin`.
 
 ## Vill du göra mer?
 
-När delmålen är klara är solsystemet ditt. Låt planeten snurra runt sin egen axel medan den färdas (var i kedjan av
-matriser hamnar det, så att månen inte börjar snurra med?). Lägg till en andra planet med en annan hastighet, en ring
-av pyttesmå lådor runt den, eller en komet på en lång, tillplattad bana. Låt solen pulsera i storlek med `sin` av
-tiden. Eller luta månens bana lite, som den riktiga – barnen kommer att bli förtjusta.
+När delmålen är klara är skylten din. Gör ansiktet blygt med upp- och nedpilarna så att bara en antydan till leende
+finns kvar, eller låt `mixValue` andas med tiden också. Ge hörnen andra färger – en solnedgång, kanske, eller en
+nebulosa. Låt ljuset springa åt andra hållet, eller fortare, eller i vågor ut från mitten. Eller prova
+`GL_MIRRORED_REPEAT` (eller dess kusiner i Vulkan och Direct3D) och se lådorna mötas på halva vägen.
