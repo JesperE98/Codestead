@@ -1,0 +1,76 @@
+=== task: night-blue
+--- file: main.cpp
+--- find:
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+--- replace:
+        glClearColor(0.03f, 0.04f, 0.15f, 1.0f); // a deep night blue behind the sign
+
+=== task: wide-sign
+--- file: main.cpp
+--- find:
+         0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   2.0f, 2.0f, // top right
+         0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   2.0f, 0.0f, // bottom right
+        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // bottom left
+        -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 2.0f  // top left
+--- replace:
+         0.9f,  0.6f, 0.0f,   1.0f, 0.0f, 0.0f,   2.0f, 2.0f, // top right
+         0.9f, -0.6f, 0.0f,   0.0f, 1.0f, 0.0f,   2.0f, 0.0f, // bottom right
+        -0.9f, -0.6f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // bottom left
+        -0.9f,  0.6f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 2.0f  // top left
+
+=== task: repeat-wood
+--- file: main.cpp
+--- find:
+         0.9f,  0.6f, 0.0f,   1.0f, 0.0f, 0.0f,   2.0f, 2.0f, // top right
+         0.9f, -0.6f, 0.0f,   0.0f, 1.0f, 0.0f,   2.0f, 0.0f, // bottom right
+--- replace:
+         0.9f,  0.6f, 0.0f,   1.0f, 0.0f, 0.0f,   4.0f, 2.0f, // top right
+         0.9f, -0.6f, 0.0f,   0.0f, 1.0f, 0.0f,   4.0f, 0.0f, // bottom right
+--- file: main.cpp
+--- find:
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // note that we set the container wrapping method to GL_CLAMP_TO_EDGE
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+--- replace:
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // the wood repeats: 4 x 2 crates of 180 x 180 pixels on the sign
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+=== task: tint
+--- file: shader.fs
+--- find:
+    FragColor = mix(texture(texture1, TexCoord), texture(texture2, vec2(1.0 - TexCoord.x, TexCoord.y)), mixValue);
+--- replace:
+    // then tint by the colour of the corners, interpolated across the sign
+    FragColor = mix(texture(texture1, TexCoord), texture(texture2, vec2(1.0 - TexCoord.x, TexCoord.y)), mixValue) * vec4(ourColor, 1.0);
+
+=== task: glow
+--- file: shader.fs
+--- find:
+uniform float mixValue;
+--- replace:
+uniform float mixValue;
+uniform float time; // seconds since the program started
+--- file: shader.fs
+--- find:
+    FragColor = mix(texture(texture1, TexCoord), texture(texture2, vec2(1.0 - TexCoord.x, TexCoord.y)), mixValue) * vec4(ourColor, 1.0);
+--- replace:
+    vec4 color = mix(texture(texture1, TexCoord), texture(texture2, vec2(1.0 - TexCoord.x, TexCoord.y)), mixValue) * vec4(ourColor, 1.0);
+    // the glow: the brightness goes between 0.4 and 1.0 and back, once every pi seconds
+    float glow = 0.7 + 0.3 * sin(time * 2.0);
+    FragColor = vec4(color.rgb * glow, 1.0);
+--- file: main.cpp
+--- find:
+        ourShader.setFloat("mixValue", mixValue);
+--- replace:
+        ourShader.setFloat("mixValue", mixValue);
+        // and the time, for the glow
+        ourShader.setFloat("time", static_cast<float>(glfwGetTime()));
+
+=== task: wave
+--- file: shader.fs
+--- find:
+    // the glow: the brightness goes between 0.4 and 1.0 and back, once every pi seconds
+    float glow = 0.7 + 0.3 * sin(time * 2.0);
+--- replace:
+    // the glow: the brightness goes between 0.4 and 1.0 and back, once every pi seconds - a little later
+    // the further right we are (TexCoord.x goes from 0 to 4), so the light runs across the sign from left to right
+    float glow = 0.7 + 0.3 * sin(time * 2.0 - TexCoord.x);

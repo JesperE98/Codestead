@@ -1,0 +1,61 @@
+{
+  "title": "Projekt: Planetariets skylt",
+  "tasks": {
+    "night-blue": {
+      "text": "Släck ner: rensa fönstret till en djup nattblå färg – mörk, men tydligt blå.",
+      "hint": {
+        "opengl": "Det är renderingsloopens rensningsfärg: `glClearColor`. Ungefär (0.03, 0.04, 0.15) – blått tydligt över rött och grönt, alla låga.",
+        "vulkan": "Det är render passets rensningsvärde i `recordCommandBuffer()`: `VkClearValue clearColor`. Ungefär (0.03, 0.04, 0.15).",
+        "d3d12": "Det är arrayen `clearColor` som `PopulateCommandList` ger `ClearRenderTargetView`. Ungefär (0.03, 0.04, 0.15)."
+      }
+    },
+    "wide-sign": {
+      "text": "En bred skylt: flytta rektangelns hörn så att den blir tydligt bredare än den är hög och täcker större delen av fönstret – till exempel x från -0.9 till 0.9 och y från -0.6 till 0.6.",
+      "hint": {
+        "opengl": "Positionerna är de tre första talen i varje vertex i `vertices`: byt 0.5 mot 0.9 (x) och 0.6 (y), med samma tecken.",
+        "vulkan": "Positionerna är första delen av varje `Vertex` i `vertices`: byt 0.5 mot 0.9 (x) och 0.6 (y), med samma tecken.",
+        "d3d12": "Positionerna är första delen av varje `Vertex` i `LoadAssets`: byt 0.5 mot 0.9 (x) och 0.6 (y), med samma tecken."
+      }
+    },
+    "repeat-wood": {
+      "text": {
+        "opengl": "Trä hela vägen: låt lådan upprepas över skylten i stället för att dess kant dras ut – texturkoordinater upp till 4 på bredden (och 2 på höjden), och en wrapping som upprepar för lådan.",
+        "vulkan": "Trä hela vägen: låt lådan upprepas över skylten i stället för att dess kant dras ut – texturkoordinater upp till 4 på bredden (och 2 på höjden), och en sampler som upprepar för lådan.",
+        "d3d12": "Trä hela vägen: låt lådan upprepas över skylten i stället för att dess kant dras ut – texturkoordinater upp till 4 på bredden (och 2 på höjden), och en sampler som upprepar för lådan."
+      },
+      "hint": {
+        "opengl": "Byt de högra hörnens s-koordinat från 2.0 till 4.0, och lådans `GL_TEXTURE_WRAP_S` och `GL_TEXTURE_WRAP_T` från `GL_CLAMP_TO_EDGE` till `GL_REPEAT`.",
+        "vulkan": "Byt de högra hörnens första texturkoordinat till 4.0, och låt lådans `imageInfo.sampler` vara `textureSampler`. Då behövs inte `clampSampler`: ta bort den, dess `vkCreateSampler` och dess `vkDestroySampler`.",
+        "d3d12": "Byt de högra hörnens första texturkoordinat till 4.0, och sampla `texture1` med `wrapSampler` i `PSMain`. Då behövs inte den klampande samplern `s1`: ta bort den ur root signaturen och shadern."
+      }
+    },
+    "tint": {
+      "text": "Färg: tona skylten med hörnens färger, så att den går från gult till rött längs överkanten och från blått till grönt längs underkanten.",
+      "hint": {
+        "opengl": "`ourColor` kommer redan in i `shader.fs`: multiplicera resultatet av `mix(...)` med `vec4(ourColor, 1.0)`.",
+        "vulkan": "`fragColor` kommer redan in i `shader.frag`: multiplicera resultatet av `mix(...)` med `vec4(fragColor, 1.0)`. Kompilera om shadern med `glslc`.",
+        "d3d12": "`input.color` kommer redan in i `PSMain`: multiplicera resultatet av `lerp(...)` med den."
+      }
+    },
+    "glow": {
+      "text": {
+        "opengl": "Skenet: låt skylten långsamt lysa starkare och svagare, om och om igen – tiden som en ny uniform, och `sin` av den i `shader.fs`.",
+        "vulkan": "Skenet: låt skylten långsamt lysa starkare och svagare, om och om igen – tiden efter `mixValue` i push constants, och `sin` av den i `shader.frag`.",
+        "d3d12": "Skenet: låt skylten långsamt lysa starkare och svagare, om och om igen – tiden efter `mixValue` i root constants, och `sin` av den i `PSMain`."
+      },
+      "hint": {
+        "opengl": "`ourShader.setFloat(\"time\", static_cast<float>(glfwGetTime()));` bredvid `mixValue`, `uniform float time;` i `shader.fs`, och `float glow = 0.7 + 0.3 * sin(time * 2.0);` – multiplicera färgens `rgb` med `glow`.",
+        "vulkan": "Lägg till `float time` i `PushConstants` och i shaderns block, fyll den med `std::chrono`-tiden från *Shaders* i `recordCommandBuffer()`, och i shadern `float glow = 0.7 + 0.3 * sin(pc.time * 2.0);` – multiplicera färgens `rgb` med `glow`.",
+        "d3d12": "Lägg till `float time` i `MixConstants` i båda filerna, fyll den med `std::chrono`-tiden från *Shaders* i `PopulateCommandList`, och i `PSMain` `float glow = 0.7f + 0.3f * sin(time * 2.0f);` – multiplicera färgens `rgb` med `glow`."
+      }
+    },
+    "wave": {
+      "text": "Ljuset springer: låt skenet vandra över skylten från vänster till höger, så att olika delar av den lyser starkast vid olika tider.",
+      "hint": {
+        "opengl": "Låt varje fragment lysa lite senare ju längre till höger det är: `sin(time * 2.0 - TexCoord.x)`.",
+        "vulkan": "Låt varje fragment lysa lite senare ju längre till höger det är: `sin(pc.time * 2.0 - fragTexCoord.x)`.",
+        "d3d12": "Låt varje fragment lysa lite senare ju längre till höger det är: `sin(time * 2.0f - input.texCoord.x)`."
+      }
+    }
+  }
+}

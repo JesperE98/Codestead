@@ -1,0 +1,131 @@
+=== task: night-blue
+--- file: main.cpp
+--- find:
+        VkClearValue clearColor = {{{0.2f, 0.3f, 0.3f, 1.0f}}};
+--- replace:
+        VkClearValue clearColor = {{{0.03f, 0.04f, 0.15f, 1.0f}}}; // a deep night blue behind the sign
+
+=== task: wide-sign
+--- file: main.cpp
+--- find:
+    {{-0.5f, -0.5f, 0.0f}, {1.0f, 1.0f, 0.0f}, {0.0f, 0.0f}}, // top left: yellow
+    {{0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {2.0f, 0.0f}},  // top right: red
+    {{0.5f, 0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {2.0f, 2.0f}},   // bottom right: green
+    {{-0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 2.0f}}   // bottom left: blue
+--- replace:
+    {{-0.9f, -0.6f, 0.0f}, {1.0f, 1.0f, 0.0f}, {0.0f, 0.0f}}, // top left: yellow
+    {{0.9f, -0.6f, 0.0f}, {1.0f, 0.0f, 0.0f}, {2.0f, 0.0f}},  // top right: red
+    {{0.9f, 0.6f, 0.0f}, {0.0f, 1.0f, 0.0f}, {2.0f, 2.0f}},   // bottom right: green
+    {{-0.9f, 0.6f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 2.0f}}   // bottom left: blue
+
+=== task: repeat-wood
+--- file: main.cpp
+--- find:
+    {{0.9f, -0.6f, 0.0f}, {1.0f, 0.0f, 0.0f}, {2.0f, 0.0f}},  // top right: red
+    {{0.9f, 0.6f, 0.0f}, {0.0f, 1.0f, 0.0f}, {2.0f, 2.0f}},   // bottom right: green
+--- replace:
+    {{0.9f, -0.6f, 0.0f}, {1.0f, 0.0f, 0.0f}, {4.0f, 0.0f}},  // top right: red
+    {{0.9f, 0.6f, 0.0f}, {0.0f, 1.0f, 0.0f}, {4.0f, 2.0f}},   // bottom right: green
+--- file: main.cpp
+--- find:
+    VkSampler textureSampler;
+    VkSampler clampSampler;
+--- replace:
+    VkSampler textureSampler;
+--- file: main.cpp
+--- find:
+        vkDestroySampler(device, clampSampler, nullptr);
+        vkDestroySampler(device, textureSampler, nullptr);
+--- replace:
+        vkDestroySampler(device, textureSampler, nullptr);
+--- file: main.cpp
+--- find:
+        if (vkCreateSampler(device, &samplerInfo, nullptr, &textureSampler) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create texture sampler!");
+        }
+
+        // A second sampler for the container: outside 0..1 it repeats the edge texels.
+        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+
+        if (vkCreateSampler(device, &samplerInfo, nullptr, &clampSampler) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create texture sampler!");
+        }
+    }
+--- replace:
+        if (vkCreateSampler(device, &samplerInfo, nullptr, &textureSampler) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create texture sampler!");
+        }
+    }
+--- file: main.cpp
+--- find:
+        imageInfo.sampler = clampSampler;
+--- replace:
+        imageInfo.sampler = textureSampler; // the repeating sampler: 4 x 2 crates of 180 x 180 pixels on the sign
+
+=== task: tint
+--- file: shaders/shader.frag
+--- find:
+    outColor = mix(texture(texSampler, fragTexCoord), texture(faceSampler, vec2(1.0 - fragTexCoord.x, fragTexCoord.y)), pc.mixValue);
+--- replace:
+    // tinted by the colour of the corners, interpolated across the sign
+    outColor = mix(texture(texSampler, fragTexCoord), texture(faceSampler, vec2(1.0 - fragTexCoord.x, fragTexCoord.y)), pc.mixValue) * vec4(fragColor, 1.0);
+
+=== task: glow
+--- file: shaders/shader.frag
+--- find:
+    float mixValue;
+} pc;
+--- replace:
+    float mixValue;
+    float time; // seconds since the program started
+} pc;
+--- file: shaders/shader.frag
+--- find:
+    outColor = mix(texture(texSampler, fragTexCoord), texture(faceSampler, vec2(1.0 - fragTexCoord.x, fragTexCoord.y)), pc.mixValue) * vec4(fragColor, 1.0);
+--- replace:
+    vec4 color = mix(texture(texSampler, fragTexCoord), texture(faceSampler, vec2(1.0 - fragTexCoord.x, fragTexCoord.y)), pc.mixValue) * vec4(fragColor, 1.0);
+    // the glow: the brightness goes between 0.4 and 1.0 and back, once every pi seconds
+    float glow = 0.7 + 0.3 * sin(pc.time * 2.0);
+    outColor = vec4(color.rgb * glow, 1.0);
+--- file: main.cpp
+--- find:
+#include <glm/glm.hpp>
+--- replace:
+#include <glm/glm.hpp>
+
+#include <chrono>
+--- file: main.cpp
+--- find:
+struct PushConstants {
+    float mixValue;
+};
+--- replace:
+struct PushConstants {
+    float mixValue;
+    float time;
+};
+--- file: main.cpp
+--- find:
+        PushConstants constants{};
+        constants.mixValue = mixValue;
+--- replace:
+        // the time in seconds since the first frame, for the glow
+        static auto startTime = std::chrono::high_resolution_clock::now();
+        auto currentTime = std::chrono::high_resolution_clock::now();
+        float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+
+        PushConstants constants{};
+        constants.mixValue = mixValue;
+        constants.time = time;
+
+=== task: wave
+--- file: shaders/shader.frag
+--- find:
+    // the glow: the brightness goes between 0.4 and 1.0 and back, once every pi seconds
+    float glow = 0.7 + 0.3 * sin(pc.time * 2.0);
+--- replace:
+    // the glow: the brightness goes between 0.4 and 1.0 and back, once every pi seconds - a little later
+    // the further right we are (fragTexCoord.x goes from 0 to 4), so the light runs across the sign from left to right
+    float glow = 0.7 + 0.3 * sin(pc.time * 2.0 - fragTexCoord.x);
