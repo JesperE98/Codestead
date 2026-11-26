@@ -2,8 +2,8 @@ import { matchCount, type CheckContext } from "../CheckContext.js";
 import type { Checks } from "./TaskChecks.PerApi.js";
 import { cameraOf, distance, matrixOf, minus, placedAt, turnDifference, vectorsByName, type Placed } from "./SceneValues.js";
 
-// The project after Getting started, "A tiny solar system": a night sky, a camera up in the gallery, a spinning sun,
-// a planet orbiting it, a moon orbiting the planet and a colour for each body (projects/<api>/getting-started-project).
+// The project after Going 3D, "A tiny solar system": a night sky, a camera up in the gallery, a spinning sun,
+// a planet orbiting it, a moon orbiting the planet and a colour for each body (projects/<api>/going-3d-project).
 // The bodies are checked where the draws' model matrices put them (the same in every API, wherever the camera is):
 // the learner chooses sizes, distances and speeds, so the checks ask for the relations – the sun in the middle and
 // turning, the planet always as far from the sun but somewhere else later, the moon always as far from the planet.
@@ -51,9 +51,9 @@ function planets(at: Placed[][], sunIndex: number): number[] {
   return (at[0] ?? []).filter((b) => b.index !== sunIndex && circles(at, b.index, sunIndex, 1.2, 10)).map((b) => b.index);
 }
 
-export function gettingStartedProject(): Record<string, Checks> {
+export function going3DProject(): Record<string, Checks> {
   return {
-    "getting-started-project": {
+    "going-3d-project": {
       // A dark sky: every channel of the clear colour low (the start's teal is 0.2, 0.3, 0.3).
       "night-sky": (c) => c.shows && c.scene!.clearColor !== null && c.scene!.clearColor.slice(0, 3).every((v, i) => v <= (i === 2 ? 0.2 : 0.12)),
       // The camera, from the view matrix: above the planets' plane, a good way back, and the sun (the origin) in front of

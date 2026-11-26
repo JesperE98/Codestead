@@ -148,6 +148,14 @@ export class GpTool implements LearningTool {
 
   readonly iconUrl: string = iconUrl;
 
+  /**
+   * The solar system's milestones, which followed their chapters (Transformations … Camera) from Getting started to
+   * the new part Going 3D (0.2.11): getting-started-project is now another project, with other milestone ids.
+   */
+  readonly movedTasks: ReadonlyMap<string, string> = new Map(
+    ["night-sky", "observatory", "sun", "planet", "moon", "colours"].map((id) => [`getting-started-project/${id}`, `going-3d-project/${id}`]),
+  );
+
   get changelog(): readonly ChangelogEntry[] {
     return (changelogEntries ??= Changelog.parse(changelogJson));
   }

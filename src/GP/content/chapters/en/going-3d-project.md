@@ -7,7 +7,7 @@ actually.
 "Can't you make a solar system out of those?" the director asks, looking at you over her glasses. "A sun, a planet,
 a moon. Moving. The children will never know."
 
-They will know. But with what you learnt in *Getting started* it can still be a rather fine solar system. Nothing
+They will know. But with what you learnt in *Getting started* and *Going 3D* it can still be a rather fine solar system. Nothing
 here is new: the challenge is combining the window, the shaders, the textures, the transformations and the camera
 on your own.
 

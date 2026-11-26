@@ -90,8 +90,10 @@ Each API is counted separately. Switching only changes which text, project and t
 
 ## How this course is structured
 
-The course is split into the same parts as learnopengl.com: *Getting started*, *Lighting*, *Model Loading*,
-*Advanced OpenGL*, *Advanced Lighting*, *PBR* and *In Practice*. Each chapter builds on the previous ones, so it is
+The course follows the parts of learnopengl.com: *Getting started*, *Lighting*, *Model Loading*,
+*Advanced OpenGL*, *Advanced Lighting*, *PBR*, *In Practice* and the *Guest Articles*. One part is our own: learnopengl's
+*Getting started* is split in two, and its second half – transformations, coordinate systems and the camera – is the
+part *Going 3D*, which opens with a chapter on the maths behind it. Each chapter builds on the previous ones, so it is
 best to follow them in order.
 
 Each chapter is a lesson in three parts:
@@ -285,38 +287,29 @@ a task; the course's tasks start in *Creating a window*.
 
 ## Course map
 
-Here is the whole course: all chapters of learnopengl.com. The chapters of *Getting started* up to *Shaders* are in
-the app now; the rest is coming, in this order.
+Here is the whole course, part by part. Every part ends with a review and an exam, and then an optional project.
 
-**Getting started** – in the app now up to *Shaders*
+**Getting started** – {{api}}, Setting up your IDE, Creating a window, Hello Window, Hello Triangle, Shaders,
+Textures.
 
-| Chapter | |
-|---|---|
-| {{api}} | available |
-| Setting up your IDE | available |
-| Creating a window | available |
-| Hello Window | available |
-| Hello Triangle | available |
-| Shaders | available |
-| Textures | coming |
-| Transformations | coming |
-| Coordinate Systems | coming |
-| Camera | coming |
-| Review | coming |
+**Going 3D** – The maths of 3D, Transformations, Coordinate Systems, Camera.
 
-**Lighting** – coming: Colors, Basic Lighting, Materials, Lighting maps, Light casters, Multiple lights, Review.
+**Lighting** – Colors, Basic Lighting, Materials, Lighting maps, Light casters, Multiple lights.
 
-**Model Loading** – coming: Assimp, Mesh, Model.
+**Model Loading** – Assimp, Mesh, Model.
 
-**Advanced {{api}}** – coming: Depth testing, Stencil testing, Blending, Face culling, Framebuffers, Cubemaps,
+**Advanced {{api}}** – Depth testing, Stencil testing, Blending, Face culling, Framebuffers, Cubemaps,
 Advanced Data, Advanced {{shaderLanguage}}, Geometry Shader, Instancing, Anti Aliasing.
 
-**Advanced Lighting** – coming: Advanced Lighting, Gamma Correction, Shadows, Normal Mapping, Parallax Mapping,
+**Advanced Lighting** – Advanced Lighting, Gamma Correction, Shadows, Normal Mapping, Parallax Mapping,
 HDR, Bloom, Deferred Shading, SSAO.
 
-**PBR** – coming: Theory, Lighting, IBL.
+**PBR** – Theory, Lighting, IBL.
 
-**In Practice** – coming: Debugging, Text Rendering, 2D Game.
+**In Practice** – Debugging, Text Rendering, 2D Game.
+
+**Guest Articles** – Order-independent transparency, Skeletal Animation, Scene Graph, Frustum Culling, Cascaded
+Shadow Mapping, Tessellation, DSA, Physically Based Bloom, Compute Shaders, Area Lights.
 
 The next chapter, *{{api}}*, explains what the API you have chosen actually is and how it is organised. Then you set
 up your IDE and start writing code: first a window, then a cleared window, then the triangle you just saw.

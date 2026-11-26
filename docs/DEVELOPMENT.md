@@ -277,6 +277,10 @@ verktyg enligt avsnittet ovan. Eleven
 väljer **grafik-API** högst upp – OpenGL 3.3, Vulkan eller DirectX 12 – och det är verktygets *variant*: varje kapitel,
 uppgift och projekt följer valet. Kursen följer learnopengl.com kapitel för kapitel; OpenGL-koden härmar
 learnopengl.com, Vulkan-koden vulkan-tutorial.com och DirectX 12-koden Microsofts D3D12HelloWorld-exempel.
+Kursen följer learnopengls delar med ett undantag: learnopengls *Getting started* är delad i två, `getting-started`
+(fram till och med *Textures*) och `going-3d` (*Going 3D*: en egen lektion om matematiken, `maths`, och sedan
+*Transformations*, *Coordinate Systems* och *Camera*), med var sin sammanfattning, prov och projekt. Uppgifter som
+flyttar mellan kapitel får sina sparade framsteg flyttade med `movedTasks` i `GpTool` (som i Codestead Linux).
 
 ```text
 ts/apps/gp/                Appen: GpTool (kursen i lärfönstret), YourProject/ (panelen "Your project", huvudfilen per
@@ -437,7 +441,8 @@ visa API:ts kod för steget – i det API eleven valt, på svenska eller engelsk
 **Diagram och simulatorbilder** (`src/GP/content/images/diagrams/`). Bilderna som förklarar kapitlen (inte
 visualiserarens) ritas från källkod i repot: en fil `<namn>.mjs` per bild, som `make.mjs` gör till `images/<variant>.webp`. Hjälpmoduler för en kursdels bilder
 heter `_<namn>.mjs` och ritas inte själva.
-Kursdelen Getting started (*Setting up your IDE* … *Camera*) har sådana bilder och är förlagan för de andra delarna.
+Kursdelarna Getting started och Going 3D (*Setting up your IDE* … *Camera*) har sådana bilder och är förlagan för de
+andra delarna.
 Codestead Linux ritar sina bilder med samma `style.mjs` och `to_webp.py` (se "Bilder i Codestead Linux"): en ändring
 här ändrar båda kursernas bilder.
 

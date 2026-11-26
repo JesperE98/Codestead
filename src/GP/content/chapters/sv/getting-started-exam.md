@@ -1,8 +1,8 @@
 # Prov: Kom igång
 
-Visa vad du har lärt dig i *Kom igång*: fönstret och bildrutan, triangeln och dess shaders, texturer,
-transformationer, koordinatsystem och kameran. Frågorna täcker hela delen, och några gäller {{api}} särskilt. Svara
-på alla och tryck på **Lämna in svaren**; du behöver 80 % rätt för att bli godkänd, och du kan göra provet igen.
+Visa vad du har lärt dig i *Kom igång*: fönstret och bildrutan, triangeln och dess shaders, värden från CPU:n och
+texturer. Frågorna täcker hela delen, och några gäller {{api}} särskilt. Svara på alla och tryck på **Lämna in
+svaren**; du behöver 80 % rätt för att bli godkänd, och du kan göra provet igen.
 
 :::opengl
 ```quiz
@@ -148,35 +148,35 @@ De två trianglarna delar två hörn. Med en indexbuffert lagras varje hörn en 
 
 :::opengl
 ```quiz
-Tio kuber ritas genom att `model`-uniformen sätts och `glDrawArrays` anropas, tio gånger per bildruta. Varför får varje kub sin egen matris?
-- [ ] Det gör den inte: alla tio kuberna får den sista matrisen som sattes
-- [ ] Varje anrop till `setMat4` skapar en ny uniform med samma namn
-- [x] Varje draw-anrop använder de uniform-värden som programmet har i det ögonblick anropet görs
-- [ ] OpenGL behåller en egen kopia av varje uniform för varje draw-anrop fram till `glfwSwapBuffers`
+I den första bildrutan anropar programmet `glUniform4f(vertexColorLocation, 0.0f, 1.0f, 0.0f, 1.0f);` och först därefter `glUseProgram(shaderProgram);`. Vad händer med den gröna färgen i den bildrutan?
+- [ ] Den sparas i shaderprogrammet och används av nästa draw-anrop
+- [ ] Den sätts i alla shaderprogram som har en uniform med det namnet
+- [x] Den når inte programmet: `glUniform…` sätter uniformen i det program som är aktivt när anropet görs, och inget är det än
+- [ ] OpenGL väntar med anropet tills `glUseProgram` har anropats
 ---
-En uniform behåller sitt värde tills du ändrar det, och OpenGL ser till att varje draw-anrop använder de värden som gäller när det görs. Därför räcker det att sätta model-matrisen före varje draw-anrop.
+`glUniform…` har inget programargument: det verkar på det program som `glUseProgram` har gjort aktivt. Aktivera programmet först och sätt sedan dess uniforms.
 ```
 :::
 :::vulkan
 ```quiz
-Tio kuber ritas per bildruta. Varför är varje kubs model-matris en push constant, medan view och projection ligger i uniform buffern?
-- [ ] Uniform buffers kan bara hålla två matriser
-- [ ] Push constants läses bara av vertex shadern, uniform buffers bara av fragment shadern
-- [ ] Push constants behålls till nästa bildruta, uniform buffers bara till nästa draw-anrop
-- [x] Push constants spelas in i command buffern per draw-anrop; uniform bufferns innehåll läses först när GPU:n kör kommandona, så tio matriser skrivna i den skulle alla bli den sista
+Fragment shadern läser nu ett värde ur push constant-blocket, men `VkPushConstantRange` och `vkCmdPushConstants` anger fortfarande bara `VK_SHADER_STAGE_VERTEX_BIT`. Vad händer?
+- [ ] Ingenting: push constants syns för alla steg i pipelinen
+- [x] Fragment shadern får inte intervallet: valideringslagret rapporterar felet, och fragmentsteget måste läggas till i intervallet och i `vkCmdPushConstants`
+- [ ] Vertex shadern skickar värdet vidare till fragment shadern av sig själv
+- [ ] Värdet kommer fram en bildruta för sent i fragment shadern
 ---
-`vkCmdPushConstants` kopierar byten in i command buffern, så varje draw-anrop ser de värden som pushats före det. En descriptor pekar bara på bufferten; det den innehåller när GPU:n kör kommandona är vad varje draw-anrop i bildrutan ser – rätt för view och projection, fel för model-matrisen.
+Ett push constant-intervall hör till de steg som står i dess `stageFlags`. Ett shadersteg som läser blocket måste finnas med i intervallet, och `vkCmdPushConstants` måste ange samma steg.
 ```
 :::
 :::d3d12
 ```quiz
-Tio kuber ritas per bildruta. Varför ligger varje kubs model-matris i root constants, medan view och projection ligger i constant buffern?
-- [ ] En constant buffer kan bara hålla två matriser
-- [ ] Root constants behålls till nästa bildruta, constant buffers bara till nästa draw-anrop
-- [ ] Root constants läses bara av vertex shadern, constant buffers bara av pixel shadern
-- [x] Root constants spelas in i command listen per draw-anrop; constant bufferns innehåll läses först när GPU:n kör kommandona, så tio matriser skrivna i den skulle alla bli den sista
+Pixel shadern läser nu ett värde ur root constants-`cbuffer`:n, men root-parametern skapades med `D3D12_SHADER_VISIBILITY_VERTEX`. Vad händer?
+- [ ] Ingenting: root constants syns för alla shadersteg
+- [ ] Vertex shadern skickar värdet vidare till pixel shadern av sig själv
+- [ ] Värdet kommer fram en bildruta för sent i pixel shadern
+- [x] Pixel shadern ser inte root-parametern: dess synlighet måste omfatta pixelsteget (`D3D12_SHADER_VISIBILITY_ALL` eller `_PIXEL`)
 ---
-`SetGraphicsRoot32BitConstants` spelar in värdena i command listen, så varje draw-anrop ser de värden som satts före det. CBV:n pekar bara på bufferten; det den innehåller när GPU:n kör kommandona är vad varje draw-anrop i bildrutan ser – rätt för view och projection, fel för model-matrisen.
+En root-parameters synlighet säger vilka shadersteg som kan läsa den. Med `VERTEX` ser bara vertex shadern konstanterna; debug-lagret rapporterar en pixel shader som läser ett register som ingen synlig parameter ger.
 ```
 :::
 
@@ -188,6 +188,16 @@ Ett stort golv med en detaljerad textur sträcker sig långt bort, och långt bo
 - [ ] Nearest-filtrering som förstoringsfilter
 ---
 Långt borta faller många texlar på en pixel (texturen förminskas), och att välja en av dem ger en annan, slumpmässig färg från bildruta till bildruta. En mindre, förfiltrerad mipnivå ger rätt medelfärg. En större textur skulle göra det värre.
+```
+
+```quiz
+En rektangels texturkoordinater går från (0, 0) till (3, 2) i stället för från (0, 0) till (1, 1), och wrapping-läget är *repeat*. Vad ser du?
+- [x] Texturen tre gånger på bredden och två gånger på höjden av rektangeln
+- [ ] Texturen en gång, tre gånger bredare och dubbelt så hög som rektangeln, avskuren vid kanterna
+- [ ] Texturen en gång, i hörnet från 0 till 1, och kanttexlarna utdragna över resten
+- [ ] Ingenting: texturkoordinater över 1 är ogiltiga
+---
+Med repeat räknas bara koordinatens decimaldel: från 0 till 3 börjar texturen om vid 1 och vid 2, så den får plats tre gånger på bredden. Clamp to edge skulle i stället dra ut kanttexlarna.
 ```
 
 :::opengl
@@ -225,13 +235,13 @@ Register fyller samma roll som OpenGL:s texturenheter: descriptor tablen täcker
 :::
 
 ```quiz
-Med kolumnvektorer (som i läroboken och GLM) vill du att varje vertex först skalas, sedan roteras och sist flyttas. Vilken matris använder du?
-- [ ] `S · R · T`
-- [x] `T · R · S`
-- [ ] Vilken som helst: ordningen i matrismultiplikation spelar ingen roll
-- [ ] `R · T · S`
+En textur i pixelgrafik på 16 × 16 ritas över större delen av ett fönster på 800 × 600. Vilket förstoringsfilter behåller dess pixlar som skarpa rutor?
+- [ ] Linjär filtrering, eftersom den läser fler texlar
+- [ ] Ett mipmap-filter, eftersom texturen ritas större än den är
+- [x] Nearest-filtrering
+- [ ] Clamp to edge
 ---
-Med kolumnvektorer tillämpas matrisen närmast vektorn – den längst till höger – först: `T · R · S · v` skalar, roterar och flyttar sedan. Matrismultiplikation är inte kommutativ, så ordningen spelar roll.
+Förstorad täcker varje texel många pixlar. Nearest ger varje pixel färgen från den närmaste texeln – skarpa rutor; linjär blandar grannarna till en mjuk suddighet. Mipmaps är till för förminskning, och clamp är ett wrapping-läge.
 ```
 
 :::opengl
@@ -247,107 +257,33 @@ Om programmet inte anropade `stbi_set_flip_vertically_on_load(true)` skulle låd
 :::
 :::vulkan
 ```quiz
-Varför multiplicerar projektet `proj[1][1]` med -1 efter `glm::perspective`?
-- [ ] Eftersom Vulkans texturkoordinater börjar längst upp i bilden
-- [ ] För att avbilda djupet från -1..1 till 0..1
-- [x] GLM skrevs för OpenGL, där y pekar uppåt i klipprummet; i Vulkan pekar det nedåt, så y-skalan vänds för att +y ska hamna överst i fönstret
-- [ ] Eftersom swap chainen lagrar sina bilder med den nedersta raden först
+I Vulkan-projektet laddas bilderna med stb_image utan att vändas, och lådan står rätt. Varför?
+- [ ] stb_image vänder bilderna av sig själv när de kopieras till en `VkImage`
+- [ ] Vertex shadern vänder y, så texturen hamnar rätt
+- [x] I Vulkan är texturkoordinaten v = 0 den första raden i bilddatan – den översta raden, som en bildfil lagrar först – och vertexarnas koordinater är skrivna med v = 0 upptill
+- [ ] Samplerns adressläge vänder bilden
 ---
-Utan vändningen skulle hela scenen stå upp och ned. Djupintervallet är en annan skillnad, som `GLM_FORCE_DEPTH_ZERO_TO_ONE` tar hand om.
+Bildfiler och Vulkan är överens: den första raden är v = 0, upptill. OpenGL lägger t = 0 nertill, och därför vänder learnopengl sina bilder när de laddas.
 ```
 :::
 :::d3d12
 ```quiz
-Projektionen görs med `XMMatrixPerspectiveFovRH`. Vad händer om du bygger vymatrisen med `XMMatrixLookAtLH` i stället för `XMMatrixLookAtRH`?
-- [x] LH-vymatrisen får kameran att titta längs +z, men RH-projektionen förväntar sig att den tittar längs -z, så scenen hamnar bakom kameran
-- [ ] Ingenting: LH och RH skiljer sig bara i hur de lagrar matrisen
-- [ ] Bilden blir spegelvänd i sidled men är annars rätt
-- [ ] Djupintervallet ändras från 0..1 till -1..1
+I Direct3D 12-projektet laddas bilderna med stb_image utan att vändas, och lådan står rätt. Varför?
+- [ ] stb_image vänder bilderna av sig själv när de kopieras till upload heapen
+- [x] I Direct3D är texturkoordinaten v = 0 den första raden i bilddatan – den översta raden, som en bildfil lagrar först – och vertexarnas koordinater är skrivna med v = 0 upptill
+- [ ] Vertex shadern vänder y, så texturen hamnar rätt
+- [ ] Den statiska samplerns adressläge vänder bilden
 ---
-Vymatrisen och projektionen måste vara överens om vyrummet. Kursen använder de högerhänta funktionerna överallt, som har samma vyrum som GLM och OpenGL.
-```
-:::
-
-:::opengl
-```quiz
-Transformationen skickas med `glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));`. Varför är det tredje argumentet `GL_FALSE`?
-- [ ] Det betyder att uniformen bara sätts en gång, inte varje bildruta
-- [ ] Det betyder att matrisen inte är normaliserad, vilket är rätt för transformationer
-- [ ] GLM-matriser är radvisa, och OpenGL transponerar dem på egen hand
-- [x] Det betyder "transponera inte": GLM lagrar sina matriser kolumn för kolumn, vilket är den ordning OpenGL förväntar sig
----
-Argumentet ber OpenGL att transponera matrisen när den läses. GLM:s minneslayout stämmer redan med OpenGL:s kolumnvisa konvention, så ingen transponering behövs.
-```
-:::
-:::vulkan
-```quiz
-`struct PushConstants { glm::mat4 model; };` kopieras byte för byte till shaderns `mat4 model`, utan transponering. Varför är det rätt?
-- [ ] Det är inte rätt, men transformationer ser likadana ut i båda fallen
-- [ ] Push constants kan bara hålla symmetriska matriser
-- [ ] `vkCmdPushConstants` transponerar varje matris den kopierar
-- [x] GLM lagrar en `mat4` kolumn för kolumn, och det är också så GLSL lägger ut en `mat4`
----
-Båda sidorna lagrar kolumnvis, så byten betyder samma matris på CPU:n och på GPU:n. (En transponerad rotation skulle vrida åt andra hållet, så det spelar roll.)
-```
-:::
-:::d3d12
-```quiz
-Innan en matris lagras i konstanterna anropar projektet `XMMatrixTranspose`, och shadern beräknar `mul(position, transform)`. Varför transponeringen?
-- [x] `XMFLOAT4X4` lagrar rad för rad, medan HLSL som standard läser en matris i en constant buffer kolumn för kolumn; transponeringen gör att shadern ser samma matris
-- [ ] `mul` i HLSL fungerar bara med transponerade matriser
-- [ ] DirectXMath-matriser är fel och måste alltid rättas
-- [ ] Root constants lagras i omvänd ordning
----
-Radvis lagring plus kolumnvis packning skulle ge shadern den transponerade matrisen. Att lagra transponatet tar ut det, och `mul` med vektorn först beräknar v · M, precis som DirectXMath på CPU:n.
+Bildfiler och Direct3D är överens: den första raden är v = 0, upptill. OpenGL lägger t = 0 nertill, och därför vänder learnopengl sina bilder när de laddas.
 ```
 :::
 
 ```quiz
-Vad gör att objekt längre bort ser mindre ut med en perspektivprojektion?
-- [ ] Rasteriseraren ritar avlägsna trianglar med färre fragment
-- [ ] Vymatrisen skalar varje objekt med dess avstånd från kameran
-- [x] Projektionsmatrisen lägger avståndet i w, och perspektivdivisionen delar x och y med det
-- [ ] Djuptestet krymper fragment som ligger längre bort
+Fragment shadern returnerar `mix(container, face, 0.2)` (i HLSL: `lerp`). Vad får ett fragment?
+- [ ] 20 % av lådan och 80 % av ansiktet
+- [ ] Lådan där den är ljusare än 0,2, annars ansiktet
+- [ ] Summan av båda färgerna gånger 0,2
+- [x] 80 % av lådans färg och 20 % av ansiktets
 ---
-Efter projektionen växer w med avståndet från kameran. Divisionen med w i slutet av vertexsteget drar punkter långt bort närmare mitten: perspektiv.
-```
-
-```quiz
-Djuptestningen är på, men programmet glömmer att rensa djupbufferten i början av varje bildruta. Vad händer?
-- [x] Fragmenten testas mot djupvärden som finns kvar från tidigare bildrutor, så många klarar inte testet och delar av scenen försvinner
-- [ ] Bara det första objektet i varje bildruta ritas
-- [ ] Scenen ritas utan djuptestning
-- [ ] Ingenting ändras: varje fragment skriver ändå över djupbufferten
----
-Rensningen sätter varje djup till 1,0, fjärrplanet, så att det första fragmentet på en pixel alltid klarar testet. Utan den döljer de gamla värdena den här bildrutans fragment överallt där de inte ligger närmare än förut.
-```
-
-```quiz
-Kamerakoden håller pitch mellan -89° och 89°. Varför inte tillåta 90°?
-- [ ] Eftersom projektionsmatrisen bara klarar vinklar under 90°
-- [ ] Så att musen inte kan vrida kameran mer än 89° per bildruta
-- [x] Vid 90° är tittriktningen parallell med världens uppåtvektor, så kryssprodukten för högervektorn blir noll och vyn slår runt
-- [ ] Eftersom `sin` och `cos` inte är definierade vid 90°
----
-LookAt-matrisen beräknar kamerans högeraxel som kryssprodukten av riktningen och världens uppåtvektor. När de två är parallella blir produkten noll och kamerans orientering är inte längre definierad.
-```
-
-```quiz
-Varför multipliceras kamerans hastighet med `deltaTime`, tiden som den förra bildrutan tog?
-- [x] Så att kameran rör sig lika fort på snabba och långsamma datorer, hur många bildrutor per sekund de än ritar
-- [ ] Så att kameran stannar när fönstret tappar fokus
-- [ ] Så att rörelsen går fortare ju längre en tangent hålls nere
-- [ ] Eftersom vymatrisen förväntar sig avstånd i sekunder
----
-Utan den flyttar sig kameran en fast sträcka per bildruta, så en dator som ritar dubbelt så många bildrutor rör sig dubbelt så fort. Hastighet gånger bildrutans tid ger en sträcka per sekund.
-```
-
-```quiz
-Mushjulet ändrar `fov`, projektionsmatrisens synfält. Vad ser du när `fov` går från 45° till 20°?
-- [x] Scenen ser större ut: du zoomar in
-- [ ] Scenen ser mindre ut: du zoomar ut
-- [ ] Objekt nära kameran klipps bort
-- [ ] Kameran flyttar sig framåt längs sin riktning
----
-Ett mindre synfält får plats med en mindre del av scenen i samma fönster, så allt i den ser större ut. Själva kameran flyttar sig inte.
+`mix(a, b, t)` är a · (1 − t) + b · t: vid t = 0 bara `a`, vid t = 1 bara `b`. Med 0,2 dominerar lådan och ansiktet skymtar svagt igenom.
 ```

@@ -6,7 +6,7 @@ en ledsen liten smäll, och den enda 3D-modellen i förrådet är… en trälåd
 – Kan du inte göra ett solsystem av de där? frågar föreståndaren och tittar på dig över glasögonen. En sol, en
 planet, en måne. Som rör sig. Barnen kommer aldrig att märka något.
 
-Det kommer de. Men med det du lärt dig i *Kom igång* kan det ändå bli ett riktigt fint solsystem. Ingenting här är
+Det kommer de. Men med det du lärt dig i *Kom igång* och *Till 3D* kan det ändå bli ett riktigt fint solsystem. Ingenting här är
 nytt: utmaningen är att själv kombinera fönster, shaders, texturer, transformationer och kamera.
 
 :::opengl

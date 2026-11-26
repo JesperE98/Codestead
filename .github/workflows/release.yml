@@ -123,7 +123,7 @@ jobs:
         # area-lights, render-text, powerups, deferred-shading …) are spread over the jobs. `chapters` narrows the parts
         # to some chapters, or leaves some out with "!"; CiTests.test.ts checks that every lesson is in exactly one job.
         shard:
-          - { name: 'getting started … advanced OpenGL, PBR', parts: 'start,getting-started,lighting,model-loading,advanced-opengl,pbr', chapters: '!specular-ibl' }
+          - { name: 'getting started … advanced OpenGL, PBR', parts: 'start,getting-started,going-3d,lighting,model-loading,advanced-opengl,pbr', chapters: '!specular-ibl' }
           - { name: 'specular-ibl, deferred-shading', parts: 'pbr,advanced-lighting', chapters: 'specular-ibl,deferred-shading' }
           - { name: 'advanced lighting, bloom', parts: 'advanced-lighting', chapters: '!ssao,!point-shadows,!deferred-shading' }
           - { name: 'ssao, point-shadows', parts: 'advanced-lighting', chapters: 'ssao,point-shadows' }

@@ -1,7 +1,7 @@
 # Project: A tiny solar system – milestones (OpenGL)
 
-The optional project after *Getting started* (brief: `chapters/<lang>/getting-started-project.md`; checks:
-`ts/packages/gp-course/src/Checks/TaskChecks.Project.GettingStarted.ts`). Nothing new is taught: the learner combines
+The optional project after *Going 3D* (brief: `chapters/<lang>/going-3d-project.md`; checks:
+`ts/packages/gp-course/src/Checks/TaskChecks.Project.Going3D.ts`). Nothing new is taught: the learner combines
 the clear colour, the camera globals, model matrices (rotate, translate, scale and a matrix kept for the next body)
 and a colour uniform mixed with the texture.
 
