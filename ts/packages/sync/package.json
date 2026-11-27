@@ -1,0 +1,10 @@
+{
+  "name": "@codestead/sync",
+  "private": true,
+  "type": "module",
+  "description": "Syncing a learner's saved files between computers: three-way merge of state.json, whole-file merge, the sync engine and its backend interface (docs/PLAN-KONTON-OCH-SYNK.md).",
+  "exports": {
+    ".": "./src/index.ts",
+    "./node": "./src/NodeFolder.ts"
+  }
+}
