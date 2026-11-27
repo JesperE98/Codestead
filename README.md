@@ -83,9 +83,9 @@ versions update themselves to it and keep your progress. Installation notes:
 - **Choose your graphics API** at the top – OpenGL 3.3, Vulkan or DirectX 12 – and every chapter, task and code
   example follows it. Each API has its own projects and progress.
 - **The same chapters as learnopengl.com**, section by section – with its first section split in two: *Getting
-  started* and *Going 3D*, which opens with a chapter on the maths behind 3D graphics. The OpenGL code follows learnopengl.com, the Vulkan
-  code vulkan-tutorial.com and the DirectX 12 code Microsoft's D3D12 samples. So far: the introduction and Getting
-  started up to Shaders.
+  started* and *Going 3D*, which opens with a chapter on the maths behind 3D graphics. Every section is there, from
+  Getting started to Guest articles. The OpenGL code follows learnopengl.com, the Vulkan code vulkan-tutorial.com and
+  the DirectX 12 code Microsoft's D3D12 samples.
 - **A project editor with Build & run**: a simulated GPU compiles the code (misspelt API names get "did you mean"),
   runs the shaders and shows the window the program would open, with the messages a driver or validation layer
   would give.
